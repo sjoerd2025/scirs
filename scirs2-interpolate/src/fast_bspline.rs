@@ -17,8 +17,8 @@
 //!
 //! ```rust
 //! use ndarray::array;
-//! use scirs2__interpolate::fast_bspline::FastBSplineEvaluator;
-//! use scirs2__interpolate::bspline::{BSpline, ExtrapolateMode};
+//! use scirs2_interpolate::fast_bspline::FastBSplineEvaluator;
+//! use scirs2_interpolate::bspline::{BSpline, ExtrapolateMode};
 //!
 //! // Create a B-spline
 //! let knots = array![0.0, 0.0, 0.0, 1.0, 2.0, 3.0, 3.0, 3.0];
@@ -631,9 +631,9 @@ where
         // Note: Using sequential evaluation instead of parallel due to thread safety
 
         let chunk_size = self.chunk_size;
-        let chunks: Vec<_> = x_vals.as_slice().unwrap().chunks(chunk_size).collect();
+        let chunks: Vec<_> = xvals.as_slice().unwrap().chunks(chunk_size).collect();
 
-        let results: Result<Vec<_>> = chunks
+        let results: Result<Vec<_>, InterpolateError> = chunks
             .into_iter()
             .map(|chunk| {
                 let mut chunk_results = Vec::with_capacity(chunk.len());

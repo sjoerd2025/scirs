@@ -6,7 +6,7 @@
 //! multiple CPU cores.
 
 use crate::error::{IntegrateError, IntegrateResult};
-use crate::monte__carlo::{ErrorEstimationMethod, MonteCarloOptions, MonteCarloResult};
+use crate::monte_carlo::{ErrorEstimationMethod, MonteCarloOptions, MonteCarloResult};
 use crate::IntegrateFloat;
 use ndarray::{Array1, ArrayView1};
 use rand::prelude::*;
@@ -16,8 +16,12 @@ use std::fmt::Debug;
 use std::marker::PhantomData;
 use std::sync::{Arc, Mutex};
 
+use scirs2_core::num_threads;
 #[cfg(feature = "parallel")]
 use scirs2_core::parallel_ops::ThreadPoolBuilder;
+use scirs2_core::parallel_ops::{
+    IndexedParallelIterator, IntoParallelIterator, IntoParallelRefIterator, ParallelIterator,
+};
 
 /// Options for parallel Monte Carlo integration
 #[derive(Debug, Clone)]
@@ -91,7 +95,7 @@ impl<F: IntegrateFloat> From<MonteCarloOptions<F>> for ParallelMonteCarloOptions
 /// # Examples
 ///
 /// ```
-/// use scirs2__integrate::monte_carlo_parallel::{parallel_monte_carlo, ParallelMonteCarloOptions};
+/// use scirs2_integrate::monte_carlo_parallel::{parallel_monte_carlo, ParallelMonteCarloOptions};
 /// use ndarray::ArrayView1;
 /// use std::marker::PhantomData;
 ///
@@ -507,7 +511,7 @@ where
     rand_distr::StandardNormal: Distribution<F>,
 {
     // Convert to regular MonteCarloOptions and use sequential implementation
-    let regular_opts = options.map(|opts| crate::monte__carlo::MonteCarloOptions {
+    let regular_opts = options.map(|opts| crate::monte_carlo::MonteCarloOptions {
         n_samples: opts.n_samples,
         seed: opts.seed,
         error_method: opts.error_method,
@@ -546,7 +550,11 @@ where
 
 #[cfg(test)]
 mod tests {
+    use super::*;
+    use crate::monte_carlo::{ErrorEstimationMethod, MonteCarloOptions};
     use approx::assert_relative_eq;
+    use ndarray::ArrayView1;
+    use std::marker::PhantomData;
 
     #[test]
     #[cfg(feature = "parallel")]

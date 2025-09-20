@@ -175,10 +175,12 @@ pub mod bezier;
 pub mod bivariate;
 pub mod boundarymode;
 pub mod bspline;
+pub mod bspline_modules;
 pub mod cache;
 pub mod cache_aware;
 pub mod constrained;
 pub mod extrapolation;
+pub mod extrapolation_modules;
 pub mod fast_bspline;
 pub mod geospatial;
 pub mod gpu_accelerated;
@@ -195,12 +197,14 @@ pub mod memory_monitor;
 pub mod multiscale;
 // pub mod neural_enhanced;
 pub mod numerical_stability;
+pub mod numerical_stability_modules;
 pub mod nurbs;
 pub mod optimization;
 pub mod parallel;
 pub mod penalized;
 pub mod physics_informed;
 pub mod production_stress_testing;
+pub mod production_stress_testing_modules;
 pub mod production_validation;
 pub mod scattered_optimized;
 pub mod simd_optimized;
@@ -219,10 +223,11 @@ pub mod statistical;
 pub mod statistical_advanced;
 pub mod streaming;
 // pub mod stress_testing;
+pub mod advanced_coordinator;
+pub mod advanced_coordinator_modules;
 pub mod tension;
 pub mod tensor;
 pub mod timeseries;
-// pub mod advanced_coordinator; // Missing file
 pub mod utils;
 pub mod voronoi;
 
@@ -246,11 +251,13 @@ pub mod scipy_compatibility;
 // Re-exports for convenience
 
 // Advanced mode coordinator for advanced AI-driven optimization
-// pub use advanced__coordinator::{
-//     create_advanced_interpolation_coordinator,
-//     create_advanced_interpolation_coordinator_with_config, AdvancedInterpolationConfig,
-//     AdvancedInterpolationCoordinator, InterpolationPerformanceMetrics, InterpolationRecommendation,
-// }; // Missing module
+pub use advanced_coordinator::{
+    create_advanced_interpolation_coordinator, create_balanced_coordinator,
+    create_default_advanced_coordinator, create_high_performance_coordinator,
+    create_memory_efficient_coordinator, AdvancedInterpolationConfig,
+    AdvancedInterpolationCoordinator, CacheOptimizationResult, InterpolationPerformanceMetrics,
+    InterpolationRecommendation, MethodPerformanceEstimate, SystemOptimizationResult,
+};
 
 pub use adaptive_gp::{
     make_adaptive_gp, AdaptiveGPConfig, AdaptiveGaussianProcess, GPStats, KernelHyperparameters,
@@ -427,16 +434,15 @@ pub use memory_monitor::{
     PerformanceSummary,
 };
 pub use multiscale::{make_adaptive_bspline, MultiscaleBSpline, RefinementCriterion};
-// pub use neural__enhanced::{
+// pub use neural_enhanced::{
 //     make_neural_enhanced_interpolator, ActivationType, EnhancementStrategy, NeuralArchitecture,
 //     NeuralEnhancedInterpolator, NeuralTrainingConfig, TrainingStats,
 // };
 pub use numerical_stability::{
-    analyze_interpolation_edge_cases, apply_tikhonov_regularization,
-    assess_enhanced_matrix_condition, assess_matrix_condition, check_safe_division,
-    compute_adaptive_regularization, early_numerical_warning_system, enhanced_matrix_multiply,
-    machine_epsilon, safe_reciprocal, solve_with_stability_monitoring, BoundaryAnalysis,
-    ConditionReport, EdgeCaseAnalysis, StabilityDiagnostics, StabilityLevel,
+    analyze_interpolation_edge_cases, apply_adaptive_regularization, apply_tikhonov_regularization,
+    assess_matrix_condition, check_safe_division, machine_epsilon, safe_reciprocal,
+    solve_with_stability_monitoring, BoundaryAnalysis, ConditionReport, EdgeCaseAnalysis,
+    StabilityDiagnostics, StabilityLevel,
 };
 pub use nurbs::{make_nurbs_circle, make_nurbs_sphere, NurbsCurve, NurbsSurface};
 pub use optimization::{
@@ -570,7 +576,7 @@ pub use voronoi::{
 };
 
 // Enhanced performance validation exports
-// pub use performance_validation__enhanced::{
+// pub use performance_validation_enhanced::{
 //     quick_validation, validate_stable_release_readiness, validate_with_config,
 //     AccuracyMetrics as EnhancedAccuracyMetrics, AllocationStats, CpuCapabilities,
 //     CrossPlatformConfig, ImpactAssessment, IssueCategory, IssueSeverity, LeakAnalysis,
@@ -582,7 +588,7 @@ pub use voronoi::{
 // };
 
 // Enhanced production hardening exports
-// pub use production_hardening__enhanced::{
+// pub use production_hardening_enhanced::{
 //     quick_production_hardening, run_production_hardening, run_production_hardening_with_config,
 //     AlertSeverity, ConcurrentAccessConfig, CpuIntensiveConfig, DataDistribution,
 //     ErrorMessageAssessment, ErrorMessageQuality, ErrorQualityConfig, HardeningCategory,
@@ -595,7 +601,7 @@ pub use voronoi::{
 // };
 
 // Enhanced documentation polish exports
-// pub use documentation_polish__enhanced::{
+// pub use documentation_polish_enhanced::{
 //     polish_documentation_for_stable_release, polish_documentation_with_config,
 //     quick_documentation_review, ApiStabilityDocumentation, AudienceLevel as PolishAudienceLevel,
 //     BenchmarkComparison, BenchmarkResult as DocBenchmarkResult, BestPracticesGuide,
@@ -614,11 +620,11 @@ pub use voronoi::{
 // };
 
 // SciPy parity completion exports
-// pub use scipy_complete__parity::{
+// pub use scipy_complete_parity::{
 //     create_scipy_interface, validate_scipy_parity as validate_complete_scipy_parity, PPoly,
 //     SciPyBSpline, SciPyCompatInterface, SciPyCubicSpline, SciPyInterpolate,
 // };
-// pub use scipy_parity__completion::{
+// pub use scipy_parity_completion::{
 //     create_scipy_parity_checker, quick_scipy_parity_check, validate_scipy_parity, FeatureAnalysis,
 //     MissingFeature as ParityMissingFeature, ParityCompletionConfig, PartialFeature,
 //     PerformanceComparison as ParityPerformanceComparison, SciPyFeature, SciPyParityCompletion,
@@ -626,7 +632,7 @@ pub use voronoi::{
 // };
 
 // API stabilization exports for 0.1.0 stable release
-// pub use api_stabilization__enhanced::{
+// pub use api_stabilization_enhanced::{
 //     analyze_api_for_stable_release, analyze_api_with_config, quick_api_analysis, ApiAnalysisResult,
 //     ApiIssue, ApiStabilizationAnalyzer, ApiStabilizationReport, BreakingChangeAssessment,
 //     DeprecationItem, IssueCategory as ApiIssueCategory, IssueSeverity as ApiIssueSeverity,
@@ -651,7 +657,7 @@ pub use documentation_enhancement::{
 };
 
 // SciPy parity enhancement exports for stable release
-// pub use scipy_parity__enhanced::{
+// pub use scipy_parity_enhanced::{
 //     enhance_scipy_parity_for_stable_release, enhance_scipy_parity_with_config,
 //     quick_scipy_parity_analysis, CompatibilityTestResult, FeatureGapAnalysis,
 //     FeaturePriority as EnhancedFeaturePriority, FocusArea, ImplementationLevel,

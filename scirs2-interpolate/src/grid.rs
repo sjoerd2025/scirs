@@ -34,7 +34,7 @@ pub enum GridTransformMethod {
 /// # Examples
 ///
 /// ```
-/// use scirs2__interpolate::grid::create_regular_grid;
+/// use scirs2_interpolate::grid::create_regular_grid;
 ///
 /// // Create a 10×20 grid from (0,0) to (1,2)
 /// let grid_coords = create_regular_grid(
@@ -132,6 +132,8 @@ where
         + std::fmt::Display
         + std::ops::AddAssign
         + std::ops::SubAssign
+        + std::ops::MulAssign
+        + std::ops::DivAssign
         + std::fmt::LowerExp
         + Send
         + Sync,
@@ -252,6 +254,8 @@ where
         + std::fmt::Display
         + std::ops::AddAssign
         + std::ops::SubAssign
+        + std::ops::MulAssign
+        + std::ops::DivAssign
         + std::fmt::LowerExp
         + Send
         + Sync,

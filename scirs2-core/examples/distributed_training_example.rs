@@ -12,6 +12,7 @@
 
 //! Example demonstrating distributed training and model serialization with the array protocol.
 
+use scirs2_core::ndarray_ext::stats::mean;
 use std::collections::HashMap;
 use tempfile::tempdir;
 
@@ -60,10 +61,10 @@ fn main() {
     // Create distributed training configuration
     let dist_config = DistributedTrainingConfig {
         strategy: DistributedStrategy::DataParallel,
-        num_workers: 2,
+        numworkers: 2,
         rank: 0,         // This would be different for each worker
         is_master: true, // This would be different for each worker
-        sync_interval: 1,
+        syncinterval: 1,
         backend: "threaded".to_string(),
         mixed_precision: false,
         gradient_accumulation_steps: 1,
@@ -71,7 +72,7 @@ fn main() {
 
     println!(
         "Created distributed training config with {} workers using {} strategy",
-        dist_config.num_workers, dist_config.strategy
+        dist_config.numworkers, dist_config.strategy
     );
 
     // Create distributed dataset
@@ -103,7 +104,7 @@ fn main() {
     let optimizer = Box::new(Adam::new(0.001, Some(0.9), Some(0.999), Some(1e-8)));
 
     // Create loss function
-    let lossfn = Box::new(CrossEntropyLoss::new(Some(mean)));
+    let lossfn = Box::new(CrossEntropyLoss::new(Some("mean")));
 
     // Create a new model instance for the trainer
     // Note: In production, you would implement proper cloning for Sequential
@@ -130,7 +131,7 @@ fn main() {
 
     // Create a temporary directory for saving models
     let temp_dir = tempdir().unwrap();
-    let modeldir = temp_dir.path().join(models);
+    let modeldir = temp_dir.path().join("models");
 
     println!("Created model directory at: {}", modeldir.display());
 
@@ -170,7 +171,7 @@ fn main() {
     metrics.insert("accuracy".to_string(), 0.85);
 
     // Save checkpoint
-    let checkpoint_path = modeldir.join(checkpoint);
+    let checkpoint_path = modeldir.join("checkpoint");
     let result = save_checkpoint(
         &model,
         optimizer.as_ref(),
@@ -188,13 +189,13 @@ fn main() {
     let result = load_checkpoint(&checkpoint_path);
 
     match result {
-        Ok((model_optimizer, epoch, metrics)) => {
+        Ok((model, optimizer, epoch, metrics)) => {
             println!("Loaded checkpoint from epoch {epoch}");
             println!("Loaded model with {} layers", model.layers().len());
             println!(
                 "Metrics: loss = {}, accuracy = {}",
-                metrics.get(loss).unwrap_or(&0.0),
-                metrics.get(accuracy).unwrap_or(&0.0)
+                metrics.get("loss").unwrap_or(&0.0),
+                metrics.get("accuracy").unwrap_or(&0.0)
             );
         }
         Err(e) => println!("Error loading checkpoint: {e}"),
@@ -206,7 +207,8 @@ fn main() {
 
     // Export model to ONNX
     let onnx_path = modeldir.join("model.onnx");
-    let result = OnnxExporter::export_model(&model, &onnx_path, &[1, 3, 224, 224]);
+    let exporter = OnnxExporter;
+    let result = exporter.export(&model, &onnx_path, &[1, 3, 224, 224]);
 
     match result {
         Ok(()) => println!("Exported model to ONNX format at: {}", onnx_path.display()),
@@ -260,7 +262,7 @@ fn create_model() -> Sequential {
         (0, 0), // Padding
     )));
 
-    model.add_layer(Box::new(Linear::withshape(
+    model.add_layer(Box::new(Linear::new_random(
         "fc1",
         32 * 6 * 6, // Input features (assuming input size is 28x28)
         128,        // Output features
@@ -268,7 +270,7 @@ fn create_model() -> Sequential {
         Some(ActivationFunc::ReLU),
     )));
 
-    model.add_layer(Box::new(Linear::withshape(
+    model.add_layer(Box::new(Linear::new_random(
         "fc_out", 128,  // Input features
         10,   // Output features
         true, // With bias
@@ -288,7 +290,7 @@ fn create_dataset() -> (InMemoryDataset, InMemoryDataset) {
 
     // Generate random inputs
     let inputs = Array2::<f64>::from_shape_fn((num_samples, num_features), |_| {
-        rand::random::<f64>() * 2.0.saturating_sub(1).0
+        rand::random::<f64>() * 2.0 - 1.0
     });
 
     // Generate random one-hot targets

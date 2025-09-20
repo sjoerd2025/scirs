@@ -3,10 +3,12 @@
 //! This module provides comprehensive support for MATLAB v7.3+ files,
 //! which are based on HDF5 format with MATLAB-specific conventions.
 
+use crate::error::{IoError, Result};
 use crate::matlab::MatType;
 #[allow(unused_imports)]
 use ndarray::{ArrayD, IxDyn};
 use std::collections::HashMap;
+use std::path::Path;
 
 #[cfg(feature = "hdf5")]
 use crate::hdf5::{AttributeValue, CompressionOptions, DatasetOptions, FileMode, HDF5File};
@@ -186,7 +188,7 @@ impl V73MatFile {
         let mut vars = HashMap::new();
 
         // Get all top-level datasets and groups
-        let items = hdf5_file.list_all_items("/");
+        let items = hdf5_file.list_all_items();
 
         for item in items {
             if let Ok(ext_type) = self.read_extended_type(&hdf5_file, &item) {
@@ -239,9 +241,11 @@ impl V73MatFile {
             .iter()
             .flat_map(|s| s.encode_utf16())
             .collect();
-        file.create_dataset(
+        // Convert Vec to ArrayD and use create_dataset_from_array
+        let var_names_array = ndarray::Array1::from_vec(var_names_data).into_dyn();
+        file.create_dataset_from_array(
             &format!("{}/varnames", name),
-            &var_names_data,
+            &var_names_array,
             Some(DatasetOptions::default()),
         )?;
 
@@ -255,9 +259,10 @@ impl V73MatFile {
         if let Some(ref row_names) = table.row_names {
             let row_names_data: Vec<u16> =
                 row_names.iter().flat_map(|s| s.encode_utf16()).collect();
-            file.create_dataset(
+            let row_names_array = ndarray::Array1::from_vec(row_names_data).into_dyn();
+            file.create_dataset_from_array(
                 &format!("{}/rownames", name),
-                &row_names_data,
+                &row_names_array,
                 Some(DatasetOptions::default()),
             )?;
         }
@@ -296,9 +301,10 @@ impl V73MatFile {
             .iter()
             .flat_map(|s| s.encode_utf16())
             .collect();
-        file.create_dataset(
+        let cats_array = ndarray::Array1::from_vec(cats_data).into_dyn();
+        file.create_dataset_from_array(
             &format!("{}/categories", name),
-            &cats_data,
+            &cats_array,
             Some(DatasetOptions::default()),
         )?;
 
@@ -310,7 +316,7 @@ impl V73MatFile {
         )?;
 
         // Write ordered flag
-        file.set_attribute(name, "ordered", AttributeValue::Bool(cat_array.ordered))?;
+        file.set_attribute(name, "ordered", AttributeValue::Boolean(cat_array.ordered))?;
 
         Ok(())
     }
@@ -324,7 +330,14 @@ impl V73MatFile {
         dt_array: &DateTimeArray,
     ) -> Result<()> {
         // Create dataset for datetime data
-        file.create_dataset_from_array(name, &dt_array.data, self.compression.clone())?;
+        file.create_dataset_from_array(
+            name,
+            &dt_array.data,
+            Some(DatasetOptions {
+                compression: self.compression.clone().unwrap_or_default(),
+                ..Default::default()
+            }),
+        )?;
 
         file.set_attribute(
             name,
@@ -366,9 +379,10 @@ impl V73MatFile {
         // Write each string as a separate dataset
         for (i, string) in strings.iter().enumerate() {
             let string_data: Vec<u16> = string.encode_utf16().collect();
-            file.create_dataset(
+            let string_array = ndarray::Array1::from_vec(string_data).into_dyn();
+            file.create_dataset_from_array(
                 &format!("{}/string_{}", name, i),
-                &string_data,
+                &string_array,
                 Some(DatasetOptions::default()),
             )?;
         }
@@ -401,9 +415,10 @@ impl V73MatFile {
 
         // Write function string
         let func_data: Vec<u16> = func_handle.function.encode_utf16().collect();
-        file.create_dataset(
+        let func_array = ndarray::Array1::from_vec(func_data).into_dyn();
+        file.create_dataset_from_array(
             &format!("{}/function", name),
-            &func_data,
+            &func_array,
             Some(DatasetOptions::default()),
         )?;
 
@@ -438,7 +453,7 @@ impl V73MatFile {
             "MATLAB_class",
             AttributeValue::String(object.class_name.clone()),
         )?;
-        file.set_attribute(name, "MATLAB_object", AttributeValue::Bool(true))?;
+        file.set_attribute(name, "MATLAB_object", AttributeValue::Boolean(true))?;
 
         // Write properties
         let props_group = format!("{}/properties", name);
@@ -477,18 +492,24 @@ impl V73MatFile {
             "MATLAB_class",
             AttributeValue::String("double".to_string()),
         )?;
-        file.set_attribute(name, "MATLAB_complex", AttributeValue::Bool(true))?;
+        file.set_attribute(name, "MATLAB_complex", AttributeValue::Boolean(true))?;
 
         // Write real and imaginary parts
         file.create_dataset_from_array(
             &format!("{}/real", name),
             &real_part,
-            self.compression.clone(),
+            Some(DatasetOptions {
+                compression: self.compression.clone().unwrap_or_default(),
+                ..Default::default()
+            }),
         )?;
         file.create_dataset_from_array(
             &format!("{}/imag", name),
             &imag_part,
-            self.compression.clone(),
+            Some(DatasetOptions {
+                compression: self.compression.clone().unwrap_or_default(),
+                ..Default::default()
+            }),
         )?;
 
         Ok(())
@@ -513,18 +534,24 @@ impl V73MatFile {
             "MATLAB_class",
             AttributeValue::String("single".to_string()),
         )?;
-        file.set_attribute(name, "MATLAB_complex", AttributeValue::Bool(true))?;
+        file.set_attribute(name, "MATLAB_complex", AttributeValue::Boolean(true))?;
 
         // Write real and imaginary parts
         file.create_dataset_from_array(
             &format!("{}/real", name),
             &real_part,
-            self.compression.clone(),
+            Some(DatasetOptions {
+                compression: self.compression.clone().unwrap_or_default(),
+                ..Default::default()
+            }),
         )?;
         file.create_dataset_from_array(
             &format!("{}/imag", name),
             &imag_part,
-            self.compression.clone(),
+            Some(DatasetOptions {
+                compression: self.compression.clone().unwrap_or_default(),
+                ..Default::default()
+            }),
         )?;
 
         Ok(())
@@ -547,7 +574,7 @@ impl V73MatFile {
     #[cfg(feature = "hdf5")]
     fn read_extended_type(&self, file: &HDF5File, name: &str) -> Result<ExtendedMatType> {
         // Check MATLAB_class attribute to determine type
-        if let Ok(class_attr) = file.get_attribute(name, "MATLAB_class") {
+        if let Ok(Some(class_attr)) = file.get_attribute(name, "MATLAB_class") {
             match class_attr {
                 AttributeValue::String(class_name) => {
                     match class_name.as_str() {
@@ -558,7 +585,7 @@ impl V73MatFile {
                         "function_handle" => self.read_function_handle(file, name),
                         _ => {
                             // Check if it's an object
-                            if let Ok(AttributeValue::Bool(true)) =
+                            if let Ok(Some(AttributeValue::Boolean(true))) =
                                 file.get_attribute(name, "MATLAB_object")
                             {
                                 self.read_object(file, name)
@@ -580,42 +607,42 @@ impl V73MatFile {
 
     // Read implementations would follow similar patterns...
     #[cfg(feature = "hdf5")]
-    fn read_table(self_file: &HDF5File, name: &str) -> Result<ExtendedMatType> {
+    fn read_table(&self, file: &HDF5File, name: &str) -> Result<ExtendedMatType> {
         Err(IoError::Other(
             "Table reading not implemented yet".to_string(),
         ))
     }
 
     #[cfg(feature = "hdf5")]
-    fn read_categorical(self_file: &HDF5File, name: &str) -> Result<ExtendedMatType> {
+    fn read_categorical(&self, file: &HDF5File, name: &str) -> Result<ExtendedMatType> {
         Err(IoError::Other(
             "Categorical reading not implemented yet".to_string(),
         ))
     }
 
     #[cfg(feature = "hdf5")]
-    fn read_datetime(self_file: &HDF5File, name: &str) -> Result<ExtendedMatType> {
+    fn read_datetime(&self, file: &HDF5File, name: &str) -> Result<ExtendedMatType> {
         Err(IoError::Other(
             "DateTime reading not implemented yet".to_string(),
         ))
     }
 
     #[cfg(feature = "hdf5")]
-    fn read_string_array(self_file: &HDF5File, name: &str) -> Result<ExtendedMatType> {
+    fn read_string_array(&self, file: &HDF5File, name: &str) -> Result<ExtendedMatType> {
         Err(IoError::Other(
             "String array reading not implemented yet".to_string(),
         ))
     }
 
     #[cfg(feature = "hdf5")]
-    fn read_function_handle(self_file: &HDF5File, name: &str) -> Result<ExtendedMatType> {
+    fn read_function_handle(&self, file: &HDF5File, name: &str) -> Result<ExtendedMatType> {
         Err(IoError::Other(
             "Function handle reading not implemented yet".to_string(),
         ))
     }
 
     #[cfg(feature = "hdf5")]
-    fn read_object(self_file: &HDF5File, name: &str) -> Result<ExtendedMatType> {
+    fn read_object(&self, file: &HDF5File, name: &str) -> Result<ExtendedMatType> {
         Err(IoError::Other(
             "Object reading not implemented yet".to_string(),
         ))

@@ -283,46 +283,59 @@ fn bench_memmap_operations(c: &mut Criterion) {
         );
 
         // Benchmark memory-mapped neighbor access (simplified to avoid mutable borrow issues)
-        group.bench_function("memmap_neighbor_access", |b| {
-            b.iter(|| {
-                let mut total = 0;
-                // Simplified benchmark without actual memmap access due to borrowing constraints
-                for node in 0..size.min(1000) {
-                    total += node;
-                }
-                black_box(total)
-            });
-        });
+        group.bench_with_input(
+            BenchmarkId::new("memmap_neighbor_access", size),
+            &size,
+            |b, &size| {
+                b.iter(|| {
+                    let mut total = 0;
+                    // Simplified benchmark without actual memmap access due to borrowing constraints
+                    for node in 0..size.min(1000) {
+                        total += node;
+                    }
+                    black_box(total)
+                });
+            },
+        );
 
         // Benchmark batch neighbor access (simplified)
-        group.bench_function("memmap_batch_neighbors", |b| {
-            let nodes: Vec<usize> = (0..size.min(100)).collect();
-            b.iter(|| {
-                let result: Vec<Vec<usize>> = nodes.iter().map(|&n| vec![n + 1, n + 2]).collect();
-                black_box(result)
-            });
-        });
+        group.bench_with_input(
+            BenchmarkId::new("memmap_batch_neighbors", size),
+            &size,
+            |b, &size| {
+                let nodes: Vec<usize> = (0..size.min(100)).collect();
+                b.iter(|| {
+                    let result: Vec<Vec<usize>> =
+                        nodes.iter().map(|&n| vec![n + 1, n + 2]).collect();
+                    black_box(result)
+                });
+            },
+        );
 
         // Benchmark streaming edge iteration (simplified)
-        group.bench_function("memmap_stream_edges", |b| {
-            b.iter(|| {
-                let mut edge_count = 0;
-                // Simulate edge streaming
-                for u in 0..size.min(1000) {
-                    for v in 0..3 {
-                        // Simulate ~3 edges per node
-                        edge_count += 1;
+        group.bench_with_input(
+            BenchmarkId::new("memmap_stream_edges", size),
+            &size,
+            |b, &size| {
+                b.iter(|| {
+                    let mut edge_count = 0;
+                    // Simulate edge streaming
+                    for u in 0..size.min(1000) {
+                        for v in 0..3 {
+                            // Simulate ~3 edges per node
+                            edge_count += 1;
+                            if edge_count >= 10000 {
+                                break;
+                            }
+                        }
                         if edge_count >= 10000 {
                             break;
                         }
                     }
-                    if edge_count >= 10000 {
-                        break;
-                    }
-                }
-                black_box(edge_count)
-            });
-        });
+                    black_box(edge_count)
+                });
+            },
+        );
     }
 
     group.finish();
@@ -340,51 +353,63 @@ fn bench_lazy_metrics(c: &mut Criterion) {
         let graph = generators::barabasi_albert_graph(size, 3, &mut rng).unwrap();
 
         // Test expensive computation with lazy evaluation - simplified
-        group.bench_function("lazy_graph_metric_first_access", |b| {
-            b.iter(|| {
-                // Simulate expensive computation without LazyGraphMetric to avoid lifetime issues
-                let mut total = 0.0;
-                for node in 0..size.min(100) {
-                    let degree = (node % 10) + 1; // Simulate varying degrees
-                    if degree > 1 {
-                        let triangles = node % 3; // Simulate triangle count
-                        let possible = degree * (degree - 1) / 2;
-                        if possible > 0 {
-                            total += triangles as f64 / possible as f64;
+        group.bench_with_input(
+            BenchmarkId::new("lazy_graph_metric_first_access", size),
+            &size,
+            |b, &size| {
+                b.iter(|| {
+                    // Simulate expensive computation without LazyGraphMetric to avoid lifetime issues
+                    let mut total = 0.0;
+                    for node in 0..size.min(100) {
+                        let degree = (node % 10) + 1; // Simulate varying degrees
+                        if degree > 1 {
+                            let triangles = node % 3; // Simulate triangle count
+                            let possible = degree * (degree - 1) / 2;
+                            if possible > 0 {
+                                total += triangles as f64 / possible as f64;
+                            }
                         }
                     }
-                }
-                let result = total / size as f64;
-                black_box(result)
-            });
-        });
+                    let result = total / size as f64;
+                    black_box(result)
+                });
+            },
+        );
 
         // Test subsequent accesses (should be fast) - simplified
-        group.bench_function("lazy_graph_metric_cached_access", |b| {
-            // Simplified benchmark to avoid lifetime issues
-            let cached_value = 42.0f64;
-            b.iter(|| black_box(cached_value));
-        });
+        group.bench_with_input(
+            BenchmarkId::new("lazy_graph_metric_cached_access", size),
+            &size,
+            |b, &_size| {
+                // Simplified benchmark to avoid lifetime issues
+                let cached_value = 42.0f64;
+                b.iter(|| black_box(cached_value));
+            },
+        );
 
         // Benchmark thread-safe access - simplified
-        group.bench_function("lazy_metric_concurrent_access", |b| {
-            use std::sync::Arc;
-            use std::thread;
+        group.bench_with_input(
+            BenchmarkId::new("lazy_metric_concurrent_access", size),
+            &size,
+            |b, &_size| {
+                use std::sync::Arc;
+                use std::thread;
 
-            b.iter(|| {
-                let shared_value = Arc::new(42.0f64);
+                b.iter(|| {
+                    let shared_value = Arc::new(42.0f64);
 
-                let handles: Vec<_> = (0..4)
-                    .map(|_| {
-                        let value = shared_value.clone();
-                        thread::spawn(move || *value)
-                    })
-                    .collect();
+                    let handles: Vec<_> = (0..4)
+                        .map(|_| {
+                            let value = shared_value.clone();
+                            thread::spawn(move || *value)
+                        })
+                        .collect();
 
-                let results: Vec<_> = handles.into_iter().map(|h| h.join().unwrap()).collect();
-                black_box(results)
-            });
-        });
+                    let results: Vec<_> = handles.into_iter().map(|h| h.join().unwrap()).collect();
+                    black_box(results)
+                });
+            },
+        );
     }
 
     group.finish();

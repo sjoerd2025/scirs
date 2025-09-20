@@ -29,8 +29,9 @@
 //! * Graph processing - [`graph`](graph)
 //! * Data transformation - [`transform`](transform)
 //! * ML evaluation metrics - [`metrics`](metrics)
-//! * ML optimization algorithms - [`optim`](optim)
 //! * Dataset utilities - [`datasets`](datasets)
+//!
+//! Note: ML optimization algorithms have been moved to the independent OptiRS project from v0.1.0-beta.2
 //!
 //! ## Examples
 //!
@@ -71,7 +72,7 @@
 //!         }
 //!         
 //!         // Calculate standard deviation
-//!         if let Ok(std_val) = scirs2::stats::std(&data.view(), 0) {
+//!         if let Ok(std_val) = scirs2::stats::std(&data.view(), 0, None) {
 //!             println!("Standard deviation: {}", std_val);
 //!         }
 //!     }
@@ -137,8 +138,7 @@ pub use scirs2_datasets as datasets;
 #[cfg(feature = "neural")]
 pub use scirs2_neural as neural;
 
-#[cfg(feature = "optim")]
-pub use scirs2_optim as optim;
+// optim module moved to independent OptiRS project from v0.1.0-beta.2
 
 #[cfg(feature = "graph")]
 pub use scirs2_graph as graph;
@@ -150,7 +150,7 @@ pub use scirs2_transform as transform;
 pub use scirs2_metrics as metrics;
 
 #[cfg(feature = "text")]
-pub use scirs2text as text;
+pub use scirs2_text as text;
 
 #[cfg(feature = "vision")]
 pub use scirs2_vision as vision;

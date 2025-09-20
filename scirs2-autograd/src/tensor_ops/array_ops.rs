@@ -493,28 +493,8 @@ impl<T: Float> op::Op<T> for GatherGrad {
 
 #[cfg(feature = "blas")]
 pub(crate) fn inplace_add_impl<F: Float>(mut a: NdArrayViewMut<F>, b: &NdArrayView<F>) {
-    use crate::same_type;
-    use crate::tensor_ops::blas_ffi::{vdAdd, vsAdd, MklInt};
-    unsafe {
-        if same_type::<F, f32>() {
-            vsAdd(
-                a.len() as MklInt,
-                a.as_ptr() as *const f32,
-                b.as_ptr() as *const f32,
-                a.as_mut_ptr() as *mut f32,
-            );
-        } else if same_type::<F, f64>() {
-            vdAdd(
-                a.len() as MklInt,
-                a.as_ptr() as *const f64,
-                b.as_ptr() as *const f64,
-                a.as_mut_ptr() as *mut f64,
-            );
-            return;
-        } else {
-            a += b;
-        }
-    }
+    // Simplified fallback - just use element-wise addition
+    a += b;
 }
 
 impl<T: Float> op::Op<T> for AddN {

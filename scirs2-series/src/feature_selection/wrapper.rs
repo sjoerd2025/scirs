@@ -28,14 +28,14 @@ impl WrapperMethods {
     ///
     /// ```
     /// use ndarray::{Array1, Array2};
-    /// use scirs2__series::feature_selection::{WrapperMethods, FeatureSelectionConfig};
+    /// use scirs2_series::feature_selection::{WrapperMethods, FeatureSelectionConfig};
     ///
     /// let features = Array2::from_shape_vec((100, 10), (0..1000).map(|x| x as f64).collect()).unwrap();
     /// let target = Array1::from_vec((0..100).map(|x| x as f64).collect());
     /// let config = FeatureSelectionConfig::default();
     ///
     /// let result = WrapperMethods::forward_selection(&features, &target, &config).unwrap();
-    /// println!("Selected {} features", result.selectedfeatures.len());
+    /// println!("Selected {} features", result.selected_features.len());
     /// ```
     pub fn forward_selection(
         features: &Array2<f64>,

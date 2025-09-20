@@ -201,9 +201,10 @@ fn test_statistical_constraint_non_numeric() {
     );
 
     let errors = result.errors();
+    // Check that we have type mismatch errors expecting "number" type
     assert!(errors
         .iter()
-        .any(|e| e.message.contains("Expected numeric value")));
+        .any(|e| e.expected == Some("number".to_string())));
 }
 
 #[cfg(all(feature = "data_validation", feature = "serde"))]
@@ -274,7 +275,7 @@ fn test_statistical_constraint_complex() {
     let stats_constraints = StatisticalConstraints::new()
         .with_mean_range(48.0, 52.0)
         .with_std_range(8.0, 12.0)
-        .with_distribution(normal);
+        .with_distribution("normal");
 
     let schema = ValidationSchema::new()
         .require_field("measurements", DataType::Array(Box::new(DataType::Float64)))

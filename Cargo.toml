@@ -26,9 +26,9 @@ members = [
     # Temporarily disabled due to compilation errors:
     "scirs2-interpolate", # Needs debugging - enabling to fix
     # "scirs2-optimize", # 518+ compilation errors
-    "scirs2-stats", # Working on fixing compilation errors  
+    "scirs2-stats", # Working on fixing compilation errors
     "scirs2-cluster", # Re-enabled after fixing workspace conflict
-    "scirs2-optim", # Compilation errors - enabling to fix
+    # "scirs2-optim", # Moved to independent OptiRS project from v0.1.0-beta.2
     "scirs2-special", # Compilation errors - enabling to fix
 ]
 resolver = "2"
@@ -39,13 +39,14 @@ bench_crates = ["scirs2-ndimage"]
 [workspace.lints.rust]
 unused_variables = "allow"
 unused_imports = "allow"
+unused_mut = "allow"
 mismatched_lifetime_syntaxes = "allow"
 dead_code = "allow"
 unpredictable_function_pointer_comparisons = "allow"
 unknown_lints = "allow"
 
 [workspace.package]
-version = "0.1.0-beta.1"
+version = "0.1.0-beta.2"
 edition = "2021"
 authors = ["SciRS2 Team"]
 description = "A Rust port of SciPy with AI/ML extensions - Scientific Computing and AI Library"
@@ -91,11 +92,11 @@ tokio-test = "0.4.4"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 bincode = "1.3.3"
-chrono = "0.4.41"
+chrono = "0.4.42"
 
 # Python bindings (optional)
-pyo3 = { version = "0.25.1", features = ["extension-module", "auto-initialize"] }
-numpy = { version = "0.25.0" }
+pyo3 = { version = "0.26.0", features = ["extension-module", "auto-initialize"] }
+numpy = { version = "0.26.0" }
 
 # Linear algebra and math (heavy dependencies - minimize features)
 nalgebra = { version = "0.33.2", default-features = false }
@@ -117,8 +118,8 @@ blas = { version = "0.23.0", default-features = false }
 # Serialization and data handling
 either = "1.15.0"
 csv = "1.3.1"
-image = "0.25.6"
-image-025 = { package = "image", version = "0.25.6", features = ["jpeg", "png", "gif"] }
+image = "0.25.8"
+image-025 = { package = "image", version = "0.25.8", features = ["jpeg", "png", "gif"] }
 
 # IO and file handling
 flate2 = "1.0"
@@ -201,15 +202,15 @@ num-rational = "0.4.2"
 rug = { version = "1.26.0", features = ["integer", "float", "rational", "complex"], default-features = false }
 gmp-mpfr-sys = { version = "1.6.5", default-features = false }
 
-# Arrow dependencies commented out due to compatibility issues with chrono
-# arrow = "54.0.0"
-# arrow-array = "54.0.0"
-# arrow-buffer = "54.0.0"
-# arrow-cast = "54.0.0"
-# arrow-data = "54.0.0"
-# arrow-schema = "54.0.0"
-# arrow-select = "54.0.0"
-# arrow-arith = "54.0.0"
+# There were compatibility issues with chrono
+arrow = "56.1.0"
+arrow-array = "56.1.0"
+arrow-buffer = "56.1.0"
+arrow-cast = "56.1.0"
+arrow-data = "56.1.0"
+arrow-schema = "56.1.0"
+arrow-select = "56.1.0"
+arrow-arith = "56.1.0"
 
 # Async dependencies
 tokio = { version = "1.45.1", features = ["full"] }
@@ -225,11 +226,14 @@ sysinfo = "0.35.2"
 
 # GPU backends
 metal = "0.31.0"
+objc2 = { version = "0.6.2"}
+objc2-foundation = "0.3.0"
 objc2-metal-performance-shaders = "0.3.0"
-cudarc = { version = "0.12", features = ["cuda-12000"] }
 opencl3 = { version = "0.11" }
 wgpu = { version = "22.1" }
 pollster = { version = "0.4" }
+cudarc = { version = "0.12", features = ["cuda-12000"] }
+
 
 # Development and testing additions
 ctor = { version = "0.2" }
@@ -245,9 +249,9 @@ ahash = { version = "0.8" }
 # Database drivers
 rusqlite = { version = "0.32" }
 sqlx = { version = "0.8", features = ["runtime-tokio-rustls", "postgres", "mysql", "sqlite"] }
-duckdb = { version = "0.10" }
+duckdb = { version = "1.4.0" } # Must update to this version
 mongodb = { version = "2.8" }
-redis = { version = "0.24" }
+redis = { version = "0.32" }
 
 # Real-time streaming
 tokio-tungstenite = { version = "0.21" }
@@ -273,7 +277,7 @@ serde-wasm-bindgen = { version = "0.6" }
 console_error_panic_hook = { version = "0.1" }
 
 # Machine learning
-tch = { version = "0.13" }
+tch = { version = "0.20" } # Must
 
 # Monitoring
 prometheus = { version = "0.13" }
@@ -285,35 +289,35 @@ eframe = { version = "0.27" }
 # Python integration (optional)
 
 # Base scirs2 crates
-scirs2-core = { version = "0.1.0-beta.1", path = "./scirs2-core" }
-scirs2 = { version = "0.1.0-beta.1", path = "./scirs2", default-features = false }
-scirs2-linalg = { version = "0.1.0-beta.1", path = "./scirs2-linalg" }
-scirs2-integrate = { version = "0.1.0-beta.1", path = "./scirs2-integrate" }
-scirs2-interpolate = { version = "0.1.0-beta.1", path = "./scirs2-interpolate" }
-scirs2-optimize = { version = "0.1.0-beta.1", path = "./scirs2-optimize" }
-scirs2-fft = { version = "0.1.0-beta.1", path = "./scirs2-fft" }
-scirs2-stats = { version = "0.1.0-beta.1", path = "./scirs2-stats" }
-scirs2-special = { version = "0.1.0-beta.1", path = "./scirs2-special" }
-scirs2-signal = { version = "0.1.0-beta.1", path = "./scirs2-signal" }
-scirs2-sparse = { version = "0.1.0-beta.1", path = "./scirs2-sparse" }
-scirs2-spatial = { version = "0.1.0-beta.1", path = "./scirs2-spatial" }
+scirs2-core = { version = "0.1.0-beta.2", path = "./scirs2-core" }
+scirs2 = { version = "0.1.0-beta.2", path = "./scirs2", default-features = false }
+scirs2-linalg = { version = "0.1.0-beta.2", path = "./scirs2-linalg" }
+scirs2-integrate = { version = "0.1.0-beta.2", path = "./scirs2-integrate" }
+scirs2-interpolate = { version = "0.1.0-beta.2", path = "./scirs2-interpolate" }
+scirs2-optimize = { version = "0.1.0-beta.2", path = "./scirs2-optimize" }
+scirs2-fft = { version = "0.1.0-beta.2", path = "./scirs2-fft" }
+scirs2-stats = { version = "0.1.0-beta.2", path = "./scirs2-stats" }
+scirs2-special = { version = "0.1.0-beta.2", path = "./scirs2-special" }
+scirs2-signal = { version = "0.1.0-beta.2", path = "./scirs2-signal" }
+scirs2-sparse = { version = "0.1.0-beta.2", path = "./scirs2-sparse" }
+scirs2-spatial = { version = "0.1.0-beta.2", path = "./scirs2-spatial" }
 
 # Advanced modules
-scirs2-cluster = { version = "0.1.0-beta.1", path = "./scirs2-cluster" }
-scirs2-ndimage = { version = "0.1.0-beta.1", path = "./scirs2-ndimage" }
-scirs2-io = { version = "0.1.0-beta.1", path = "./scirs2-io" }
-scirs2-datasets = { version = "0.1.0-beta.1", path = "./scirs2-datasets" }
+scirs2-cluster = { version = "0.1.0-beta.2", path = "./scirs2-cluster" }
+scirs2-ndimage = { version = "0.1.0-beta.2", path = "./scirs2-ndimage" }
+scirs2-io = { version = "0.1.0-beta.2", path = "./scirs2-io" }
+scirs2-datasets = { version = "0.1.0-beta.2", path = "./scirs2-datasets" }
 
 # AI/ML modules
-scirs2-neural = { version = "0.1.0-beta.1", path = "./scirs2-neural" }
-scirs2-optim = { version = "0.1.0-beta.1", path = "./scirs2-optim" }
-scirs2-graph = { version = "0.1.0-beta.1", path = "./scirs2-graph" }
-scirs2-transform = { version = "0.1.0-beta.1", path = "./scirs2-transform" }
-scirs2-metrics = { version = "0.1.0-beta.1", path = "./scirs2-metrics", default-features = false }
-scirs2-text = { version = "0.1.0-beta.1", path = "./scirs2-text" }
-scirs2-vision = { version = "0.1.0-beta.1", path = "./scirs2-vision" }
-scirs2-series = { version = "0.1.0-beta.1", path = "./scirs2-series" }
-scirs2-autograd = { version = "0.1.0-beta.1", path = "./scirs2-autograd" }
+scirs2-neural = { version = "0.1.0-beta.2", path = "./scirs2-neural" }
+# scirs2-optim moved to independent OptiRS project from v0.1.0-beta.2
+scirs2-graph = { version = "0.1.0-beta.2", path = "./scirs2-graph" }
+scirs2-transform = { version = "0.1.0-beta.2", path = "./scirs2-transform" }
+scirs2-metrics = { version = "0.1.0-beta.2", path = "./scirs2-metrics", default-features = false }
+scirs2-text = { version = "0.1.0-beta.2", path = "./scirs2-text" }
+scirs2-vision = { version = "0.1.0-beta.2", path = "./scirs2-vision" }
+scirs2-series = { version = "0.1.0-beta.2", path = "./scirs2-series" }
+scirs2-autograd = { version = "0.1.0-beta.2", path = "./scirs2-autograd" }
 
 
 [profile.release]

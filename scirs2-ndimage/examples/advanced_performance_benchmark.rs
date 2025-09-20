@@ -338,26 +338,29 @@ fn benchmark_edge_detection(
     results.push(result);
 
     // Compare with standard edge detection methods
-    let edge_methods = [
-        ("Standard Sobel", benchmark_standard_sobel),
-        ("Standard Canny", benchmark_standard_canny),
-    ];
+    #[cfg(feature = "simd")]
+    {
+        let edge_methods: [(&str, fn(&Array2<f64>) -> NdimageResult<Array2<f64>>); 2] = [
+            ("Standard Sobel", benchmark_standard_sobel),
+            ("Standard Canny", benchmark_standard_canny),
+        ];
 
-    for (method_name, benchmark_fn) in edge_methods {
-        let mut durations = Vec::new();
+        for (method_name, benchmark_fn) in edge_methods {
+            let mut durations = Vec::new();
 
-        for _ in 0..config.iterations {
-            let start = Instant::now();
-            let _result = benchmark_fn(image)?;
-            durations.push(start.elapsed());
+            for _ in 0..config.iterations {
+                let start = Instant::now();
+                let _result = benchmark_fn(image)?;
+                durations.push(start.elapsed());
+            }
+
+            let result = BenchmarkResult::new(method_name.to_string(), image.dim(), &durations);
+
+            if config.verbose {
+                result.display();
+            }
+            results.push(result);
         }
-
-        let result = BenchmarkResult::new(method_name.to_string(), image.dim(), &durations);
-
-        if config.verbose {
-            result.display();
-        }
-        results.push(result);
     }
 
     Ok(results)
@@ -366,19 +369,25 @@ fn benchmark_edge_detection(
 #[cfg(feature = "simd")]
 #[allow(dead_code)]
 fn benchmark_standard_sobel(image: &Array2<f64>) -> NdimageResult<Array2<f64>> {
-    sobel(&image.view(), None, None, None)
+    sobel(image, 0, None)
 }
 
 #[cfg(feature = "simd")]
 #[allow(dead_code)]
 fn benchmark_standard_canny(image: &Array2<f64>) -> NdimageResult<Array2<f64>> {
-    canny(
-        image.view(),
-        1.0,  // sigma
-        0.1,  // low_threshold
-        0.3,  // high_threshold
-        None, // mask
-    )
+    // Convert f64 image to f32 for canny function
+    let image_f32 = image.mapv(|x| x as f32);
+
+    // Call canny and convert result back to f64
+    let result_f32 = canny(
+        &image_f32, 1.0f32, // sigma
+        0.1f32, // low_threshold
+        0.3f32, // high_threshold
+        None,   // mask
+    );
+
+    // Convert result back to f64
+    Ok(result_f32.mapv(|x| x as f64))
 }
 
 #[allow(dead_code)]

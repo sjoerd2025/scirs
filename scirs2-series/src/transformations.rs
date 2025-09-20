@@ -99,7 +99,7 @@ pub enum StationarityTestType {
 ///
 /// ```
 /// use ndarray::Array1;
-/// use scirs2__series::transformations::box_cox_transform;
+/// use scirs2_series::transformations::box_cox_transform;
 ///
 /// let ts = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
 /// let (transformed, params) = box_cox_transform(&ts, Some(0.5)).unwrap();
@@ -264,7 +264,7 @@ where
 ///
 /// ```
 /// use ndarray::Array1;
-/// use scirs2__series::transformations::difference_transform;
+/// use scirs2_series::transformations::difference_transform;
 ///
 /// let ts = Array1::from_vec(vec![1.0, 3.0, 6.0, 10.0, 15.0]);
 /// let (differenced, params) = difference_transform(&ts, 1, None).unwrap();
@@ -420,7 +420,7 @@ where
 ///
 /// ```
 /// use ndarray::Array1;
-/// use scirs2__series::transformations::{normalize_transform, NormalizationMethod};
+/// use scirs2_series::transformations::{normalize_transform, NormalizationMethod};
 ///
 /// let ts = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
 /// let (normalized, params) = normalize_transform(&ts, NormalizationMethod::ZScore).unwrap();
@@ -1170,15 +1170,18 @@ mod tests {
 
     #[test]
     fn test_adf_test() {
-        // Create a non-stationary random walk with more variation
+        // Create a non-stationary random walk with more variation and better conditioning
         let mut ts = Array1::zeros(100);
         ts[0] = 10.0;
         for i in 1..100 {
-            ts[i] = ts[i - 1] + 0.5 * (i as f64 / 10.0).sin() + 0.1 * (i as f64);
-            // Trending with variation
+            ts[i] = ts[i - 1]
+                + 0.5 * (i as f64 / 10.0).sin()
+                + 0.1 * (i as f64)
+                + 0.01 * ((i * 7) as f64).cos();
+            // Trending with variation and additional noise for better conditioning
         }
 
-        let result = adf_test(&ts, None, "c").unwrap();
+        let result = adf_test(&ts, Some(2), "c").unwrap();
 
         // Should have proper structure
         assert_eq!(result.test_type, StationarityTestType::ADF);

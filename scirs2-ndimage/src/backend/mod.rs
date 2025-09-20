@@ -26,7 +26,7 @@ pub use concrete_gpu_backends::CudaContext;
 pub use concrete_gpu_backends::OpenCLContext;
 // TODO: Implement MetalContext in concrete_gpu_backends.rs
 // #[cfg(all(target_os = "macos", feature = "metal"))]
-// pub use concrete_gpu__backends::MetalContext;
+// pub use concrete_gpu_backends::MetalContext;
 
 use crate::error::{NdimageError, NdimageResult};
 use ndarray::{Array, ArrayView, Dimension};
@@ -117,7 +117,7 @@ pub struct BackendExecutor {
 impl BackendExecutor {
     pub fn new(config: BackendConfig) -> NdimageResult<Self> {
         #[cfg(feature = "gpu")]
-        let gpu_context = match config.backend {
+        let gpu_context: Option<Arc<dyn GpuContext>> = match config.backend {
             #[cfg(feature = "cuda")]
             Backend::Cuda => Some(Arc::new(CudaContext::new(config.device_id)?)),
             #[cfg(feature = "opencl")]
@@ -246,7 +246,7 @@ impl<T: Float + FromPrimitive + Debug + Clone> GaussianFilterOp<T> {
 
 impl<T, D> BackendOp<T, D> for GaussianFilterOp<T>
 where
-    T: Float + FromPrimitive + Debug + Clone + Send + Sync + 'static,
+    T: Float + FromPrimitive + Debug + Clone + Default + Send + Sync + 'static,
     D: Dimension + 'static,
 {
     fn execute_cpu(&self, input: &ArrayView<T, D>) -> NdimageResult<Array<T, D>> {
@@ -292,7 +292,7 @@ fn cuda_gaussian_filter<T, D>(
     _truncate: Option<T>,
 ) -> NdimageResult<Array<T, D>>
 where
-    T: Float + FromPrimitive + Debug + Clone + Send + Sync + 'static,
+    T: Float + FromPrimitive + Debug + Clone + Default + Send + Sync + 'static,
     D: Dimension,
 {
     // Currently only support 2D arrays for GPU acceleration

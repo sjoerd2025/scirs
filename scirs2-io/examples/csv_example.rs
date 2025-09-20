@@ -2,12 +2,17 @@ use ndarray::{array, Array1};
 use scirs2_io::csv::{
     read_csv, write_csv, write_csv_columns, CsvReaderConfig, CsvWriterConfig, LineEnding,
 };
+use std::env;
 use std::error::Error;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn Error>> {
+    // Use environment variable or temp directory for output
+    let output_dir = env::var("SCIRS2_EXAMPLE_OUTPUT_DIR")
+        .unwrap_or_else(|_| env::temp_dir().to_string_lossy().to_string());
+
     // Path to example data file
-    let data_path = "/media/kitasan/Backup/scirs/scirs2-io/examples/data.csv";
+    let data_path = format!("{}/scirs2_csv_example_data.csv", output_dir);
 
     println!("Reading CSV file as strings...");
     // Read CSV with default configuration
@@ -15,7 +20,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         comment_char: Some('#'),
         ..Default::default()
     };
-    let (headers, data) = read_csv(data_path, Some(config))?;
+    let (headers, data) = read_csv(&data_path, Some(config))?;
     println!("Headers: {:?}", headers);
     println!("Data shape: {:?}", data.shape());
     println!("First row: {:?}", data.row(0));
@@ -27,7 +32,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         has_header: true,
         ..Default::default()
     };
-    let (_headers, data) = read_csv(data_path, Some(config))?;
+    let (_headers, data) = read_csv(&data_path, Some(config))?;
     println!("Number of rows read: {}", data.shape()[0]);
 
     println!("\nReading CSV file as numeric data...");
@@ -38,7 +43,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         ..Default::default()
     };
     // Read the full file first to get headers
-    let (all_headers, string_data) = read_csv(data_path, Some(config.clone()))?;
+    let (all_headers, string_data) = read_csv(&data_path, Some(config.clone()))?;
 
     // Extract numeric columns
     let numeric_columns = vec![1, 2, 3]; // Age, Height, Weight columns
@@ -76,13 +81,9 @@ fn main() -> Result<(), Box<dyn Error>> {
     ];
 
     // Write with default configuration
-    write_csv(
-        "/media/kitasan/Backup/scirs/scirs2-io/examples/output.csv",
-        &data_to_write,
-        Some(&write_headers),
-        None,
-    )?;
-    println!("Wrote data to /media/kitasan/Backup/scirs/scirs2-io/examples/output.csv");
+    let output_path = format!("{}/scirs2_csv_example_output.csv", output_dir);
+    write_csv(&output_path, &data_to_write, Some(&write_headers), None)?;
+    println!("Wrote data to {}", output_path);
 
     // Write with custom configuration (semicolon separator, CRLF line endings)
     let write_config = CsvWriterConfig {
@@ -91,13 +92,14 @@ fn main() -> Result<(), Box<dyn Error>> {
         always_quote: true,
         ..Default::default()
     };
+    let semicolon_output_path = format!("{}/scirs2_csv_example_output_semicolon.csv", output_dir);
     write_csv(
-        "/media/kitasan/Backup/scirs/scirs2-io/examples/output_semicolon.csv",
+        &semicolon_output_path,
         &data_to_write,
         Some(&write_headers),
         Some(write_config),
     )?;
-    println!("Wrote data to /media/kitasan/Backup/scirs/scirs2-io/examples/output_semicolon.csv");
+    println!("Wrote data to {}", semicolon_output_path);
 
     println!("\nWriting columns to CSV file...");
     // Create some columns to write
@@ -109,13 +111,9 @@ fn main() -> Result<(), Box<dyn Error>> {
     let column_headers = vec!["X".to_string(), "Y".to_string(), "Z".to_string()];
 
     // Write columns to CSV
-    write_csv_columns(
-        "/media/kitasan/Backup/scirs/scirs2-io/examples/columns.csv",
-        &columns,
-        Some(&column_headers),
-        None,
-    )?;
-    println!("Wrote columns to /media/kitasan/Backup/scirs/scirs2-io/examples/columns.csv");
+    let columns_output_path = format!("{}/scirs2_csv_example_columns.csv", output_dir);
+    write_csv_columns(&columns_output_path, &columns, Some(&column_headers), None)?;
+    println!("Wrote columns to {}", columns_output_path);
 
     println!("\nCSV IO operations completed successfully!");
     Ok(())

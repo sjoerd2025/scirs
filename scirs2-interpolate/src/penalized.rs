@@ -136,8 +136,8 @@ where
     /// # #[cfg(feature = "linalg")]
     /// # {
     /// use ndarray::array;
-    /// use scirs2__interpolate::penalized::{PSpline, PenaltyType};
-    /// use scirs2__interpolate::bspline::ExtrapolateMode;
+    /// use scirs2_interpolate::penalized::{PSpline, PenaltyType};
+    /// use scirs2_interpolate::bspline::ExtrapolateMode;
     ///
     /// // Create some noisy data
     /// let x = array![0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0];
@@ -468,7 +468,7 @@ where
                     };
 
                     // u and vt are already extracted from the SVD tuple above
-                    let mut s_inv = Array2::zeros((_a.ncols(), a.nrows()));
+                    let mut s_inv = Array2::zeros((a.ncols(), a.nrows()));
 
                     // Threshold for singular values (to handle near-zero values)
                     let threshold = T::from_f64(1e-10).unwrap();
@@ -934,7 +934,7 @@ mod tests {
         // Test cross-validation with a few lambda values
         let lambda_values = array![0.001, 0.01, 0.1, 1.0, 10.0];
 
-        let (best_lambda_) = cross_validate_lambda(
+        let (best_lambda_, _) = cross_validate_lambda(
             &x.view(),
             &y.view(),
             10,
@@ -948,7 +948,7 @@ mod tests {
         // Best lambda should be one of the values in the array
         assert!(lambda_values
             .iter()
-            .any(|&x| (x - best_lambda).abs() < 1e-10));
+            .any(|&x| (x - best_lambda_).abs() < 1e-10));
 
         // Fit with the best lambda
         let pspline = PSpline::new(
@@ -956,7 +956,7 @@ mod tests {
             &y.view(),
             10,
             3,
-            best_lambda,
+            best_lambda_,
             PenaltyType::SecondDerivative,
             ExtrapolateMode::Extrapolate,
         )

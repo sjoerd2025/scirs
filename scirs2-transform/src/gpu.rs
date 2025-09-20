@@ -6,7 +6,7 @@
 use crate::error::{Result, TransformError};
 use ndarray::{Array1, Array2, ArrayView2};
 use scirs2_core::gpu::{GpuBackend, GpuContext};
-use scirs2_core::validation::{check_array_finite, check_not_empty, check_positive};
+use scirs2_core::validation::{check_not_empty, check_positive, checkarray_finite};
 
 /// GPU-accelerated Principal Component Analysis
 #[cfg(feature = "gpu")]
@@ -50,8 +50,8 @@ impl GpuPCA {
     /// # Ok(())
     /// # }
     /// ```
-    pub fn new(_ncomponents: usize) -> Result<Self> {
-        check_positive(_n_components, "_n_components")?;
+    pub fn new(n_components: usize) -> Result<Self> {
+        check_positive(n_components, "n_components")?;
 
         let gpu_context = GpuContext::new(GpuBackend::preferred()).map_err(|e| {
             TransformError::ComputationError(format!("Failed to initialize GPU: {}", e))
@@ -95,7 +95,7 @@ impl GpuPCA {
     /// ```
     pub fn fit(&mut self, x: &ArrayView2<f64>) -> Result<()> {
         check_not_empty(x, "x")?;
-        check_array_finite(x, "x")?;
+        checkarray_finite(x, "x")?;
 
         // Validate input
         let (n_samples, n_features) = x.dim();
@@ -129,7 +129,7 @@ impl GpuPCA {
     /// Returns an error indicating that GPU PCA is not fully implemented yet
     pub fn transform(&self, x: &ArrayView2<f64>) -> Result<Array2<f64>> {
         check_not_empty(x, "x")?;
-        check_array_finite(x, "x")?;
+        checkarray_finite(x, "x")?;
 
         Err(TransformError::NotImplemented(
             "GPU-accelerated PCA transform is not yet fully implemented. Use CPU PCA instead."
@@ -239,8 +239,8 @@ pub struct GpuTSNE {
 #[cfg(feature = "gpu")]
 impl GpuTSNE {
     /// Create new GPU t-SNE instance
-    pub fn new(_ncomponents: usize) -> Result<Self> {
-        check_positive(_n_components, "_n_components")?;
+    pub fn new(n_components: usize) -> Result<Self> {
+        check_positive(n_components, "n_components")?;
 
         let gpu_context = GpuContext::new(GpuBackend::preferred()).map_err(|e| {
             TransformError::ComputationError(format!("Failed to initialize GPU: {}", e))
@@ -262,13 +262,13 @@ impl GpuTSNE {
     }
 
     /// Set learning rate
-    pub fn with_learning_rate(mut self, learningrate: f64) -> Self {
+    pub fn with_learning_rate(mut self, learning_rate: f64) -> Self {
         self.learning_rate = learning_rate;
         self
     }
 
     /// Set maximum iterations
-    pub fn with_max_iter(mut self, maxiter: usize) -> Self {
+    pub fn with_max_iter(mut self, max_iter: usize) -> Self {
         self.max_iter = max_iter;
         self
     }

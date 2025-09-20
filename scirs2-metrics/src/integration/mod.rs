@@ -10,7 +10,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! scirs2-metrics = { version = "0.1.0-alpha.3", features = ["neural_common"] }
+//! scirs2-metrics = { version = "0.1.0-beta.2", features = ["neural_common"] }
 //! ```
 //!
 //! ## Basic Usage
@@ -60,7 +60,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! scirs2-metrics = { version = "0.1.0-alpha.3", features = ["optim_integration"] }
+//! scirs2-metrics = { version = "0.1.0-beta.2", features = ["optim_integration"] }
 //! ```
 //!
 //! ## Basic Usage
@@ -79,11 +79,11 @@
 //!
 //! // Create an actual scheduler using the configuration
 //! let mut scheduler = MetricLRScheduler::new(
-//!     scheduler_configinitial_lr,
-//!     scheduler_configfactor,
-//!     scheduler_configpatience,
-//!     scheduler_configmin_lr,
-//!     &scheduler_configmetric_name,
+//!     scheduler_config.initial_lr,
+//!     scheduler_config.factor,
+//!     scheduler_config.patience,
+//!     scheduler_config.min_lr,
+//!     &scheduler_config.metric_name,
 //!     true // maximize
 //! );
 //!

@@ -22,6 +22,7 @@ use scirs2_core::array_protocol::{
     training::{DataLoader, InMemoryDataset, Loss, MSELoss},
     NdarrayWrapper,
 };
+use scirs2_core::ndarray_ext::stats::mean;
 use statrs::statistics::Statistics;
 
 /// A simple feed-forward neural network for demonstrating backpropagation
@@ -50,8 +51,7 @@ fn main() {
     println!("\nCreating model parameters with gradient tracking:");
 
     // First layer parameters
-    let w1_array =
-        Array2::<f64>::from_shape_fn((2, 4), |_| rand::random::<f64>() * 2.0.saturating_sub(1).0);
+    let w1_array = Array2::<f64>::from_shape_fn((2, 4), |_| rand::random::<f64>() * 2.0 - 1.0);
     let b1_array = Array1::<f64>::zeros(4);
     println!(
         "Layer 1: {} -> {}",
@@ -60,8 +60,7 @@ fn main() {
     );
 
     // Second layer parameters
-    let w2_array =
-        Array2::<f64>::from_shape_fn((4, 1), |_| rand::random::<f64>() * 2.0.saturating_sub(1).0);
+    let w2_array = Array2::<f64>::from_shape_fn((4, 1), |_| rand::random::<f64>() * 2.0 - 1.0);
     let b2_array = Array1::<f64>::zeros(1);
     println!(
         "Layer 2: {} -> {}",
@@ -191,10 +190,10 @@ fn main() {
         println!("Epoch {}: loss = {:.4}", epoch + 1, avg_loss);
 
         // Update weights with gradients
-        w1.update_with_gradient(learningrate);
-        b1.update_with_gradient(learningrate);
-        w2.update_with_gradient(learningrate);
-        b2.update_with_gradient(learningrate);
+        w1.update_with_learningrate(learningrate);
+        b1.update_with_learningrate(learningrate);
+        w2.update_with_learningrate(learningrate);
+        b2.update_with_learningrate(learningrate);
 
         // Zero gradients for next epoch
         w1.zero_grad();
@@ -309,7 +308,7 @@ fn main() {
     let mut model = Sequential::new("XorModel", Vec::new());
 
     // Add layers
-    model.add_layer(Box::new(Linear::withshape(
+    model.add_layer(Box::new(Linear::new_random(
         "fc1",
         input_dim,
         hidden_dim,
@@ -317,7 +316,7 @@ fn main() {
         Some(ActivationFunc::Sigmoid),
     )));
 
-    model.add_layer(Box::new(Linear::withshape(
+    model.add_layer(Box::new(Linear::new_random(
         "fc2",
         hidden_dim,
         output_dim,
@@ -347,7 +346,7 @@ fn main() {
     );
 
     // Create loss function
-    let lossfn = MSELoss::new(Some(mean));
+    let lossfn = MSELoss::new(Some("mean"));
 
     // Training loop with automatic backpropagation
     println!("\nTraining with automatic backpropagation (10 epochs):");
@@ -550,7 +549,7 @@ impl GradientTensorExt for GradientTensor {
             let ndarray = array.as_array().clone();
 
             // Get the gradient (in a real implementation, this would come from the backward pass)
-            if let Some(grad) = self.grad() {
+            if let Some(grad) = self.grad_2() {
                 if let Some(grad_array) = grad.as_any().downcast_ref::<NdarrayWrapper<f64, Ix2>>() {
                     let grad_ndarray = grad_array.as_array();
 
@@ -604,8 +603,8 @@ impl GradientTensorExt for GradientTensor {
             let ndarray = array.as_array().clone();
 
             // Compute mean
-            let mean = ndarray.mean().unwrap_or(0.0);
-            let result = Array1::from_elem(1, mean);
+            let mean_val = ndarray.mean();
+            let result = Array1::from_elem(1, mean_val);
 
             // Create a new gradient tensor with the result
             // In a real implementation, this would also record the operation for backpropagation

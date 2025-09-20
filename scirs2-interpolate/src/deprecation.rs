@@ -14,14 +14,15 @@
 //! # Usage
 //!
 //! ```rust
-//! use scirs2__interpolate::deprecation::{deprecated_function, DeprecationLevel};
+//! use scirs2_interpolate::{deprecated_function, deprecation::DeprecationLevel};
 //!
-//! #[deprecated_function(
-//!     since = "0.1.0",
-//!     note = "Use make_enhanced_rbf_interpolator instead",
-//!     alternative = "enhanced_rbf::make_enhanced_rbf_interpolator"
-//! )]
 //! pub fn old_rbf_function() {
+//!     deprecated_function!(
+//!         name = "old_rbf_function",
+//!         since = "0.1.0",
+//!         reason = "Use make_enhanced_rbf_interpolator instead",
+//!         alternative = "enhanced_rbf::make_enhanced_rbf_interpolator"
+//!     );
 //!     // Implementation
 //! }
 //! ```
@@ -58,7 +59,7 @@ impl Default for DeprecationConfig {
             warnings_as_errors: false,
             max_warning_count: 3,
             warning_counts: HashMap::new(),
-            current_version: "0.1.0-beta.1".to_string(),
+            current_version: "0.1.0-beta.2".to_string(),
         }
     }
 }

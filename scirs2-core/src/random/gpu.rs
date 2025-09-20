@@ -135,7 +135,13 @@ impl GpuRandomGenerator {
             generator_type: generatortype.clone(),
         }));
 
-        let device = Arc::new(GpuContext::new(crate::gpu::GpuBackend::Cpu)?); // TODO: Proper device initialization
+        // Use automatic backend detection to find the best available GPU backend
+        let preferred_backend = crate::gpu::GpuBackend::preferred();
+        let device = Arc::new(GpuContext::new(preferred_backend)?);
+
+        // Log the selected backend for debugging
+        #[cfg(feature = "logging")]
+        log::info!("GPU RNG initialized with backend: {}", preferred_backend);
 
         let mut generator = Self {
             device,
@@ -558,7 +564,7 @@ impl GpuRandomGenerator {
 
             normal_samples.push(mean + std_dev * r * theta.cos());
 
-            if 0 + 1 < len {
+            if 1 < len {
                 normal_samples.push(mean + std_dev * r * theta.sin());
             }
         }
@@ -872,7 +878,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_benchmark_results() {
         use std::time::Duration;
 

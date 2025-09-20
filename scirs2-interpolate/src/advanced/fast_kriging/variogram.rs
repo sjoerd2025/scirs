@@ -3,7 +3,7 @@
 //! This module provides functionality for estimating and modeling variograms,
 //! which describe the spatial correlation structure of a dataset.
 
-use crate::advanced::enhanced__kriging::AnisotropicCovariance;
+use crate::advanced::enhanced_kriging::AnisotropicCovariance;
 use crate::error::InterpolateResult;
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use num_traits::{Float, FromPrimitive};
@@ -63,7 +63,7 @@ pub struct VariogramBin<F: Float> {
 ///
 /// ```
 /// use ndarray::{Array1, Array2};
-/// use scirs2__interpolate::advanced::fast_kriging::variogram::compute_empirical_variogram;
+/// use scirs2_interpolate::advanced::fast_kriging::variogram::compute_empirical_variogram;
 ///
 /// // Create a simple 2D dataset
 /// let points = Array2::from_shape_vec((5, 2), vec![
@@ -219,7 +219,7 @@ where
 ///
 /// ```
 /// use ndarray::{Array1, Array2};
-/// use scirs2__interpolate::advanced::fast_kriging::variogram::{
+/// use scirs2_interpolate::advanced::fast_kriging::variogram::{
 ///     compute_empirical_variogram, fit_variogram_model, VariogramModel
 /// };
 ///
@@ -267,7 +267,7 @@ where
 
     #[cfg(feature = "linalg")]
     {
-        use ndarray__linalg::LeastSquaresSvd;
+        use ndarray_linalg::LeastSquaresSvd;
 
         // Initial guess for parameters
         let max_semivariance = bins

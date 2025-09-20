@@ -1007,7 +1007,7 @@ impl<
         Ok(svg)
     /// Export attention data as JSON
     fn export_attention_data_as_json(&self) -> Result<String> {
-        use serde__json::json;
+        use serde_json::json;
         let mut layers_data = serde_json::Map::new();
             let weights_data: Vec<Vec<f64>> = attention_data
                 .weights
@@ -1035,7 +1035,7 @@ impl<
             "attention_layers": layers_data,
             "export_timestamp": chrono::Utc::now().to_rfc3339(),
             "framework": "scirs2-neural",
-            "version": "0.1.0-beta.1"
+            "version": "0.1.0-beta.2"
         });
         serde_json::to_string_pretty(&export_data)
             .map_err(|e| NeuralError::ComputationError(format!("JSON serialization error: {}", e)))

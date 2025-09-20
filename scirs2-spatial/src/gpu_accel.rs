@@ -28,6 +28,7 @@
 //! use scirs2_spatial::gpu_accel::{GpuDistanceMatrix, GpuKMeans};
 //! use ndarray::array;
 //!
+//! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
 //! // GPU distance matrix computation
 //! let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]];
 //!
@@ -39,11 +40,15 @@
 //! let gpu_kmeans = GpuKMeans::new(2)?;
 //! let (centroids, assignments) = gpu_kmeans.fit(&points.view()).await?;
 //! println!("GPU centroids: {:?}", centroids);
+//! # Ok(())
+//! # }
 //! ```
 
 use crate::error::SpatialResult;
 use crate::memory_pool::DistancePool;
 use ndarray::{Array1, Array2, ArrayView2};
+use std::path::Path;
+use std::process::Command;
 use std::sync::Arc;
 
 // Type alias for complex return types
@@ -263,9 +268,7 @@ impl GpuDevice {
 
     // GPU backend detection implementations
     #[cfg(feature = "cuda")]
-    fn check_cuda_available(&self) -> bool {
-        use std::process::Command;
-
+    fn check_cuda_available() -> bool {
         // Check for NVIDIA driver and CUDA runtime
         if let Ok(output) = Command::new("nvidia-smi")
             .arg("--query-gpu=count")
@@ -284,7 +287,6 @@ impl GpuDevice {
         // Fallback: check for CUDA libraries
         #[cfg(target_os = "linux")]
         {
-            use std::path::Path;
             Path::exists(Path::new("/usr/local/cuda/lib64/libcuda.so"))
                 || Path::exists(Path::new("/usr/lib/x86_64-linux-gnu/libcuda.so"))
                 || Path::exists(Path::new("/usr/lib64/libcuda.so"))
@@ -300,7 +302,7 @@ impl GpuDevice {
     }
 
     #[cfg(feature = "cuda")]
-    fn get_cuda_device_count(&self) -> usize {
+    fn get_cuda_device_count() -> usize {
         if let Ok(output) = Command::new("nvidia-smi")
             .arg("--query-gpu=count")
             .arg("--format=csv,noheader,nounits")
@@ -331,7 +333,7 @@ impl GpuDevice {
     }
 
     #[cfg(feature = "rocm")]
-    fn check_rocm_available(&self) -> bool {
+    fn check_rocm_available() -> bool {
         // Check for ROCm tools
         if let Ok(output) = Command::new("rocm-smi").arg("--showid").output() {
             if output.status.success() {
@@ -352,7 +354,7 @@ impl GpuDevice {
     }
 
     #[cfg(feature = "rocm")]
-    fn get_rocm_device_count(&self) -> usize {
+    fn get_rocm_device_count() -> usize {
         if let Ok(output) = Command::new("rocm-smi").arg("--showid").output() {
             if output.status.success() {
                 if let Ok(list_str) = String::from_utf8(output.stdout) {
@@ -390,7 +392,7 @@ impl GpuDevice {
     }
 
     #[cfg(feature = "vulkan")]
-    fn check_vulkan_available(&self) -> bool {
+    fn check_vulkan_available() -> bool {
         // Check for vulkaninfo tool
         if let Ok(output) = Command::new("vulkaninfo").arg("--summary").output() {
             if output.status.success() {
@@ -429,7 +431,7 @@ impl GpuDevice {
 
     /// Get detailed CUDA device information
     #[cfg(feature = "cuda")]
-    fn get_cuda_device_info(&self) -> GpuDeviceInfoResult {
+    fn get_cuda_device_info() -> GpuDeviceInfoResult {
         let mut device_names = Vec::new();
         let mut memory_info = Vec::new();
 
@@ -475,7 +477,7 @@ impl GpuDevice {
 
     /// Get CUDA compute capability
     #[cfg(feature = "cuda")]
-    fn get_cuda_compute_capability(&self) -> Option<(u32, u32)> {
+    fn get_cuda_compute_capability() -> Option<(u32, u32)> {
         if let Ok(output) = Command::new("nvidia-smi")
             .arg("--query-gpu=compute_cap")
             .arg("--format=csv,noheader,nounits")
@@ -502,7 +504,7 @@ impl GpuDevice {
 
     /// Get detailed ROCm device information
     #[cfg(feature = "rocm")]
-    fn get_rocm_device_info(&self) -> GpuDeviceInfoResult {
+    fn get_rocm_device_info() -> GpuDeviceInfoResult {
         let mut device_names = Vec::new();
         let mut memory_info = Vec::new();
 
@@ -564,7 +566,7 @@ impl GpuDevice {
 
     /// Get detailed Vulkan device information
     #[cfg(feature = "vulkan")]
-    fn get_vulkan_device_info(&self) -> GpuDeviceInfoResult {
+    fn get_vulkan_device_info() -> GpuDeviceInfoResult {
         let mut device_names = Vec::new();
         let mut memory_info = Vec::new();
 
@@ -598,25 +600,25 @@ impl GpuDevice {
 
     #[cfg(not(feature = "cuda"))]
     #[allow(dead_code)]
-    fn get_cuda_device_info(&self) -> GpuDeviceInfoResult {
+    fn get_cuda_device_info() -> GpuDeviceInfoResult {
         Ok((Vec::new(), Vec::new()))
     }
 
     #[cfg(not(feature = "cuda"))]
     #[allow(dead_code)]
-    fn get_cuda_compute_capability(&self) -> Option<(u32, u32)> {
+    fn get_cuda_compute_capability() -> Option<(u32, u32)> {
         None
     }
 
     #[cfg(not(feature = "rocm"))]
     #[allow(dead_code)]
-    fn get_rocm_device_info(&self) -> GpuDeviceInfoResult {
+    fn get_rocm_device_info() -> GpuDeviceInfoResult {
         Ok((Vec::new(), Vec::new()))
     }
 
     #[cfg(not(feature = "vulkan"))]
     #[allow(dead_code)]
-    fn get_vulkan_device_info(&self) -> GpuDeviceInfoResult {
+    fn get_vulkan_device_info() -> GpuDeviceInfoResult {
         Ok((Vec::new(), Vec::new()))
     }
 }

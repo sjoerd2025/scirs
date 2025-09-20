@@ -253,7 +253,7 @@ where
 
 /// Compute the inner product of two complex vectors
 ///
-/// Computes <x, y> = ∑ x[i]* y[i], where x[i]* is the complex conjugate.
+/// Computes <x, y> = ∑ x\[i\]* y\[i\], where x\[i\]* is the complex conjugate.
 ///
 /// # Arguments
 ///
@@ -484,11 +484,11 @@ where
 ///     [Complex::new(1.0, 0.0), Complex::new(2.0, 0.0)]
 /// ];
 ///
-/// let (eval_) = power_method(&h.view(), 100, 1e-10_f64).unwrap();
+/// let (eval_, _evec) = power_method(&h.view(), 100, 1e-10_f64).unwrap();
 ///
 /// // The dominant eigenvalue should be 3
-/// assert!((eval.re - 3.0_f64).abs() < 1e-10_f64);
-/// assert!(eval.im.abs() < 1e-10_f64);
+/// assert!((eval_.re - 3.0_f64).abs() < 1e-10_f64);
+/// assert!(eval_.im.abs() < 1e-10_f64);
 /// ```
 #[allow(dead_code)]
 pub fn power_method<F>(

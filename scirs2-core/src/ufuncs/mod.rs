@@ -8,6 +8,10 @@ use crate::error::{CoreError, CoreResult};
 use ndarray::{Array, ArrayView, Ix1, Ix2};
 use std::ops;
 
+// External module declarations
+pub mod core;
+pub mod reduction;
+
 /// Common mathematical operations for numerical arrays (1D)
 pub mod math {
     use super::*;
@@ -610,19 +614,20 @@ pub mod binary2d {
 }
 
 /// Reduction operations for arrays
-pub mod reduction {
+// Module for 2D-specific reduction operations with error handling
+pub mod reduction2d {
     use super::*;
     use crate::error::{ErrorContext, ErrorLocation};
     use num_traits::{Float, FromPrimitive, One, Zero};
 
-    /// Sum of array elements
-    pub fn sum<T>(array: &ArrayView<T, Ix2>, axis: Option<usize>) -> CoreResult<Array<T, Ix1>>
+    /// Sum of 2D array elements with error handling
+    pub fn sum_2d<T>(array: &ArrayView<T, Ix2>, axis: Option<usize>) -> CoreResult<Array<T, Ix1>>
     where
         T: Clone + Default + ops::Add<Output = T> + Zero,
     {
         match axis {
             Some(ax) => {
-                let (rows, cols) = (_array.shape()[0], array.shape()[1]);
+                let (rows, cols) = (array.shape()[0], array.shape()[1]);
 
                 match ax {
                     0 => {
@@ -684,7 +689,7 @@ pub mod reduction {
     {
         match axis {
             Some(ax) => {
-                let (rows, cols) = (_array.shape()[0], array.shape()[1]);
+                let (rows, cols) = (array.shape()[0], array.shape()[1]);
 
                 match ax {
                     0 => {
@@ -738,7 +743,7 @@ pub mod reduction {
     {
         match axis {
             Some(ax) => {
-                let (rows, cols) = (_array.shape()[0], array.shape()[1]);
+                let (rows, cols) = (array.shape()[0], array.shape()[1]);
 
                 match ax {
                     0 => {
@@ -776,7 +781,7 @@ pub mod reduction {
             }
             None => {
                 // Mean over all elements
-                let (rows, cols) = (_array.shape()[0], array.shape()[1]);
+                let (rows, cols) = (array.shape()[0], array.shape()[1]);
                 let n = T::from_usize(rows * cols).unwrap();
                 let mut sum = T::zero();
 
@@ -804,12 +809,12 @@ pub mod reduction {
     {
         match axis {
             Some(ax) => {
-                let (rows, cols) = (_array.shape()[0], array.shape()[1]);
+                let (rows, cols) = (array.shape()[0], array.shape()[1]);
 
                 match ax {
                     0 => {
                         // Variance along rows (result has length cols)
-                        let means = mean(_array, Some(0));
+                        let means = mean(array, Some(0));
                         let mut result = Array::<T, Ix1>::default(cols);
                         let n = T::from_usize(rows).unwrap();
 
@@ -826,7 +831,7 @@ pub mod reduction {
                     }
                     1 => {
                         // Variance along columns (result has length rows)
-                        let means = mean(_array, Some(1));
+                        let means = mean(array, Some(1));
                         let mut result = Array::<T, Ix1>::default(rows);
                         let n = T::from_usize(cols).unwrap();
 
@@ -846,11 +851,11 @@ pub mod reduction {
             }
             None => {
                 // Variance over all elements
-                let (rows, cols) = (_array.shape()[0], array.shape()[1]);
+                let (rows, cols) = (array.shape()[0], array.shape()[1]);
                 let n = T::from_usize(rows * cols).unwrap();
 
                 // Compute the mean
-                let mean_val = mean(_array, None)[0].clone();
+                let mean_val = mean(array, None)[0].clone();
 
                 // Compute the sum of squared differences from the mean
                 let mut sum_sq_diff = T::zero();
@@ -878,7 +883,7 @@ pub mod reduction {
             + FromPrimitive
             + Float,
     {
-        let variances = var(_array, axis);
+        let variances = var(array, axis);
 
         variances.mapv(|x| x.sqrt())
     }
@@ -890,7 +895,7 @@ pub mod reduction {
     {
         match axis {
             Some(ax) => {
-                let (rows, cols) = (_array.shape()[0], array.shape()[1]);
+                let (rows, cols) = (array.shape()[0], array.shape()[1]);
 
                 match ax {
                     0 => {
@@ -950,7 +955,7 @@ pub mod reduction {
     {
         match axis {
             Some(ax) => {
-                let (rows, cols) = (_array.shape()[0], array.shape()[1]);
+                let (rows, cols) = (array.shape()[0], array.shape()[1]);
 
                 match ax {
                     0 => {
@@ -1010,13 +1015,14 @@ pub use math2d::{
     reciprocal, round, sign, sin, sinh, sqrt, square, tan, tanh, trunc,
 };
 
-// Export reduction operations directly
+// Export reduction operations directly from the external module
 pub use reduction::{max, mean, min, product, std, sum, var};
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use ndarray::array;
+    use std::f64::consts::PI;
 
     #[test]
     fn test_math_unary() {
@@ -1060,19 +1066,19 @@ mod tests {
         let a = array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]];
 
         // Test sum reduction
-        let result = reduction::sum(&a.view(), None).unwrap();
+        let result = sum(&a.view(), None);
         assert_eq!(result, array![21.0]);
 
         // Test sum along axis 0
-        let result = reduction::sum(&a.view(), Some(0)).unwrap();
+        let result = sum(&a.view(), Some(0));
         assert_eq!(result, array![5.0, 7.0, 9.0]);
 
         // Test sum along axis 1
-        let result = reduction::sum(&a.view(), Some(1)).unwrap();
+        let result = sum(&a.view(), Some(1));
         assert_eq!(result, array![6.0, 15.0]);
 
         // Test mean reduction
-        let result = reduction::mean(&a.view(), None);
+        let result = mean(&a.view(), None);
         assert_eq!(result, array![3.5]);
     }
 }

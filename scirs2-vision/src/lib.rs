@@ -171,9 +171,9 @@ pub use gpu_ops::{
 
 // Re-export streaming operations
 pub use streaming::{
-    BatchProcessor, BlurStage, EdgeDetectionStage, Frame, FrameMetadata, GrayscaleStage,
-    MotionDetectionStage, PerformanceMonitor, PipelineMetrics, ProcessingStage, StreamPipeline,
-    StreamProcessor, VideoStreamReader,
+    AdvancedStreamPipeline, AdvancedStreamProcessor, BlurStage, EdgeDetectionStage, Frame,
+    FrameMetadata, GrayscaleStage, PipelineMetrics, ProcessingStage, SimplePerformanceMonitor,
+    StreamPipeline, StreamProcessor, VideoStreamReader,
 };
 
 // Re-export Advanced mode enhancements
@@ -221,8 +221,8 @@ pub use visual_slam::{
 // Re-export Advanced integration functionality
 pub use integration::{
     batch_process_advanced, process_with_advanced_mode, realtime_advanced_stream,
-    AdvancedProcessingResult, CrossModuleAdvancedProcessingResult, EmergentBehavior, FusionQuality,
-    NeuralQuantumHybridProcessor, PerformanceMetrics,
+    AdvancedProcessingResult, CrossModuleAdvancedProcessingResult, EmergentBehaviorDetection,
+    FusionQualityIndicators, NeuralQuantumHybridProcessor, PerformanceMetrics,
     UncertaintyQuantification as AdvancedUncertaintyQuantification,
 };
 

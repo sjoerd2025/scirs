@@ -89,7 +89,7 @@ impl SparseArray {
 
 impl fmt::Debug for SparseArray {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct(SparseArray)
+        f.debug_struct("SparseArray")
             .field("shape", &self.shape)
             .field("nnz", &self.nnz())
             .field("sparsity", &self.sparsity())
@@ -107,7 +107,9 @@ impl ArrayProtocol for SparseArray {
         })
     }
 
-    fn types(
+    fn array_function(
+        &self,
+        func: &ArrayFunction,
         _type_ids: &[TypeId],
         args: &[Box<dyn Any>],
         kwargs: &HashMap<String, Box<dyn Any>>,
@@ -123,13 +125,12 @@ impl ArrayProtocol for SparseArray {
                 let other = if let Some(sparse) = args[1].downcast_ref::<&dyn ArrayProtocol>() {
                     if let Some(sparse_array) = sparse.as_any().downcast_ref::<SparseArray>() {
                         sparse_array
-                    } else if let Some(ndarray_wrapper) =
-                        sparse.as_any().downcast_ref::<NdarrayWrapper<f64_>>()
+                    } else if let Some(ndarray_wrapper) = sparse
+                        .as_any()
+                        .downcast_ref::<NdarrayWrapper<f64, ndarray::Ix2>>()
                     {
                         // Convert ndarray to sparse array (simplified for example)
-                        return Ok(Box::new(SparseArray::from_dense(
-                            ndarray_wrapper.as_array(),
-                        )));
+                        return Ok(Box::new(SparseArray::array(ndarray_wrapper.as_array())));
                     } else {
                         return Err(NotImplemented);
                     }
@@ -146,7 +147,7 @@ impl ArrayProtocol for SparseArray {
                 let a_dense = self.to_dense();
                 let b_dense = other.to_dense();
                 let result_dense = a_dense.dot(&b_dense);
-                let result = SparseArray::from_dense(&result_dense);
+                let result = SparseArray::array(&result_dense);
 
                 Ok(Box::new(result))
             }
@@ -176,7 +177,7 @@ impl ArrayProtocol for SparseArray {
                 let a_dense = self.to_dense();
                 let b_dense = other.to_dense();
                 let result_dense = &a_dense + &b_dense;
-                let result = SparseArray::from_dense(&result_dense);
+                let result = SparseArray::array(&result_dense);
 
                 Ok(Box::new(result))
             }
@@ -186,13 +187,13 @@ impl ArrayProtocol for SparseArray {
                 let result: f64 = self.values.iter().sum();
 
                 // Check if summing along an axis
-                if let Some(axis_box) = kwargs.get(axis) {
+                if let Some(axis_box) = kwargs.get("axis") {
                     if let Some(axis) = axis_box.downcast_ref::<usize>() {
                         // For the example, we'll just convert to dense and use ndarray's sum
                         let dense = self.to_dense();
                         let result = dense.sum_axis(ndarray::Axis(*axis));
                         let sparse_result =
-                            SparseArray::from_dense(&result.into_dimensionality().unwrap());
+                            SparseArray::array(&result.into_dimensionality().unwrap());
                         return Ok(Box::new(sparse_result));
                     }
                 }
@@ -241,7 +242,7 @@ fn main() {
     dense[[4, 4]] = 5.0;
 
     // Create a sparse array from the dense array
-    let sparse = SparseArray::from_dense(&dense);
+    let sparse = SparseArray::array(&dense);
 
     println!("\nOriginal sparse array:");
     println!("{:?}", sparse);

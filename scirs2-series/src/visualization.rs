@@ -17,15 +17,15 @@
 //!
 //! # Examples
 //!
-//! ```rust
-//! use scirs2__series::visualization::{TimeSeriesPlot, PlotStyle, ExportFormat};
+//! ```rust,no_run
+//! use scirs2_series::visualization::{TimeSeriesPlot, PlotStyle, ExportFormat};
 //! use ndarray::Array1;
 //!
 //! let data = Array1::linspace(0.0, 10.0, 100);
 //! let ts_data = data.mapv(|x| (x * 2.0 * std::f64::consts::PI).sin());
 //!
 //! let mut plot = TimeSeriesPlot::new("Sample Time Series");
-//! plot.add_series("sine_wave", &data, &ts_data, PlotStyle::Line);
+//! plot.add_series("sine_wave", &data, &ts_data, PlotStyle::default());
 //! plot.show();
 //! ```
 

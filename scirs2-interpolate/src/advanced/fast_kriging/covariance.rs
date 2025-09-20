@@ -3,7 +3,7 @@
 //! This module provides implementations of covariance functions and related
 //! utilities for fast kriging interpolation.
 
-use crate::advanced::enhanced__kriging::AnisotropicCovariance;
+use crate::advanced::enhanced_kriging::AnisotropicCovariance;
 use crate::advanced::kriging::CovarianceFunction;
 use crate::error::InterpolateResult;
 use ndarray::{Array1, Array2, ArrayView1};
@@ -197,7 +197,7 @@ pub fn compute_low_rank_approximation<
     // SVD components with conditional compilation
     #[cfg(feature = "linalg")]
     let (u, s, vt) = {
-        use ndarray__linalg::SVD;
+        use ndarray_linalg::SVD;
         // Convert to f64 for SVD
         let sample_cov_f64 = sample_cov.mapv(|x| x.to_f64().unwrap());
         match sample_cov_f64.svd(true, true) {

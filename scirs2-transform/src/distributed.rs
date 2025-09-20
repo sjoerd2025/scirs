@@ -123,7 +123,7 @@ impl DistributedCoordinator {
         let (result_sender, result_receiver) = mpsc::unbounded_channel();
 
         let mut nodes = HashMap::new();
-        for node in &_config.nodes {
+        for node in &config.nodes {
             nodes.insert(node.id.clone(), node.clone());
         }
 
@@ -249,7 +249,7 @@ impl DistributedCoordinator {
                     .partial_cmp(score_b)
                     .unwrap_or(std::cmp::Ordering::Equal)
             })
-            .map(|(node_)| node)
+            .map(|(node_, _)| node_)
     }
 
     /// Send task to remote node via HTTP with retry logic and enhanced error handling
@@ -260,7 +260,7 @@ impl DistributedCoordinator {
         let mut last_error = None;
 
         for attempt in 0..MAX_RETRIES {
-            match Self::send_task_to_node_once(_node, task).await {
+            match Self::send_task_to_node_once(node, task).await {
                 Ok(result) => return Ok(result),
                 Err(e) => {
                     last_error = Some(e);
@@ -283,7 +283,7 @@ impl DistributedCoordinator {
         // Validate _node availability
         if node.address.is_empty() || node.port == 0 {
             return Err(TransformError::DistributedError(format!(
-                "Invalid _node configuration: {}:{}",
+                "Invalid node configuration: {}:{}",
                 node.address, node.port
             )));
         }
@@ -355,9 +355,9 @@ impl DistributedCoordinator {
         // Simple compression simulation - in real implementation use zlib/gzip
         if data.len() > 1024 {
             // Simulate 50% compression ratio for large _data
-            Ok(_data[.._data.len() / 2].to_vec())
+            Ok(data[..data.len() / 2].to_vec())
         } else {
-            Ok(_data.to_vec())
+            Ok(data.to_vec())
         }
     }
 
@@ -391,8 +391,8 @@ impl DistributedCoordinator {
 
     /// Execute fit task locally or remotely
     async fn execute_fit_task(data: &[u8]) -> Result<Vec<u8>> {
-        // Deserialize input _data
-        let input_data: Vec<f64> = bincode::deserialize(_data).map_err(|e| {
+        // Deserialize input data
+        let input_data: Vec<f64> = bincode::deserialize(data).map_err(|e| {
             TransformError::DistributedError(format!("Failed to deserialize fit data: {}", e))
         })?;
 
@@ -410,12 +410,9 @@ impl DistributedCoordinator {
 
     /// Execute transform task locally or remotely  
     async fn execute_transform_task(data: &[u8], params: &[u8]) -> Result<Vec<u8>> {
-        // Deserialize input _data and parameters
-        let input_data: Vec<f64> = bincode::deserialize(_data).map_err(|e| {
-            TransformError::DistributedError(format!(
-                "Failed to deserialize transform _data: {}",
-                e
-            ))
+        // Deserialize input data and parameters
+        let input_data: Vec<f64> = bincode::deserialize(data).map_err(|e| {
+            TransformError::DistributedError(format!("Failed to deserialize transform data: {}", e))
         })?;
 
         let fit_params: Vec<f64> = bincode::deserialize(params).map_err(|e| {
@@ -450,7 +447,7 @@ impl DistributedCoordinator {
         let mut all_data = Vec::new();
 
         // Deserialize and combine all partial _results
-        for result_data in _partial_results {
+        for result_data in _partialresults {
             let partial_data: Vec<f64> = bincode::deserialize(result_data).map_err(|e| {
                 TransformError::DistributedError(format!(
                     "Failed to deserialize partial result: {}",
@@ -486,7 +483,7 @@ impl DistributedCoordinator {
         let start_time = std::time::Instant::now();
 
         // Real distributed task execution using HTTP communication
-        let result = Self::send_task_to_node(_node, task).await?;
+        let result = Self::send_task_to_node(node, task).await?;
 
         let execution_time = start_time.elapsed();
 
@@ -499,7 +496,7 @@ impl DistributedCoordinator {
                 DistributedTask::Transform { task_id, .. } => task_id.clone(),
                 DistributedTask::Aggregate { task_id, .. } => task_id.clone(),
             },
-            _node_id: node.id.clone(),
+            node_id: node.id.clone(),
             result,
             execution_time_ms: execution_time.as_millis() as u64,
             memory_used_mb,
@@ -511,7 +508,7 @@ impl DistributedCoordinator {
         let base_overhead = 10.0; // Base overhead in MB
         let result_size_mb = result.len() as f64 / (1024.0 * 1024.0);
 
-        match _task {
+        match task {
             DistributedTask::Fit { data_partition, .. } => {
                 // Estimate memory for fit operations (data + intermediate computations)
                 let data_size_mb = (data_partition.len() * std::mem::size_of::<Vec<f64>>()) as f64
@@ -556,7 +553,7 @@ impl DistributedCoordinator {
         loop {
             {
                 let results_guard = self.results.read().await;
-                if let Some(result) = results_guard.get(task_id) {
+                if let Some(result) = results_guard.get(taskid) {
                     return Ok(result.clone());
                 }
             }
@@ -569,7 +566,7 @@ impl DistributedCoordinator {
                 drop(results_guard);
                 drop(receiver_guard);
 
-                if &result.task_id == task_id {
+                if &result.task_id == taskid {
                     return Ok(result);
                 }
             } else {
@@ -596,8 +593,9 @@ impl DistributedPCA {
         let coordinator = DistributedCoordinator::new(config).await?;
 
         Ok(DistributedPCA {
-            n_components,
-            coordinator_components: None,
+            coordinator,
+            n_components: _ncomponents,
+            components: None,
             mean: None,
         })
     }
@@ -694,15 +692,15 @@ impl DistributedPCA {
         }
 
         // Reshape to final array
-        let (n_samples_) = x.dim();
-        Array2::from_shape_vec((n_samples, self.n_components), all_results).map_err(|e| {
+        let (n_samples_, _) = x.dim();
+        Array2::from_shape_vec((n_samples_, self.n_components), all_results).map_err(|e| {
             TransformError::ComputationError(format!("Failed to reshape result: {}", e))
         })
     }
 
     /// Partition data for distributed processing using intelligent strategies
     async fn partition_data(&self, x: &ArrayView2<'_, f64>) -> Result<Vec<Vec<Vec<f64>>>> {
-        let (_n_samples_n_features) = x.dim();
+        let _n_samples_n_features = x.dim();
         let nodes = self.coordinator.nodes.read().await;
 
         match &self.coordinator.config.partitioning_strategy {
@@ -721,7 +719,7 @@ impl DistributedPCA {
         x: &ArrayView2<'_, f64>,
         nodes: &HashMap<NodeId, NodeInfo>,
     ) -> Result<Vec<Vec<Vec<f64>>>> {
-        let (n_samples_) = x.dim();
+        let (n_samples_, _) = x.dim();
         let n_nodes = nodes.len();
 
         if n_nodes == 0 {
@@ -742,8 +740,8 @@ impl DistributedPCA {
         for node in nodes.values() {
             let node_capacity = node.memory_gb + node.cpu_cores as f64;
             let capacity_ratio = node_capacity / total_capacity;
-            let rows_for_node = ((n_samples as f64 * capacity_ratio) as usize).max(1);
-            let end_row = (current_row + rows_for_node).min(n_samples);
+            let rows_for_node = ((n_samples_ as f64 * capacity_ratio) as usize).max(1);
+            let end_row = (current_row + rows_for_node).min(n_samples_);
 
             if current_row < end_row {
                 let partition = x.slice(ndarray::s![current_row..end_row, ..]);
@@ -756,7 +754,7 @@ impl DistributedPCA {
                 current_row = end_row;
             }
 
-            if current_row >= n_samples {
+            if current_row >= n_samples_ {
                 break;
             }
         }
@@ -1116,7 +1114,7 @@ enum CircuitBreakerState {
 #[cfg(feature = "distributed")]
 impl CircuitBreaker {
     /// Create a new circuit breaker
-    pub fn new(_failure_threshold: u32, success_threshold: u32, timeoutseconds: u64) -> Self {
+    pub fn new(failure_threshold: u32, success_threshold: u32, timeout_seconds: u64) -> Self {
         CircuitBreaker {
             state: CircuitBreakerState::Closed,
             failure_threshold,
@@ -1227,13 +1225,13 @@ impl EnhancedDistributedCoordinator {
         config: DistributedConfig,
         auto_scaling_config: AutoScalingConfig,
     ) -> Result<Self> {
-        let base_coordinator = DistributedCoordinator::new(_config).await?;
+        let base_coordinator = DistributedCoordinator::new(config).await?;
 
         let mut node_health = HashMap::new();
         let mut circuit_breakers = HashMap::new();
 
         // Initialize health monitoring for all nodes
-        for node in &base_coordinator._config.nodes {
+        for node in &base_coordinator.config.nodes {
             node_health.insert(
                 node.id.clone(),
                 NodeHealth {
@@ -1458,15 +1456,15 @@ impl EnhancedDistributedCoordinator {
         let mut rng = rand::rng();
 
         Ok(NodeHealth {
-            node_id: node_info.id.clone(),
+            node_id: _nodeinfo.id.clone(),
             status: NodeStatus::Healthy,
-            cpu_utilization: rng.gen_range(0.1..0.9)..memory,
-            _utilization: rng.gen_range(0.2..0.8),
-            network_latency_ms: rng.gen_range(1.0..50.0)..error,
-            _rate: rng.gen_range(0.0..0.05),
+            cpu_utilization: rng.gen_range(0.1..0.9),
+            memory_utilization: rng.gen_range(0.2..0.8),
+            network_latency_ms: rng.gen_range(1.0..50.0),
+            error_rate: rng.gen_range(0.0..0.05),
             last_check_timestamp: current_timestamp(),
             consecutive_failures: 0,
-            task_completion_rate: rng.gen_range(10.0..100.0)..,
+            task_completion_rate: rng.gen_range(10.0..100.0),
         })
     }
 
@@ -1512,7 +1510,7 @@ impl EnhancedDistributedCoordinator {
 
     /// Get task ID from distributed task
     fn get_task_id(task: &DistributedTask) -> &str {
-        match _task {
+        match task {
             DistributedTask::Fit { task_id, .. } => task_id,
             DistributedTask::Transform { task_id, .. } => task_id,
             DistributedTask::Aggregate { task_id, .. } => task_id,
@@ -1594,6 +1592,9 @@ impl EnhancedDistributedCoordinator {
                 NodeStatus::Healthy => healthy_nodes += 1,
                 NodeStatus::Degraded => degraded_nodes += 1,
                 NodeStatus::Failed => failed_nodes += 1,
+                NodeStatus::Overloaded => failed_nodes += 1, // Count as failed for metrics
+                NodeStatus::Draining => degraded_nodes += 1, // Count as degraded
+                NodeStatus::Disabled => failed_nodes += 1,   // Count as failed
             }
 
             total_cpu_utilization += health.cpu_utilization;

@@ -17,6 +17,25 @@ pub use scirs2_core::gpu::{GpuBackend, GpuBuffer, GpuContext, GpuDataType, GpuKe
 pub use scirs2_core::GpuError;
 
 // Fallback types when GPU feature is not enabled
+
+// Fallback trait for GpuDataType when GPU feature is not enabled
+#[cfg(not(feature = "gpu"))]
+pub trait GpuDataType: Copy + Send + Sync + 'static {}
+
+// Implement GpuDataType for common numeric types
+#[cfg(not(feature = "gpu"))]
+impl GpuDataType for f32 {}
+#[cfg(not(feature = "gpu"))]
+impl GpuDataType for f64 {}
+#[cfg(not(feature = "gpu"))]
+impl GpuDataType for i32 {}
+#[cfg(not(feature = "gpu"))]
+impl GpuDataType for i64 {}
+#[cfg(not(feature = "gpu"))]
+impl GpuDataType for u32 {}
+#[cfg(not(feature = "gpu"))]
+impl GpuDataType for u64 {}
+
 #[cfg(not(feature = "gpu"))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum GpuBackend {
@@ -73,6 +92,10 @@ pub struct GpuBuffer<T> {
 
 #[cfg(not(feature = "gpu"))]
 impl<T: Clone + Copy> GpuBuffer<T> {
+    pub fn from_vec(data: Vec<T>) -> Self {
+        Self { data }
+    }
+
     pub fn as_slice(&self) -> &[T] {
         &self.data
     }
@@ -142,14 +165,8 @@ impl GpuDevice {
     }
 }
 
-// GPU data type trait
-pub trait GpuDataType: Send + Sync + Copy + 'static {}
-
-impl GpuDataType for f32 {}
-impl GpuDataType for f64 {}
-impl GpuDataType for usize {}
-impl GpuDataType for u32 {}
-impl GpuDataType for i32 {}
+// GPU data type implementations for compatibility with scirs2-core
+// Note: GpuDataType trait is provided by scirs2-core
 
 // Re-export unified GPU interface
 pub use crate::gpu::{BackendInfo, GpuSpMatVec, OptimizationHint};
@@ -158,7 +175,6 @@ pub use crate::gpu::{BackendInfo, GpuSpMatVec, OptimizationHint};
 pub use crate::gpu::convenience::{available_backends, gpu_spmv, gpu_spmv_optimized};
 
 // Legacy types for backward compatibility
-#[derive(Debug, Clone)]
 pub struct AdvancedGpuOps {
     gpu_handler: GpuSpMatVec,
 }
@@ -184,7 +200,6 @@ pub struct GpuProfiler {
     enabled: bool,
 }
 
-#[derive(Debug, Clone)]
 pub struct OptimizedGpuOps {
     gpu_handler: GpuSpMatVec,
 }
@@ -195,6 +210,8 @@ use crate::error::SparseResult;
 use ndarray::{Array1, ArrayView1};
 use num_traits::Float;
 use std::fmt::Debug;
+
+// GpuDataType is already defined above in this module
 
 /// GPU sparse matrix-vector multiplication (legacy interface)
 ///
@@ -215,7 +232,23 @@ where
         GpuSpMatVec::new()?
     };
 
-    gpu_handler.spmv(matrix, vector, None)
+    // For Metal backend on macOS, create a dummy device
+    #[cfg(all(target_os = "macos", feature = "gpu"))]
+    let device = if matches!(backend, Some(GpuBackend::Metal) | None) {
+        Some(GpuDevice::new(GpuBackend::Metal, 0))
+    } else {
+        None
+    };
+    #[cfg(all(target_os = "macos", not(feature = "gpu")))]
+    let device = if matches!(backend, Some(GpuBackend::Metal) | None) {
+        GpuDevice::new(GpuBackend::Metal).ok()
+    } else {
+        None
+    };
+    #[cfg(not(target_os = "macos"))]
+    let device = None;
+
+    gpu_handler.spmv(matrix, vector, device.as_ref())
 }
 
 /// GPU symmetric sparse matrix-vector multiplication (legacy interface)
@@ -234,7 +267,23 @@ where
         GpuSpMatVec::new()?
     };
 
-    gpu_handler.spmv(matrix, vector, None)
+    // For Metal backend on macOS, create a dummy device
+    #[cfg(all(target_os = "macos", feature = "gpu"))]
+    let device = if matches!(backend, Some(GpuBackend::Metal) | None) {
+        Some(GpuDevice::new(GpuBackend::Metal, 0))
+    } else {
+        None
+    };
+    #[cfg(all(target_os = "macos", not(feature = "gpu")))]
+    let device = if matches!(backend, Some(GpuBackend::Metal) | None) {
+        GpuDevice::new(GpuBackend::Metal).ok()
+    } else {
+        None
+    };
+    #[cfg(not(target_os = "macos"))]
+    let device = None;
+
+    gpu_handler.spmv(matrix, vector, device.as_ref())
 }
 
 /// Advanced GPU sparse matrix-vector multiplication with optimization hints
@@ -254,7 +303,23 @@ where
         GpuSpMatVec::new()?
     };
 
-    gpu_handler.spmv_optimized(matrix, vector, None, optimization)
+    // For Metal backend on macOS, create a dummy device
+    #[cfg(all(target_os = "macos", feature = "gpu"))]
+    let device = if matches!(backend, Some(GpuBackend::Metal) | None) {
+        Some(GpuDevice::new(GpuBackend::Metal, 0))
+    } else {
+        None
+    };
+    #[cfg(all(target_os = "macos", not(feature = "gpu")))]
+    let device = if matches!(backend, Some(GpuBackend::Metal) | None) {
+        GpuDevice::new(GpuBackend::Metal).ok()
+    } else {
+        None
+    };
+    #[cfg(not(target_os = "macos"))]
+    let device = None;
+
+    gpu_handler.spmv_optimized(matrix, vector, device.as_ref(), optimization)
 }
 
 // Legacy kernel and device management structures
@@ -265,7 +330,12 @@ pub struct SpMVKernel {
 
 impl SpMVKernel {
     pub fn new(_device: &GpuDevice, _workgroupsize: [u32; 3]) -> Result<Self, GpuError> {
-        let gpu_handler = GpuSpMatVec::new().map_err(|e| GpuError::other(format!("{:?}", e)))?;
+        let gpu_handler = GpuSpMatVec::new().map_err(|e| {
+            #[cfg(feature = "gpu")]
+            return GpuError::Other(format!("{:?}", e));
+            #[cfg(not(feature = "gpu"))]
+            return GpuError::other(format!("{:?}", e));
+        })?;
         Ok(Self { gpu_handler })
     }
 
@@ -280,7 +350,12 @@ impl SpMVKernel {
     {
         self.gpu_handler
             .spmv(matrix, vector, Some(device))
-            .map_err(|e| GpuError::other(format!("{:?}", e)))
+            .map_err(|e| {
+                #[cfg(feature = "gpu")]
+                return GpuError::Other(format!("{:?}", e));
+                #[cfg(not(feature = "gpu"))]
+                return GpuError::other(format!("{:?}", e));
+            })
     }
 }
 
@@ -300,9 +375,14 @@ impl<T: GpuDataType> GpuBufferExt<T> for GpuBuffer<T> {
         if range.end <= full_data.len() {
             Ok(full_data[range].to_vec())
         } else {
-            Err(GpuError::invalid_parameter(
+            #[cfg(feature = "gpu")]
+            return Err(GpuError::InvalidParameter(
                 "Range out of bounds".to_string(),
-            ))
+            ));
+            #[cfg(not(feature = "gpu"))]
+            return Err(GpuError::invalid_parameter(
+                "Range out of bounds".to_string(),
+            ));
         }
     }
 }
@@ -324,16 +404,26 @@ mod tests {
 
         // Test with automatic backend selection
         let result = gpu_sparse_matvec(&matrix, &vector.view(), None);
+        if let Err(e) = &result {
+            eprintln!("Error from gpu_sparse_matvec: {:?}", e);
+        }
         assert!(result.is_ok());
 
         // Test with specific backend
         let result = gpu_sparse_matvec(&matrix, &vector.view(), Some(GpuBackend::Cpu));
+        if let Err(e) = &result {
+            eprintln!("Error from gpu_sparse_matvec with CPU backend: {:?}", e);
+        }
         assert!(result.is_ok());
     }
 
     #[test]
     fn test_gpu_spmv_kernel() {
+        #[cfg(feature = "gpu")]
+        let device = scirs2_core::gpu::GpuDevice::new(GpuBackend::Cpu, 0);
+        #[cfg(not(feature = "gpu"))]
         let device = GpuDevice::new(GpuBackend::Cpu).unwrap();
+
         let kernel = SpMVKernel::new(&device, [1, 1, 1]);
         assert!(kernel.is_ok());
     }
@@ -360,9 +450,10 @@ mod tests {
 
         is_gpu_data_type::<f32>();
         is_gpu_data_type::<f64>();
-        is_gpu_data_type::<usize>();
         is_gpu_data_type::<u32>();
+        is_gpu_data_type::<u64>();
         is_gpu_data_type::<i32>();
+        is_gpu_data_type::<i64>();
     }
 
     #[test]

@@ -2,7 +2,8 @@ use crate::ndarray_ext::{NdArray, NdArrayView};
 use crate::op;
 use crate::tensor::Tensor;
 use crate::tensor_ops::*;
-use crate::Float;
+use crate::tensor_ops::{vdAdd, vdExp, vdLn, vsAdd, vsExp, vsLn, BlasIF};
+use crate::{same_type, Float};
 use ndarray;
 use ndarray::Zip;
 

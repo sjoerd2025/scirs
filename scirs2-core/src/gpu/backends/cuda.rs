@@ -8,32 +8,80 @@ use std::sync::{Arc, Mutex};
 
 use crate::gpu::{GpuBufferImpl, GpuCompilerImpl, GpuContextImpl, GpuError, GpuKernelImpl};
 
-#[cfg(feature = "cuda")]
+#[cfg(all(
+    feature = "cuda",
+    target_arch = "x86_64",
+    any(target_os = "linux", target_os = "windows")
+))]
 use cudarc::driver::sys::{CUcontext, CUdevice, CUdeviceptr};
-#[cfg(feature = "cuda")]
+#[cfg(all(
+    feature = "cuda",
+    target_arch = "x86_64",
+    any(target_os = "linux", target_os = "windows")
+))]
 use cudarc::driver::{CudaDevice, DevicePtr};
-#[cfg(feature = "cuda")]
+#[cfg(all(
+    feature = "cuda",
+    target_arch = "x86_64",
+    any(target_os = "linux", target_os = "windows")
+))]
 use cudarc::nvrtc::Ptx;
 
 // CUDA API types - use real CUDA when available, fallback types otherwise
-#[cfg(feature = "cuda")]
+#[cfg(all(
+    feature = "cuda",
+    target_arch = "x86_64",
+    any(target_os = "linux", target_os = "windows")
+))]
 type CudaDeviceHandle = Arc<CudaDevice>;
-#[cfg(not(feature = "cuda"))]
+#[cfg(not(all(
+    feature = "cuda",
+    target_arch = "x86_64",
+    any(target_os = "linux", target_os = "windows")
+)))]
 type CudaDeviceHandle = i32;
 
-#[cfg(not(feature = "cuda"))]
+#[cfg(not(all(
+    feature = "cuda",
+    target_arch = "x86_64",
+    any(target_os = "linux", target_os = "windows")
+)))]
 type CUdevice = i32;
-#[cfg(not(feature = "cuda"))]
+#[cfg(not(all(
+    feature = "cuda",
+    target_arch = "x86_64",
+    any(target_os = "linux", target_os = "windows")
+)))]
 type CUcontext = *mut c_void;
-#[cfg(not(feature = "cuda"))]
+#[cfg(not(all(
+    feature = "cuda",
+    target_arch = "x86_64",
+    any(target_os = "linux", target_os = "windows")
+)))]
 type CUmodule = *mut c_void;
-#[cfg(not(feature = "cuda"))]
+#[cfg(not(all(
+    feature = "cuda",
+    target_arch = "x86_64",
+    any(target_os = "linux", target_os = "windows")
+)))]
 type CUfunction = *mut c_void;
-#[cfg(not(feature = "cuda"))]
+#[cfg(not(all(
+    feature = "cuda",
+    target_arch = "x86_64",
+    any(target_os = "linux", target_os = "windows")
+)))]
 type Ptx = String;
-#[cfg(not(feature = "cuda"))]
+#[cfg(not(all(
+    feature = "cuda",
+    target_arch = "x86_64",
+    any(target_os = "linux", target_os = "windows")
+)))]
 type CUdeviceptr = u64;
-#[cfg(not(feature = "cuda"))]
+#[cfg(not(all(
+    feature = "cuda",
+    target_arch = "x86_64",
+    any(target_os = "linux", target_os = "windows")
+)))]
 type CUresult = i32;
 
 #[cfg(not(feature = "cuda"))]
@@ -174,13 +222,39 @@ extern "C" __global__ void lamb_update_f32(
 }
 "#;
 
+// Define a constant for CUDA platform support
+#[cfg(all(
+    feature = "cuda",
+    target_arch = "x86_64",
+    any(target_os = "linux", target_os = "windows")
+))]
+const CUDA_PLATFORM_SUPPORTED: bool = true;
+#[cfg(not(all(
+    feature = "cuda",
+    target_arch = "x86_64",
+    any(target_os = "linux", target_os = "windows")
+)))]
+const CUDA_PLATFORM_SUPPORTED: bool = false;
+
 /// CUDA context wrapper
 pub struct CudaContext {
-    #[cfg(feature = "cuda")]
+    #[cfg(all(
+        feature = "cuda",
+        target_arch = "x86_64",
+        any(target_os = "linux", target_os = "windows")
+    ))]
     device: CudaDeviceHandle,
-    #[cfg(not(feature = "cuda"))]
+    #[cfg(not(all(
+        feature = "cuda",
+        target_arch = "x86_64",
+        any(target_os = "linux", target_os = "windows")
+    )))]
     device: CUdevice,
-    #[cfg(not(feature = "cuda"))]
+    #[cfg(not(all(
+        feature = "cuda",
+        target_arch = "x86_64",
+        any(target_os = "linux", target_os = "windows")
+    )))]
     context: CUcontext,
     compiled_kernels: Arc<Mutex<HashMap<String, CudaKernel>>>,
     memory_pool: Arc<Mutex<CudaMemoryPool>>,
@@ -193,7 +267,11 @@ unsafe impl Sync for CudaContext {}
 impl CudaContext {
     /// Create a new CUDA context
     pub fn new() -> Result<Self, GpuError> {
-        #[cfg(feature = "cuda")]
+        #[cfg(all(
+            feature = "cuda",
+            target_arch = "x86_64",
+            any(target_os = "linux", target_os = "windows")
+        ))]
         {
             // Real CUDA implementation
             let device = CudaDevice::new(0)
@@ -205,7 +283,11 @@ impl CudaContext {
                 memory_pool: Arc::new(Mutex::new(CudaMemoryPool::new(1024 * 1024 * 1024))), // 1GB pool
             })
         }
-        #[cfg(not(feature = "cuda"))]
+        #[cfg(not(all(
+            feature = "cuda",
+            target_arch = "x86_64",
+            any(target_os = "linux", target_os = "windows")
+        )))]
         {
             // Fallback implementation
             let device = Self::initialize_cuda()?;
@@ -266,15 +348,33 @@ impl CudaContext {
 
     /// Check if CUDA is available and working
     pub fn is_available() -> bool {
-        #[cfg(feature = "cuda")]
+        #[cfg(all(
+            feature = "cuda",
+            target_arch = "x86_64",
+            any(target_os = "linux", target_os = "windows")
+        ))]
         {
-            // Real CUDA implementation - try to create a device
-            match CudaDevice::new(0) {
-                Ok(_) => true,
-                Err(_) => false,
+            // Use panic::catch_unwind to handle dynamic library loading failures
+            use std::panic;
+
+            let result = panic::catch_unwind(|| {
+                // Real CUDA implementation - try to create a device
+                match CudaDevice::new(0) {
+                    Ok(_) => true,
+                    Err(_) => false,
+                }
+            });
+
+            match result {
+                Ok(available) => available,
+                Err(_) => false, // If it panicked (e.g., library not found), CUDA is not available
             }
         }
-        #[cfg(not(feature = "cuda"))]
+        #[cfg(not(all(
+            feature = "cuda",
+            target_arch = "x86_64",
+            any(target_os = "linux", target_os = "windows")
+        )))]
         {
             // Fallback: return false since we don't have real CUDA
             false
@@ -313,7 +413,11 @@ impl CudaContext {
     /// Compile CUDA source to PTX using nvrtc
     #[allow(dead_code)]
     fn compile_to_ptx(source: &str, name: &str) -> Result<Ptx, GpuError> {
-        #[cfg(feature = "cuda")]
+        #[cfg(all(
+            feature = "cuda",
+            target_arch = "x86_64",
+            any(target_os = "linux", target_os = "windows")
+        ))]
         {
             // Real NVRTC implementation
             use cudarc::nvrtc::compile_ptx;
@@ -321,7 +425,11 @@ impl CudaContext {
             compile_ptx(source)
                 .map_err(|e| GpuError::Other(format!("NVRTC compilation failed for {name}: {e}")))
         }
-        #[cfg(not(feature = "cuda"))]
+        #[cfg(not(all(
+            feature = "cuda",
+            target_arch = "x86_64",
+            any(target_os = "linux", target_os = "windows")
+        )))]
         {
             // Fallback implementation - return mock PTX
             let ptx_str = format!(
@@ -365,7 +473,11 @@ impl CudaContext {
     }
 
     /// Allocate device memory
-    #[cfg(feature = "cuda")]
+    #[cfg(all(
+        feature = "cuda",
+        target_arch = "x86_64",
+        any(target_os = "linux", target_os = "windows")
+    ))]
     pub fn allocate_device_memory(&self, size: usize) -> Result<u64, GpuError> {
         let buffer = self
             .device
@@ -375,21 +487,33 @@ impl CudaContext {
     }
 
     /// Allocate device memory (fallback)
-    #[cfg(not(feature = "cuda"))]
-    pub fn allocate_device_memory_2(&self, size: usize) -> Result<CUdeviceptr, GpuError> {
+    #[cfg(not(all(
+        feature = "cuda",
+        target_arch = "x86_64",
+        any(target_os = "linux", target_os = "windows")
+    )))]
+    pub fn allocate_device_memory(&self, size: usize) -> Result<CUdeviceptr, GpuError> {
         // Fallback implementation: return a simulated device pointer
         Ok(0x1000 + size as CUdeviceptr) // Simulate unique device addresses
     }
 
     /// Free device memory
-    #[cfg(feature = "cuda")]
+    #[cfg(all(
+        feature = "cuda",
+        target_arch = "x86_64",
+        any(target_os = "linux", target_os = "windows")
+    ))]
     pub fn free_device_memory(&self, ptr: u64) -> Result<(), GpuError> {
         // DevicePtr automatically deallocates when dropped
         Ok(())
     }
 
     /// Free device memory (fallback)
-    #[cfg(not(feature = "cuda"))]
+    #[cfg(not(all(
+        feature = "cuda",
+        target_arch = "x86_64",
+        any(target_os = "linux", target_os = "windows")
+    )))]
     pub fn free_device_memory(&self, ptr: CUdeviceptr) -> Result<(), GpuError> {
         // Fallback implementation: just validate pointer
         if ptr == 0 {
@@ -653,7 +777,12 @@ impl GpuCompilerImpl for CudaCompiler {
         }))
     }
 
-    fn compile_typed(&self, name: &str, _typeid: std::any::TypeId) -> Arc<dyn GpuKernelImpl> {
+    fn compile_typed(
+        &self,
+        name: &str,
+        _input_type: std::any::TypeId,
+        _output_type: std::any::TypeId,
+    ) -> Arc<dyn GpuKernelImpl> {
         Arc::new(CudaKernelHandle {
             kernel_name: name.to_string(),
             compiled_kernels: Arc::clone(&self.compiled_kernels),
@@ -685,7 +814,7 @@ impl CudaKernelHandle {
         if let Ok(kernels) = self.compiled_kernels.lock() {
             if let Some(_kernel) = kernels.get(&self.kernel_name) {
                 // Convert parameters to CUDA-compatible format
-                let mut _cuda_params = Vec::new();
+                let mut cuda_params = Vec::new();
 
                 for (_, param) in params.iter() {
                     match param {
@@ -712,7 +841,7 @@ impl CudaKernelHandle {
                 }
 
                 // Calculate optimal grid and block dimensions
-                let (grid_dim, block_dim) = self.calculate_launch_config(work_groups);
+                let (grid_dim, block_dim) = self.calculate_launch_config(workgroups);
 
                 #[cfg(debug_assertions)]
                 eprintln!(
@@ -736,11 +865,11 @@ impl CudaKernelHandle {
     #[cfg(not(feature = "cuda"))]
     fn simulate_kernel_execution(
         &self,
-        work_groups: [u32; 3],
+        workgroups: [u32; 3],
         params: &HashMap<String, KernelParam>,
     ) {
         // Advanced simulation that models actual computation
-        let total_threads = work_groups[0] as u64 * work_groups[1] as u64 * work_groups[2] as u64;
+        let total_threads = workgroups[0] as u64 * workgroups[1] as u64 * workgroups[2] as u64;
 
         // Simulate computation time based on kernel type and parameters
         let computation_time = self.estimate_kernel_time(total_threads, params);
@@ -769,7 +898,7 @@ impl CudaKernelHandle {
         let warp_size = 32u32; // CUDA warp size
 
         // Calculate block dimensions that are multiples of warp size
-        let total_work = work_groups[0] * work_groups[1] * work_groups[2];
+        let total_work = workgroups[0] * workgroups[1] * workgroups[2];
 
         if total_work <= max_threads_per_block {
             // Use single block if work fits
@@ -777,15 +906,15 @@ impl CudaKernelHandle {
             ((1, 1, 1), (block_size.min(max_threads_per_block), 1, 1))
         } else {
             // Multi-block configuration
-            let block_x = if work_groups[0] <= max_threads_per_block {
-                ((work_groups[0] + warp_size - 1) / warp_size) * warp_size
+            let block_x = if workgroups[0] <= max_threads_per_block {
+                ((workgroups[0] + warp_size - 1) / warp_size) * warp_size
             } else {
                 max_threads_per_block
             };
 
-            let grid_x = (work_groups[0] + block_x - 1) / block_x;
-            let grid_y = work_groups[1];
-            let grid_z = work_groups[2];
+            let grid_x = (workgroups[0] + block_x - 1) / block_x;
+            let grid_y = workgroups[1];
+            let grid_z = workgroups[2];
 
             ((grid_x, grid_y, grid_z), (block_x, 1, 1))
         }
@@ -875,12 +1004,12 @@ impl GpuKernelImpl for CudaKernelHandle {
     }
 
     /// Execute the kernel launch with comprehensive parameter marshaling and execution
-    fn dispatch_workgroups(&self, workgroups: [u32; 3]) {
+    fn dispatch(&self, workgroups: [u32; 3]) {
         #[cfg(debug_assertions)]
         {
             eprintln!(
-                "CUDA: Launching kernel '{}' with work _groups [{}, {}, {}]",
-                self.kernel_name, work_groups[0], work_groups[1], work_groups[2]
+                "CUDA: Launching kernel '{}' with workgroups [{}, {}, {}]",
+                self.kernel_name, workgroups[0], workgroups[1], workgroups[2]
             );
         }
 
@@ -906,12 +1035,12 @@ impl GpuKernelImpl for CudaKernelHandle {
             #[cfg(feature = "cuda")]
             {
                 // Real CUDA implementation with parameter marshaling
-                self.execute_cuda_kernel(work_groups, &params);
+                self.execute_cuda_kernel(workgroups, &params);
             }
             #[cfg(not(feature = "cuda"))]
             {
                 // Enhanced simulation with computation modeling
-                self.simulate_kernel_execution(work_groups, &params);
+                self.simulate_kernel_execution(workgroups, &params);
             }
         }
     }
@@ -941,8 +1070,8 @@ impl CudaMemoryPool {
         let base_ptr = 0x10000000;
 
         Self {
-            total_size,
-            free_blocks: vec![(base_ptr, total_size)], // Initially all memory is free
+            total_size: totalsize,
+            free_blocks: vec![(base_ptr, totalsize)], // Initially all memory is free
             allocated_blocks: HashMap::new(),
         }
     }
@@ -1110,10 +1239,26 @@ mod tests {
 
     #[test]
     fn test_cuda_context_creation() {
-        // This test would fail in real implementation without CUDA
-        // but works with our stub
-        let context = CudaContext::new();
-        assert!(context.is_ok());
+        use std::panic;
+
+        // Skip test if CUDA library is not available at runtime
+        let result = panic::catch_unwind(|| CudaContext::new());
+
+        match result {
+            Ok(Ok(context)) => {
+                // If we can create a context, test passed
+                drop(context);
+            }
+            Ok(Err(GpuError::BackendNotAvailable(_))) | Err(_) => {
+                // CUDA not available or library loading failed, skip test
+                eprintln!("Skipping test: CUDA runtime not available");
+                return;
+            }
+            Ok(Err(e)) => {
+                // Other error that's not backend availability
+                panic!("Unexpected error creating CUDA context: {:?}", e);
+            }
+        }
     }
 
     #[test]

@@ -707,7 +707,7 @@ where
         #[cfg(feature = "gpu")]
         if let Ok(device_manager) = crate::backend::device_detection::get_device_manager() {
             if let Ok(dm) = device_manager.lock() {
-                if let Some((backend_device_id)) =
+                if let Some((backend, device_id)) =
                     dm.get_best_device(input.len() * std::mem::size_of::<T>())
                 {
                     return self.process_gpu_chunks(input, op, backend);
@@ -715,8 +715,10 @@ where
             }
         }
 
-        // Fallback to CPU processing
-        self.process_adaptive(input, op)
+        // Fallback to CPU processing - simplified implementation
+        // Process the input directly without adaptive chunking
+        let result = op.apply_chunk(&input)?;
+        Ok(result)
     }
 
     /// Extract chunk with proper boundary handling
@@ -833,10 +835,26 @@ where
         D: Dimension,
         Op: GpuStreamableOp<T, D>,
     {
-        use crate::backend::GpuContext;
+        use crate::backend::{Backend, GpuContext};
 
-        // Initialize GPU context
-        let gpucontext = GpuContext::new()?;
+        // Initialize GPU context based on backend type
+        let gpucontext: Box<dyn GpuContext> = match gpu_backend {
+            #[cfg(feature = "cuda")]
+            Backend::Cuda => {
+                use crate::backend::CudaContext;
+                Box::new(CudaContext::new(None)?)
+            }
+            #[cfg(feature = "opencl")]
+            Backend::OpenCL => {
+                use crate::backend::OpenCLContext;
+                Box::new(OpenCLContext::new(None)?)
+            }
+            _ => {
+                return Err(crate::error::NdimageError::GpuNotAvailable(
+                    "Unsupported GPU backend".to_string(),
+                ))?
+            }
+        };
 
         // Get required overlap
         let required_overlap = op.required_overlap();
@@ -892,7 +910,7 @@ where
             }
 
             // Process chunk on GPU
-            let chunk_result = op.apply_chunk_gpu(&chunk_view, &gpucontext)?;
+            let chunk_result = op.apply_chunk_gpu(&chunk_view, gpucontext.as_ref())?;
 
             // Handle overlapping regions using proper overlap merging
             if overlap.iter().any(|&x| x > 0) {
@@ -1079,7 +1097,7 @@ where
     fn apply_chunk_gpu(
         &self,
         chunk: &ArrayView<T, D>,
-        gpucontext: &GpuContext,
+        gpucontext: &dyn crate::backend::GpuContext,
     ) -> NdimageResult<Array<T, D>>;
 
     /// Check if chunk size is suitable for GPU processing
@@ -1113,13 +1131,13 @@ impl GpuContext {
         self.device_id
     }
 
-    pub fn allocate_memory(&mut selfsize: usize) -> NdimageResult<*mut u8> {
+    pub fn allocate_memory(&mut self, size: usize) -> NdimageResult<*mut u8> {
         // GPU memory allocation
         // This is a placeholder - would use actual GPU allocation APIs
         Ok(std::ptr::null_mut())
     }
 
-    pub fn free_memory(&mut selfptr: *mut u8) -> NdimageResult<()> {
+    pub fn free_memory(&mut self, ptr: *mut u8) -> NdimageResult<()> {
         // GPU memory deallocation
         // This is a placeholder - would use actual GPU deallocation APIs
         Ok(())

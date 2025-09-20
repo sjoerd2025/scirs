@@ -3,6 +3,17 @@ target/
 **/*.rs.bk
 Cargo.lock
 
+# Backup files
+**/*.rs.bak
+**/*_old.rs
+**/*_backup.rs
+**/*.rs.old
+**/*.rs.backup
+
+# HDF5 files
+**/*.nc
+**/*.nc.json
+
 # IDE files
 .idea/
 .vscode/

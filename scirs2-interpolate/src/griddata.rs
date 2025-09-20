@@ -8,7 +8,7 @@
 //!
 //! ```
 //! use ndarray::{array, Array2};
-//! use scirs2__interpolate::griddata::{griddata, GriddataMethod};
+//! use scirs2_interpolate::griddata::{griddata, GriddataMethod};
 //!
 //! // Scattered data points
 //! let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]];
@@ -75,7 +75,7 @@ pub enum GriddataMethod {
 /// ## Basic usage with scattered 2D data
 /// ```
 /// use ndarray::array;
-/// use scirs2__interpolate::griddata::{griddata, GriddataMethod};
+/// use scirs2_interpolate::griddata::{griddata, GriddataMethod};
 ///
 /// // Scattered data: z = x² + y²
 /// let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0], [0.5, 0.5]];
@@ -95,7 +95,7 @@ pub enum GriddataMethod {
 /// ## Using different interpolation methods
 /// ```
 /// use ndarray::array;
-/// use scirs2__interpolate::griddata::{griddata, GriddataMethod};
+/// use scirs2_interpolate::griddata::{griddata, GriddataMethod};
 ///
 /// let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]];
 /// let values = array![0.0, 1.0, 1.0];
@@ -139,6 +139,8 @@ where
         + AddAssign
         + std::ops::SubAssign
         + std::fmt::LowerExp
+        + std::ops::MulAssign
+        + std::ops::DivAssign
         + Send
         + Sync
         + 'static,
@@ -213,7 +215,7 @@ where
 ///
 /// ```
 /// use ndarray::{array, Array2};
-/// use scirs2__interpolate::griddata::{griddata_parallel, GriddataMethod};
+/// use scirs2_interpolate::griddata::{griddata_parallel, GriddataMethod};
 ///
 /// // Large dataset interpolation
 /// let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]];
@@ -252,6 +254,8 @@ where
         + AddAssign
         + std::ops::SubAssign
         + std::fmt::LowerExp
+        + std::ops::MulAssign
+        + std::ops::DivAssign
         + 'static,
 {
     // Import parallel processing utilities
@@ -419,6 +423,8 @@ where
         + Display
         + AddAssign
         + std::ops::SubAssign
+        + std::ops::MulAssign
+        + std::ops::DivAssign
         + std::fmt::LowerExp
         + 'static,
 {
@@ -981,6 +987,8 @@ where
         + AddAssign
         + std::ops::SubAssign
         + std::fmt::LowerExp
+        + std::ops::MulAssign
+        + std::ops::DivAssign
         + Send
         + Sync
         + 'static,
@@ -1006,6 +1014,8 @@ where
         + AddAssign
         + std::ops::SubAssign
         + std::fmt::LowerExp
+        + std::ops::MulAssign
+        + std::ops::DivAssign
         + Send
         + Sync
         + 'static,
@@ -1276,6 +1286,8 @@ where
         + AddAssign
         + std::ops::SubAssign
         + std::fmt::LowerExp
+        + std::ops::MulAssign
+        + std::ops::DivAssign
         + Send
         + Sync
         + 'static,
@@ -1360,7 +1372,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__interpolate::griddata::make_regular_grid;
+/// use scirs2_interpolate::griddata::make_regular_grid;
 ///
 /// // Create a 2D grid from (0,0) to (1,1) with 3x3 points
 /// let bounds = vec![(0.0, 1.0), (0.0, 1.0)];

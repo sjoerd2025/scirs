@@ -161,7 +161,7 @@ where
     let (height, width) = input.dim();
     let filter_len = low_filter.len();
     let filter_center = filter_len / 2;
-    let simd_width = T::simd_width();
+    let simd_width = 8; // Default SIMD width for vectorization
 
     // Process rows in parallel
     for y in 0..height {
@@ -242,7 +242,7 @@ where
     let (height, width) = input.dim();
     let filter_len = low_filter.len();
     let filter_center = filter_len / 2;
-    let simd_width = T::simd_width();
+    let simd_width = 8; // Default SIMD width for vectorization
 
     let out_height = height / 2;
 
@@ -774,7 +774,7 @@ mod tests {
 
     #[test]
     fn test_advanced_simd_wavelet_pyramid() {
-        let input = Array2::ones((64, 64));
+        let input = Array2::<f64>::ones((64, 64));
 
         let pyramid = advanced_simd_wavelet_pyramid(input.view(), 3, WaveletType::Haar).unwrap();
 
@@ -807,7 +807,7 @@ mod tests {
     #[test]
     fn test_advanced_simd_advanced_edge_detection() {
         let input =
-            Array2::from_shape_fn((64, 64), |(i_j)| if i > 30 && i < 34 { 1.0 } else { 0.0 });
+            Array2::from_shape_fn((64, 64), |(i, _j)| if i > 30 && i < 34 { 1.0 } else { 0.0 });
 
         let result = advanced_simd_advanced_edge_detection(input.view(), 1.0, 0.1, 0.3).unwrap();
 

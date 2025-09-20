@@ -20,9 +20,10 @@
 use scirs2_core::error::CoreResult;
 use scirs2_core::testing::ecosystem_integration::{
     create_ecosystem_test_suite, ApiComplianceLevel, DeploymentTarget, EcosystemTestConfig,
-    EcosystemTestRunner,
+    EcosystemTestResult, EcosystemTestRunner,
 };
 use std::collections::HashSet;
+use std::path::PathBuf;
 
 #[allow(dead_code)]
 fn main() -> CoreResult<()> {
@@ -30,8 +31,13 @@ fn main() -> CoreResult<()> {
     println!("=====================================================================");
 
     // Configure ecosystem testing for comprehensive validation
+    // Use environment variable or current directory for workspace path
+    let workspace_path = std::env::var("SCIRS2_WORKSPACE_PATH")
+        .map(PathBuf::from)
+        .unwrap_or_else(|_| std::env::current_dir().unwrap_or_else(|_| PathBuf::from(".")));
+
     let config = EcosystemTestConfig {
-        workspace_path: PathBuf::from("/media/kitasan/Backup/scirs"),
+        workspace_path,
         auto_discover_modules: true,
         included_modules: HashSet::new(), // Include all discovered modules
         excluded_modules: {
@@ -97,7 +103,7 @@ fn main() -> CoreResult<()> {
             }
 
             // Display final assessment
-            display_final_assessment(&result);
+            display_release_assessment(&result);
         }
         Err(e) => {
             println!("\n❌ Ecosystem Integration Testing Failed: {:?}", e);
@@ -144,7 +150,7 @@ fn main() -> CoreResult<()> {
 
 /// Display ecosystem summary results
 #[allow(dead_code)]
-fn display_ecosystem_summary(result: EcosystemTestResult) {
+fn display_ecosystem_summary(result: &EcosystemTestResult) {
     println!("📈 ECOSYSTEM HEALTH SUMMARY");
     println!("   Overall Health Score: {:.1}/100", result.health_score);
     println!("   Modules Discovered: {}", result.discovered_modules.len());
@@ -309,7 +315,7 @@ fn display_ecosystem_summary(result: EcosystemTestResult) {
 
 /// Display final 1.0 release assessment
 #[allow(dead_code)]
-fn display_release_assessment(result: EcosystemTestResult) {
+fn display_release_assessment(result: &EcosystemTestResult) {
     println!("\n🎯 1.0 RELEASE READINESS ASSESSMENT");
     println!("═══════════════════════════════════════");
 

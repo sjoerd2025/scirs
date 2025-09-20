@@ -60,6 +60,8 @@ impl<
             + Display
             + AddAssign
             + std::ops::SubAssign
+            + std::ops::MulAssign
+            + std::ops::DivAssign
             + std::fmt::LowerExp
             + Send
             + Sync
@@ -83,7 +85,7 @@ impl<
     ///
     /// ```
     /// use ndarray::{array, Array2};
-    /// use scirs2__interpolate::advanced::rbf::{RBFInterpolator, RBFKernel};
+    /// use scirs2_interpolate::advanced::rbf::{RBFInterpolator, RBFKernel};
     ///
     /// // Create 2D points
     /// let points = Array2::from_shape_vec((5, 2), vec![
@@ -141,7 +143,7 @@ impl<
     ///
     /// ```
     /// use ndarray::{array, Array2};
-    /// use scirs2__interpolate::advanced::rbf::{RBFInterpolator, RBFKernel};
+    /// use scirs2_interpolate::advanced::rbf::{RBFInterpolator, RBFKernel};
     ///
     /// // Create 2D points
     /// let points = Array2::from_shape_vec((5, 2), vec![
@@ -318,8 +320,8 @@ impl<
         }
 
         // Solve the linear system with stability monitoring
-        let (coefficients, _solve_report) =
-            solve_with_stability_monitoring(&working_matrix, &values.to_owned()).or_else(|_| {
+        let coefficients = solve_with_stability_monitoring(&working_matrix.view(), &values.view())
+            .or_else(|_| {
                 // Silently fall back to regularized solver
 
                 // Apply stronger regularization
@@ -329,22 +331,7 @@ impl<
                     regularized_matrix[[i, i]] += regularization;
                 }
 
-                self_solve_linear_system(&regularized_matrix, values).map(|coeffs| {
-                    (
-                        coeffs,
-                        condition_report.clone().unwrap_or_else(|| {
-                            // Create a default report for fallback case
-                            ConditionReport {
-                                _conditionnumber: F::from_f64(1e16).unwrap(),
-                                is_well_conditioned: false,
-                                recommended_regularization: Some(regularization),
-                                stability_level: StabilityLevel::Poor,
-                                diagnostics:
-                                    crate::numerical_stability::StabilityDiagnostics::default(),
-                            }
-                        }),
-                    )
-                })
+                self_solve_linear_system(&regularized_matrix, values)
             })?;
 
         Ok(RBFInterpolator {
@@ -410,7 +397,7 @@ impl<
     ///
     /// ```
     /// use ndarray::array;
-    /// use scirs2__interpolate::advanced::rbf::{RBFInterpolator, RBFKernel};
+    /// use scirs2_interpolate::advanced::rbf::{RBFInterpolator, RBFKernel};
     ///
     /// // Training data: function z = x² + y²
     /// let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]];
@@ -491,8 +478,8 @@ impl<
     ///
     /// ```
     /// use ndarray::Array2;
-    /// use scirs2__interpolate::advanced::rbf::{RBFInterpolator, RBFKernel};
-    /// use scirs2__interpolate::numerical_stability::StabilityLevel;
+    /// use scirs2_interpolate::advanced::rbf::{RBFInterpolator, RBFKernel};
+    /// use scirs2_interpolate::numerical_stability::StabilityLevel;
     ///
     /// // Create interpolator (example data)
     /// let points = Array2::from_shape_vec((3, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0]).unwrap();
@@ -547,7 +534,7 @@ impl<
     /// # Examples
     ///
     /// ```
-    /// use scirs2__interpolate::advanced::rbf::{RBFInterpolator, RBFKernel};
+    /// use scirs2_interpolate::advanced::rbf::{RBFInterpolator, RBFKernel};
     /// let mut rbf = RBFInterpolator::new_unfitted(RBFKernel::Gaussian, 1.0f64);
     /// // Use rbf.fit() to train the interpolator before prediction
     /// ```
@@ -579,7 +566,7 @@ impl<
     ///
     /// ```
     /// use ndarray::{array, Array2};
-    /// use scirs2__interpolate::advanced::rbf::{RBFInterpolator, RBFKernel};
+    /// use scirs2_interpolate::advanced::rbf::{RBFInterpolator, RBFKernel};
     ///
     /// let mut rbf = RBFInterpolator::new_unfitted(RBFKernel::Gaussian, 1.0f64);
     ///
@@ -617,7 +604,7 @@ impl<
     ///
     /// ```
     /// use ndarray::{array, Array2};
-    /// use scirs2__interpolate::advanced::rbf::{RBFInterpolator, RBFKernel};
+    /// use scirs2_interpolate::advanced::rbf::{RBFInterpolator, RBFKernel};
     ///
     /// let mut rbf = RBFInterpolator::new_unfitted(RBFKernel::Gaussian, 1.0f64);
     ///

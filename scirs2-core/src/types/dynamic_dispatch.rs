@@ -89,7 +89,7 @@ impl DynamicValue {
     }
 
     /// Create a new dynamic value with custom type information
-    pub fn with_type_info<T: Any + Send + Sync>(value: T, typeinfo: TypeInfo) -> Self {
+    pub fn with_type_info<T: Any + Send + Sync>(value: T, type_info: TypeInfo) -> Self {
         Self {
             value: Box::new(value),
             type_info,
@@ -150,7 +150,22 @@ impl DynamicValue {
         let type_name = std::any::type_name::<T>();
 
         // Basic pattern matching on type names
-        if type_name.contains("f32")
+        // Check for collection types first before scalar types
+        if type_name.contains("Vec") || type_name.contains("Array1") {
+            TypeCategory::Vector
+        } else if type_name.contains("Array2") || type_name.contains("Matrix") {
+            TypeCategory::Matrix
+        } else if type_name.contains("Array") || type_name.contains("Tensor") {
+            TypeCategory::Tensor
+        } else if type_name.contains("Complex") || type_name.contains("complex") {
+            TypeCategory::Complex
+        } else if type_name.contains("String") || type_name.contains("str") {
+            TypeCategory::String
+        } else if type_name.contains("DateTime") || type_name.contains("Time") {
+            TypeCategory::DateTime
+        } else if type_name.contains("bool") {
+            TypeCategory::Boolean
+        } else if type_name.contains("f32")
             || type_name.contains("f64")
             || type_name.contains("i8")
             || type_name.contains("i16")
@@ -162,20 +177,6 @@ impl DynamicValue {
             || type_name.contains("u64")
         {
             TypeCategory::Scalar
-        } else if type_name.contains("Complex") || type_name.contains("complex") {
-            TypeCategory::Complex
-        } else if type_name.contains("Vec") || type_name.contains("Array1") {
-            TypeCategory::Vector
-        } else if type_name.contains("Array2") || type_name.contains("Matrix") {
-            TypeCategory::Matrix
-        } else if type_name.contains("Array") || type_name.contains("Tensor") {
-            TypeCategory::Tensor
-        } else if type_name.contains("String") || type_name.contains("str") {
-            TypeCategory::String
-        } else if type_name.contains("bool") {
-            TypeCategory::Boolean
-        } else if type_name.contains("DateTime") || type_name.contains("Time") {
-            TypeCategory::DateTime
         } else {
             TypeCategory::Custom(type_name.to_string())
         }
@@ -650,7 +651,7 @@ pub mod utils {
         I: IntoIterator<Item = DynamicValue>,
     {
         let mut collection = HeterogeneousCollection::new();
-        for value in _values {
+        for value in values {
             collection.push_dynamic(value);
         }
         collection
@@ -768,7 +769,7 @@ mod tests {
 
         let mut sum = 0i32;
         collection
-            .apply_to_type::<i32>(|value| {
+            .apply_to_type::<i32, _>(|value| {
                 sum += *value;
                 Ok(())
             })

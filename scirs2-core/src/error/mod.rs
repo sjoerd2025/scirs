@@ -154,9 +154,9 @@ pub use error::{
     CoreResult, ErrorContext, ErrorLocation,
 };
 
-/// Alpha 6 Enhanced Diagnostic Functions
+/// Beta 2 Enhanced Diagnostic Functions
 ///
-/// Analyze an error with comprehensive diagnostics including Alpha 6 features
+/// Analyze an error with comprehensive diagnostics including Beta 2 features
 ///
 /// # Errors
 ///
@@ -334,7 +334,7 @@ mod tests {
     #[cfg(feature = "async")]
     #[tokio::test]
     async fn test_asyncerror_handling() {
-        use super::async__handling::*;
+        use super::async_handling::*;
 
         // Test timeout
         let result = with_timeout(

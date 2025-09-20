@@ -18,7 +18,7 @@
 //! use scirs2_core::logging::progress::{ProgressBuilder, ProgressStyle};
 //!
 //! // Create a logger
-//! let logger = Logger::new(matrix_operations);
+//! let logger = Logger::new("matrix_operations");
 //!
 //! // Log messages at different levels
 //! logger.info("Starting matrix multiplication");
@@ -36,7 +36,7 @@
 //!     // Perform computation
 //!
 //!     // Update progress
-//!     progress.update_model(i + 1);
+//!     progress.update(i + 1);
 //!
 //!     // Log intermediate results at low frequency to avoid flooding logs
 //!     if i % 100 == 0 {
@@ -575,7 +575,7 @@ macro_rules! getlogger {
     };
 }
 
-// # Distributed Logging and Adaptive Rate Limiting (Alpha 6)
+// # Distributed Logging and Adaptive Rate Limiting (Beta 2)
 //
 // This section provides advanced distributed logging capabilities with
 // aggregation, adaptive rate limiting, and multi-node coordination.

@@ -358,11 +358,10 @@ macro_rules! impl_bin_op_forward {
                         }
                     }
 
-                    // Fallback to MKL if available
+                    // Use element-wise fallback for same-shape tensors
                     #[cfg(feature = "blas")]
                     {
-                        use crate::{tensor_ops::blas, _ffi::*, same_type};
-                        bin_op_sameshape!($vms_op, $vmd_op, $bin_op, x0, x1)
+                        x0 $bin_op x1
                     }
                     #[cfg(not(feature = "blas"))] {
                         x0 $bin_op x1

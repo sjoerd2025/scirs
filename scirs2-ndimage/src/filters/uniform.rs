@@ -3,7 +3,7 @@
 //! This module provides functions for applying uniform filters (also known as box filters)
 //! to n-dimensional arrays.
 
-use ndarray::{s, Array, Array1, Array2, Dimension, IxDyn};
+use ndarray::{s, Array, Array1, Array2, Dim, Dimension, IxDyn, IxDynImpl, NdIndex};
 use num_traits::{Float, FromPrimitive};
 use scirs2_core::validation::{check_1d, check_2d, check_positive};
 use std::fmt::Debug;
@@ -258,7 +258,8 @@ where
         if window_end <= padded_data.len() {
             // Use SIMD sum operation for the window
             let window_slice = &padded_data[window_start..window_end];
-            let sum = f32::simd_sum(window_slice);
+            let window_array = Array1::from_vec(window_slice.to_vec());
+            let sum = f32::simd_sum(&window_array.view());
             output[i] = sum * norm_factor;
         } else {
             // Fallback for edge cases
@@ -434,7 +435,8 @@ where
                 let window_slice = &padded_row.as_slice().unwrap()[row_start..row_end];
 
                 // Use SIMD sum for the row segment
-                sum += f32::simd_sum(window_slice);
+                let window_array = Array1::from_vec(window_slice.to_vec());
+                sum += f32::simd_sum(&window_array.view());
             }
 
             // Normalize
@@ -651,12 +653,13 @@ where
     let total_elements = input.len();
 
     // Use parallel iteration if the array is large enough
-    #[cfg(feature = "parallel")]
-    {
-        if total_elements > 10000 {
-            return uniform_filter_nd_parallel(input, &padded_input, size, norm_factor, inputshape);
-        }
-    }
+    // Disabled temporarily due to type constraint issues
+    // #[cfg(feature = "parallel")]
+    // {
+    //     if total_elements > 10000 {
+    //         return uniform_filter_nd_parallel(input, &padded_input, size, norm_factor, inputshape);
+    //     }
+    // }
 
     // Sequential implementation for smaller arrays or when parallel feature is disabled
     uniform_filter_nd_sequential(
@@ -754,6 +757,7 @@ fn uniform_filter_nd_parallel<T, D>(
 where
     T: Float + FromPrimitive + Debug + std::ops::AddAssign + Send + Sync,
     D: Dimension + 'static,
+    Dim<IxDynImpl>: NdIndex<D>,
 {
     use scirs2_core::parallel_ops::*;
 
@@ -1144,7 +1148,7 @@ where
         orig.to_vec()
     } else {
         // Default to centered filter
-        vec![(_size[0] / 2) as isize, (_size[1] / 2) as isize]
+        vec![(size[0] / 2) as isize, (size[1] / 2) as isize]
     };
 
     // Calculate padding for overlap between chunks

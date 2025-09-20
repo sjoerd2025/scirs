@@ -18,8 +18,8 @@
 //!
 //! ```rust
 //! use ndarray::Array1;
-//! use scirs2__interpolate::cache::{CachedBSpline, BSplineCache};
-//! use scirs2__interpolate::bspline::ExtrapolateMode;
+//! use scirs2_interpolate::cache::{CachedBSpline, BSplineCache};
+//! use scirs2_interpolate::bspline::ExtrapolateMode;
 //!
 //! // Create a cached B-spline for fast repeated evaluations
 //! let knots = Array1::linspace(0.0, 10.0, 20);
@@ -31,7 +31,10 @@
 //!     3, // degree
 //!     ExtrapolateMode::Extrapolate,
 //!     BSplineCache::default(),
-//! ).unwrap10.0, 1000.iter() {
+//! ).unwrap();
+//!
+//! // Use cached evaluation for fast performance
+//! for x in Array1::linspace(0.0, 10.0, 1000).iter() {
 //!     let y = cached_spline.evaluate_cached(*x).unwrap();
 //! }
 //! ```
@@ -650,8 +653,8 @@ where
     ///
     /// ```rust
     /// use ndarray::Array1;
-    /// use scirs2__interpolate::cache::{CachedBSpline, BSplineCache, CacheConfig};
-    /// use scirs2__interpolate::bspline::ExtrapolateMode;
+    /// use scirs2_interpolate::cache::{CachedBSpline, BSplineCache, CacheConfig};
+    /// use scirs2_interpolate::bspline::ExtrapolateMode;
     ///
     /// let knots = Array1::from_vec(vec![0.0, 0.0, 0.0, 1.0, 2.0, 3.0, 3.0, 3.0]);
     /// let coeffs = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
@@ -701,8 +704,8 @@ where
     ///
     /// ```rust
     /// use ndarray::Array1;
-    /// use scirs2__interpolate::cache::make_cached_bspline;
-    /// use scirs2__interpolate::bspline::ExtrapolateMode;
+    /// use scirs2_interpolate::cache::make_cached_bspline;
+    /// use scirs2_interpolate::bspline::ExtrapolateMode;
     ///
     /// let knots = Array1::linspace(0.0, 10.0, 11);
     /// let coeffs = Array1::linspace(1.0, 5.0, 8);
@@ -942,8 +945,8 @@ where
     ///
     /// ```rust
     /// use ndarray::Array1;
-    /// use scirs2__interpolate::cache::make_cached_bspline;
-    /// use scirs2__interpolate::bspline::ExtrapolateMode;
+    /// use scirs2_interpolate::cache::make_cached_bspline;
+    /// use scirs2_interpolate::bspline::ExtrapolateMode;
     ///
     /// let knots = Array1::from_vec(vec![0.0, 0.0, 1.0, 2.0, 3.0, 3.0]);
     /// let coeffs = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0]);

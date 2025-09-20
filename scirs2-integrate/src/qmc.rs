@@ -539,7 +539,7 @@ pub fn scale<T: Float + FromPrimitive>(
 ///
 /// ```
 /// use ndarray::{Array1, ArrayView1};
-/// use scirs2__integrate::qmc::{qmc_quad, Halton};
+/// use scirs2_integrate::qmc::{qmc_quad, Halton};
 ///
 /// let f = |x: ArrayView1<f64>| x[0].powi(2) * x[1].exp();
 /// let a = Array1::from_vec(vec![0.0, 0.0]);
@@ -748,7 +748,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__integrate::qmc::{qmc_quad_parallel, Halton};
+/// use scirs2_integrate::qmc::{qmc_quad_parallel, Halton};
 /// use ndarray::{Array1, ArrayView1};
 ///
 /// let f = |x: ArrayView1<f64>| x[0].powi(2) * x[1].exp();
@@ -912,10 +912,10 @@ where
             // Each thread gets its own QRNG instance with different seed
             let mut local_qrng = qrng.new_from_seed(rand::random());
 
-            // Sample _points
-            let _points = local_qrng.random(n_points);
+            // Sample points
+            let points = local_qrng.random(n_points);
 
-            // Transform _points to integration domain and evaluate function
+            // Transform points to integration domain and evaluate function
             let mut sum = 0.0;
 
             for i in 0..n_points {

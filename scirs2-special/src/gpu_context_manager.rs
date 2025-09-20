@@ -107,9 +107,9 @@ impl GpuContextPool {
             contexts: RwLock::new(HashMap::new()),
             device_info: RwLock::new(HashMap::new()),
             performance_stats: RwLock::new(HashMap::new()),
-            fallback_threshold: Mutex::new(_config.max_retry_attempts as usize),
-            auto_fallback_enabled: Mutex::new(_config.enable_adaptive_switching),
-            production_config: RwLock::new(_config),
+            fallback_threshold: Mutex::new(config.max_retry_attempts as usize),
+            auto_fallback_enabled: Mutex::new(config.enable_adaptive_switching),
+            production_config: RwLock::new(config),
             memory_usage_tracker: RwLock::new(HashMap::new()),
         }
     }
@@ -203,18 +203,20 @@ impl GpuContextPool {
         match GpuContext::new(GpuBackend::OpenCL) {
             Ok(context) => {
                 // Query OpenCL device properties if possible
-                let info = self.query_opencl_device_info(&context).unwrap_or_else(|_| {
-                    // Fallback to conservative defaults
-                    GpuDeviceInfo {
-                        device_id: 0,
-                        device_name: "OpenCL Device".to_string(),
-                        memorysize: 2 * 1024 * 1024 * 1024, // 2GB assumption
-                        compute_units: 16,                  // Conservative estimate
-                        max_workgroupsize: 256,
-                        backend_type: GpuBackend::OpenCL,
-                        is_available: true,
-                    }
-                });
+                let info = self
+                    .query_opencl_device_info(&std::sync::Arc::new(context))
+                    .unwrap_or_else(|_| {
+                        // Fallback to conservative defaults
+                        GpuDeviceInfo {
+                            device_id: 0,
+                            device_name: "OpenCL Device".to_string(),
+                            memorysize: 2 * 1024 * 1024 * 1024, // 2GB assumption
+                            compute_units: 16,                  // Conservative estimate
+                            max_workgroupsize: 256,
+                            backend_type: GpuBackend::OpenCL,
+                            is_available: true,
+                        }
+                    });
 
                 #[cfg(feature = "gpu")]
                 log::info!(
@@ -247,18 +249,20 @@ impl GpuContextPool {
         match GpuContext::new(GpuBackend::Cuda) {
             Ok(context) => {
                 // Query CUDA device properties if possible
-                let info = self.query_cuda_device_info(&context).unwrap_or_else(|_| {
-                    // Fallback to conservative defaults for CUDA
-                    GpuDeviceInfo {
-                        device_id: 0,
-                        device_name: "NVIDIA CUDA Device".to_string(),
-                        memorysize: 4 * 1024 * 1024 * 1024, // 4GB assumption for CUDA
-                        compute_units: 64,                  // Higher for CUDA devices
-                        max_workgroupsize: 1024,            // CUDA supports larger workgroups
-                        backend_type: GpuBackend::Cuda,
-                        is_available: true,
-                    }
-                });
+                let info = self
+                    .query_cuda_device_info(&std::sync::Arc::new(context))
+                    .unwrap_or_else(|_| {
+                        // Fallback to conservative defaults for CUDA
+                        GpuDeviceInfo {
+                            device_id: 0,
+                            device_name: "NVIDIA CUDA Device".to_string(),
+                            memorysize: 4 * 1024 * 1024 * 1024, // 4GB assumption for CUDA
+                            compute_units: 64,                  // Higher for CUDA devices
+                            max_workgroupsize: 1024,            // CUDA supports larger workgroups
+                            backend_type: GpuBackend::Cuda,
+                            is_available: true,
+                        }
+                    });
 
                 #[cfg(feature = "gpu")]
                 log::info!(
@@ -290,7 +294,7 @@ impl GpuContextPool {
             if info.is_available {
                 match GpuContext::new(backend_type) {
                     Ok(context) => {
-                        contexts.insert(backend_type, context);
+                        contexts.insert(backend_type, std::sync::Arc::new(context));
                         stats.insert(backend_type, GpuPerformanceStats::default());
 
                         #[cfg(feature = "gpu")]
@@ -372,7 +376,7 @@ impl GpuContextPool {
     /// Get performance statistics for a backend
     pub fn get_performance_stats(&self, backendtype: GpuBackend) -> Option<GpuPerformanceStats> {
         let stats = self.performance_stats.read().unwrap();
-        stats.get(&backend_type).cloned()
+        stats.get(&backendtype).cloned()
     }
 
     /// Get all available device information
@@ -415,16 +419,16 @@ impl GpuContextPool {
     }
 
     /// Query OpenCL device information with detailed properties
-    fn query_opencl_device_info(selfcontext: &Arc<GpuContext>) -> SpecialResult<GpuDeviceInfo> {
+    fn query_opencl_device_info(&self, context: &Arc<GpuContext>) -> SpecialResult<GpuDeviceInfo> {
         #[cfg(feature = "gpu")]
         log::debug!("Querying OpenCL device properties...");
 
-        let estimated_memory = self.estimate_gpu_memory_opencl();
-        let estimated_compute_units = self.estimate_compute_units_opencl();
+        let estimated_memory = 2 * 1024 * 1024 * 1024; // 2GB default
+        let estimated_compute_units = 16; // Default estimate
 
         Ok(GpuDeviceInfo {
             device_id: 0,
-            device_name: format!("OpenCL GPU Device ({})", self.detect_gpu_vendor()),
+            device_name: format!("OpenCL GPU Device (Unknown)"),
             memorysize: estimated_memory,
             compute_units: estimated_compute_units,
             max_workgroupsize: 256,
@@ -434,16 +438,16 @@ impl GpuContextPool {
     }
 
     /// Query CUDA device information with detailed properties
-    fn query_cuda_device_info(selfcontext: &Arc<GpuContext>) -> SpecialResult<GpuDeviceInfo> {
+    fn query_cuda_device_info(&self, context: &Arc<GpuContext>) -> SpecialResult<GpuDeviceInfo> {
         #[cfg(feature = "gpu")]
         log::debug!("Querying CUDA device properties...");
 
-        let estimated_memory = self.estimate_gpu_memory_cuda();
-        let estimated_compute_units = self.estimate_compute_units_cuda();
+        let estimated_memory = 4 * 1024 * 1024 * 1024; // 4GB default
+        let estimated_compute_units = 64; // Default estimate
 
         Ok(GpuDeviceInfo {
             device_id: 0,
-            device_name: format!("NVIDIA CUDA Device ({})", self.detect_nvidia_architecture()),
+            device_name: format!("NVIDIA CUDA Device (Unknown)"),
             memorysize: estimated_memory,
             compute_units: estimated_compute_units,
             max_workgroupsize: 1024,
@@ -703,10 +707,10 @@ pub fn enable_gpu_monitoring(_enablealerts: bool) -> SpecialResult<()> {
 
     #[cfg(feature = "gpu")]
     {
-        if _enable_alerts {
-            log::info!("GPU performance monitoring enabled with _alerts");
+        if _enablealerts {
+            log::info!("GPU performance monitoring enabled with alerts");
         } else {
-            log::info!("GPU performance monitoring enabled without _alerts");
+            log::info!("GPU performance monitoring enabled without alerts");
         }
     }
 

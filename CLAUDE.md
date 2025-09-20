@@ -4,7 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-SciRS2 is a comprehensive scientific computing and AI/ML infrastructure in Rust, providing SciPy-compatible APIs while leveraging Rust's performance, safety, and concurrency features. The project contains over 1.5 million lines of code across 24 modular crates.
+SciRS2 is a comprehensive scientific computing and AI/ML infrastructure in Rust, providing SciPy-compatible APIs while leveraging Rust's performance, safety, and concurrency features.
+
+**Note**: From v0.1.0-beta.2, the ML optimization module (scirs2-optim) has been separated into the independent [OptiRS](https://github.com/cool-japan/optirs) project for better modularity and focused development.
 
 ## Development Commands
 
@@ -51,6 +53,22 @@ When implementing SciPy-compatible functionality, directly read these source fil
 - Performance benchmarks for critical operations
 - DOC tests for all public APIs
 
+### PyTorch Compatibility (scirs2-transform)
+**Known Issue**: The `auto-feature-engineering` feature in scirs2-transform requires PyTorch 2.0.0 but may conflict with newer PyTorch versions (2.5+).
+
+**Current Workaround**:
+```bash
+# Run tests excluding auto-feature-engineering
+cargo nextest run --nff --features simd,gpu,distributed,monitoring
+
+# To use auto-feature-engineering feature:
+# 1. Install PyTorch 2.0.0, OR
+# 2. Set environment variables:
+#    LIBTORCH_USE_PYTORCH=1 LIBTORCH_BYPASS_VERSION_CHECK=1
+```
+
+**Status**: Main functionality works without the auto-feature-engineering feature. Full PyTorch integration requires compatible PyTorch version or environment variable workarounds.
+
 ### API Updates
 - rand 0.9.x: Update API calls (gen_range → random_range, thread_rng → rng)
 - Maintain SciPy API compatibility where reasonable
@@ -78,7 +96,7 @@ scirs2/                  # Main integration crate (re-exports all modules)
 ├── scirs2-datasets/   # Sample datasets
 ├── scirs2-autograd/   # Automatic differentiation
 ├── scirs2-neural/     # Neural networks
-├── scirs2-optim/      # ML optimizers
+# Note: scirs2-optim moved to independent OptiRS project from beta.2
 ├── scirs2-graph/      # Graph processing
 ├── scirs2-transform/  # Data transformation
 ├── scirs2-metrics/    # ML metrics
@@ -164,9 +182,15 @@ use scirs2_core::parallel_ops::*;
 - Separate public API from implementation
 
 ### Naming Conventions
-- `mod.rs`: Public interface and re-exports
-- `implementation.rs`: Core implementation
-- `utils.rs`: Module-specific utilities
+- **Variables**: Use `snake_case` for all variables and function parameters
+- **Functions**: Use `snake_case` for all functions and methods
+- **Structs/Enums**: Use `PascalCase` for types
+- **Constants**: Use `SCREAMING_SNAKE_CASE` for constants
+- **Modules**: Use `snake_case` for module names
+- File conventions:
+  - `mod.rs`: Public interface and re-exports
+  - `implementation.rs`: Core implementation
+  - `utils.rs`: Module-specific utilities
 - Follow Rust naming conventions strictly
 
 ### Documentation Requirements
@@ -220,6 +244,7 @@ The project uses GitHub Actions with:
 - Comprehensive test coverage
 
 ## Version Information
-- Current version: 0.1.0-beta.1
+- Current version: 0.1.0-beta.2
 - Repository: https://github.com/cool-japan/scirs
 - Main branch: master
+- ML Optimization: Independent [OptiRS](https://github.com/cool-japan/optirs) project

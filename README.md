@@ -45,7 +45,7 @@ SciRS2 is a comprehensive scientific computing and AI/ML infrastructure in Rust,
 
 ## Project Scale
 
-This project now contains **over 2 million lines of code** and runs **over 9,000 tests** across all modules, demonstrating the comprehensive nature of the SciRS2 ecosystem.
+This project now contains **over 2 million source lines of code** and runs **over 9,000 tests** across all modules (including previous scirs2-optim, currently another project), demonstrating the comprehensive nature of the SciRS2 ecosystem.
 
 ## Project Goals
 
@@ -86,7 +86,7 @@ SciRS2 adopts a modular architecture with separate crates for different function
 
 # AI/ML Modules
 ├── scirs2-neural/            # Neural network building blocks
-├── scirs2-optim/             # ML-specific optimization algorithms
+# Note: scirs2-optim separated into independent OptiRS project from v0.1.0-beta.2
 ├── scirs2-graph/             # Graph processing algorithms
 ├── scirs2-transform/         # Data transformation utilities
 ├── scirs2-metrics/           # ML evaluation metrics
@@ -201,7 +201,7 @@ Each module has its own README with detailed documentation and is available on c
 
 ### AI/ML Modules
 - [**scirs2-neural**](scirs2-neural/README.md): Neural network building blocks [![crates.io](https://img.shields.io/crates/v/scirs2-neural.svg)](https://crates.io/crates/scirs2-neural)
-- [**scirs2-optim**](scirs2-optim/README.md): ML-specific optimization algorithms [![crates.io](https://img.shields.io/crates/v/scirs2-optim.svg)](https://crates.io/crates/scirs2-optim)
+- **⚠️ scirs2-optim**: **Separated to independent [OptiRS](https://github.com/cool-japan/optirs) project from v0.1.0-beta.2**
 - [**scirs2-graph**](scirs2-graph/README.md): Graph processing algorithms [![crates.io](https://img.shields.io/crates/v/scirs2-graph.svg)](https://crates.io/crates/scirs2-graph)
 - [**scirs2-transform**](scirs2-transform/README.md): Data transformation utilities [![crates.io](https://img.shields.io/crates/v/scirs2-transform.svg)](https://crates.io/crates/scirs2-transform)
 - [**scirs2-metrics**](scirs2-metrics/README.md): ML evaluation metrics [![crates.io](https://img.shields.io/crates/v/scirs2-metrics.svg)](https://crates.io/crates/scirs2-metrics)
@@ -287,7 +287,7 @@ SciRS2 and all its modules are available on [crates.io](https://crates.io/crates
 ```toml
 # Add the main integration crate for all functionality
 [dependencies]
-scirs2 = "0.1.0-beta.1"
+scirs2 = "0.1.0-beta.2"
 ```
 
 Or include only the specific modules you need:
@@ -295,16 +295,17 @@ Or include only the specific modules you need:
 ```toml
 [dependencies]
 # Core utilities
-scirs2-core = "0.1.0-beta.1"
+scirs2-core = "0.1.0-beta.2"
 
 # Scientific computing modules
-scirs2-linalg = "0.1.0-beta.1"
-scirs2-stats = "0.1.0-beta.1"
-scirs2-optimize = "0.1.0-beta.1"
+scirs2-linalg = "0.1.0-beta.2"
+scirs2-stats = "0.1.0-beta.2"
+scirs2-optimize = "0.1.0-beta.2"
 
 # AI/ML modules
-scirs2-neural = "0.1.0-beta.1"
-scirs2-autograd = "0.1.0-beta.1"
+scirs2-neural = "0.1.0-beta.2"
+scirs2-autograd = "0.1.0-beta.2"
+# Note: For ML optimization algorithms, use the independent OptiRS project
 ```
 
 ### Example Usage
@@ -474,7 +475,7 @@ The following modules are in preview state and may undergo API changes:
 #### AI/ML Modules
 - **Automatic Differentiation** (`scirs2-autograd`): Tensor ops, neural network primitives
 - **Neural Networks** (`scirs2-neural`): Layers, activations, loss functions
-- **ML Optimization** (`scirs2-optim`): Optimizers, schedulers, regularization
+- **ML Optimization**: **Moved to independent [OptiRS](https://github.com/cool-japan/optirs) project**
 - **Graph Processing** (`scirs2-graph`): Graph algorithms and data structures
 - **Text Processing** (`scirs2-text`): Tokenization, vectorization, word embeddings
 - **Computer Vision** (`scirs2-vision`): Image processing, feature detection
@@ -506,10 +507,10 @@ All SciRS2 modules are available on crates.io. Add the modules you need to your 
 
 ```toml
 [dependencies]
-scirs2 = "0.1.0-beta.1"  # Core library with all modules
+scirs2 = "0.1.0-beta.2"  # Core library with all modules
 # Or individual modules:
-scirs2-linalg = "0.1.0-beta.1"  # Linear algebra
-scirs2-stats = "0.1.0-beta.1"   # Statistics
+scirs2-linalg = "0.1.0-beta.2"  # Linear algebra
+scirs2-stats = "0.1.0-beta.2"   # Statistics
 # ... and more
 ```
 
@@ -538,9 +539,39 @@ Initial benchmarks on core operations show performance comparable to or exceedin
 
 *Note: Performance may vary based on hardware, compiler optimization, and specific workloads.*
 
+## Important: Beta 2 Release Notes
+
+**⚠️ Critical Update:** v0.1.0-beta.2 had compilation errors when downloaded from crates.io and has been **yanked**. Please use v0.1.0-beta.2 instead.
+
+### 🔧 v0.1.0-beta.2 (2025-09-20) - Compilation Fixes & OptiRS Separation
+
+This release resolves all compilation errors that prevented v0.1.0-beta.2 from building successfully:
+
+#### ✅ Fixed Issues:
+- **Variable name inconsistencies**: Resolved `chunk_size`/`chunksize`, `op_name`/`opname`, `target_unit`/`targetunit` mismatches
+- **Pattern matching errors**: Fixed SIMD loop patterns and indexing logic
+- **Undefined variables**: Fixed unresolved variables in batch conversion functions
+- **Function conflicts**: Resolved duplicate function definitions
+- **Type references**: Fixed field reference consistency
+
+#### 🔄 Project Restructure:
+- **⚠️ scirs2-optim separation**: The ML optimization module (470k+ lines) has been moved to the independent **[OptiRS](https://github.com/cool-japan/optirs)** project
+- **Simplified SciRS2**: Focus on core scientific computing with cleaner architecture
+- **Better modularity**: Allows independent development cycles for optimization research
+
+#### 📊 Results:
+- ✅ **100% Compilation Success**: All crates now compile without errors
+- ✅ **Zero Warnings**: Clean build across all feature combinations
+- ✅ **Reduced complexity**: Main project is now more manageable
+- ✅ **No API Changes**: Existing scientific computing APIs unchanged
+
+**Migration:**
+- Update `Cargo.toml` from `0.1.0-beta.2` to `0.1.0-beta.2`
+- For ML optimization features, add the independent `optirs` crate
+
 ## Known Limitations (Beta Release)
 
-This is the first beta release (0.1.0-beta.1) of SciRS2. While the core functionality is stable and well-tested, there are some known limitations:
+This is the second beta release (0.1.0-beta.2) of SciRS2. While the core functionality is stable and well-tested, there are some known limitations:
 
 ### Autograd Module
 - **Gradient Shape Propagation**: Some complex operations may have limitations in gradient shape inference (Issue #1). Complex computation graphs may require manual shape specification in certain cases.

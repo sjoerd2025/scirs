@@ -10,7 +10,7 @@
 //! All SIMD operations are delegated to scirs2-core's unified SIMD abstraction layer
 //! in compliance with the project-wide SIMD policy.
 
-use crate::error::InterpolateResult;
+use crate::error::{InterpolateError, InterpolateResult};
 use crate::spatial::{BallTree, KdTree};
 use ndarray::{ArrayView2, Axis};
 
@@ -66,23 +66,15 @@ impl SimdDistanceOps {
     {
         assert_eq!(a.len(), b.len(), "Vectors must have the same dimension");
 
-        if F::simd_available() && a.len() >= 4 {
-            // Use SIMD for larger vectors
-            let a_arr = Array1::from_vec(a.to_vec());
-            let b_arr = Array1::from_vec(b.to_vec());
-            let diff = F::simd_sub(&a_arr.view(), &b_arr.view());
-            let squared = F::simd_mul(&diff.view(), &diff.view());
-            F::simd_sum(&squared.view())
-        } else {
-            // Fallback to scalar computation for small vectors
-            a.iter()
-                .zip(b.iter())
-                .map(|(&x, &y)| {
-                    let diff = x - y;
-                    diff * diff
-                })
-                .fold(F::zero(), |acc, x| acc + x)
-        }
+        // Use scalar computation to avoid stack overflow in SIMD operations
+        // TODO: Fix SIMD implementation in scirs2-core
+        a.iter()
+            .zip(b.iter())
+            .map(|(&x, &y)| {
+                let diff = x - y;
+                diff * diff
+            })
+            .fold(F::zero(), |acc, x| acc + x)
     }
 
     /// Enhanced batch distance computation with SIMD optimization for better memory access patterns
@@ -329,7 +321,7 @@ where
                     let query_slice = query.as_slice().unwrap();
                     self.k_nearest_neighbors(query_slice, k)
                 })
-                .collect::<Result<Vec<_>>>()
+                .collect::<Result<Vec<_>, InterpolateError>>()
         })
     }
 
@@ -404,7 +396,7 @@ where
                     let query_slice = query.as_slice().unwrap();
                     self.k_nearest_neighbors(query_slice, k)
                 })
-                .collect::<Result<Vec<_>>>()
+                .collect::<Result<Vec<_>, InterpolateError>>()
         })
     }
 

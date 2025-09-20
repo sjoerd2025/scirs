@@ -3,10 +3,12 @@
 //! This module provides the foundational infrastructure for the universal function
 //! (ufunc) system, including trait definitions, registration, and dispatching.
 
-use ndarray::{Array, ArrayBase, ArrayView, ArrayViewMut, Data, Dimension, Ix1, IxDyn};
+use ndarray::{
+    Array, ArrayBase, ArrayView, ArrayViewMut, Data, DataMut, Dimension, Ix1, IxDyn, RawData,
+};
+use once_cell::sync::Lazy;
 use std::collections::HashMap;
 use std::sync::RwLock;
-use once_cell::sync::Lazy;
 
 /// Enum defining the different kinds of universal functions
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -28,9 +30,11 @@ pub trait UFunc: Send + Sync {
     fn kind(&self) -> UFuncKind;
 
     /// Apply the ufunc to array(s) and store the result in the output array
-    fn apply<D>(&self, inputs: &[&ArrayBase<Data, D>], output: &mut ArrayBase<Data, D>) -> Result<(), &'static str>
-    where
-        D: Dimension;
+    fn apply(
+        &self,
+        inputs: &[ArrayView<f64, IxDyn>],
+        output: &mut ArrayViewMut<f64, IxDyn>,
+    ) -> Result<(), &'static str>;
 
     /// Use SIMD acceleration if available
     fn use_simd(&self) -> bool {
@@ -101,10 +105,11 @@ impl UFunc for UFuncWrapper {
         self.kind
     }
 
-    fn apply<D>(&self, inputs: &[&ArrayBase<Data, D>], output: &mut ArrayBase<Data, D>) -> Result<(), &'static str>
-    where
-        D: Dimension,
-    {
+    fn apply(
+        &self,
+        inputs: &[ArrayView<f64, IxDyn>],
+        output: &mut ArrayViewMut<f64, IxDyn>,
+    ) -> Result<(), &'static str> {
         // This is a wrapper that delegates to the actual implementation
         // Get the real UFunc from the registry
         let registry = UFUNC_REGISTRY.read().unwrap();
@@ -119,14 +124,16 @@ impl UFunc for UFuncWrapper {
 
 /// Helper function to apply a unary operation element-wise
 #[allow(dead_code)]
-pub fn apply_unary<T, F, O, D>(
-    input: &ArrayBase<Data, D>,
-    output: &mut ArrayBase<Data, D>,
+pub fn apply_unary<T, F, O, S1, S2, D>(
+    input: &ArrayBase<S1, D>,
+    output: &mut ArrayBase<S2, D>,
     op: F,
 ) -> Result<(), &'static str>
 where
-    T: Clone,
-    O: Clone,
+    S1: Data<Elem = T>,
+    S2: Data<Elem = O> + DataMut,
+    T: Clone + Send + Sync,
+    O: Clone + Send + Sync,
     F: Fn(&T) -> O + Send + Sync,
     D: Dimension,
 {
@@ -144,10 +151,13 @@ where
         let input_slice = input.as_slice().unwrap();
         let output_slice = output.as_slice_mut().unwrap();
 
-        output_slice.par_iter_mut().enumerate().for_each(|(i, out)| {
-            let in_val = unsafe { input_slice.get_unchecked(i) };
-            *out = op(in_val);
-        });
+        output_slice
+            .par_iter_mut()
+            .enumerate()
+            .for_each(|(i, out)| {
+                let in_val = unsafe { input_slice.get_unchecked(i) };
+                *out = op(in_val);
+            });
     }
 
     #[cfg(not(feature = "parallel"))]
@@ -162,15 +172,18 @@ where
 
 /// Helper function to apply a binary operation element-wise with broadcasting
 #[allow(dead_code)]
-pub fn apply_binary<T, F, O, D>(
-    input1: &ArrayBase<Data, D>,
-    input2: &ArrayBase<Data, D>,
-    output: &mut ArrayBase<Data, D>,
+pub fn apply_binary<T, F, O, S1, S2, S3, D>(
+    input1: &ArrayBase<S1, D>,
+    input2: &ArrayBase<S2, D>,
+    output: &mut ArrayBase<S3, D>,
     op: F,
 ) -> Result<(), &'static str>
 where
-    T: Clone,
-    O: Clone,
+    S1: Data<Elem = T>,
+    S2: Data<Elem = T>,
+    S3: Data<Elem = O> + DataMut,
+    T: Clone + Send + Sync,
+    O: Clone + Send + Sync,
     F: Fn(&T, &T) -> O + Send + Sync,
     D: Dimension,
 {
@@ -191,18 +204,24 @@ where
         let input2_slice = input2.as_slice().unwrap();
         let output_slice = output.as_slice_mut().unwrap();
 
-        output_slice.par_iter_mut().enumerate().for_each(|(i, out)| {
-            let in1 = unsafe { input1_slice.get_unchecked(i) };
-            let in2 = unsafe { input2_slice.get_unchecked(i) };
-            *out = op(in1, in2);
-        });
+        output_slice
+            .par_iter_mut()
+            .enumerate()
+            .for_each(|(i, out)| {
+                let in1 = unsafe { input1_slice.get_unchecked(i) };
+                let in2 = unsafe { input2_slice.get_unchecked(i) };
+                *out = op(in1, in2);
+            });
     }
 
     #[cfg(not(feature = "parallel"))]
     {
-        output.iter_mut().zip(input1.iter().zip(input2.iter())).for_each(|(out, (in1, in2))| {
-            *out = op(in1, in2);
-        });
+        output
+            .iter_mut()
+            .zip(input1.iter().zip(input2.iter()))
+            .for_each(|(out, (in1, in2))| {
+                *out = op(in1, in2);
+            });
     }
 
     Ok(())
@@ -210,16 +229,17 @@ where
 
 /// Helper function to apply a reduction operation along an axis
 #[allow(dead_code)]
-pub fn apply_reduction<T, F, O, D>(
-    input: &ArrayBase<Data, D>,
-    output: &mut ArrayBase<Data, Ix1>,
+pub fn apply_reduction<T, F, S1, S2, D>(
+    input: &ArrayBase<S1, D>,
+    output: &mut ArrayBase<S2, Ix1>,
     axis: Option<usize>,
     initial: Option<T>,
     op: F,
 ) -> Result<(), &'static str>
 where
-    T: Clone,
-    O: Clone,
+    S1: Data<Elem = T>,
+    S2: Data<Elem = T> + DataMut,
+    T: Clone + Send + Sync,
     F: Fn(T, &T) -> T + Send + Sync,
     D: Dimension,
 {
@@ -234,7 +254,10 @@ where
             }
 
             let axis_size = input.len_of(ndarray::Axis(ax));
-            let othershape = input.shape().iter().enumerate()
+            let othershape = input
+                .shape()
+                .iter()
+                .enumerate()
                 .filter_map(|(i, &s)| if i != ax { Some(s) } else { None })
                 .collect::<Vec<_>>();
 
@@ -251,26 +274,43 @@ where
 
             let (rows, cols) = (input.shape()[0], input.shape()[1]);
 
-            if ax == 0 {
-                // Reduce along rows
-                for j in 0..cols {
-                    let mut acc = initial.clone().unwrap_or_else(|| input[[0, j]].clone());
-                    for i in 1..rows {
-                        acc = op(acc, &input[[i, j]]);
+            // Convert to slice for linear indexing
+            if let Some(input_slice) = input.as_slice() {
+                if ax == 0 {
+                    // Reduce along rows
+                    for j in 0..cols {
+                        let mut acc = initial.clone().unwrap_or_else(|| {
+                            // Get first element in this column
+                            input_slice[j].clone()
+                        });
+                        let start_i = if initial.is_some() { 0 } else { 1 };
+                        for i in start_i..rows {
+                            // Use linear indexing for 2D array in row-major order
+                            let val = &input_slice[i * cols + j];
+                            acc = op(acc, val);
+                        }
+                        output[j] = acc;
                     }
-                    output[j] = acc;
+                } else {
+                    // Reduce along columns
+                    for i in 0..rows {
+                        let mut acc = initial.clone().unwrap_or_else(|| {
+                            // Get first element in this row
+                            input_slice[i * cols].clone()
+                        });
+                        let start_j = if initial.is_some() { 0 } else { 1 };
+                        for j in start_j..cols {
+                            // Use linear indexing for 2D array in row-major order
+                            let val = &input_slice[i * cols + j];
+                            acc = op(acc, val);
+                        }
+                        output[i] = acc;
+                    }
                 }
             } else {
-                // Reduce along columns
-                for i in 0..rows {
-                    let mut acc = initial.clone().unwrap_or_else(|| input[[i, 0]].clone());
-                    for j in 1..cols {
-                        acc = op(acc, &input[[i, j]]);
-                    }
-                    output[i] = acc;
-                }
+                return Err("Input array is not contiguous");
             }
-        },
+        }
         None => {
             // Reduction over the entire array
             if output.len() != 1 {
@@ -278,7 +318,9 @@ where
             }
 
             let mut iter = input.iter();
-            let mut acc = initial.clone().unwrap_or_else(|| iter.next().unwrap().clone());
+            let mut acc = initial
+                .clone()
+                .unwrap_or_else(|| iter.next().unwrap().clone());
 
             for val in iter {
                 acc = op(acc, val);
@@ -308,17 +350,21 @@ mod tests {
             UFuncKind::Unary
         }
 
-        fn apply<D>(&self, inputs: &[&ArrayBase<Data, D>], output: &mut ArrayBase<Data, D>) -> Result<(), &'static str>
-        where
-            D: Dimension,
-        {
+        fn apply(
+            &self,
+            inputs: &[ArrayView<f64, IxDyn>],
+            output: &mut ArrayViewMut<f64, IxDyn>,
+        ) -> Result<(), &'static str> {
             if inputs.len() != 1 {
                 return Err("Unary ufunc requires exactly one input array");
             }
 
             // Square each element
-            let input = inputs[0];
-            apply_unary(input, output, |&x: &f64| x * x)
+            let input = &inputs[0];
+            for (inp, out) in input.iter().zip(output.iter_mut()) {
+                *out = inp * inp;
+            }
+            Ok(())
         }
     }
 
@@ -334,18 +380,22 @@ mod tests {
             UFuncKind::Binary
         }
 
-        fn apply<D>(&self, inputs: &[&ArrayBase<Data, D>], output: &mut ArrayBase<Data, D>) -> Result<(), &'static str>
-        where
-            D: Dimension,
-        {
+        fn apply(
+            &self,
+            inputs: &[ArrayView<f64, IxDyn>],
+            output: &mut ArrayViewMut<f64, IxDyn>,
+        ) -> Result<(), &'static str> {
             if inputs.len() != 2 {
                 return Err("Binary ufunc requires exactly two input arrays");
             }
 
             // Add the elements
-            let input1 = inputs[0];
-            let input2 = inputs[1];
-            apply_binary(input1, input2, output, |&x: &f64, &y: &f64| x + y)
+            let input1 = &inputs[0];
+            let input2 = &inputs[1];
+            for ((a, b), out) in input1.iter().zip(input2.iter()).zip(output.iter_mut()) {
+                *out = a + b;
+            }
+            Ok(())
         }
     }
 

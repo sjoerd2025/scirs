@@ -98,10 +98,10 @@ impl<F: Float + FromPrimitive> Default for LocalPolynomialConfig<F> {
 /// # #[cfg(feature = "linalg")]
 /// # {
 /// use ndarray::{Array1, Array2, Axis};
-/// use scirs2__interpolate::local::polynomial::{
+/// use scirs2_interpolate::local::polynomial::{
 ///     LocalPolynomialRegression, LocalPolynomialConfig
 /// };
-/// use scirs2__interpolate::local::mls::{WeightFunction, PolynomialBasis};
+/// use scirs2_interpolate::local::mls::{WeightFunction, PolynomialBasis};
 ///
 /// // Create some 1D data with noise
 /// let x = Array1::<f64>::linspace(0.0, 10.0, 50);
@@ -562,8 +562,8 @@ where
         #[cfg(feature = "linalg")]
         let coefficients = {
             use scirs2_linalg::solve;
-            let xtx_f64 = xtx.mapv(|_x| x.to_f64().unwrap());
-            let xty_f64 = xty.mapv(|_x| x.to_f64().unwrap());
+            let xtx_f64 = xtx.mapv(|x| x.to_f64().unwrap());
+            let xty_f64 = xty.mapv(|x| x.to_f64().unwrap());
             match solve(&xtx_f64.view(), &xty_f64.view(), None) {
                 Ok(c) => c.mapv(|_x| F::from_f64(_x).unwrap()),
                 Err(_) => {
@@ -624,7 +624,7 @@ where
         #[cfg(feature = "linalg")]
         let xtx_inv = {
             use scirs2_linalg::inv;
-            let xtx_f64 = xtx.mapv(|_x| x.to_f64().unwrap());
+            let xtx_f64 = xtx.mapv(|x| x.to_f64().unwrap());
             match inv(&xtx_f64.view(), None) {
                 Ok(inv) => inv.mapv(|_x| F::from_f64(_x).unwrap()),
                 Err(_) => {

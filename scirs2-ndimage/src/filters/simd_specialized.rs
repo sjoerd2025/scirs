@@ -3,7 +3,7 @@
 //! This module provides highly optimized SIMD implementations for
 //! specialized filtering operations that benefit from vectorization.
 
-use ndarray::{s, Array, ArrayView2, ArrayViewMut1, Axis, Ix2};
+use ndarray::{s, Array, Array1, ArrayView2, ArrayViewMut1, Axis, Ix2};
 use num_traits::{Float, FromPrimitive};
 use scirs2_core::simd_ops::SimdUnifiedOps;
 use std::fmt::Debug;
@@ -22,7 +22,7 @@ fn safe_float_to_usize<T: Float>(value: T) -> NdimageResult<usize> {
 /// Helper function for safe isize conversion
 #[allow(dead_code)]
 fn safe_isize_to_float<T: Float + FromPrimitive>(value: isize) -> NdimageResult<T> {
-    T::from_isize(_value).ok_or_else(|| {
+    T::from_isize(value).ok_or_else(|| {
         NdimageError::ComputationError(format!("Failed to convert isize {} to float type", value))
     })
 }
@@ -30,7 +30,7 @@ fn safe_isize_to_float<T: Float + FromPrimitive>(value: isize) -> NdimageResult<
 /// Helper function for safe usize conversion
 #[allow(dead_code)]
 fn safe_usize_to_float<T: Float + FromPrimitive>(value: usize) -> NdimageResult<T> {
-    T::from_usize(_value).ok_or_else(|| {
+    T::from_usize(value).ok_or_else(|| {
         NdimageError::ComputationError(format!("Failed to convert usize {} to float type", value))
     })
 }
@@ -59,7 +59,7 @@ where
 {
     let (height, width) = input.dim();
     let window_size = match window_size {
-        Some(_size) => size,
+        Some(size) => size,
         None => {
             // Automatically determine window _size based on spatial _sigma
             let three = safe_f64_to_float::<T>(3.0)?;
@@ -121,7 +121,7 @@ where
     let range_factor = safe_f64_to_float::<T>(-0.5)? / (range_sigma * range_sigma);
 
     // Process pixels in SIMD chunks
-    let simd_width = T::simd_width();
+    let simd_width = 8; // Default SIMD width for vectorization
     let num_full_chunks = width / simd_width;
 
     // Process full SIMD chunks
@@ -162,12 +162,14 @@ where
                 }
 
                 // Square differences
-                let range_diffs_sq = T::simd_mul(&range_diffs[..], &range_diffs[..]);
+                let range_diffs_array = Array1::from_vec(range_diffs.clone());
+                let range_diffs_sq =
+                    T::simd_mul(&range_diffs_array.view(), &range_diffs_array.view());
 
                 // Apply range factor
                 let mut range_exp_args = vec![T::zero(); simd_width];
                 for i in 0..simd_width {
-                    range_exp_args[i] = range_diffs_sq[i] * range_factor;
+                    range_exp_args[i] = range_diffs_sq.as_slice().unwrap()[i] * range_factor;
                 }
 
                 // Compute exponential (approximation for SIMD)
@@ -227,19 +229,19 @@ where
 
 /// Compute spatial weights for bilateral filter
 #[allow(dead_code)]
-fn compute_spatial_weights<T>(_windowsize: usize, sigma: T) -> NdimageResult<Array<T, Ix2>>
+fn compute_spatial_weights<T>(window_size: usize, sigma: T) -> NdimageResult<Array<T, Ix2>>
 where
     T: Float + FromPrimitive,
 {
-    let half_window = _window_size / 2;
+    let half_window = window_size / 2;
     let factor = safe_f64_to_float::<T>(-0.5)? / (sigma * sigma);
-    let mut weights = Array::zeros((_window_size, window_size));
+    let mut weights = Array::zeros((window_size, window_size));
 
-    for dy in 0.._window_size {
-        for dx in 0.._window_size {
-            let y_dist = safe_isize_to_float(dy as isize - half_window as isize)?;
-            let x_dist = safe_isize_to_float(dx as isize - half_window as isize)?;
-            let dist_sq = y_dist * y_dist + x_dist * x_dist;
+    for dy in 0..window_size {
+        for dx in 0..window_size {
+            let y_dist = safe_isize_to_float::<T>(dy as isize - half_window as isize)?;
+            let x_dist = safe_isize_to_float::<T>(dx as isize - half_window as isize)?;
+            let dist_sq: T = y_dist * y_dist + x_dist * x_dist;
             weights[(dy, dx)] = (dist_sq * factor).exp();
         }
     }
@@ -257,7 +259,7 @@ where
     // This is accurate for small _values (which we have after multiplying by range_factor)
     let mut result = vec![T::one(); values.len()];
 
-    for i in 0.._values.len() {
+    for i in 0..values.len() {
         let x = values[i];
         let x2 = x * x;
         let x3 = x2 * x;
@@ -345,7 +347,7 @@ where
     T: Float + FromPrimitive + Debug + Clone + SimdUnifiedOps,
 {
     let (height, width) = input.dim();
-    let simd_width = T::simd_width();
+    let simd_width = 8; // Default SIMD width for vectorization
 
     for x in half_patch..width - half_patch {
         let mut weight_sum = T::zero();
@@ -402,7 +404,7 @@ where
     })?;
 
     let mut sum = T::zero();
-    let simd_width = T::simd_width();
+    let simd_width = 8; // Default SIMD width for vectorization
     let num_chunks = flat1.len() / simd_width;
 
     // Process SIMD chunks
@@ -410,8 +412,10 @@ where
         let start = i * simd_width;
         let end = start + simd_width;
 
-        let diff = T::simd_sub(&flat1[start..end], &flat2[start..end]);
-        let diff_sq = T::simd_mul(&diff, &diff);
+        let flat1_array = Array1::from_vec(flat1[start..end].to_vec());
+        let flat2_array = Array1::from_vec(flat2[start..end].to_vec());
+        let diff = T::simd_sub(&flat1_array.view(), &flat2_array.view());
+        let diff_sq = T::simd_mul(&diff.view(), &diff.view());
 
         for &val in &diff_sq {
             sum = sum + val;
@@ -482,7 +486,7 @@ fn simd_diffusion_row<T>(
     T: Float + FromPrimitive + Debug + Clone + SimdUnifiedOps,
 {
     let (height, width) = input.dim();
-    let simd_width = T::simd_width();
+    let simd_width = 8; // Default SIMD width for vectorization
 
     // Process SIMD chunks
     let num_chunks = width / simd_width;
@@ -524,24 +528,30 @@ fn simd_diffusion_row<T>(
         }
 
         // Compute gradients using SIMD
-        let grad_n = T::simd_sub(&north_vals[..], &center_vals[..]);
-        let grad_s = T::simd_sub(&south_vals[..], &center_vals[..]);
-        let grad_e = T::simd_sub(&east_vals[..], &center_vals[..]);
-        let grad_w = T::simd_sub(&west_vals[..], &center_vals[..]);
+        let north_array = Array1::from_vec(north_vals.clone());
+        let south_array = Array1::from_vec(south_vals.clone());
+        let east_array = Array1::from_vec(east_vals.clone());
+        let west_array = Array1::from_vec(west_vals.clone());
+        let center_array = Array1::from_vec(center_vals.clone());
+
+        let grad_n = T::simd_sub(&north_array.view(), &center_array.view());
+        let grad_s = T::simd_sub(&south_array.view(), &center_array.view());
+        let grad_e = T::simd_sub(&east_array.view(), &center_array.view());
+        let grad_w = T::simd_sub(&west_array.view(), &center_array.view());
 
         // Compute diffusion coefficients
-        let coeff_n = compute_diffusion_coeff(&grad_n, kappa_sq, option);
-        let coeff_s = compute_diffusion_coeff(&grad_s, kappa_sq, option);
-        let coeff_e = compute_diffusion_coeff(&grad_e, kappa_sq, option);
-        let coeff_w = compute_diffusion_coeff(&grad_w, kappa_sq, option);
+        let coeff_n = compute_diffusion_coeff(grad_n.as_slice().unwrap(), kappa_sq, option);
+        let coeff_s = compute_diffusion_coeff(grad_s.as_slice().unwrap(), kappa_sq, option);
+        let coeff_e = compute_diffusion_coeff(grad_e.as_slice().unwrap(), kappa_sq, option);
+        let coeff_w = compute_diffusion_coeff(grad_w.as_slice().unwrap(), kappa_sq, option);
 
         // Update values
         for i in 0..simd_width {
             if x_start + i < width {
-                let flux = coeff_n[i] * grad_n[i]
-                    + coeff_s[i] * grad_s[i]
-                    + coeff_e[i] * grad_e[i]
-                    + coeff_w[i] * grad_w[i];
+                let flux = coeff_n[i] * grad_n.as_slice().unwrap()[i]
+                    + coeff_s[i] * grad_s.as_slice().unwrap()[i]
+                    + coeff_e[i] * grad_e.as_slice().unwrap()[i]
+                    + coeff_w[i] * grad_w.as_slice().unwrap()[i];
                 output_row[x_start + i] = center_vals[i] + lambda * flux;
             }
         }
@@ -587,23 +597,24 @@ where
 {
     _gradients
         .iter()
-        .map(|&g| compute_single_diffusion_coeff(g, kappa_sq, option))
+        .map(|&g| compute_single_diffusion_coeff(g, kappasq, option))
         .collect()
 }
 
 /// Compute single diffusion coefficient
 #[allow(dead_code)]
-fn compute_single_diffusion_coeff<T>(_gradient: T, kappasq: T, option: usize) -> T
+fn compute_single_diffusion_coeff<T>(gradient: T, kappasq: T, option: usize) -> T
 where
     T: Float + FromPrimitive,
 {
     match option {
         1 => {
             // Exponential: c(g) = exp(-(g/kappa)²)
-            (-(_gradient * gradient) / kappa_sq).exp()
+            (-(gradient * gradient) / kappasq).exp()
         }
         2 => {
-            // Quadratic: c(g) = 1 / (1 + (g/kappa)²), T::one() / (T::one() + _gradient * _gradient / kappa_sq)
+            // Quadratic: c(g) = 1 / (1 + (g/kappa)²)
+            T::one() / (T::one() + gradient * gradient / kappasq)
         }
         _ => T::one(),
     }
@@ -642,11 +653,18 @@ pub fn simd_guided_filter<T>(
     epsilon: T,
 ) -> NdimageResult<Array<T, Ix2>>
 where
-    T: Float + FromPrimitive + Debug + Clone + Send + Sync + SimdUnifiedOps,
+    T: Float
+        + FromPrimitive
+        + Debug
+        + Clone
+        + Send
+        + Sync
+        + SimdUnifiedOps
+        + ndarray::ScalarOperand,
 {
     let (height, width) = input.dim();
     if guide.dim() != (height, width) {
-        return Err(crate::error::NdimageError::ShapeError(
+        return Err(crate::error::NdimageError::InvalidInput(
             "Input and guide must have the same shape".into(),
         ));
     }
@@ -698,7 +716,7 @@ where
 
             for (local_y, mut row) in chunk.axis_iter_mut(Axis(0)).enumerate() {
                 let y = y_start + local_y;
-                if let Err(e) = simd_box_filter_row(_input, &mut row, y, radius, norm) {
+                if let Err(e) = simd_box_filter_row(input, &mut row, y, radius, norm) {
                     // For parallel processing, we can't propagate errors directly
                     // Log error and continue with default values
                     eprintln!("Warning: box filter row processing failed: {:?}", e);
@@ -722,7 +740,7 @@ where
     T: Float + FromPrimitive + SimdUnifiedOps,
 {
     let (height, width) = input.dim();
-    let simd_width = T::simd_width();
+    let simd_width = 8; // Default SIMD width for vectorization
 
     // Use sliding window approach for efficiency
     for x in 0..width {
@@ -747,7 +765,8 @@ where
                         "Failed to convert _row slice to contiguous slice".to_string(),
                     )
                 })?;
-                let chunk_sum = T::simd_sum(&slice[start..end]);
+                let slice_array = Array1::from_vec(slice[start..end].to_vec());
+                let chunk_sum = T::simd_sum(&slice_array.view());
                 sum = sum + chunk_sum;
             }
 
@@ -815,7 +834,7 @@ where
     T: Float + FromPrimitive + SimdUnifiedOps,
 {
     let (height, width) = input1.dim();
-    let simd_width = T::simd_width();
+    let simd_width = 8; // Default SIMD width for vectorization
 
     for x in 0..width {
         let x_min = x.saturating_sub(radius);
@@ -848,8 +867,10 @@ where
                 let slice1 = &slice1_raw[start..end];
                 let slice2 = &slice2_raw[start..end];
 
-                let products = T::simd_mul(slice1, slice2);
-                let chunk_sum = T::simd_sum(&products);
+                let slice1_array = Array1::from_vec(slice1.to_vec());
+                let slice2_array = Array1::from_vec(slice2.to_vec());
+                let products = T::simd_mul(&slice1_array.view(), &slice2_array.view());
+                let chunk_sum = T::simd_sum(&products.view());
                 sum = sum + chunk_sum;
             }
 
@@ -881,13 +902,13 @@ where
 {
     let (height, width) = input.dim();
     if guide.dim() != (height, width) {
-        return Err(crate::error::NdimageError::ShapeError(
+        return Err(crate::error::NdimageError::InvalidInput(
             "Input and guide must have the same shape".into(),
         ));
     }
 
     let window_size = match window_size {
-        Some(_size) => size,
+        Some(size) => size,
         None => {
             let three = safe_f64_to_float::<T>(3.0)?;
             let radius = safe_float_to_usize(spatial_sigma * three)?;
@@ -949,7 +970,7 @@ where
 {
     let (height, width) = input.dim();
     let range_factor = safe_f64_to_float::<T>(-0.5)? / (range_sigma * range_sigma);
-    let simd_width = T::simd_width();
+    let simd_width = 8; // Default SIMD width for vectorization
 
     for x in 0..width {
         let guide_center = guide[(y, x)];

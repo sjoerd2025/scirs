@@ -15,7 +15,9 @@ pub use scirs2_core::gpu::{
 
 // Fallback types when GPU feature is not enabled
 #[cfg(not(feature = "gpu"))]
-pub use crate::gpu_ops::{GpuBackend, GpuBuffer, GpuDevice, GpuError, GpuKernelHandle};
+pub use crate::gpu_ops::{
+    GpuBackend, GpuBuffer, GpuDataType, GpuDevice, GpuError, GpuKernelHandle,
+};
 
 // Re-export backend-specific modules
 pub use cuda::{CudaMemoryManager, CudaOptimizationLevel, CudaSpMatVec};
@@ -26,14 +28,14 @@ pub use opencl::{
 
 use crate::csr_array::CsrArray;
 use crate::error::{SparseError, SparseResult};
-use crate::gpu_ops::GpuDataType;
 use crate::sparray::SparseArray;
 use ndarray::{Array1, ArrayView1};
 use num_traits::Float;
 use std::fmt::Debug;
 
+// GpuDataType is already available from the pub use statements above
+
 /// Unified GPU sparse matrix operations interface
-#[derive(Debug, Clone)]
 pub struct GpuSpMatVec {
     backend: GpuBackend,
     cuda_handler: Option<CudaSpMatVec>,
@@ -441,7 +443,6 @@ pub struct BackendInfo {
 /// Convenient functions for common operations
 pub mod convenience {
     use super::*;
-    use crate::gpu_ops::GpuDataType;
 
     /// Execute sparse matrix-vector multiplication with automatic GPU detection
     pub fn gpu_spmv<T>(matrix: &CsrArray<T>, vector: &ArrayView1<T>) -> SparseResult<Array1<T>>

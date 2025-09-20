@@ -293,7 +293,7 @@ impl WebGPUContext {
                         binding: binding_index,
                         visibility: ShaderStages::COMPUTE,
                         ty: BindingType::Buffer {
-                            ty: BufferBindingType::Storage { read, only: false },
+                            ty: BufferBindingType::Storage { read_only: false },
                             has_dynamic_offset: false,
                             min_binding_size: None,
                         },
@@ -305,7 +305,7 @@ impl WebGPUContext {
                         binding: binding_index,
                         visibility: ShaderStages::COMPUTE,
                         ty: BindingType::Buffer {
-                            ty: BufferBindingType::Storage { read, only: true },
+                            ty: BufferBindingType::Storage { read_only: true },
                             has_dynamic_offset: false,
                             min_binding_size: None,
                         },
@@ -334,7 +334,7 @@ impl WebGPUContext {
                 binding: 0,
                 visibility: ShaderStages::COMPUTE,
                 ty: BindingType::Buffer {
-                    ty: BufferBindingType::Storage { read, only: false },
+                    ty: BufferBindingType::Storage { read_only: false },
                     has_dynamic_offset: false,
                     min_binding_size: None,
                 },
@@ -541,7 +541,12 @@ impl GpuCompilerImpl for WebGPUCompiler {
         }))
     }
 
-    fn compile_typed(&self, name: &str, _typeid: std::any::TypeId) -> Arc<dyn GpuKernelImpl> {
+    fn compile_typed(
+        &self,
+        name: &str,
+        _input_type: std::any::TypeId,
+        _output_type: std::any::TypeId,
+    ) -> Arc<dyn GpuKernelImpl> {
         Arc::new(WebGPUKernelHandle {
             shader_name: name.to_string(),
             compiled_shaders: Arc::clone(&self.context.compiled_shaders),
@@ -612,7 +617,7 @@ impl GpuKernelImpl for WebGPUKernelHandle {
         params.insert(name.to_string(), KernelParam::F64(value));
     }
 
-    fn dispatch_workgroups(&self, workgroups: [u32; 3]) {
+    fn dispatch(&self, workgroups: [u32; 3]) {
         #[cfg(feature = "wgpu_backend")]
         {
             // Real WebGPU compute dispatch
@@ -653,11 +658,7 @@ impl GpuKernelImpl for WebGPUKernelHandle {
                     // }
 
                     // Dispatch the compute shader
-                    compute_pass.dispatch_workgroups(
-                        work_groups[0],
-                        work_groups[1],
-                        work_groups[2],
-                    );
+                    compute_pass.dispatch_workgroups(workgroups[0], workgroups[1], workgroups[2]);
                 }
 
                 // Submit the command buffer
@@ -666,7 +667,7 @@ impl GpuKernelImpl for WebGPUKernelHandle {
 
                 eprintln!(
                     "WebGPU compute shader {} dispatched with workgroups: {:?}",
-                    self.shader_name, work_groups
+                    self.shader_name, workgroups
                 );
             }
         }
@@ -674,7 +675,7 @@ impl GpuKernelImpl for WebGPUKernelHandle {
         {
             // Fallback implementation - just log the execution
             eprintln!("Executing WebGPU shader {} (simulated)", self.shader_name);
-            eprintln!("Work groups: {:?}", work_groups);
+            eprintln!("Work groups: {:?}", workgroups);
         }
     }
 }
@@ -890,7 +891,7 @@ impl WebGPUMemoryPool {
     fn new(totalsize: usize) -> Self {
         Self {
             available_buffers: HashMap::new(),
-            total_size,
+            total_size: totalsize,
             used_size: 0,
         }
     }

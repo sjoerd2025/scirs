@@ -277,7 +277,7 @@ impl ModelRegistry {
             })?;
 
             // Update file path to current directory
-            metadata.file_path = model_dir.to_path_buf();
+            metadata.file_path = modeldir.to_path_buf();
             Ok(metadata)
         }
 
@@ -553,12 +553,12 @@ impl ModelRegistry {
             .ok_or_else(|| TextError::InvalidInput(format!("Model not found: {model_id}")))?;
 
         // Simple version comparison (in practice, this would be more sophisticated)
-        let current_version = "0.1.0-beta.1"; // Use hardcoded version
+        let current_version = "0.1.0-beta.2"; // Use hardcoded version
         let min_version = &metadata.min_api_version;
 
         // For now, just check if versions match exactly
         // In practice, this would use semantic versioning
-        Ok(current_version >= min_version)
+        Ok(current_version >= min_version.as_str())
     }
 
     /// Get model statistics

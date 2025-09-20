@@ -46,7 +46,9 @@
 //! use ndarray::array;
 //!
 //! let mut model = AparchModel::new();
-//! let returns = array![0.01, -0.02, 0.015, -0.008, 0.012]; // Return series
+//! let returns = array![0.01, -0.02, 0.015, -0.008, 0.012, 0.005, -0.015, 0.02, -0.01, 0.008,
+//!                      0.003, -0.012, 0.018, -0.006, 0.009, 0.002, -0.008, 0.014, -0.004, 0.011,
+//!                      0.007, -0.009, 0.013, -0.003, 0.006]; // Return series
 //!
 //! let result = model.fit(&returns).unwrap();
 //! println!("APARCH Parameters: {:?}", result.parameters);
@@ -59,19 +61,23 @@
 //! use ndarray::array;
 //!
 //! let mut model = AparchModel::new();
-//! let returns = array![0.01, -0.02, 0.015, -0.008, 0.012];
+//! let returns = array![0.01, -0.02, 0.015, -0.008, 0.012, 0.005, -0.015, 0.02, -0.01, 0.008,
+//!                      0.003, -0.012, 0.018, -0.006, 0.009, 0.002, -0.008, 0.014, -0.004, 0.011,
+//!                      0.007, -0.009, 0.013, -0.003, 0.006];
 //!
 //! let result = model.fit(&returns).unwrap();
 //!
 //! // Interpret the power parameter
-//! if result.parameters.delta.abs_sub(2.0) < 0.1 {
+//! let delta = result.parameters.delta;
+//! if (delta - 2.0f64).abs() < 0.1 {
 //!     println!("Model behaves similar to GARCH");
-//! } else if result.parameters.delta.abs_sub(1.0) < 0.1 {
+//! } else if (delta - 1.0f64).abs() < 0.1 {
 //!     println!("Model behaves similar to absolute value GARCH");
 //! }
 //!
 //! // Check for asymmetric effects
-//! if result.parameters.gamma.abs() > 0.01 {
+//! let gamma = result.parameters.gamma;
+//! if gamma.abs() > 0.01f64 {
 //!     println!("Asymmetric effects detected");
 //! }
 //! ```

@@ -55,8 +55,10 @@ use num_traits::Float;
 use std::collections::VecDeque;
 
 // Re-export advanced streaming capabilities
-pub mod advanced_streaming;
-pub use advanced_streaming::{
+pub mod advanced;
+
+// Re-export from the new modular advanced streaming
+pub use advanced::{
     AdaptiveStreamingMetrics, AdwinDetector, AlertSeverity, AnomalyDetectionAlgorithm,
     AnomalySummary, ConceptDriftDetector, DdmDetector, DriftDetectionMethod, DriftStatus,
     PageHinkleyDetector, StreamingConfig, UpdateResult, WindowAdaptationStrategy,

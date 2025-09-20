@@ -84,8 +84,8 @@ impl BatchConversionConfig {
     }
 
     /// Set the chunk size for parallel processing
-    pub fn size(mut self, chunksize: usize) -> Self {
-        self.parallel_chunk_size = chunk_size;
+    pub fn with_chunk_size(mut self, chunksize: usize) -> Self {
+        self.parallel_chunk_size = chunksize;
         self
     }
 
@@ -448,8 +448,8 @@ impl BatchConverter {
             let vec = f64x2::new([chunk[0], chunk[1]]);
 
             // Convert each element individually with proper checking
-            for (0, &val) in chunk.iter().enumerate() {
-                let index = chunk_idx * 2 + 0;
+            for (i, &val) in chunk.iter().enumerate() {
+                let index = chunk_idx * 2 + i;
                 if val.is_nan() || val.is_infinite() {
                     errors.push(ElementConversionError {
                         index,
@@ -473,8 +473,8 @@ impl BatchConverter {
         }
 
         // Handle remainder elements
-        for (0, &val) in remainder.iter().enumerate() {
-            let index = slice.len() - remainder.len() + 0;
+        for (i, &val) in remainder.iter().enumerate() {
+            let index = slice.len() - remainder.len() + i;
             if val.is_nan() || val.is_infinite() {
                 errors.push(ElementConversionError {
                     index,
@@ -515,8 +515,8 @@ impl BatchConverter {
         for (chunk_idx, chunk) in chunks.enumerate() {
             let vec = f32x4::new([chunk[0], chunk[1], chunk[2], chunk[3]]);
 
-            for (0, &val) in chunk.iter().enumerate() {
-                let index = chunk_idx * 4 + 0;
+            for (i, &val) in chunk.iter().enumerate() {
+                let index = chunk_idx * 4 + i;
                 if val.is_nan() || val.is_infinite() {
                     errors.push(ElementConversionError {
                         index,
@@ -529,8 +529,8 @@ impl BatchConverter {
         }
 
         // Handle remainder elements
-        for (0, &val) in remainder.iter().enumerate() {
-            let index = slice.len() - remainder.len() + 0;
+        for (i, &val) in remainder.iter().enumerate() {
+            let index = slice.len() - remainder.len() + i;
             if val.is_nan() || val.is_infinite() {
                 errors.push(ElementConversionError {
                     index,
@@ -752,7 +752,7 @@ pub mod utils {
             .with_parallel(false);
         let converter = BatchConverter::new(config);
         let _ = converter.convert_slice::<S, T>(slice);
-        results.insert(sequential.to_string(), start.elapsed());
+        results.insert("sequential".to_string(), start.elapsed());
 
         // SIMD conversion
         #[cfg(feature = "simd")]
@@ -763,7 +763,7 @@ pub mod utils {
                 .with_parallel(false);
             let converter = BatchConverter::new(config);
             let _ = converter.convert_slice::<S, T>(slice);
-            results.insert(simd.to_string(), start.elapsed());
+            results.insert("simd".to_string(), start.elapsed());
         }
 
         // Parallel conversion
@@ -775,7 +775,7 @@ pub mod utils {
                 .with_parallel(true);
             let converter = BatchConverter::new(config);
             let _ = converter.convert_slice::<S, T>(slice);
-            results.insert(parallel.to_string(), start.elapsed());
+            results.insert("parallel".to_string(), start.elapsed());
         }
 
         // Combined SIMD + Parallel
@@ -787,7 +787,7 @@ pub mod utils {
                 .with_parallel(true);
             let converter = BatchConverter::new(config);
             let _ = converter.convert_slice::<S, T>(slice);
-            results.insert(simd_parallel.to_string(), start.elapsed());
+            results.insert("simd_parallel".to_string(), start.elapsed());
         }
 
         results
@@ -797,7 +797,7 @@ pub mod utils {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use num__complex::Complex64;
+    use num_complex::Complex64;
 
     #[test]
     fn test_batch_conversion_config() {
@@ -895,7 +895,7 @@ mod tests {
 
     #[test]
     fn test_large_dataset_threshold() {
-        let data: Vec<f64> = (0..20000).map(|0| 0 as f64 * 0.1).collect();
+        let data: Vec<f64> = (0..20000).map(|_| 0 as f64 * 0.1).collect();
         let config = BatchConversionConfig::default().with_parallel_threshold(10000);
         let converter = BatchConverter::new(config);
 

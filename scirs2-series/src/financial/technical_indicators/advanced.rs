@@ -27,7 +27,7 @@
 //!
 //! ## Enhanced Bollinger Bands
 //! ```rust
-//! use scirs2_series::financial::technical_indicators::advanced::{BollingerBandsConfig, bollinger_bands};
+//! use scirs2_series::financial::technical_indicators::advanced::{BollingerBandsConfig, bollinger_bands, MovingAverageType};
 //! use ndarray::array;
 //!
 //! let prices = array![20.0, 21.0, 19.5, 22.0, 21.5, 20.0, 19.0, 23.0, 22.5, 21.0];
@@ -45,11 +45,14 @@
 //! ## Ichimoku Cloud Analysis
 //! ```rust
 //! use scirs2_series::financial::technical_indicators::advanced::{IchimokuConfig, ichimoku_cloud};
-//! use ndarray::array;
+//! use ndarray::Array1;
 //!
-//! let high = array![15.0, 16.0, 14.5, 17.0, 16.5, 18.0, 17.5];
-//! let low = array![13.0, 14.0, 13.5, 15.0, 15.5, 16.0, 16.5];
-//! let close = array![14.5, 15.5, 14.0, 16.0, 16.0, 17.0, 17.0];
+//! let high = (0..60).map(|i| 15.0 + (i as f64 * 0.1).sin() * 2.0).collect::<Vec<f64>>();
+//! let low = (0..60).map(|i| 13.0 + (i as f64 * 0.1).sin() * 2.0).collect::<Vec<f64>>();
+//! let close = (0..60).map(|i| 14.0 + (i as f64 * 0.1).sin() * 2.0).collect::<Vec<f64>>();
+//! let high = Array1::from_vec(high);
+//! let low = Array1::from_vec(low);
+//! let close = Array1::from_vec(close);
 //! let config = IchimokuConfig::default();
 //!
 //! let cloud = ichimoku_cloud(&high, &low, &close, &config).unwrap();
@@ -136,7 +139,7 @@ pub struct BollingerBands<F: Float> {
 /// use scirs2_series::financial::technical_indicators::advanced::{BollingerBandsConfig, bollinger_bands};
 /// use ndarray::array;
 ///
-/// let prices = array![20.0, 21.0, 19.5, 22.0, 21.5, 20.0, 19.0];
+/// let prices = array![20.0, 21.0, 19.5, 22.0, 21.5, 20.0, 19.0, 23.0, 22.5, 21.0, 20.5, 22.5, 23.0, 21.5, 20.0, 22.0, 21.0, 19.5, 21.5, 22.0, 20.5];
 /// let config = BollingerBandsConfig::default();
 /// let bands = bollinger_bands(&prices, &config).unwrap();
 /// ```

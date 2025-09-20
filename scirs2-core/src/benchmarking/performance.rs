@@ -41,7 +41,7 @@ pub struct PerformanceTarget {
 
 impl PerformanceTarget {
     /// Create a new performance target
-    pub fn new(category: BenchmarkCategory, targettime: Duration) -> Self {
+    pub fn new(category: BenchmarkCategory, target_time: Duration) -> Self {
         Self {
             category,
             target_time,
@@ -70,19 +70,19 @@ impl PerformanceTarget {
     }
 
     /// Check if benchmark result meets this target
-    pub fn is_met_by(&self, result: &BenchmarkResult, inputscale: f64) -> bool {
+    pub fn is_met_by(&self, result: &BenchmarkResult, input_scale: f64) -> bool {
         let scaled_target_time = Duration::from_nanos(
             (self.target_time.as_nanos() as f64 * input_scale.powf(self.scaling_factor)) as u64,
         );
 
         // Check execution time
-        if result.statistics.meanexecution_time > scaled_target_time {
+        if result.statistics.mean_execution_time > scaled_target_time {
             return false;
         }
 
         // Check throughput if specified
         if let Some(target_throughput) = self.target_throughput {
-            let actual_throughput = 1.0 / result.statistics.meanexecution_time.as_secs_f64();
+            let actual_throughput = 1.0 / result.statistics.mean_execution_time.as_secs_f64();
             if actual_throughput < target_throughput {
                 return false;
             }
@@ -127,7 +127,10 @@ impl PerformanceBenchmarkResult {
             (target.target_time.as_nanos() as f64 * input_scale.powf(target.scaling_factor)) as u64,
         );
 
-        let performance_ratio = benchmark_result.statistics.meanexecution_time.as_secs_f64()
+        let performance_ratio = benchmark_result
+            .statistics
+            .mean_execution_time
+            .as_secs_f64()
             / scaled_target_time.as_secs_f64();
 
         Self {
@@ -308,12 +311,12 @@ impl PerformanceBenchmarker {
         let speedup = scalar_result
             .benchmark_result
             .statistics
-            .meanexecution_time
+            .mean_execution_time
             .as_secs_f64()
             / simd_result
                 .benchmark_result
                 .statistics
-                .meanexecution_time
+                .mean_execution_time
                 .as_secs_f64();
 
         Ok((simd_result, scalar_result, speedup))
@@ -357,12 +360,12 @@ impl PerformanceBenchmarker {
         let actual_speedup = sequential_result
             .benchmark_result
             .statistics
-            .meanexecution_time
+            .mean_execution_time
             .as_secs_f64()
             / parallel_result
                 .benchmark_result
                 .statistics
-                .meanexecution_time
+                .mean_execution_time
                 .as_secs_f64();
         let efficiency = actual_speedup / theoretical_speedup;
 
@@ -574,7 +577,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_performance_benchmarker() {
         let config = BenchmarkConfig::new()
             .with_warmup_iterations(1)
@@ -592,7 +594,7 @@ mod tests {
             )
             .unwrap();
 
-        assert!(result.benchmark_result.statistics.meanexecution_time > Duration::from_micros(50));
+        assert!(result.benchmark_result.statistics.mean_execution_time > Duration::from_micros(50));
         assert_eq!(result.target.category, BenchmarkCategory::Computation);
     }
 }

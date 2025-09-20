@@ -69,14 +69,14 @@ where
 /// use ndarray::Array1;
 /// use scirs2_sparse::{
 ///     sym_csr::SymCsrMatrix,
-///     linalg::eigen::{power_iteration, PowerIterationOptions},
+///     linalg::{power_iteration, PowerIterationOptions},
 /// };
 ///
 /// // Create a symmetric matrix
-/// let data = vec![2.0, 1.0, 2.0, 3.0, 1.0];
-/// let indices = vec![0, 0, 1, 1, 2];
-/// let indptr = vec![0, 1, 3, 5];
-/// let matrix = SymCsrMatrix::new(data, indices, indptr, (3, 3)).unwrap();
+/// let data = vec![2.0, 1.0, 2.0, 3.0];
+/// let indices = vec![0, 0, 1, 2];
+/// let indptr = vec![0, 1, 3, 4];
+/// let matrix = SymCsrMatrix::new(data, indptr, indices, (3, 3)).unwrap();
 ///
 /// // Configure options
 /// let options = PowerIterationOptions {

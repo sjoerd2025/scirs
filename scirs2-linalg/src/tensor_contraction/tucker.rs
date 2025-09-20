@@ -580,7 +580,7 @@ where
     let other_dims_prod: usize = shape
         .iter()
         .enumerate()
-        .filter(|&(i_)| i != mode)
+        .filter(|&(i, _)| i != mode)
         .map(|(_, &dim)| dim)
         .product();
 
@@ -605,7 +605,7 @@ where
     // Populate the unfolded _tensor
     for idx in ndarray::indices(shape) {
         let mode_idx = idx[mode];
-        let idx_vec: Vec<usize> = idx.asarray_view().to_vec();
+        let idx_vec: Vec<usize> = idx.as_array_view().to_vec();
         let col_idx = calc_col_idx(&idx_vec, shape, mode);
         result[[mode_idx, col_idx]] = tensor[idx.clone()];
     }
@@ -633,8 +633,8 @@ where
     // For each _mode except the one to skip, project the core tensor
     let mut projected_tensor = core.clone();
 
-    for (_mode, factor) in factors.iter().enumerate() {
-        if _mode == skip_mode {
+    for (mode, factor) in factors.iter().enumerate() {
+        if mode == skip_mode {
             continue;
         }
 

@@ -10,6 +10,7 @@ use crate::error::{SignalError, SignalResult};
 use num_traits::{Float, NumCast};
 use rand::Rng;
 use scirs2_core::validation::{check_finite, check_positive};
+use std::f64::consts::PI;
 use std::fmt::Debug;
 
 #[allow(unused_imports)]
@@ -160,14 +161,7 @@ where
     let power = if config.use_fast {
         compute_fast_lombscargle(&times_f64, &windowed_values, &frequencies, config.tolerance)?
     } else {
-        compute_standard_lombscargle(
-            &times_f64,
-            &windowed_values,
-            &frequencies,
-            None,
-            None,
-            Some(false),
-        )?
+        compute_standard_lombscargle(&times_f64, &windowed_values, &frequencies)?
     };
 
     // Compute bootstrap confidence intervals if requested

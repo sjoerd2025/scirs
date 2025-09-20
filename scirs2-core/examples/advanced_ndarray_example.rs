@@ -1,11 +1,11 @@
 // Example demonstrating the enhanced ndarray extensions and ufuncs functionality
 
-use ndarray::{array, Array};
+use ndarray::{array, Array, Array2};
 use scirs2_core::ndarray_ext::{
     // Array manipulation operations
     manipulation::{concatenate_2d, flip_2d, pad_2d, repeat_2d, roll_2d, tile_2d, vstack_1d},
     // Matrix operations
-    matrix::{block_diag, diag, eye, kron, toeplitz, trace, tridiagonal},
+    matrix::{_diag as diag, block_diag, eye, kron, toeplitz, trace, tridiagonal},
 };
 use scirs2_core::ufuncs::{
     ceil,
@@ -27,6 +27,7 @@ use scirs2_core::ufuncs::{
     square,
     std,
 };
+use std::f64::consts::PI;
 
 #[allow(dead_code)]
 fn print_title(title: &str) {
@@ -48,7 +49,7 @@ fn main() {
     let angles = array![[0.0, PI / 6.0, PI / 4.0, PI / 3.0, PI / 2.0]];
 
     // Demonstrate matrix creation functions
-    print_section("Matrix Creation");
+    println!("\n=== Matrix Creation ===");
 
     let identity = eye::<f64>(3);
     println!("Identity matrix (3x3):");
@@ -89,7 +90,7 @@ fn main() {
     println!("{}", tridiag);
 
     // Demonstrate array manipulation functions
-    print_section("Array Manipulation");
+    println!("\n=== Array Manipulation ===");
 
     println!("Original array a:");
     println!("{}", a);
@@ -123,7 +124,7 @@ fn main() {
     println!("{}", vstacked);
 
     // Demonstrate mathematical operations
-    print_section("Mathematical Functions");
+    println!("\n=== Mathematical Functions ===");
 
     println!("Original angles (in radians):");
     println!("{}", angles_1d);
@@ -177,7 +178,7 @@ fn main() {
     println!("{}", degrees);
 
     // Demonstrate statistical operations
-    print_section("Statistical Functions");
+    println!("\n=== Statistical Functions ===");
 
     let data = array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]];
     println!("Data matrix:");
@@ -204,7 +205,7 @@ fn main() {
     println!("\nMaximum value: {}", max_all[0]);
 
     // Demonstrate a complete data analysis workflow
-    print_section("Complete Data Analysis Workflow");
+    println!("\n=== Complete Data Analysis Workflow ===");
 
     // Create a dataset with some noise
     let measurements = array![

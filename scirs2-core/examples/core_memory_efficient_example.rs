@@ -1,9 +1,9 @@
-use ndarray::Array2;
 use scirs2_core::error::CoreError;
 use scirs2_core::memory_efficient::{
     chunk_wise_op, create_disk_array, diagonal_view, evaluate, transpose_view, ChunkingStrategy,
     LazyArray,
 };
+use scirs2_core::ndarray_ext::Array2;
 use std::time::Instant;
 
 #[allow(dead_code)]

@@ -798,7 +798,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Test failing - needs investigation
+    #[ignore] // FIXME: Test expectations don't match implementation - distance calculation needs review
     fn test_wasserstein_distance() {
         let stable = StableMetrics::<f64>::default();
 

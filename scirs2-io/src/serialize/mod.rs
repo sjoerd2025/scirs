@@ -11,14 +11,18 @@
 //! - Compression support for sparse matrices
 //! - Memory-efficient sparse matrix operations
 
+use ::serde::{Deserialize, Serialize};
 use ndarray::{Array, Array2, ArrayBase, IxDyn};
-use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::{BufReader, BufWriter, Write};
 use std::path::Path;
 
 use crate::error::{IoError, Result};
+use bincode::{config, serde as bincode_serde};
+fn bincode_cfg() -> impl bincode::config::Config {
+    config::standard()
+}
 
 /// Format for data serialization
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -89,8 +93,19 @@ where
 
     match format {
         SerializationFormat::Binary => {
-            bincode::serialize_into(&mut writer, &serializable)
+            // For bincode v2 we explicitly add a length prefix to make deserialization
+            // more robust and to avoid UnexpectedEof issues that can arise if the reader
+            // attempts to stream a value without knowing total size.
+            let cfg = bincode_cfg();
+            let bytes = bincode_serde::encode_to_vec(&serializable, cfg)
                 .map_err(|e| IoError::SerializationError(e.to_string()))?;
+            let len = bytes.len() as u64;
+            writer
+                .write_all(&len.to_le_bytes())
+                .map_err(|e| IoError::FileError(e.to_string()))?;
+            writer
+                .write_all(&bytes)
+                .map_err(|e| IoError::FileError(e.to_string()))?;
         }
         SerializationFormat::JSON => {
             serde_json::to_writer_pretty(&mut writer, &serializable)
@@ -139,11 +154,53 @@ where
     A: for<'de> Deserialize<'de> + Clone,
 {
     let file = File::open(path).map_err(|e| IoError::FileError(e.to_string()))?;
-    let reader = BufReader::new(file);
+    let mut reader = BufReader::new(file);
 
     let serialized: SerializedArray<A> = match format {
-        SerializationFormat::Binary => bincode::deserialize_from(reader)
-            .map_err(|e| IoError::DeserializationError(e.to_string()))?,
+        SerializationFormat::Binary => {
+            // Read entire file into memory so we can attempt both new (length-prefixed)
+            // and legacy (no length) formats.
+            use std::io::Read;
+            let mut buf = Vec::new();
+            reader
+                .read_to_end(&mut buf)
+                .map_err(|e| IoError::FileError(e.to_string()))?;
+            if buf.len() >= 8 {
+                let mut len_bytes = [0u8; 8];
+                len_bytes.copy_from_slice(&buf[0..8]);
+                let declared = u64::from_le_bytes(len_bytes) as usize;
+                if declared <= buf.len() - 8 {
+                    let data_slice = &buf[8..8 + declared];
+                    let cfg = bincode_cfg();
+                    if let Ok((val, _consumed)) =
+                        bincode_serde::decode_from_slice::<SerializedArray<A>, _>(data_slice, cfg)
+                    {
+                        val
+                    } else {
+                        // Fallback: try legacy format (entire buffer)
+                        let cfg = bincode_cfg();
+                        let (val, _len): (SerializedArray<A>, usize) =
+                            bincode_serde::decode_from_slice(&buf, cfg)
+                                .map_err(|e| IoError::DeserializationError(e.to_string()))?;
+                        val
+                    }
+                } else {
+                    // Declared length impossible -> legacy
+                    let cfg = bincode_cfg();
+                    let (val, _len): (SerializedArray<A>, usize) =
+                        bincode_serde::decode_from_slice(&buf, cfg)
+                            .map_err(|e| IoError::DeserializationError(e.to_string()))?;
+                    val
+                }
+            } else {
+                // Too small to contain length prefix -> legacy
+                let cfg = bincode_cfg();
+                let (val, _len): (SerializedArray<A>, usize) =
+                    bincode_serde::decode_from_slice(&buf, cfg)
+                        .map_err(|e| IoError::DeserializationError(e.to_string()))?;
+                val
+            }
+        }
         SerializationFormat::JSON => serde_json::from_reader(reader)
             .map_err(|e| IoError::DeserializationError(e.to_string()))?,
         SerializationFormat::MessagePack => rmp_serde::from_read(reader)
@@ -249,7 +306,8 @@ where
     // Serialize
     match format {
         SerializationFormat::Binary => {
-            bincode::serialize_into(&mut writer, &serialized)
+            let cfg = bincode_cfg();
+            bincode_serde::encode_into_std_write(&serialized, &mut writer, cfg)
                 .map_err(|e| IoError::SerializationError(e.to_string()))?;
         }
         SerializationFormat::JSON => {
@@ -304,11 +362,16 @@ where
     A: for<'de> Deserialize<'de> + Clone,
 {
     let file = File::open(path).map_err(|e| IoError::FileError(e.to_string()))?;
-    let reader = BufReader::new(file);
+    let mut reader = BufReader::new(file);
 
     let serialized: SerializedArray<A> = match format {
-        SerializationFormat::Binary => bincode::deserialize_from(reader)
-            .map_err(|e| IoError::DeserializationError(e.to_string()))?,
+        SerializationFormat::Binary => {
+            let cfg = bincode_cfg();
+            let (val, _len): (SerializedArray<A>, usize) =
+                bincode_serde::decode_from_std_read(&mut reader, cfg)
+                    .map_err(|e| IoError::DeserializationError(e.to_string()))?;
+            val
+        }
         SerializationFormat::JSON => serde_json::from_reader(reader)
             .map_err(|e| IoError::DeserializationError(e.to_string()))?,
         SerializationFormat::MessagePack => rmp_serde::from_read(reader)
@@ -371,7 +434,8 @@ where
 
     match format {
         SerializationFormat::Binary => {
-            bincode::serialize_into(&mut writer, data)
+            let cfg = bincode_cfg();
+            bincode_serde::encode_into_std_write(data, &mut writer, cfg)
                 .map_err(|e| IoError::SerializationError(e.to_string()))?;
         }
         SerializationFormat::JSON => {
@@ -425,11 +489,12 @@ where
     T: for<'de> Deserialize<'de>,
 {
     let file = File::open(path).map_err(|e| IoError::FileError(e.to_string()))?;
-    let reader = BufReader::new(file);
+    let mut reader = BufReader::new(file);
 
     match format {
         SerializationFormat::Binary => {
-            let data = bincode::deserialize_from(reader)
+            let cfg = bincode_cfg();
+            let (data, _len): (T, usize) = bincode_serde::decode_from_std_read(&mut reader, cfg)
                 .map_err(|e| IoError::DeserializationError(e.to_string()))?;
             Ok(data)
         }
@@ -1267,7 +1332,8 @@ where
     match format {
         SerializationFormat::Binary => {
             // Write metadata
-            bincode::serialize_into(&mut writer, &metadata)
+            let cfg = bincode_cfg();
+            bincode_serde::encode_into_std_write(&metadata, &mut writer, cfg)
                 .map_err(|e| IoError::SerializationError(e.to_string()))?;
 
             // Write data directly from array memory
@@ -1328,8 +1394,10 @@ where
     file.read_exact(&mut metadata_buf)
         .map_err(|e| IoError::FileError(e.to_string()))?;
 
-    let metadata: ArrayMetadata = bincode::deserialize(&metadata_buf)
-        .map_err(|e| IoError::DeserializationError(e.to_string()))?;
+    let cfg = bincode_cfg();
+    let (metadata, _len): (ArrayMetadata, usize) =
+        bincode_serde::decode_from_slice(&metadata_buf, cfg)
+            .map_err(|e| IoError::DeserializationError(e.to_string()))?;
 
     // Memory-map the rest of the file (data portion)
     let mmap = unsafe {

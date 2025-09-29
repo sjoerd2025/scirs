@@ -13,9 +13,9 @@ fn main() {
 }
 
 #[cfg(feature = "memory_management")]
-use ndarray::Array2;
-#[cfg(feature = "memory_management")]
 use scirs2_core::memory::{global_buffer_pool, BufferPool, ChunkProcessor2D, ZeroCopyView};
+#[cfg(feature = "memory_management")]
+use scirs2_core::ndarray_ext::Array2;
 
 #[cfg(feature = "memory_management")]
 #[allow(dead_code)]

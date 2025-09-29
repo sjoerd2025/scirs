@@ -28,7 +28,7 @@
 //! ```
 
 use crate::error::{SpatialError, SpatialResult};
-use ndarray::{Array1, Array2};
+use scirs2_core::ndarray::{Array1, Array2};
 use std::f64::consts::PI;
 
 /// A trajectory point with position, velocity, and acceleration

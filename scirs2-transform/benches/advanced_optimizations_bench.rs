@@ -6,9 +6,10 @@
 //! Run with: cargo bench --bench advanced_optimizations_bench
 
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
-use ndarray::Array2;
-use ndarray_rand::rand::distributions::Uniform;
-use ndarray_rand::RandomExt;
+use scirs2_core::ndarray::RandomExt;
+use scirs2_core::ndarray::{Array2, Ix2};
+use scirs2_core::random::prelude::*;
+use scirs2_core::random::OptimizedArrayRandom;
 use scirs2_transform::*;
 use std::hint::black_box;
 
@@ -22,7 +23,12 @@ fn bench_adaptive_simd_normalization(c: &mut Criterion) {
 
     for &n_samples in SAMPLE_SIZES {
         for &n_features in FEATURE_SIZES {
-            let data = Array2::random((n_samples, n_features), Uniform::new(-100.0, 100.0));
+            let mut rng = thread_rng();
+            let data = Array2::random_bulk(
+                Ix2(n_samples, n_features),
+                Uniform::new(-100.0, 100.0).unwrap(),
+                &mut rng,
+            );
 
             group.throughput(Throughput::Elements((n_samples * n_features) as u64));
 
@@ -84,7 +90,12 @@ fn bench_enhanced_standard_scaler(c: &mut Criterion) {
 
     for &n_samples in SAMPLE_SIZES {
         for &n_features in FEATURE_SIZES {
-            let data = Array2::random((n_samples, n_features), Uniform::new(-100.0, 100.0));
+            let mut rng = thread_rng();
+            let data = Array2::random_bulk(
+                Ix2(n_samples, n_features),
+                Uniform::new(-100.0, 100.0).unwrap(),
+                &mut rng,
+            );
 
             group.throughput(Throughput::Elements((n_samples * n_features) as u64));
 
@@ -124,7 +135,12 @@ fn bench_enhanced_pca(c: &mut Criterion) {
 
     for &n_samples in &[100, 500, 1000] {
         for &n_features in &[20, 50, 100] {
-            let data = Array2::random((n_samples, n_features), Uniform::new(-10.0, 10.0));
+            let mut rng = thread_rng();
+            let data = Array2::random_bulk(
+                Ix2(n_samples, n_features),
+                Uniform::new(-10.0, 10.0).unwrap(),
+                &mut rng,
+            );
             let n_components = (n_features / 2).min(10);
 
             group.throughput(Throughput::Elements((n_samples * n_features) as u64));
@@ -169,7 +185,12 @@ fn bench_simd_polynomial_features(c: &mut Criterion) {
 
     for &n_samples in &[100, 500, 1000] {
         for &n_features in &[5, 10, 20] {
-            let data = Array2::random((n_samples, n_features), Uniform::new(-2.0, 2.0));
+            let mut rng = thread_rng();
+            let data = Array2::random_bulk(
+                Ix2(n_samples, n_features),
+                Uniform::new(-2.0, 2.0).unwrap(),
+                &mut rng,
+            );
 
             group.throughput(Throughput::Elements((n_samples * n_features) as u64));
 
@@ -241,7 +262,9 @@ fn bench_memory_pool_performance(_c: &mut Criterion) {
 fn bench_comprehensive_performance(c: &mut Criterion) {
     let mut group = c.benchmark_group("Comprehensive Performance");
 
-    let large_data = Array2::random((5000, 50), Uniform::new(-10.0, 10.0));
+    let mut rng = thread_rng();
+    let large_data =
+        Array2::random_bulk(Ix2(5000, 50), Uniform::new(-10.0, 10.0).unwrap(), &mut rng);
 
     group.throughput(Throughput::Elements((5000 * 50) as u64));
 

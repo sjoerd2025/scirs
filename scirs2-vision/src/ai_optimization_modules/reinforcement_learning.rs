@@ -5,7 +5,7 @@
 //! and experience replay.
 
 use crate::error::Result;
-use scirs2_core::rng;
+use scirs2_core::random::prelude::*;
 use std::collections::{HashMap, VecDeque};
 use std::time::Instant;
 
@@ -228,9 +228,9 @@ impl RLParameterOptimizer {
 
     /// Select action using epsilon-greedy policy
     pub fn select_action(&mut self, state: &StateDiscrete) -> ActionDiscrete {
-        let mut rng = rng();
+        let mut rng = thread_rng();
 
-        if rng.random_f64() < self.learning_params.epsilon {
+        if rng.gen::<f64>() < self.learning_params.epsilon {
             // Explore: random action
             let idx = rng.gen_range(0..self.action_space.len());
             self.action_space[idx].clone()
@@ -337,7 +337,7 @@ impl RLParameterOptimizer {
             return;
         }
 
-        let mut rng = rng();
+        let mut rng = thread_rng();
         let sample_indices: Vec<usize> = (0..batchsize)
             .map(|_| rng.gen_range(0..self.experience_buffer.len()))
             .collect();

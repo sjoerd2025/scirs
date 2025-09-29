@@ -108,7 +108,7 @@ All public APIs now include stability attributes:
 
 ```rust
 // Stable APIs
-stable!("graph_core", "0.1.0-beta.2");
+stable!("graph_core", "0.1.0-beta.3");
 pub use algorithms::{
     dijkstra_path, louvain_communities_result, label_propagation_result,
     // ... other stable functions
@@ -153,7 +153,7 @@ pub fn dijkstra_path<N, E, Ix>(...) -> Result<Option<Path<N, E>>>
 
 ## Deprecation Timeline
 
-### Phase 1: v0.1.0-beta.2 (Current)
+### Phase 1: v0.1.0-beta.3 (Current)
 - ✅ Add deprecation warnings to legacy APIs
 - ✅ Introduce new standardized APIs
 - ✅ Update documentation with migration examples

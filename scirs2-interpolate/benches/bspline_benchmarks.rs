@@ -1,5 +1,5 @@
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
-use ndarray::Array1;
+use scirs2_core::ndarray::Array1;
 use scirs2_interpolate::bspline::{
     generate_knots, make_interp_bspline, make_lsq_bspline, BSpline, ExtrapolateMode,
 };

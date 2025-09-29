@@ -1,10 +1,8 @@
 use criterion::{
     criterion_group, criterion_main, AxisScale, BenchmarkId, Criterion, PlotConfiguration,
 };
-use ndarray::{Array1, Array2};
-use rand::distr::Uniform;
-use rand::{Rng, SeedableRng};
-use rand_chacha::ChaCha8Rng;
+use scirs2_core::ndarray::{Array1, Array2};
+use scirs2_core::random::prelude::*;
 use scirs2_linalg::{
     cholesky, det, eigen, inv, lstsq, lu, matrix_norm, qr, solve, solve_triangular, svd,
 };
@@ -18,7 +16,7 @@ const SEED: u64 = 42;
 /// Generate a random matrix with controlled properties
 #[allow(dead_code)]
 fn generate_matrix(n: usize, condition_number: Option<f64>) -> Array2<f64> {
-    let mut rng = ChaCha8Rng::seed_from_u64(SEED);
+    let mut rng = StdRng::seed_from_u64(SEED);
 
     match condition_number {
         Some(cond) => {
@@ -50,7 +48,7 @@ fn generate_matrix(n: usize, condition_number: Option<f64>) -> Array2<f64> {
 /// Generate a symmetric positive definite matrix
 #[allow(dead_code)]
 fn generate_spd_matrix(n: usize) -> Array2<f64> {
-    let mut rng = ChaCha8Rng::seed_from_u64(SEED);
+    let mut rng = StdRng::seed_from_u64(SEED);
     let uniform = Uniform::new(-1.0, 1.0).unwrap();
     let a = Array2::from_shape_fn((n, n), |_| rng.sample(uniform));
 

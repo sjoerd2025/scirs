@@ -1185,7 +1185,6 @@ mod tests {
     use ndarray::array;
 
     #[test]
-    #[ignore = "timeout"]
     fn test_streaming_stats_calculator() {
         let config = MemoryOptimizationConfig::default();
         let mut calculator = StreamingStatsCalculator::new(config);

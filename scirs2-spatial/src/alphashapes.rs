@@ -5,7 +5,7 @@
 //! around a set of points through the alpha parameter.
 
 use crate::error::{SpatialError, SpatialResult};
-use ndarray::{Array2, ArrayView1, ArrayView2};
+use scirs2_core::ndarray::{Array2, ArrayView1, ArrayView2};
 
 /// Alpha shape representation for point cloud analysis
 ///
@@ -162,7 +162,7 @@ impl AlphaShape {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::array;
+    use scirs2_core::ndarray::array;
 
     #[test]
     fn test_alpha_shape_creation() {

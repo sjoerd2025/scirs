@@ -28,7 +28,7 @@
 //!
 //! ```ignore
 //! use scirs2_spatial::ml_optimization::{NeuralSpatialOptimizer, ReinforcementLearningSelector};
-//! use ndarray::array;
+//! use scirs2_core::ndarray::array;
 //!
 //! # fn example() -> Result<(), Box<dyn std::error::Error>> {
 //! // Neural network-based spatial optimizer
@@ -56,8 +56,8 @@
 //! ```
 
 use crate::error::{SpatialError, SpatialResult};
-use ndarray::{Array1, Array2, ArrayView2, Axis};
-use rand::Rng;
+use scirs2_core::ndarray::{Array1, Array2, ArrayView2, Axis};
+use scirs2_core::random::Rng;
 use statrs::statistics::Statistics;
 use std::collections::{HashMap, VecDeque};
 use std::f64::consts::PI;
@@ -1410,7 +1410,7 @@ impl ReinforcementLearningSelector {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::array;
+    use scirs2_core::ndarray::array;
 
     #[test]
     fn test_activation_functions() {

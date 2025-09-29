@@ -4,7 +4,7 @@
 //! and ensure consistent performance across releases.
 
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
-use ndarray::{Array1, Array2};
+use scirs2_core::ndarray::{Array1, Array2};
 use scirs2_metrics::{
     anomaly::{js_divergence, kl_divergence, wasserstein_distance},
     classification::{accuracy_score, confusion_matrix, f1_score, precision_score, recall_score},

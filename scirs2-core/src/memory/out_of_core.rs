@@ -794,9 +794,8 @@ where
 
     /// Deserialize chunk data from bytes
     fn deserialize_chunk_data(&self, data: &[u8], shape: &[usize]) -> CoreResult<Array<T, IxDyn>> {
-        // For simplicity, assuming T implements serde traits
-        // In a real implementation, would use bincode or similar
-        use bincode::deserialize;
+        // bincode2 serde-based decoding
+        let cfg = bincode::config::standard();
 
         if data.is_empty() {
             // Return default initialized array if no data
@@ -804,8 +803,8 @@ where
         }
 
         // Try to deserialize the data
-        match deserialize::<Vec<T>>(data) {
-            Ok(vec_data) => {
+        match bincode::serde::decode_from_slice::<Vec<T>, _>(data, cfg) {
+            Ok((vec_data, _len)) => {
                 let total_elements: usize = shape.iter().product();
                 if vec_data.len() != total_elements {
                     return Err(OutOfCoreError::SerializationError(format!(
@@ -826,12 +825,11 @@ where
 
     /// Serialize chunk data to bytes
     fn serialize_chunk_data(&self, chunk: &Array<T, IxDyn>) -> CoreResult<Vec<u8>> {
-        use bincode::serialize;
-
         // Convert array to vec for serialization
         let vec_data: Vec<T> = chunk.iter().cloned().collect();
-
-        serialize(&vec_data).map_err(|e| OutOfCoreError::SerializationError(e.to_string()).into())
+        let cfg = bincode::config::standard();
+        bincode::serde::encode_to_vec(&vec_data, cfg)
+            .map_err(|e| OutOfCoreError::SerializationError(e.to_string()).into())
     }
 
     /// Get a view of a specific region

@@ -10,7 +10,7 @@ use crate::stochastic::{
 };
 use crate::unconstrained::result::OptimizeResult;
 use ndarray::Array1;
-use scirs2_core::rng;
+use scirs2_core::random::prelude::*;
 
 /// Options for SGD optimization
 #[derive(Debug, Clone)]
@@ -350,7 +350,7 @@ where
         // Shuffle data indices for this epoch
         let mut all_indices: Vec<usize> = (0..num_samples).collect();
         use rand::seq::SliceRandom;
-        all_indices.shuffle(&mut rng());
+        all_indices.shuffle(&mut thread_rng());
 
         let mut _epoch_loss = 0.0;
         let mut epoch_grad_norm = 0.0;

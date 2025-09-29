@@ -172,42 +172,33 @@ impl ExternalClient {
             }
         }
 
-        let mut request = ureq::get(url)
-            .set("User-Agent", &self.config.user_agent)
-            .timeout(Duration::from_secs(self.config.timeout_seconds));
+        let mut request = ureq::get(url).header("User-Agent", &self.config.user_agent);
 
         // Add custom headers
         for (key, value) in &self.config.headers {
-            request = request.set(key, value);
+            request = request.header(key, value);
         }
 
         let response = request
             .call()
             .map_err(|e| DatasetsError::IoError(std::io::Error::other(e)))?;
 
-        let total_size = response
-            .header("content-length")
+        // Get content-length header if present (case-insensitive per HTTP spec)
+        let headers = response.headers();
+        let total_size = headers
+            .get("Content-Length")
+            .and_then(|hv| hv.to_str().ok())
             .and_then(|s| s.parse::<u64>().ok())
             .unwrap_or(0);
 
-        let mut buffer = Vec::new();
-        let mut reader = response.into_reader();
-        let mut chunk = vec![0; 8192];
-        let mut downloaded = 0u64;
-
-        loop {
-            let bytes_read = reader.read(&mut chunk).map_err(DatasetsError::IoError)?;
-
-            if bytes_read == 0 {
-                break;
-            }
-
-            buffer.extend_from_slice(&chunk[..bytes_read]);
-            downloaded += bytes_read as u64;
-
-            if let Some(ref callback) = progress {
-                callback(downloaded, total_size);
-            }
+        // Read body via body reader (ureq 3.x)
+        let mut body = response.into_body();
+        let buffer = body
+            .read_to_vec()
+            .map_err(|e| DatasetsError::IoError(std::io::Error::other(e)))?;
+        let downloaded = buffer.len() as u64;
+        if let Some(ref callback) = progress {
+            callback(downloaded, total_size);
         }
 
         // Cache the downloaded data

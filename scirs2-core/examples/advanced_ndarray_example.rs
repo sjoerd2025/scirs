@@ -1,6 +1,6 @@
 // Example demonstrating the enhanced ndarray extensions and ufuncs functionality
 
-use ndarray::{array, Array, Array2};
+use scirs2_core::ndarray_ext::{array, Array, Array2};
 use scirs2_core::ndarray_ext::{
     // Array manipulation operations
     manipulation::{concatenate_2d, flip_2d, pad_2d, repeat_2d, roll_2d, tile_2d, vstack_1d},

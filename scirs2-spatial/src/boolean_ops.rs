@@ -19,7 +19,7 @@
 //!
 //! ```
 //! use scirs2_spatial::boolean_ops::{polygon_union, polygon_intersection};
-//! use ndarray::array;
+//! use scirs2_core::ndarray::array;
 //!
 //! // Define two overlapping squares
 //! let poly1 = array![
@@ -46,7 +46,7 @@
 //! ```
 
 use crate::error::{SpatialError, SpatialResult};
-use ndarray::{Array2, ArrayView2};
+use scirs2_core::ndarray::{Array2, ArrayView2};
 use std::cmp::Ordering;
 use std::collections::HashMap;
 
@@ -233,7 +233,7 @@ impl LabeledPolygon {
 ///
 /// ```
 /// use scirs2_spatial::boolean_ops::polygon_union;
-/// use ndarray::array;
+/// use scirs2_core::ndarray::array;
 ///
 /// let poly1 = array![[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]];
 /// let poly2 = array![[0.5, 0.5], [1.5, 0.5], [1.5, 1.5], [0.5, 1.5]];
@@ -718,7 +718,7 @@ pub fn is_self_intersecting(vertices: &ArrayView2<'_, f64>) -> SpatialResult<boo
 mod tests {
     use super::*;
     use approx::assert_relative_eq;
-    use ndarray::arr2;
+    use scirs2_core::ndarray::arr2;
 
     #[test]
     fn testpoint2d_operations() {

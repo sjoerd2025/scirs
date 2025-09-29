@@ -13,7 +13,7 @@
 //! # Examples
 //!
 //! ```
-//! use ndarray::array;
+//! use scirs2_core::ndarray::array;
 //! use scirs2_spatial::spatial_stats::{morans_i, gearys_c};
 //!
 //! // Create spatial data (values at different locations)
@@ -36,8 +36,8 @@
 //! println!("Geary's C: {:.3}", geary);
 //! ```
 
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use num_traits::Float;
+use scirs2_core::ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 
 use crate::error::{SpatialError, SpatialResult};
 
@@ -59,7 +59,7 @@ use crate::error::{SpatialError, SpatialResult};
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use scirs2_core::ndarray::array;
 /// use scirs2_spatial::spatial_stats::morans_i;
 ///
 /// let values = array![1.0, 2.0, 1.5, 3.0, 2.5];
@@ -142,7 +142,7 @@ pub fn morans_i<T: Float>(values: &ArrayView1<T>, weights: &ArrayView2<T>) -> Sp
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use scirs2_core::ndarray::array;
 /// use scirs2_spatial::spatial_stats::gearys_c;
 ///
 /// let values = array![1.0, 2.0, 1.5, 3.0, 2.5];
@@ -230,7 +230,7 @@ pub fn gearys_c<T: Float>(values: &ArrayView1<T>, weights: &ArrayView2<T>) -> Sp
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use scirs2_core::ndarray::array;
 /// use scirs2_spatial::spatial_stats::local_morans_i;
 ///
 /// let values = array![1.0, 2.0, 1.5, 3.0, 2.5];
@@ -314,7 +314,7 @@ pub fn local_morans_i<T: Float>(
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use scirs2_core::ndarray::array;
 /// use scirs2_spatial::spatial_stats::getis_ord_gi;
 ///
 /// let values = array![1.0, 2.0, 1.5, 3.0, 2.5];
@@ -419,7 +419,7 @@ pub fn getis_ord_gi<T: Float>(
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use scirs2_core::ndarray::array;
 /// use scirs2_spatial::spatial_stats::distance_weights_matrix;
 ///
 /// let coords = array![
@@ -511,7 +511,7 @@ pub fn distance_weights_matrix<T: Float>(
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use scirs2_core::ndarray::array;
 /// use scirs2_spatial::spatial_stats::clark_evans_index;
 ///
 /// let coords = array![
@@ -579,7 +579,7 @@ pub fn clark_evans_index<T: Float>(coordinates: &ArrayView2<T>, study_area: T) -
 mod tests {
     use super::*;
     use approx::assert_relative_eq;
-    use ndarray::array;
+    use scirs2_core::ndarray::array;
 
     #[test]
     fn test_morans_i() {

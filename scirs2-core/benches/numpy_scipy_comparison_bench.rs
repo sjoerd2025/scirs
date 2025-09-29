@@ -4,9 +4,8 @@
 //! NumPy/SciPy operations to validate Beta 1 performance targets.
 
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
-use ndarray::{Array1, Array2, Axis};
-use ndarray_rand::rand_distr::Uniform;
-use ndarray_rand::RandomExt;
+use scirs2_core::ndarray_ext::{Array1, Array2, Axis, Ix1, Ix2};
+use scirs2_core::random::{arrays::random_uniform_array, seeded_rng};
 // use statrs::statistics::Statistics; // Not available in dev-dependencies
 use std::hint::black_box;
 use std::time::Duration;
@@ -42,7 +41,10 @@ fn bench_array_creation(c: &mut Criterion) {
         // Random initialization
         group.bench_with_input(BenchmarkId::new("random", size), &size, |b, &s| {
             b.iter(|| {
-                let arr = Array1::<f64>::random(s, Uniform::new(0.0, 1.0));
+                let arr = {
+                    let mut rng = seeded_rng(42);
+                    random_uniform_array(Ix1(s), &mut rng)
+                };
                 black_box(arr)
             })
         });
@@ -65,8 +67,14 @@ fn bench_element_wise_ops(c: &mut Criterion) {
     group.measurement_time(Duration::from_secs(10));
 
     for &size in SIZES {
-        let arr1 = Array1::<f64>::random(size, Uniform::new(0.0, 1.0));
-        let arr2 = Array1::<f64>::random(size, Uniform::new(0.0, 1.0));
+        let arr1 = {
+            let mut rng = seeded_rng(42);
+            random_uniform_array(Ix1(size), &mut rng)
+        };
+        let arr2 = {
+            let mut rng = seeded_rng(42);
+            random_uniform_array(Ix1(size), &mut rng)
+        };
 
         group.throughput(Throughput::Elements(size as u64));
 
@@ -128,7 +136,10 @@ fn bench_reduction_ops(c: &mut Criterion) {
     group.measurement_time(Duration::from_secs(10));
 
     for &size in SIZES {
-        let arr = Array1::<f64>::random(size, Uniform::new(0.0, 1.0));
+        let arr = {
+            let mut rng = seeded_rng(42);
+            random_uniform_array(Ix1(size), &mut rng)
+        };
 
         group.throughput(Throughput::Elements(size as u64));
 
@@ -177,9 +188,18 @@ fn benchmatrix_ops(c: &mut Criterion) {
     group.measurement_time(Duration::from_secs(20));
 
     for &size in MATRIX_SIZES {
-        let mat_a = Array2::<f64>::random((size, size), Uniform::new(0.0, 1.0));
-        let mat_b = Array2::<f64>::random((size, size), Uniform::new(0.0, 1.0));
-        let vec = Array1::<f64>::random(size, Uniform::new(0.0, 1.0));
+        let mat_a = {
+            let mut rng = seeded_rng(42);
+            random_uniform_array(Ix2(size, size), &mut rng)
+        };
+        let mat_b = {
+            let mut rng = seeded_rng(42);
+            random_uniform_array(Ix2(size, size), &mut rng)
+        };
+        let vec = {
+            let mut rng = seeded_rng(42);
+            random_uniform_array(Ix1(size), &mut rng)
+        };
 
         group.throughput(Throughput::Elements((size * size) as u64));
 
@@ -233,7 +253,10 @@ fn bench_array_manipulation(c: &mut Criterion) {
     group.measurement_time(Duration::from_secs(10));
 
     for &size in SIZES {
-        let arr = Array1::<f64>::random(size, Uniform::new(0.0, 1.0));
+        let arr = {
+            let mut rng = seeded_rng(42);
+            random_uniform_array(Ix1(size), &mut rng)
+        };
 
         group.throughput(Throughput::Elements(size as u64));
 
@@ -252,7 +275,10 @@ fn bench_array_manipulation(c: &mut Criterion) {
         }
 
         // Concatenation
-        let arr2 = Array1::<f64>::random(size, Uniform::new(0.0, 1.0));
+        let arr2 = {
+            let mut rng = seeded_rng(42);
+            random_uniform_array(Ix1(size), &mut rng)
+        };
         group.bench_with_input(
             BenchmarkId::new("concatenate", size),
             &(&arr, &arr2),
@@ -294,8 +320,14 @@ fn bench_statistical_ops(c: &mut Criterion) {
     group.measurement_time(Duration::from_secs(10));
 
     for &size in SIZES {
-        let arr1 = Array1::<f64>::random(size, Uniform::new(0.0, 1.0));
-        let arr2 = Array1::<f64>::random(size, Uniform::new(0.0, 1.0));
+        let arr1 = {
+            let mut rng = seeded_rng(42);
+            random_uniform_array(Ix1(size), &mut rng)
+        };
+        let arr2 = {
+            let mut rng = seeded_rng(42);
+            random_uniform_array(Ix1(size), &mut rng)
+        };
 
         group.throughput(Throughput::Elements(size as u64));
 
@@ -356,7 +388,10 @@ fn bench_memory_ops(c: &mut Criterion) {
         ));
 
         // Array copy
-        let arr = Array1::<f64>::random(size, Uniform::new(0.0, 1.0));
+        let arr = {
+            let mut rng = seeded_rng(42);
+            random_uniform_array(Ix1(size), &mut rng)
+        };
         group.bench_with_input(BenchmarkId::new("copy", size), &arr, |b, a| {
             b.iter(|| {
                 let result = a.to_owned();

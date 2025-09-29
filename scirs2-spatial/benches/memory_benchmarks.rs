@@ -5,8 +5,8 @@
 //! cache performance for spatial operations.
 
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
-use ndarray::Array2;
-use rand::{rngs::StdRng, Rng, SeedableRng};
+use scirs2_core::ndarray::Array2;
+use scirs2_core::random::{rngs::StdRng, Rng, SeedableRng};
 use scirs2_spatial::{
     distance::{euclidean, pdist},
     simd_distance::{parallel_pdist, simd_euclidean_distance_batch},
@@ -343,7 +343,7 @@ impl MemoryBenchmark {
 
             for chunk_start in (0..size).step_by(chunk_size) {
                 let chunk_end = (chunk_start + chunk_size).min(size);
-                let chunk = points.slice(ndarray::s![chunk_start..chunk_end, ..]);
+                let chunk = points.slice(scirs2_core::ndarray::s![chunk_start..chunk_end, ..]);
 
                 if chunk.nrows() > 1 {
                     let chunk_distances = parallel_pdist(&chunk, "euclidean").unwrap();

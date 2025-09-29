@@ -1415,7 +1415,7 @@ impl MonteCarloStabilityTester {
         D: Data<Elem = R>,
         R: Float + NumCast + Copy + Send + Sync + Debug + 'static,
     {
-        let mut rng = rand::rng();
+        let mut rng = rand::thread_rng();
         let perturbation_magnitude = R::from(1e-12).unwrap_or(R::min_positive_value());
 
         let perturbeddata = testdata.mapv(|x| {

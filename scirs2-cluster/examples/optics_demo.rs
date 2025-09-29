@@ -1,8 +1,8 @@
-use ndarray::{Array1, Array2};
-use rand::distr::Uniform;
-use rand::prelude::*;
 use scirs2_cluster::density::optics::{extract_dbscan_clustering, extract_xi_clusters, optics};
 use scirs2_cluster::density::DistanceMetric;
+use scirs2_core::essentials::Uniform;
+use scirs2_core::ndarray::{Array1, Array2};
+use scirs2_core::random::prelude::*;
 
 #[allow(dead_code)]
 fn main() {

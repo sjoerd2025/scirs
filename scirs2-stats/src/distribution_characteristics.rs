@@ -585,7 +585,6 @@ mod tests {
     use ndarray::array;
 
     #[test]
-    #[ignore = "timeout"]
     fn test_mode_unimodal() {
         let data = array![1, 2, 2, 3, 2, 4, 5];
         let result = mode(&data.view(), ModeMethod::Unimodal).unwrap();

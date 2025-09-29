@@ -30,7 +30,7 @@ use crate::error::SpatialResult;
 /// ```rust
 /// use scirs2_spatial::convex_hull::ConvexHull;
 /// use scirs2_spatial::convex_hull::properties::surface_area::compute_surface_area;
-/// use ndarray::array;
+/// use scirs2_core::ndarray::array;
 ///
 /// // 2D square with perimeter 4
 /// let points = array![[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]];
@@ -120,7 +120,7 @@ fn compute_nd_surface_area(hull: &ConvexHull) -> SpatialResult<f64> {
 /// ```rust
 /// use scirs2_spatial::convex_hull::ConvexHull;
 /// use scirs2_spatial::convex_hull::properties::surface_area::compute_surface_area_bounds;
-/// use ndarray::array;
+/// use scirs2_core::ndarray::array;
 ///
 /// let points = array![[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]];
 /// let hull = ConvexHull::new(&points.view()).unwrap();
@@ -221,7 +221,7 @@ fn compute_geometric_surface_area_bounds(hull: &ConvexHull) -> SpatialResult<(f6
 /// ```rust
 /// use scirs2_spatial::convex_hull::ConvexHull;
 /// use scirs2_spatial::convex_hull::properties::surface_area::compute_surface_to_volume_ratio;
-/// use ndarray::array;
+/// use scirs2_core::ndarray::array;
 ///
 /// let points = array![[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]];
 /// let hull = ConvexHull::new(&points.view()).unwrap();
@@ -258,7 +258,7 @@ pub fn compute_surface_to_volume_ratio(hull: &ConvexHull) -> SpatialResult<f64> 
 /// ```rust
 /// use scirs2_spatial::convex_hull::ConvexHull;
 /// use scirs2_spatial::convex_hull::properties::surface_area::compute_compactness;
-/// use ndarray::array;
+/// use scirs2_core::ndarray::array;
 ///
 /// // Circle-like shape should have high compactness
 /// let points = array![[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]];
@@ -333,7 +333,7 @@ fn tgamma_approx(x: f64) -> f64 {
 /// ```rust
 /// use scirs2_spatial::convex_hull::ConvexHull;
 /// use scirs2_spatial::convex_hull::properties::surface_area::is_surface_area_computation_reliable;
-/// use ndarray::array;
+/// use scirs2_core::ndarray::array;
 ///
 /// let points = array![[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]];
 /// let hull = ConvexHull::new(&points.view()).unwrap();
@@ -371,7 +371,7 @@ pub fn is_surface_area_computation_reliable(hull: &ConvexHull) -> bool {
 mod tests {
     use super::*;
     use crate::convex_hull::ConvexHull;
-    use ndarray::arr2;
+    use scirs2_core::ndarray::arr2;
 
     #[test]
     fn test_compute_2d_surface_area() {
@@ -452,18 +452,23 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn test_degenerate_cases() {
-        // Single point
+        // Single point - should fail to create convex hull
         let points = arr2(&[[1.0, 2.0]]);
-        let hull = ConvexHull::new(&points.view()).unwrap();
-        let surface_area = compute_surface_area(&hull).unwrap();
-        assert_eq!(surface_area, 0.0);
+        let hull_result = ConvexHull::new(&points.view());
+        assert!(hull_result.is_err());
 
-        // Two points (should have 0 surface area)
+        // Two points in 2D - should fail to create convex hull
         let points = arr2(&[[0.0, 0.0], [1.0, 1.0]]);
+        let hull_result = ConvexHull::new(&points.view());
+        assert!(hull_result.is_err());
+
+        // Valid 2D triangle (minimal valid case)
+        let points = arr2(&[[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]]);
         let hull = ConvexHull::new(&points.view()).unwrap();
         let surface_area = compute_surface_area(&hull).unwrap();
-        assert_eq!(surface_area, 0.0);
+        // Perimeter of triangle with sides sqrt(2), 1, 1
+        let expected_perimeter = 2.0 + (2.0_f64).sqrt();
+        assert!((surface_area - expected_perimeter).abs() < 1e-10);
     }
 }

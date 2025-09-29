@@ -1,22 +1,22 @@
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
-use ndarray::Array1;
-use rand::Rng;
+use scirs2_core::ndarray::Array1;
+use scirs2_core::random::prelude::*;
 use scirs2_sparse::*;
 use std::hint::black_box;
 
 #[allow(dead_code)]
 fn generate_sparse_matrix(size: usize, density: f64) -> (Vec<usize>, Vec<usize>, Vec<f64>) {
-    let mut rng = rand::rng();
+    let mut rng = thread_rng();
     let mut rows = Vec::new();
     let mut cols = Vec::new();
     let mut data = Vec::new();
 
     for i in 0..size {
         for j in 0..size {
-            if rng.random::<f64>() < density {
+            if rng.gen::<f64>() < density {
                 rows.push(i);
                 cols.push(j);
-                data.push(rng.random::<f64>());
+                data.push(rng.gen::<f64>());
             }
         }
     }
@@ -187,11 +187,11 @@ fn bench_linear_solvers(c: &mut Criterion) {
         }
 
         // Add some off-diagonal elements
-        let mut rng = rand::rng();
+        let mut rng = thread_rng();
         for i in 0..*size {
             for j in (i + 1)..*size {
-                if rng.random::<f64>() < 0.02 {
-                    let val = rng.random::<f64>() * 0.5;
+                if rng.gen::<f64>() < 0.02 {
+                    let val = rng.gen::<f64>() * 0.5;
                     rows.push(i);
                     cols.push(j);
                     data.push(val);
@@ -239,7 +239,7 @@ fn bench_symmetric_operations(c: &mut Criterion) {
         let mut rows = Vec::new();
         let mut cols = Vec::new();
         let mut data = Vec::new();
-        let mut rng = rand::rng();
+        let mut rng = thread_rng();
 
         // Create a simple diagonal matrix to avoid dimension issues
         for i in 0..*size {

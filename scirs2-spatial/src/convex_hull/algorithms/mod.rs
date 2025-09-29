@@ -36,7 +36,7 @@
 //! ## Using QHull (Recommended)
 //! ```rust
 //! use scirs2_spatial::convex_hull::algorithms::qhull::compute_qhull;
-//! use ndarray::array;
+//! use scirs2_core::ndarray::array;
 //!
 //! let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [0.5, 0.5]];
 //! let hull = compute_qhull(&points.view()).unwrap();
@@ -46,7 +46,7 @@
 //! ## Using Graham Scan for 2D
 //! ```rust
 //! use scirs2_spatial::convex_hull::algorithms::graham_scan::compute_graham_scan;
-//! use ndarray::array;
+//! use scirs2_core::ndarray::array;
 //!
 //! let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [0.5, 0.5]];
 //! let hull = compute_graham_scan(&points.view()).unwrap();
@@ -56,7 +56,7 @@
 //! ## Using Jarvis March for Small Hulls
 //! ```rust
 //! use scirs2_spatial::convex_hull::algorithms::jarvis_march::compute_jarvis_march;
-//! use ndarray::array;
+//! use scirs2_core::ndarray::array;
 //!
 //! let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [0.5, 0.5]];
 //! let hull = compute_jarvis_march(&points.view()).unwrap();
@@ -66,7 +66,7 @@
 //! ## Handling Special Cases
 //! ```rust
 //! use scirs2_spatial::convex_hull::algorithms::special_cases::handle_degenerate_case;
-//! use ndarray::array;
+//! use scirs2_core::ndarray::array;
 //!
 //! // Collinear points
 //! let collinear = array![[0.0, 0.0], [1.0, 0.0], [2.0, 0.0]];

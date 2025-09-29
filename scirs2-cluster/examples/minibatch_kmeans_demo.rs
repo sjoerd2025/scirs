@@ -1,10 +1,10 @@
-use ndarray::Array2;
-use rand::distr::Uniform;
-use rand::prelude::*;
-use rand::seq::SliceRandom;
 use scirs2_cluster::vq::{
     kmeans2, minibatch_kmeans, MiniBatchKMeansOptions, MinitMethod, MissingMethod,
 };
+use scirs2_core::essentials::Uniform;
+use scirs2_core::ndarray::Array2;
+use scirs2_core::random::prelude::*;
+use scirs2_core::random::seq::SliceRandom;
 
 #[allow(dead_code)]
 fn main() {
@@ -121,15 +121,15 @@ fn main() {
 /// Generate random data with clusters
 #[allow(dead_code)]
 fn generate_clustered_data(n_samples: usize, ndim: usize) -> Array2<f64> {
-    let mut rng = rand::rng();
+    let mut rng = thread_rng();
 
     // Define distributions for two clusters
     let cluster1_dist = Uniform::new(-0.5, 0.5).unwrap();
     let cluster2_dist = Uniform::new(-0.5, 0.5).unwrap();
 
     // Create centers for the clusters
-    let center1: Vec<f64> = (0..ndim).map(|_| rng.random_range(0.0..2.0)).collect();
-    let center2: Vec<f64> = (0..ndim).map(|_| rng.random_range(8.0..10.0)).collect();
+    let center1: Vec<f64> = (0..ndim).map(|_| rng.gen_range(0.0..2.0)).collect();
+    let center2: Vec<f64> = (0..ndim).map(|_| rng.gen_range(8.0..10.0)).collect();
 
     // Allocate data array
     let mut data = Vec::with_capacity(n_samples * ndim);

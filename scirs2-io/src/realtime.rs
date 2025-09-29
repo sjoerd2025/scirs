@@ -537,13 +537,15 @@ impl StreamConnection for WebSocketConnection {
     async fn connect(&mut self) -> Result<()> {
         use tokio_tungstenite::{connect_async, tungstenite::protocol::Message};
 
-        let url = url::Url::parse(&self.config.endpoint)
-            .map_err(|e| IoError::ParseError(format!("Invalid WebSocket URL: {}", e)))?;
-
-        let (ws_stream_response) = tokio::time::timeout(self.config.timeout, connect_async(url))
-            .await
-            .map_err(|_| IoError::TimeoutError("WebSocket connection timeout".to_string()))?
-            .map_err(|e| IoError::NetworkError(format!("WebSocket connection failed: {}", e)))?;
+        let endpoint_str = self.config.endpoint.clone();
+        // tokio_tungstenite connect_async accepts &str / String / Request
+        let (ws_stream_response) =
+            tokio::time::timeout(self.config.timeout, connect_async(&endpoint_str))
+                .await
+                .map_err(|_| IoError::TimeoutError("WebSocket connection timeout".to_string()))?
+                .map_err(|e| {
+                    IoError::NetworkError(format!("WebSocket connection failed: {}", e))
+                })?;
 
         // Extract just the stream from the tuple (stream, response)
         let (ws_stream, _response) = ws_stream_response;
@@ -566,8 +568,12 @@ impl StreamConnection for WebSocketConnection {
                     match msg_result.map_err(|e| {
                         IoError::NetworkError(format!("WebSocket receive error: {}", e))
                     })? {
-                        Message::Binary(data) => Ok(data),
-                        Message::Text(text) => Ok(text.into_bytes()),
+                        Message::Binary(data) => Ok(data.to_vec()),
+                        Message::Text(text) => {
+                            // Convert Utf8Bytes (tungstenite) into a String then to bytes
+                            let s: String = text.to_string();
+                            Ok(s.into_bytes())
+                        }
                         Message::Close(_) => {
                             self.connected = false;
                             Err(IoError::NetworkError(
@@ -575,9 +581,9 @@ impl StreamConnection for WebSocketConnection {
                             ))
                         }
                         Message::Ping(data) => {
-                            // Respond to ping with pong
-                            let _ = ws_stream.send(Message::Pong(data.clone())).await;
-                            Ok(data)
+                            let clone = data.clone();
+                            let _ = ws_stream.send(Message::Pong(clone.clone())).await;
+                            Ok(clone.to_vec())
                         }
                         Message::Pong(_) => {
                             // Pong received, request next message
@@ -613,13 +619,14 @@ impl StreamConnection for WebSocketConnection {
 
         if let Some(ws_stream) = &mut self.ws_stream {
             let message = match self.config.format {
-                DataFormat::Binary => Message::Binary(data.to_vec()),
+                DataFormat::Binary => Message::Binary(data.to_vec().into()),
                 DataFormat::Json => {
-                    Message::Text(String::from_utf8(data.to_vec()).map_err(|e| {
+                    let s = String::from_utf8(data.to_vec()).map_err(|e| {
                         IoError::ParseError(format!("Invalid UTF-8 for JSON: {}", e))
-                    })?)
+                    })?;
+                    Message::Text(s.into())
                 }
-                _ => Message::Binary(data.to_vec()),
+                _ => Message::Binary(data.to_vec().into()),
             };
 
             tokio::time::timeout(self.config.timeout, ws_stream.send(message))

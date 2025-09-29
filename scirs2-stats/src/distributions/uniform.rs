@@ -168,7 +168,7 @@ impl<F: Float + NumCast + std::fmt::Display> Uniform<F> {
     /// assert_eq!(samples.len(), 1000);
     /// ```
     pub fn rvs(&self, size: usize) -> StatsResult<Array1<F>> {
-        let mut rng = rand::rng();
+        let mut rng = rand::thread_rng();
         let mut samples = Vec::with_capacity(size);
 
         for _ in 0..size {
@@ -233,7 +233,6 @@ mod tests {
     use approx::assert_relative_eq;
 
     #[test]
-    #[ignore = "timeout"]
     fn test_uniform_creation() {
         // Standard uniform
         let unif = Uniform::new(0.0, 1.0).unwrap();

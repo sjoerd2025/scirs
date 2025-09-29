@@ -1,8 +1,8 @@
 # scirs2-sparse TODO
 
-## Release Status: 0.1.0-beta.2 (Beta 2)
+## Release Status: 0.1.0-beta.3 (Beta 3)
 
-This is the final alpha release before the stable 1.0.0 release. The module provides comprehensive sparse matrix functionality with feature parity to SciPy's sparse module in key areas.
+This beta 3 release features SciRS2 POLICY implementation and enhanced GPU support. Following the [SciRS2 POLICY](../SCIRS2_POLICY.md), the module provides comprehensive sparse matrix functionality with feature parity to SciPy's sparse module in key areas, enhanced GPU operations, and ecosystem consistency.
 
 ## Implemented Features ✅
 

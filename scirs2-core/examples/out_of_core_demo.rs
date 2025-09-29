@@ -12,11 +12,11 @@ fn main() {
 }
 
 #[cfg(feature = "memory_management")]
-use ndarray::{Array, IxDyn};
-#[cfg(feature = "memory_management")]
 use scirs2_core::memory::out_of_core::{
     CachePolicy, FileStorageBackend, OutOfCoreArray, OutOfCoreConfig, OutOfCoreManager,
 };
+#[cfg(feature = "memory_management")]
+use scirs2_core::ndarray_ext::{Array, IxDyn};
 #[cfg(feature = "memory_management")]
 use std::sync::Arc;
 #[cfg(feature = "memory_management")]

@@ -28,7 +28,7 @@ pub enum ExtrapolationMethod {
 
 /// Parameters for extrapolation
 #[derive(Debug, Clone)]
-pub struct ExtrapolationParams<F: Float + FromPrimitive + Debug> {
+pub struct ExtrapolationParams<F: Float + FromPrimitive + Debug + ordered_float::FloatCore> {
     /// The method to use for extrapolation
     pub method: ExtrapolationMethod,
 
@@ -42,7 +42,9 @@ pub struct ExtrapolationParams<F: Float + FromPrimitive + Debug> {
     pub constant_value: F,
 }
 
-impl<F: Float + FromPrimitive + Debug> Default for ExtrapolationParams<F> {
+impl<F: Float + FromPrimitive + Debug + ordered_float::FloatCore> Default
+    for ExtrapolationParams<F>
+{
     fn default() -> Self {
         ExtrapolationParams {
             method: ExtrapolationMethod::NearestNeighbor,
@@ -54,7 +56,7 @@ impl<F: Float + FromPrimitive + Debug> Default for ExtrapolationParams<F> {
 }
 
 /// Extension trait for handling extrapolation
-pub trait Extrapolation<F: Float + FromPrimitive + Debug> {
+pub trait Extrapolation<F: Float + FromPrimitive + Debug + ordered_float::FloatCore> {
     /// Extrapolate a value at a query point outside the domain
     ///
     /// # Arguments
@@ -125,7 +127,8 @@ impl<
             + ndarray::ScalarOperand
             + 'static
             + for<'a> std::iter::Sum<&'a F>
-            + std::cmp::PartialOrd,
+            + std::cmp::PartialOrd
+            + ordered_float::FloatCore,
     > Extrapolation<F> for NaturalNeighborInterpolator<F>
 {
     fn extrapolate(
@@ -178,16 +181,20 @@ impl<
                     // Compute distance
                     let mut dist_sq = F::zero();
                     for j in 0..dim {
-                        dist_sq = dist_sq + (point[j] - query[j]).powi(2);
+                        dist_sq = dist_sq + num_traits::Float::powi(point[j] - query[j], 2);
                     }
 
                     // Avoid division by zero
-                    if dist_sq < F::epsilon() {
+                    if dist_sq < <F as num_traits::Float>::epsilon() {
                         return Ok(self.values[idx]);
                     }
 
                     // Compute weight as inverse distance to the power p
-                    let weight = F::one() / dist_sq.powf(params.idw_power / F::from(2.0).unwrap());
+                    let weight = F::one()
+                        / num_traits::Float::powf(
+                            dist_sq,
+                            params.idw_power / F::from(2.0).unwrap(),
+                        );
 
                     weighted_sum = weighted_sum + weight * self.values[idx];
                     weight_sum = weight_sum + weight;
@@ -319,8 +326,9 @@ impl<
 
 /// Creates extrapolation parameters for nearest neighbor extrapolation
 #[allow(dead_code)]
-pub fn nearest_neighbor_extrapolation<F: crate::traits::InterpolationFloat>(
-) -> ExtrapolationParams<F> {
+pub fn nearest_neighbor_extrapolation<
+    F: crate::traits::InterpolationFloat + ordered_float::FloatCore,
+>() -> ExtrapolationParams<F> {
     ExtrapolationParams {
         method: ExtrapolationMethod::NearestNeighbor,
         ..Default::default()
@@ -333,7 +341,9 @@ pub fn nearest_neighbor_extrapolation<F: crate::traits::InterpolationFloat>(
 /// * `n_neighbors` - The number of nearest neighbors to use
 /// * `power` - The power parameter for inverse distance weighting
 #[allow(dead_code)]
-pub fn inverse_distance_extrapolation<F: crate::traits::InterpolationFloat>(
+pub fn inverse_distance_extrapolation<
+    F: crate::traits::InterpolationFloat + ordered_float::FloatCore,
+>(
     n_neighbors: usize,
     power: F,
 ) -> ExtrapolationParams<F> {
@@ -347,8 +357,9 @@ pub fn inverse_distance_extrapolation<F: crate::traits::InterpolationFloat>(
 
 /// Creates extrapolation parameters for linear gradient extrapolation
 #[allow(dead_code)]
-pub fn linear_gradient_extrapolation<F: crate::traits::InterpolationFloat>(
-) -> ExtrapolationParams<F> {
+pub fn linear_gradient_extrapolation<
+    F: crate::traits::InterpolationFloat + ordered_float::FloatCore,
+>() -> ExtrapolationParams<F> {
     ExtrapolationParams {
         method: ExtrapolationMethod::LinearGradient,
         ..Default::default()
@@ -360,7 +371,9 @@ pub fn linear_gradient_extrapolation<F: crate::traits::InterpolationFloat>(
 /// # Arguments
 /// * `value` - The constant value to use for extrapolation
 #[allow(dead_code)]
-pub fn constant_value_extrapolation<F: crate::traits::InterpolationFloat>(
+pub fn constant_value_extrapolation<
+    F: crate::traits::InterpolationFloat + ordered_float::FloatCore,
+>(
     value: F,
 ) -> ExtrapolationParams<F> {
     ExtrapolationParams {

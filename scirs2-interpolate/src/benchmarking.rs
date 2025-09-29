@@ -18,8 +18,8 @@
 
 use crate::error::InterpolateResult;
 use crate::streaming::StreamingInterpolator;
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use num_traits::{Float, FromPrimitive};
+use scirs2_core::ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use statrs::statistics::Statistics;
 use std::collections::HashMap;
 use std::fmt::{Debug, Display};

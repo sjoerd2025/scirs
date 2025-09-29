@@ -11,7 +11,7 @@
 //!
 //! Run with: cargo run --example advanced_interactive_tutor
 
-use num_complex::Complex64;
+use scirs2_core::Complex64;
 use scirs2_special::*;
 use std::collections::HashMap;
 use std::f64::consts::PI;

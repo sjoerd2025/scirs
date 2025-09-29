@@ -435,6 +435,62 @@ impl GenericDistanceMatrix {
         }
     }
 
+    /// Compute pairwise distance matrix with optimized flat memory layout
+    pub fn compute_flat<T, P, M>(points: &[P], metric: &M) -> SpatialResult<Vec<T>>
+    where
+        T: SpatialScalar + Send + Sync,
+        P: SpatialPoint<T> + Send + Sync,
+        M: DistanceMetric<T, P> + Send + Sync,
+    {
+        let n = points.len();
+        let mut matrix = vec![T::zero(); n * n];
+
+        // Use flat indexing with loop unrolling for optimal cache locality and instruction-level parallelism
+        for i in 0..n {
+            // Diagonal element
+            matrix[i * n + i] = T::zero();
+
+            // Process off-diagonal elements with unrolling
+            let remaining = n - i - 1;
+            let j_chunks = remaining / 4;
+
+            // Unroll in chunks of 4 for better instruction pipelining
+            for chunk in 0..j_chunks {
+                let j_base = i + 1 + chunk * 4;
+
+                let j0 = j_base;
+                let j1 = j_base + 1;
+                let j2 = j_base + 2;
+                let j3 = j_base + 3;
+
+                // Compute distances in parallel
+                let distance0 = metric.distance(&points[i], &points[j0]);
+                let distance1 = metric.distance(&points[i], &points[j1]);
+                let distance2 = metric.distance(&points[i], &points[j2]);
+                let distance3 = metric.distance(&points[i], &points[j3]);
+
+                // Store symmetric elements
+                matrix[i * n + j0] = distance0;
+                matrix[j0 * n + i] = distance0;
+                matrix[i * n + j1] = distance1;
+                matrix[j1 * n + i] = distance1;
+                matrix[i * n + j2] = distance2;
+                matrix[j2 * n + i] = distance2;
+                matrix[i * n + j3] = distance3;
+                matrix[j3 * n + i] = distance3;
+            }
+
+            // Handle remaining elements
+            for j in (i + 1 + j_chunks * 4)..n {
+                let distance = metric.distance(&points[i], &points[j]);
+                matrix[i * n + j] = distance;
+                matrix[j * n + i] = distance; // Symmetric
+            }
+        }
+
+        Ok(matrix)
+    }
+
     /// Basic computation for small datasets
     fn compute_basic<T, P, M>(points: &[P], metric: &M) -> SpatialResult<Vec<Vec<T>>>
     where
@@ -445,14 +501,44 @@ impl GenericDistanceMatrix {
         let n = points.len();
         let mut matrix = vec![vec![T::zero(); n]; n];
 
+        // Optimize with loop unrolling for instruction-level parallelism
         for i in 0..n {
-            for j in i..n {
-                let distance = if i == j {
-                    T::zero()
-                } else {
-                    metric.distance(&points[i], &points[j])
-                };
+            // Diagonal element
+            matrix[i][i] = T::zero();
 
+            // Process off-diagonal elements with unrolling
+            let remaining = n - i - 1;
+            let j_chunks = remaining / 4;
+
+            // Unroll in chunks of 4 for better instruction pipelining
+            for chunk in 0..j_chunks {
+                let j_base = i + 1 + chunk * 4;
+
+                let j0 = j_base;
+                let j1 = j_base + 1;
+                let j2 = j_base + 2;
+                let j3 = j_base + 3;
+
+                // Compute distances in parallel
+                let distance0 = metric.distance(&points[i], &points[j0]);
+                let distance1 = metric.distance(&points[i], &points[j1]);
+                let distance2 = metric.distance(&points[i], &points[j2]);
+                let distance3 = metric.distance(&points[i], &points[j3]);
+
+                // Store symmetric elements
+                matrix[i][j0] = distance0;
+                matrix[j0][i] = distance0;
+                matrix[i][j1] = distance1;
+                matrix[j1][i] = distance1;
+                matrix[i][j2] = distance2;
+                matrix[j2][i] = distance2;
+                matrix[i][j3] = distance3;
+                matrix[j3][i] = distance3;
+            }
+
+            // Handle remaining elements
+            for j in (i + 1 + j_chunks * 4)..n {
+                let distance = metric.distance(&points[i], &points[j]);
                 matrix[i][j] = distance;
                 matrix[j][i] = distance;
             }
@@ -2049,7 +2135,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn test_parallel_distance_matrix() {
         // Use even smaller dataset for much faster testing
         let points = vec![Point::new_2d(0.0f64, 0.0), Point::new_2d(1.0, 0.0)];
@@ -2068,7 +2153,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn test_parallel_kmeans() {
         // Use minimal dataset for much faster testing
         let points = vec![Point::new_2d(0.0f64, 0.0), Point::new_2d(1.0, 1.0)];

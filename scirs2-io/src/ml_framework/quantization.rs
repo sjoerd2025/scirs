@@ -43,7 +43,7 @@ impl QuantizedTensor {
 
         let quantized: Vec<u8> = data
             .iter()
-            .map(|&x| ((x / scale + zero_point as f32).round() as u8))
+            .map(|&x| (x / scale + zero_point as f32).round() as u8)
             .collect();
 
         Ok(Self {

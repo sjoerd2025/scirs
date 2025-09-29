@@ -5,7 +5,7 @@
 //! Features include memory profiling, scalability analysis, and cross-platform testing.
 
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
-use ndarray::{s, Array1, Array2, Array3};
+use scirs2_core::ndarray::{s, Array1, Array2, Array3};
 use statrs::statistics::Statistics;
 use std::collections::HashMap;
 use std::hint::black_box;
@@ -550,7 +550,7 @@ fn advanced_bench_scalability(_c: &mut Criterion) {
 
                     for i in (0..data.len()).step_by(chunk_size) {
                         let end = (i + chunk_size).min(data.len());
-                        let chunk = &data.slice(s![i..end]);
+                        let chunk = &data.slice(scirs2_core::ndarray::s![i..end]);
                         total_sum += chunk.iter().sum::<f64>();
                     }
 
@@ -653,7 +653,7 @@ fn advanced_bench_comparative_analysis(_c: &mut Criterion) {
                     for i in window_size / 2..data.len() - window_size / 2 {
                         let start = i - window_size / 2;
                         let end = i + window_size / 2;
-                        trend[i] = data.slice(s![start..end]).mean().unwrap();
+                        trend[i] = data.slice(scirs2_core::ndarray::s![start..end]).mean().unwrap();
                     }
                     black_box(trend);
                 });
@@ -720,7 +720,7 @@ fn advanced_bench_memory_profiling(_c: &mut Criterion) {
                     let mut stats = scirs2_series::out_of_core::StreamingStats::new();
                     for i in (0..data.len()).step_by(1000) {
                         let end = (i + 1000).min(data.len());
-                        let chunk = &data.slice(s![i..end]);
+                        let chunk = &data.slice(scirs2_core::ndarray::s![i..end]);
                         for &value in chunk {
                             stats.update(value);
                         }

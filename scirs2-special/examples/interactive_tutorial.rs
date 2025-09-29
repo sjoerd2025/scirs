@@ -8,7 +8,7 @@
 #![allow(unexpected_cfgs)]
 
 use ndarray::Array1;
-use num_complex::Complex64;
+use scirs2_core::Complex64;
 use scirs2_special::*;
 use statrs::statistics::Statistics;
 use std::io::{self, Write};
@@ -1533,7 +1533,7 @@ fn advanced_features_tutorial() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🌀 COMPLEX NUMBER SUPPORT");
     println!("Many functions support complex arguments:");
 
-    use num_complex::Complex64;
+    use scirs2_core::Complex64;
 
     let z1 = Complex64::new(1.0, 0.5);
     let z2 = Complex64::new(0.0, 1.0); // Pure imaginary

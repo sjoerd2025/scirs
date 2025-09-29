@@ -13,7 +13,6 @@
 //! Example demonstrating backpropagation and gradient computation
 //! using the array protocol.
 
-use ndarray::{array, Array1, Array2, Ix2};
 use scirs2_core::array_protocol::{
     self,
     grad::{Adam, GradientTensor, Optimizer, Variable},
@@ -23,6 +22,7 @@ use scirs2_core::array_protocol::{
     NdarrayWrapper,
 };
 use scirs2_core::ndarray_ext::stats::mean;
+use scirs2_core::ndarray_ext::{array, Array1, Array2, Ix2};
 use statrs::statistics::Statistics;
 
 /// A simple feed-forward neural network for demonstrating backpropagation

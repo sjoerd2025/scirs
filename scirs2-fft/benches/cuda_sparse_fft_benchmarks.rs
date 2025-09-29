@@ -1,7 +1,7 @@
 use criterion::{criterion_group, criterion_main, Bencher, Criterion};
-use rand::rngs::StdRng;
-use rand::SeedableRng;
-use rand_distr::{Distribution, Normal};
+use scirs2_core::essentials::Normal;
+use scirs2_core::random::prelude::*;
+use scirs2_core::random::Distribution;
 use scirs2_fft::{
     sparse_fft::sparse_fft,
     sparse_fft::{SparseFFTAlgorithm, WindowFunction},
@@ -35,7 +35,7 @@ fn create_noisy_sparse_signal(
     noise_level: f64,
 ) -> Vec<f64> {
     // Use a fixed seed for reproducible benchmarks
-    let mut rng = StdRng::seed_from_u64(12345);
+    let mut rng = thread_rng();
     let normal = Normal::new(0.0, noise_level).unwrap();
 
     let mut signal = create_sparse_signal(n, frequencies);

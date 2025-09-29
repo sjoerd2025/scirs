@@ -543,7 +543,6 @@ mod tests {
     use ndarray::array;
 
     #[test]
-    #[ignore = "timeout"]
     fn test_memory_profiler() {
         let profiler = MemoryProfiler::new();
 
@@ -558,7 +557,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_statistics_cache() {
         let mut cache = StatisticsCache::new(2, 1024);
 
@@ -575,7 +573,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_profiled_statistics() {
         let profiler = Arc::new(MemoryProfiler::new());
         let mut stats = ProfiledStatistics::new(profiler.clone());
@@ -594,7 +591,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_adaptive_memory_manager() {
         let profiler = Arc::new(MemoryProfiler::new());
         let manager = AdaptiveMemoryManager::new(profiler);

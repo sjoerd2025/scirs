@@ -562,3 +562,331 @@ where
             .with_cause(error),
     )
 }
+
+/// Error recovery strategies for robust error handling
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ErrorRecoveryStrategy {
+    /// Fail immediately
+    FailFast,
+    /// Retry the operation with exponential backoff
+    RetryExponential,
+    /// Retry the operation with linear backoff
+    RetryLinear,
+    /// Use a fallback operation
+    Fallback,
+    /// Skip the failed operation and continue
+    Skip,
+    /// Use a default value
+    UseDefault,
+    /// Log the error and continue
+    LogAndContinue,
+}
+
+/// Error severity levels for prioritized error handling
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+pub enum ErrorSeverity {
+    /// Low severity - operation can continue
+    Low,
+    /// Medium severity - operation can continue with warnings
+    Medium,
+    /// High severity - operation should be reconsidered
+    High,
+    /// Critical severity - operation must be stopped
+    Critical,
+}
+
+/// Error handler configuration for systematic error management
+#[derive(Debug, Clone)]
+pub struct ErrorHandlerConfig {
+    /// Maximum number of retry attempts
+    pub max_retries: usize,
+    /// Initial retry delay in milliseconds
+    pub initial_delay_ms: u64,
+    /// Maximum retry delay in milliseconds
+    pub max_delay_ms: u64,
+    /// Whether to log errors
+    pub log_errors: bool,
+    /// Error recovery strategy
+    pub recovery_strategy: ErrorRecoveryStrategy,
+    /// Minimum severity level to handle
+    pub min_severity: ErrorSeverity,
+}
+
+impl Default for ErrorHandlerConfig {
+    fn default() -> Self {
+        Self {
+            max_retries: 3,
+            initial_delay_ms: 100,
+            max_delay_ms: 5000,
+            log_errors: true,
+            recovery_strategy: ErrorRecoveryStrategy::FailFast,
+            min_severity: ErrorSeverity::Low,
+        }
+    }
+}
+
+/// Enhanced error with severity and recovery information
+#[derive(Debug, Clone)]
+pub struct EnhancedError {
+    /// Core error
+    pub error: CoreError,
+    /// Error severity
+    pub severity: ErrorSeverity,
+    /// Suggested recovery strategy
+    pub recovery_strategy: ErrorRecoveryStrategy,
+    /// Error occurrence timestamp
+    pub timestamp: std::time::SystemTime,
+    /// Error category for grouping
+    pub category: Option<String>,
+    /// Error tags for filtering
+    pub tags: Vec<String>,
+}
+
+impl EnhancedError {
+    /// Create a new enhanced error
+    pub fn new(error: CoreError, severity: ErrorSeverity) -> Self {
+        Self {
+            error,
+            severity,
+            recovery_strategy: ErrorRecoveryStrategy::FailFast,
+            timestamp: std::time::SystemTime::now(),
+            category: None,
+            tags: Vec::new(),
+        }
+    }
+
+    /// Set recovery strategy
+    pub fn with_recovery(mut self, strategy: ErrorRecoveryStrategy) -> Self {
+        self.recovery_strategy = strategy;
+        self
+    }
+
+    /// Set error category
+    pub fn with_category(mut self, category: impl Into<String>) -> Self {
+        self.category = Some(category.into());
+        self
+    }
+
+    /// Add error tag
+    pub fn with_tag(mut self, tag: impl Into<String>) -> Self {
+        self.tags.push(tag.into());
+        self
+    }
+
+    /// Check if error has specific tag
+    pub fn has_tag(&self, tag: &str) -> bool {
+        self.tags.iter().any(|t| t == tag)
+    }
+
+    /// Check if error is retryable based on its recovery strategy
+    pub fn is_retryable(&self) -> bool {
+        matches!(
+            self.recovery_strategy,
+            ErrorRecoveryStrategy::RetryExponential | ErrorRecoveryStrategy::RetryLinear
+        )
+    }
+
+    /// Check if error is recoverable
+    pub fn is_recoverable(&self) -> bool {
+        !matches!(self.recovery_strategy, ErrorRecoveryStrategy::FailFast)
+    }
+}
+
+impl fmt::Display for EnhancedError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "[{:?}] {}", self.severity, self.error)?;
+        if let Some(category) = &self.category {
+            write!(f, " (category: {category})")?;
+        }
+        if !self.tags.is_empty() {
+            write!(f, " [tags: {}]", self.tags.join(", "))?;
+        }
+        Ok(())
+    }
+}
+
+/// Batch error handling for processing multiple operations
+#[derive(Debug, Clone)]
+pub struct BatchError {
+    /// Individual errors
+    pub errors: Vec<EnhancedError>,
+    /// Total operations attempted
+    pub total_operations: usize,
+    /// Number of successful operations
+    pub successful_operations: usize,
+}
+
+impl BatchError {
+    /// Create a new batch error
+    pub fn new(total_operations: usize) -> Self {
+        Self {
+            errors: Vec::new(),
+            total_operations,
+            successful_operations: 0,
+        }
+    }
+
+    /// Add an error to the batch
+    pub fn add_error(&mut self, error: EnhancedError) {
+        self.errors.push(error);
+    }
+
+    /// Record a successful operation
+    pub fn add_success(&mut self) {
+        self.successful_operations += 1;
+    }
+
+    /// Get error rate (0.0 to 1.0)
+    pub fn error_rate(&self) -> f64 {
+        if self.total_operations == 0 {
+            0.0
+        } else {
+            self.errors.len() as f64 / self.total_operations as f64
+        }
+    }
+
+    /// Get success rate (0.0 to 1.0)
+    pub fn success_rate(&self) -> f64 {
+        if self.total_operations == 0 {
+            0.0
+        } else {
+            self.successful_operations as f64 / self.total_operations as f64
+        }
+    }
+
+    /// Check if batch operation was successful (configurable threshold)
+    pub fn is_successful(&self, min_success_rate: f64) -> bool {
+        self.success_rate() >= min_success_rate
+    }
+
+    /// Get errors by severity
+    pub fn errors_by_severity(&self, severity: ErrorSeverity) -> Vec<&EnhancedError> {
+        self.errors
+            .iter()
+            .filter(|e| e.severity == severity)
+            .collect()
+    }
+
+    /// Get errors by category
+    pub fn errors_by_category(&self, category: &str) -> Vec<&EnhancedError> {
+        self.errors
+            .iter()
+            .filter(|e| e.category.as_deref() == Some(category))
+            .collect()
+    }
+
+    /// Get retryable errors
+    pub fn retryable_errors(&self) -> Vec<&EnhancedError> {
+        self.errors.iter().filter(|e| e.is_retryable()).collect()
+    }
+}
+
+impl fmt::Display for BatchError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "Batch operation: {}/{} successful ({:.1}% success rate)",
+            self.successful_operations,
+            self.total_operations,
+            self.success_rate() * 100.0
+        )?;
+        if !self.errors.is_empty() {
+            write!(f, "\nErrors ({})", self.errors.len())?;
+            for (i, error) in self.errors.iter().enumerate() {
+                write!(f, "\n  {}: {}", i + 1, error)?;
+            }
+        }
+        Ok(())
+    }
+}
+
+/// Result type for enhanced error handling
+pub type EnhancedResult<T> = Result<T, EnhancedError>;
+
+/// Result type for batch operations
+pub type BatchResult<T> = Result<T, BatchError>;
+
+/// Convenience function to create an enhanced error from a core error
+pub fn enhance_error(error: CoreError, severity: ErrorSeverity) -> EnhancedError {
+    EnhancedError::new(error, severity)
+}
+
+/// Convenience function to create a critical error
+pub fn critical_error(error: CoreError) -> EnhancedError {
+    EnhancedError::new(error, ErrorSeverity::Critical)
+}
+
+/// Convenience function to create a high severity error
+pub fn high_error(error: CoreError) -> EnhancedError {
+    EnhancedError::new(error, ErrorSeverity::High)
+}
+
+/// Convenience function to create a medium severity error
+pub fn medium_error(error: CoreError) -> EnhancedError {
+    EnhancedError::new(error, ErrorSeverity::Medium)
+}
+
+/// Convenience function to create a low severity error
+pub fn low_error(error: CoreError) -> EnhancedError {
+    EnhancedError::new(error, ErrorSeverity::Low)
+}
+
+/// Macro to create an enhanced error with automatic severity detection
+#[macro_export]
+macro_rules! enhanced_error {
+    (critical, $error:expr) => {
+        $crate::error::critical_error($error)
+    };
+    (high, $error:expr) => {
+        $crate::error::high_error($error)
+    };
+    (medium, $error:expr) => {
+        $crate::error::medium_error($error)
+    };
+    (low, $error:expr) => {
+        $crate::error::low_error($error)
+    };
+    ($error:expr) => {
+        $crate::error::medium_error($error)
+    };
+}
+
+/// Macro for batch error handling
+#[macro_export]
+macro_rules! batch_operation {
+    ($total:expr, $operations:block) => {{
+        let mut batch_error = $crate::error::BatchError::new($total);
+        let result = $operations;
+        if batch_error.errors.is_empty() {
+            Ok(result)
+        } else {
+            Err(batch_error)
+        }
+    }};
+}
+
+/// Macro for error recovery with retry logic
+#[macro_export]
+macro_rules! with_retry {
+    ($operation:expr, $max_retries:expr) => {{
+        let mut attempts = 0;
+        let mut last_error = None;
+
+        loop {
+            match $operation {
+                Ok(result) => break Ok(result),
+                Err(error) => {
+                    attempts += 1;
+                    last_error = Some(error);
+
+                    if attempts >= $max_retries {
+                        break Err(last_error.unwrap());
+                    }
+
+                    // Simple linear backoff
+                    std::thread::sleep(std::time::Duration::from_millis(attempts * 100));
+                }
+            }
+        }
+    }};
+}

@@ -30,7 +30,7 @@ use crate::error::SpatialResult;
 /// ```rust
 /// use scirs2_spatial::convex_hull::ConvexHull;
 /// use scirs2_spatial::convex_hull::properties::volume::compute_volume;
-/// use ndarray::array;
+/// use scirs2_core::ndarray::array;
 ///
 /// // 2D square with area 1
 /// let points = array![[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]];
@@ -140,7 +140,7 @@ fn compute_nd_volume(hull: &ConvexHull) -> SpatialResult<f64> {
 /// ```rust
 /// use scirs2_spatial::convex_hull::ConvexHull;
 /// use scirs2_spatial::convex_hull::properties::volume::compute_volume_monte_carlo;
-/// use ndarray::array;
+/// use scirs2_core::ndarray::array;
 ///
 /// let points = array![[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]];
 /// let hull = ConvexHull::new(&points.view()).unwrap();
@@ -149,7 +149,7 @@ fn compute_nd_volume(hull: &ConvexHull) -> SpatialResult<f64> {
 /// ```
 pub fn compute_volume_monte_carlo(hull: &ConvexHull, num_samples: usize) -> SpatialResult<f64> {
     use crate::convex_hull::geometry::compute_bounding_box;
-    use rand::Rng;
+    use scirs2_core::random::Rng;
 
     if hull.vertex_indices.is_empty() {
         return Ok(0.0);
@@ -212,7 +212,7 @@ pub fn compute_volume_monte_carlo(hull: &ConvexHull, num_samples: usize) -> Spat
 /// ```rust
 /// use scirs2_spatial::convex_hull::ConvexHull;
 /// use scirs2_spatial::convex_hull::properties::volume::compute_volume_bounds;
-/// use ndarray::array;
+/// use scirs2_core::ndarray::array;
 ///
 /// let points = array![[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]];
 /// let hull = ConvexHull::new(&points.view()).unwrap();
@@ -266,7 +266,7 @@ pub fn compute_volume_bounds(hull: &ConvexHull) -> SpatialResult<(f64, f64, Opti
 /// ```rust
 /// use scirs2_spatial::convex_hull::ConvexHull;
 /// use scirs2_spatial::convex_hull::properties::volume::is_volume_computation_reliable;
-/// use ndarray::array;
+/// use scirs2_core::ndarray::array;
 ///
 /// let points = array![[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]];
 /// let hull = ConvexHull::new(&points.view()).unwrap();
@@ -298,7 +298,7 @@ pub fn is_volume_computation_reliable(hull: &ConvexHull) -> bool {
 mod tests {
     use super::*;
     use crate::convex_hull::ConvexHull;
-    use ndarray::arr2;
+    use scirs2_core::ndarray::arr2;
 
     #[test]
     fn test_compute_2d_volume() {
@@ -364,18 +364,21 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn test_degenerate_cases() {
-        // Single point
+        // Single point - should fail to create convex hull
         let points = arr2(&[[1.0, 2.0]]);
-        let hull = ConvexHull::new(&points.view()).unwrap();
-        let volume = compute_volume(&hull).unwrap();
-        assert_eq!(volume, 0.0);
+        let hull_result = ConvexHull::new(&points.view());
+        assert!(hull_result.is_err());
 
-        // Two points (1D case)
-        let points = arr2(&[[0.0], [5.0]]);
+        // Two points in 2D - should fail to create convex hull
+        let points = arr2(&[[0.0, 0.0], [1.0, 1.0]]);
+        let hull_result = ConvexHull::new(&points.view());
+        assert!(hull_result.is_err());
+
+        // Valid 1D case: many points on a line
+        let points = arr2(&[[0.0], [1.0], [2.0], [3.0]]);
         let hull = ConvexHull::new(&points.view()).unwrap();
         let length = compute_volume(&hull).unwrap();
-        assert!((length - 5.0).abs() < 1e-10);
+        assert!((length - 3.0).abs() < 1e-10); // Length should be 3.0 - 0.0 = 3.0
     }
 }

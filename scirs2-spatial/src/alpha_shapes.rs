@@ -22,7 +22,7 @@
 //!
 //! ```
 //! use scirs2_spatial::alphashapes::AlphaShape;
-//! use ndarray::array;
+//! use scirs2_core::ndarray::array;
 //!
 //! // Create a set of 2D points
 //! let points = array![
@@ -48,7 +48,7 @@
 
 use crate::delaunay::Delaunay;
 use crate::error::{SpatialError, SpatialResult};
-use ndarray::Array2;
+use scirs2_core::ndarray::Array2;
 use std::collections::HashMap;
 
 /// Alpha shape of a point set
@@ -92,7 +92,7 @@ impl AlphaShape {
     ///
     /// ```
     /// use scirs2_spatial::alphashapes::AlphaShape;
-    /// use ndarray::array;
+    /// use scirs2_core::ndarray::array;
     ///
     /// let points = array![
     ///     [0.0, 0.0],
@@ -168,7 +168,7 @@ impl AlphaShape {
     ///
     /// ```
     /// use scirs2_spatial::alphashapes::AlphaShape;
-    /// use ndarray::array;
+    /// use scirs2_core::ndarray::array;
     ///
     /// let points = array![
     ///     [0.0, 0.0],
@@ -766,7 +766,7 @@ impl AlphaShape {
     ///
     /// ```
     /// use scirs2_spatial::alphashapes::AlphaShape;
-    /// use ndarray::array;
+    /// use scirs2_core::ndarray::array;
     ///
     /// let points = array![
     ///     [0.0, 0.0],
@@ -857,7 +857,7 @@ impl AlphaShape {
 mod tests {
     use super::*;
     use approx::assert_relative_eq;
-    use ndarray::arr2;
+    use scirs2_core::ndarray::arr2;
 
     #[test]
     fn test_alphashape_2d_basic() {

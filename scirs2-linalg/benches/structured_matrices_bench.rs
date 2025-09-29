@@ -5,7 +5,7 @@
 //! leveraging their special structure for efficient algorithms.
 
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
-use ndarray::{Array1, Array2};
+use scirs2_core::ndarray::{Array1, Array2};
 use scirs2_linalg::prelude::*;
 use scirs2_linalg::specialized::{
     block_diagonal_determinant, block_tridiagonal_lu, solve_block_diagonal, BlockDiagonalMatrix,

@@ -6,7 +6,7 @@ use crate::error::{StatsError, StatsResult};
 use crate::sampling::SampleableDistribution;
 use ndarray::{s, Array1, Array2, ArrayBase, ArrayView1, ArrayView2, Axis, Data, Ix1, Ix2};
 use rand_distr::{ChiSquared, Distribution, Normal as RandNormal};
-use scirs2_core::rng;
+use scirs2_core::random::prelude::*;
 use std::fmt::Debug;
 
 // Import the helper functions used by MultivariateNormal
@@ -259,7 +259,7 @@ impl MultivariateT {
     /// assert_eq!(samples.shape(), &[100, 2]);
     /// ```
     pub fn rvs(&self, size: usize) -> StatsResult<Array2<f64>> {
-        let mut rng = rng();
+        let mut rng = thread_rng();
         let normal_dist = RandNormal::new(0.0, 1.0).unwrap();
         let chi2_dist = ChiSquared::new(self.df).unwrap();
 
@@ -451,7 +451,6 @@ mod tests {
     use ndarray::{array, Axis};
 
     #[test]
-    #[ignore = "timeout"]
     fn test_mvt_creation() {
         // 2D standard multivariate t
         let mean = array![0.0, 0.0];

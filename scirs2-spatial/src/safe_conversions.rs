@@ -72,7 +72,7 @@ where
 /// Safely convert array view to slice
 #[allow(dead_code)]
 pub fn safe_as_slice<'a, T>(
-    array: &'a ndarray::ArrayView1<'a, T>,
+    array: &'a scirs2_core::ndarray::ArrayView1<'a, T>,
     context: &str,
 ) -> SpatialResult<&'a [T]> {
     array.as_slice().ok_or_else(|| {

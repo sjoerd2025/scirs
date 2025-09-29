@@ -4,9 +4,9 @@
 //! Python/SciPy benchmarks to assess relative performance.
 
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
-use ndarray::Array1;
-use rand::prelude::*;
-use rand_distr::StandardNormal;
+use scirs2_core::ndarray::Array1;
+use scirs2_core::random::prelude::*;
+use scirs2_core::random::{Distribution, StandardNormal};
 use scirs2_stats::{
     kurtosis, mean, pearson_r, quantile, spearman_r, std, var, QuantileInterpolation,
 };
@@ -15,8 +15,8 @@ use std::hint::black_box;
 /// Generate large datasets for throughput testing
 #[allow(dead_code)]
 fn generate_largedataset(n: usize) -> Array1<f64> {
-    let mut rng = rand::rng();
-    Array1::from_shape_fn(n, |_| StandardNormal.sample(&mut rng))
+    let mut rng = thread_rng();
+    Array1::from_shape_fn(n, |_| rng.sample(StandardNormal))
 }
 
 /// Benchmark basic descriptive statistics
@@ -109,7 +109,7 @@ fn bench_correlation_matrix(c: &mut Criterion) {
 
     for (n_vars, n_obs) in configs {
         // Generate random data matrix
-        let mut rng = rand::rng();
+        let mut rng = thread_rng();
         let data: Vec<Array1<f64>> = (0..n_vars)
             .map(|_| Array1::from_shape_fn(n_obs, |_| StandardNormal.sample(&mut rng)))
             .collect();

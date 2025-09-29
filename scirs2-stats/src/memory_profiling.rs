@@ -636,7 +636,6 @@ mod tests {
     use ndarray::array;
 
     #[test]
-    #[ignore = "timeout"]
     fn test_memory_adaptive_algorithm() {
         let adapter = MemoryAdaptiveAlgorithm::new();
 

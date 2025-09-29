@@ -7,7 +7,7 @@ use crate::sampling::SampleableDistribution;
 use crate::traits::{Distribution as DistributionTrait, MultivariateDistribution};
 use ndarray::{s, Array1, Array2, ArrayBase, ArrayView1, ArrayView2, Axis, Data, Ix1, Ix2};
 use rand_distr::{Distribution as RandDistribution, Normal as RandNormal};
-use scirs2_core::rng;
+use scirs2_core::random::prelude::*;
 use statrs::statistics::Statistics;
 use std::fmt::Debug;
 
@@ -173,7 +173,7 @@ impl MultivariateNormal {
     /// assert_eq!(samples.shape(), &[100, 2]);
     /// ```
     pub fn rvs(&self, size: usize) -> StatsResult<Array2<f64>> {
-        let mut rng = rng();
+        let mut rng = thread_rng();
         let normal = RandNormal::new(0.0, 1.0).unwrap();
 
         // Create a matrix of standard normal samples
@@ -499,7 +499,6 @@ mod tests {
     use ndarray::{array, Axis};
 
     #[test]
-    #[ignore = "timeout"]
     fn test_mvn_creation() {
         // 2D standard multivariate normal
         let mean = array![0.0, 0.0];

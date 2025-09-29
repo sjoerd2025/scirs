@@ -830,7 +830,6 @@ mod tests {
     use ndarray::array;
 
     #[test]
-    #[ignore = "timeout"]
     fn test_mean() {
         let data = test_utils::test_array();
         let result = mean(&data.view()).unwrap();

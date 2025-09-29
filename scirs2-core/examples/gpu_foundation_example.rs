@@ -6,11 +6,11 @@
 //! - Buffer management and data transfer
 //! - Error handling and fallback to CPU
 
-use ndarray::Array2;
 #[cfg(feature = "gpu")]
 use scirs2_core::gpu::kernels::{DataType, KernelParams};
 #[cfg(feature = "gpu")]
 use scirs2_core::gpu::{GpuBackend, GpuContext};
+use scirs2_core::ndarray_ext::Array2;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {

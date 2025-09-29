@@ -22,7 +22,7 @@
 //! use scirs2_cluster::advanced_benchmarking::{
 //!     AdvancedBenchmark, BenchmarkConfig, create_comprehensive_report
 //! };
-//! use ndarray::Array2;
+//! use scirs2_core::ndarray::Array2;
 //! use std::time::Duration;
 //!
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -57,7 +57,7 @@ use crate::hierarchy::{linkage, LinkageMethod, Metric};
 use crate::metrics::{calinski_harabasz_score, silhouette_score};
 use crate::vq::{kmeans, kmeans2, vq};
 
-use ndarray::{Array1, Array2, ArrayView2};
+use scirs2_core::ndarray::{Array1, Array2, ArrayView2};
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;

@@ -1,4 +1,4 @@
-use ndarray::array;
+use scirs2_core::ndarray::array;
 use scirs2_spatial::convex_hull::{convex_hull, ConvexHull};
 
 #[allow(dead_code)]

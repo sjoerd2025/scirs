@@ -32,7 +32,13 @@ pub enum InterpolationMethod {
 /// Supports both Sibson and non-Sibsonian (Laplace) interpolation methods.
 #[derive(Debug, Clone)]
 pub struct NaturalNeighborInterpolator<
-    F: Float + FromPrimitive + Debug + ndarray::ScalarOperand + 'static + std::cmp::PartialOrd,
+    F: Float
+        + FromPrimitive
+        + Debug
+        + ndarray::ScalarOperand
+        + 'static
+        + std::cmp::PartialOrd
+        + ordered_float::FloatCore,
 > {
     /// The Voronoi diagram of the input points
     voronoi_diagram: VoronoiDiagram<F>,
@@ -51,7 +57,13 @@ pub struct NaturalNeighborInterpolator<
 }
 
 impl<
-        F: Float + FromPrimitive + Debug + ndarray::ScalarOperand + 'static + std::cmp::PartialOrd,
+        F: Float
+            + FromPrimitive
+            + Debug
+            + ndarray::ScalarOperand
+            + 'static
+            + std::cmp::PartialOrd
+            + ordered_float::FloatCore,
     > NaturalNeighborInterpolator<F>
 {
     /// Creates a new Natural Neighbor interpolator
@@ -131,7 +143,8 @@ impl<
             let mut is_same = true;
 
             for j in 0..dim {
-                if (point[j] - query[j]).abs() > F::epsilon() {
+                if num_traits::Float::abs(point[j] - query[j]) > <F as num_traits::Float>::epsilon()
+                {
                     is_same = false;
                     break;
                 }
@@ -200,11 +213,11 @@ impl<
                     // Compute distance to the neighbor
                     let mut distance = F::zero();
                     for j in 0..dim {
-                        distance = distance + (site[j] - query[j]).powi(2);
+                        distance = distance + num_traits::Float::powi(site[j] - query[j], 2);
                     }
                     distance = distance.sqrt();
 
-                    if distance < F::epsilon() {
+                    if distance < <F as num_traits::Float>::epsilon() {
                         // If the query point is very close to this site,
                         // just return the value at this site
                         return Ok(self.values[*idx_]);
@@ -286,7 +299,13 @@ impl<
 /// A new Natural Neighbor interpolator
 #[allow(dead_code)]
 pub fn make_natural_neighbor_interpolator<
-    F: Float + FromPrimitive + Debug + ndarray::ScalarOperand + 'static + std::cmp::PartialOrd,
+    F: Float
+        + FromPrimitive
+        + Debug
+        + ndarray::ScalarOperand
+        + 'static
+        + std::cmp::PartialOrd
+        + ordered_float::FloatCore,
 >(
     points: Array2<F>,
     values: Array1<F>,
@@ -305,7 +324,13 @@ pub fn make_natural_neighbor_interpolator<
 /// A new Natural Neighbor interpolator using Sibson's method
 #[allow(dead_code)]
 pub fn make_sibson_interpolator<
-    F: Float + FromPrimitive + Debug + ndarray::ScalarOperand + 'static + std::cmp::PartialOrd,
+    F: Float
+        + FromPrimitive
+        + Debug
+        + ndarray::ScalarOperand
+        + 'static
+        + std::cmp::PartialOrd
+        + ordered_float::FloatCore,
 >(
     points: Array2<F>,
     values: Array1<F>,
@@ -323,7 +348,13 @@ pub fn make_sibson_interpolator<
 /// A new Natural Neighbor interpolator using the non-Sibsonian (Laplace) method
 #[allow(dead_code)]
 pub fn make_laplace_interpolator<
-    F: Float + FromPrimitive + Debug + ndarray::ScalarOperand + 'static + std::cmp::PartialOrd,
+    F: Float
+        + FromPrimitive
+        + Debug
+        + ndarray::ScalarOperand
+        + 'static
+        + std::cmp::PartialOrd
+        + ordered_float::FloatCore,
 >(
     points: Array2<F>,
     values: Array1<F>,

@@ -15,7 +15,7 @@
 use crate::delaunay::Delaunay;
 use crate::error::{SpatialError, SpatialResult};
 use crate::voronoi::Voronoi;
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
+use scirs2_core::ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use std::collections::HashMap;
 use std::fmt;
 
@@ -28,7 +28,7 @@ use std::fmt;
 ///
 /// ```
 /// use scirs2_spatial::interpolate::NaturalNeighborInterpolator;
-/// use ndarray::array;
+/// use scirs2_core::ndarray::array;
 ///
 /// // Create sample points and values
 /// let points = array![
@@ -553,13 +553,30 @@ impl NaturalNeighborInterpolator {
     ///
     /// # Returns
     ///
-    /// Euclidean distance between the points
+    /// Optimized Euclidean distance between the points with loop unrolling
     fn euclidean_distance(p1: &ArrayView1<f64>, p2: &ArrayView1<f64>) -> f64 {
+        let len = p1.len().min(p2.len());
         let mut sum_sq = 0.0;
-        for i in 0..p1.len().min(p2.len()) {
+
+        // Process in chunks of 4 for instruction-level parallelism
+        let chunks = len / 4;
+
+        for i in 0..chunks {
+            let base = i * 4;
+            let diff0 = p1[base] - p2[base];
+            let diff1 = p1[base + 1] - p2[base + 1];
+            let diff2 = p1[base + 2] - p2[base + 2];
+            let diff3 = p1[base + 3] - p2[base + 3];
+
+            sum_sq += diff0 * diff0 + diff1 * diff1 + diff2 * diff2 + diff3 * diff3;
+        }
+
+        // Handle remaining elements
+        for i in (chunks * 4)..len {
             let diff = p1[i] - p2[i];
             sum_sq += diff * diff;
         }
+
         sum_sq.sqrt()
     }
 
@@ -706,7 +723,7 @@ impl NaturalNeighborInterpolator {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::array;
+    use scirs2_core::ndarray::array;
 
     #[test]
     #[ignore]

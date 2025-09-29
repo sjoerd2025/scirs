@@ -9,11 +9,11 @@
 //! Run with: `cargo run --example memory_mapped_running_stats --features memory_efficient`
 
 #[cfg(feature = "memory_efficient")]
-use ndarray::{Array1, ArrayView1};
-#[cfg(feature = "memory_efficient")]
 use scirs2_core::memory_efficient::{
     create_mmap, AccessMode, ChunkingStrategy, MemoryMappedArray, MemoryMappedChunks,
 };
+#[cfg(feature = "memory_efficient")]
+use scirs2_core::ndarray_ext::{Array1, ArrayView1};
 // Removed unused statrs import
 #[cfg(feature = "memory_efficient")]
 use std::path::Path;

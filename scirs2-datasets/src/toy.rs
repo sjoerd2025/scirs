@@ -6,9 +6,7 @@
 use crate::error::Result;
 use crate::utils::Dataset;
 use ndarray::{Array1, Array2};
-use rand::prelude::*;
-use rand::rngs::StdRng;
-use scirs2_core::rng;
+use scirs2_core::random::prelude::*;
 
 /// Generate the classic Iris dataset
 #[allow(dead_code)]
@@ -250,7 +248,7 @@ pub fn load_digits() -> Result<Dataset> {
     ];
 
     // Create 5 samples per digit with small random variations
-    let mut rng = rng();
+    let mut rng = thread_rng();
     let noise_level = 0.1;
 
     for (digit, &pattern) in digit_patterns.iter().enumerate() {
@@ -266,7 +264,7 @@ pub fn load_digits() -> Result<Dataset> {
                     noise_level * rng.random::<f64>()
                 };
 
-                let val = pixel + noise;
+                let val: f64 = pixel + noise;
                 data[[idx, j]] = val.clamp(0.0, 1.0);
             }
         }

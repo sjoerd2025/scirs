@@ -1,8 +1,8 @@
 //! Minimal Performance Benchmark - Quick Results
 
 use criterion::{criterion_group, criterion_main, Criterion};
-use ndarray::Array2;
-use rand::{rngs::StdRng, Rng, SeedableRng};
+use scirs2_core::ndarray::Array2;
+use scirs2_core::random::{rngs::StdRng, Rng, SeedableRng};
 use scirs2_spatial::distance::{euclidean, pdist};
 use std::hint::black_box;
 use std::time::Duration;

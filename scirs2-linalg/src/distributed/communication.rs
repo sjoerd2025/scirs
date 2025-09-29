@@ -407,8 +407,9 @@ impl DistributedCommunicator {
     where
         T: Serialize,
     {
-        bincode::serialize(matrix).map_err(|e| {
-            LinalgError::SerializationError(format!("Failed to serialize matrix: {}", e))
+        let cfg = bincode::config::standard();
+        bincode::serde::encode_to_vec(matrix, cfg).map_err(|e| {
+            LinalgError::SerializationError(format!("Failed to serialize matrix (bincode2): {}", e))
         })
     }
     
@@ -416,9 +417,12 @@ impl DistributedCommunicator {
     where
         T: for<'de> Deserialize<'de>,
     {
-        bincode::deserialize(data).map_err(|e| {
-            LinalgError::SerializationError(format!("Failed to deserialize matrix: {}", e))
-        })
+        let cfg = bincode::config::standard();
+        bincode::serde::decode_from_slice(data, cfg)
+            .map(|(m, _len)| m)
+            .map_err(|e| {
+                LinalgError::SerializationError(format!("Failed to deserialize matrix (bincode2): {}", e))
+            })
     }
     
     fn send_in_memory(&self, message: Message<Vec<u8>>) -> LinalgResult<()> {
@@ -476,8 +480,9 @@ impl DistributedCommunicator {
             checksum: self.calculate_checksum(&message.data),
         };
         
-        let header_bytes = bincode::serialize(&header)
-            .map_err(|e| LinalgError::SerializationError(format!("Header serialization failed: {}", e)))?;
+        let cfg = bincode::config::standard();
+        let header_bytes = bincode::serde::encode_to_vec(&header, cfg)
+            .map_err(|e| LinalgError::SerializationError(format!("Header serialization failed (bincode2): {}", e)))?;
         
         // Send header size first (4 bytes)
         let headersize = header_bytes.len() as u32;
@@ -528,8 +533,9 @@ impl DistributedCommunicator {
         stream.read_exact(&mut header_bytes)
             .map_err(|e| LinalgError::CommunicationError(format!("Failed to read header: {}", e)))?;
         
-        let header: TcpMessageHeader = bincode::deserialize(&header_bytes)
-            .map_err(|e| LinalgError::SerializationError(format!("Header deserialization failed: {}", e)))?;
+        let cfg = bincode::config::standard();
+        let (header, _len): (TcpMessageHeader, usize) = bincode::serde::decode_from_slice(&header_bytes, cfg)
+            .map_err(|e| LinalgError::SerializationError(format!("Header deserialization failed (bincode2): {}", e)))?;
         
         // Validate header
         if header.source != source {

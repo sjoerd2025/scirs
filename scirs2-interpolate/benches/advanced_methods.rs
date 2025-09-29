@@ -1,5 +1,5 @@
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
-use ndarray::{Array1, Array2};
+use scirs2_core::ndarray::{Array1, Array2};
 use scirs2_interpolate::advanced::enhanced_kriging::EnhancedKrigingBuilder;
 use scirs2_interpolate::advanced::enhanced_rbf::{EnhancedRBFInterpolator, KernelWidthStrategy};
 use scirs2_interpolate::advanced::fast_kriging::{FastKrigingBuilder, FastKrigingMethod};
@@ -166,7 +166,7 @@ fn bench_kriging_interpolation(c: &mut Criterion) {
                 |b, &data_size| {
                     b.iter(|| {
                         for i in 0..queries.nrows() {
-                            let query = queries.slice(ndarray::s![i..i + 1, ..]);
+                            let query = queries.slice(scirs2_core::ndarray::s![i..i + 1, ..]);
                             let _ = black_box(interpolator.predict(black_box(&query)));
                         }
                     });
@@ -330,7 +330,7 @@ fn bench_moving_least_squares(c: &mut Criterion) {
                 |b, &data_size| {
                     b.iter(|| {
                         for i in 0..queries.nrows() {
-                            let query = queries.slice(ndarray::s![i, ..]);
+                            let query = queries.slice(scirs2_core::ndarray::s![i, ..]);
                             let _ = black_box(interpolator.evaluate(black_box(&query)));
                         }
                     });

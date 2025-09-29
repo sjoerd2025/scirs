@@ -3,7 +3,7 @@
 //! This example shows how the utils module automatically uses parallel
 //! implementations for large arrays when the parallel feature is enabled.
 
-use ndarray::{Array1, Array2};
+use scirs2_core::ndarray_ext::{Array1, Array2};
 use scirs2_core::utils::{linspace, maximum, minimum};
 use std::time::Instant;
 

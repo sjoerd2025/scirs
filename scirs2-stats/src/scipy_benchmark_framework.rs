@@ -675,7 +675,6 @@ mod tests {
     use crate::descriptive::mean;
 
     #[test]
-    #[ignore = "timeout"]
     fn test_benchmark_framework_creation() {
         let framework = ScipyBenchmarkFramework::default();
         assert_eq!(framework.config.absolute_tolerance, 1e-12);
@@ -683,7 +682,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_testdata_generation() {
         let generator = TestDataGenerator::new(TestDataConfig::default());
         let data = generator.generate_1ddata(100).unwrap();

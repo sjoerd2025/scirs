@@ -866,7 +866,6 @@ mod tests {
     use super::*;
 
     #[test]
-    #[ignore = "timeout"]
     fn test_error_messages() {
         let err = ErrorMessages::length_mismatch("x", 5, "y", 3);
         assert!(err.to_string().contains("Array length mismatch"));

@@ -8,9 +8,7 @@
 use crate::error::{Result, VisionError};
 use image::{DynamicImage, GenericImageView, ImageBuffer, Rgba};
 use ndarray::{Array1, Array2};
-use rand::rngs::StdRng;
-use rand::{Rng, SeedableRng};
-use scirs2_core::rng;
+use scirs2_core::random::prelude::*;
 use std::f64::consts::PI;
 // use scirs2_linalg::solve;
 
@@ -288,7 +286,7 @@ impl ElasticDeformation {
             StdRng::seed_from_u64(seed_value)
         } else {
             // For rand 0.9.0+, we need to create a seeded RNG for reproducibility
-            let mut rng = rng();
+            let mut rng = thread_rng();
             StdRng::from_rng(&mut rng)
         };
 

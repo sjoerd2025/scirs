@@ -1,5 +1,5 @@
 use crate::error::{SpatialError, SpatialResult};
-use ndarray::{Array1, ArrayView1};
+use scirs2_core::ndarray::{Array1, ArrayView1};
 use std::cmp::Ordering;
 // No imports from std::collections needed
 
@@ -449,7 +449,7 @@ impl<T: Clone> Ord for EntryWithDistance<T> {
 ///
 /// ```
 /// use scirs2_spatial::rtree::RTree;
-/// use ndarray::array;
+/// use scirs2_core::ndarray::array;
 ///
 /// // Create points
 /// let points = array![
@@ -601,7 +601,7 @@ impl<T: Clone> RTree<T> {
 mod tests {
     use super::*;
     use approx::assert_relative_eq;
-    use ndarray::array;
+    use scirs2_core::ndarray::array;
 
     #[test]
     fn test_rectangle_creation() {

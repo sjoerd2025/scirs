@@ -15,7 +15,7 @@ use crate::{
 
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
 use num_cpus;
-use scirs2_core::rng;
+use scirs2_core::random::prelude::*;
 use scirs2_core::simd_ops::SimdUnifiedOps;
 use statrs::statistics::Statistics;
 use std::time::Instant;
@@ -719,7 +719,7 @@ impl PerformanceBenchmark {
     ) -> Result<(Array2<f64>, Array1<i32>)> {
         use rand_distr::{Distribution, Normal};
 
-        let mut rng = rng();
+        let mut rng = thread_rng();
         let normal = Normal::new(0.0, 1.0).unwrap();
 
         let mut x = Array2::zeros((n_samples_, n_features));
@@ -780,7 +780,6 @@ mod tests {
     use ndarray::array;
 
     #[test]
-    #[ignore = "timeout"]
     fn test_optimized_lda() {
         // Create non-degenerate data with proper variance in multiple dimensions
         let x = array![

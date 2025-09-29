@@ -436,7 +436,6 @@ mod tests {
     use ndarray::{array, Axis};
 
     #[test]
-    #[ignore = "timeout"]
     fn test_mvln_creation() {
         // 2D multivariate lognormal
         let mu = array![0.0, 0.0];

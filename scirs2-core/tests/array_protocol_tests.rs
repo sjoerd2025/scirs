@@ -39,7 +39,7 @@ macro_rules! array_function {
         fn $name($($arg: $arg_ty),*) -> $ret $body
     };
 }
-use ndarray::{arr2, Array2};
+use scirs2_core::ndarray_ext::{arr2, Array2};
 use std::any::{Any, TypeId};
 use std::collections::HashMap;
 

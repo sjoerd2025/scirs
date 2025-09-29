@@ -8,7 +8,7 @@
 //! # Examples
 //!
 //! ```
-//! use ndarray::array;
+//! use scirs2_core::ndarray::array;
 //! use scirs2_spatial::pathplanning::VisibilityGraphPlanner;
 //!
 //! // Create some polygon obstacles
@@ -32,7 +32,7 @@
 //! // Note: This test is currently ignored due to implementation issues with visibility checking
 //! ```
 
-use ndarray::Array2;
+use scirs2_core::ndarray::Array2;
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
 
@@ -685,7 +685,7 @@ fn segments_intersect(a1: &[f64], a2: &[f64], b1: &[f64], b2: &[f64]) -> bool {
 mod tests {
     use super::*;
     use approx::assert_relative_eq;
-    use ndarray::array;
+    use scirs2_core::ndarray::array;
 
     #[test]
     fn test_point_equality() {

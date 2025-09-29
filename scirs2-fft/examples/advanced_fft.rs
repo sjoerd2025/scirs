@@ -3,7 +3,7 @@
 //! This example demonstrates more advanced usage of the FFT module
 //! including the Hilbert transform, fractional FFT, and non-uniform FFT.
 
-use num_complex::Complex64;
+use scirs2_core::Complex64;
 use scirs2_fft::nufft::InterpolationType;
 use scirs2_fft::{fft, frft, frft_complex, hilbert, nufft, rfft};
 use std::f64::consts::PI;

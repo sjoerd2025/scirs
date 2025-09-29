@@ -3,8 +3,8 @@
 //! This example runs the core performance benchmarks to validate the
 //! performance claims made in the spatial module.
 
-use ndarray::Array2;
-use rand::{rngs::StdRng, Rng, SeedableRng};
+use scirs2_core::ndarray::Array2;
+use scirs2_core::random::{rngs::StdRng, Rng, SeedableRng};
 use scirs2_spatial::{
     distance::{euclidean, pdist},
     simd_distance::{

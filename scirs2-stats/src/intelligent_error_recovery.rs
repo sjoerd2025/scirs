@@ -756,7 +756,7 @@ impl NeuralErrorClassifier {
     /// Create new neural classifier
     pub fn new() -> Self {
         // Initialize with small random weights
-        let mut rng = rand::rng();
+        let mut rng = rand::thread_rng();
         let mut weights = Vec::new();
         let inputsize = 12; // Number of features
         let hiddensize = 8;

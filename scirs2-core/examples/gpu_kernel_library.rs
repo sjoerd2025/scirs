@@ -2,11 +2,11 @@
 //!
 //! This example shows how to use the kernel library for common operations.
 
-use ndarray::{Array1, Array2};
 #[cfg(feature = "gpu")]
 use scirs2_core::gpu::kernels::{DataType, KernelParams};
 #[cfg(feature = "gpu")]
 use scirs2_core::gpu::{GpuBackend, GpuContext, GpuError};
+use scirs2_core::ndarray_ext::{Array1, Array2};
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {

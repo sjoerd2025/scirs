@@ -879,7 +879,7 @@ fn calculate_segmentation_quality(segmentation: &Array2<usize>) -> f64 {
 }
 
 #[allow(dead_code)]
-fn calculate_frequency_complexity(_qftresult: &Array2<num_complex::Complex<f64>>) -> f64 {
+fn calculate_frequency_complexity(_qftresult: &Array2<scirs2_core::Complex<f64>>) -> f64 {
     // Measure complexity in frequency domain
     let magnitude_spectrum: Vec<f64> = _qftresult.iter().map(|c| c.norm()).collect();
     let mean_magnitude = magnitude_spectrum.iter().sum::<f64>() / magnitude_spectrum.len() as f64;

@@ -119,7 +119,15 @@ impl AdvancedSimdOps {
         k: usize,
     ) -> Vec<Vec<(usize, F)>>
     where
-        F: Float + FromPrimitive + SimdUnifiedOps + Zero + Send + Sync + Debug + PartialOrd,
+        F: Float
+            + FromPrimitive
+            + SimdUnifiedOps
+            + Zero
+            + Send
+            + Sync
+            + Debug
+            + PartialOrd
+            + ordered_float::FloatCore,
     {
         let n_queries = queries.nrows();
 
@@ -149,7 +157,13 @@ impl AdvancedSimdOps {
         k: usize,
     ) -> Vec<(usize, F)>
     where
-        F: Float + FromPrimitive + SimdUnifiedOps + Zero + Debug + PartialOrd,
+        F: Float
+            + FromPrimitive
+            + SimdUnifiedOps
+            + Zero
+            + Debug
+            + PartialOrd
+            + ordered_float::FloatCore,
     {
         let n_points = points.nrows();
         let dim = points.ncols();
@@ -251,7 +265,13 @@ impl AdvancedSimdOps {
         radius_squared: F,
     ) -> Vec<(usize, F)>
     where
-        F: Float + FromPrimitive + SimdUnifiedOps + Zero + Debug + PartialOrd,
+        F: Float
+            + FromPrimitive
+            + SimdUnifiedOps
+            + Zero
+            + Debug
+            + PartialOrd
+            + ordered_float::FloatCore,
     {
         let n_points = points.nrows();
         let dim = points.ncols();
@@ -301,7 +321,15 @@ impl AdvancedSimdOps {
         k: usize,
     ) -> InterpolateResult<Vec<Vec<(usize, F)>>>
     where
-        F: Float + FromPrimitive + SimdUnifiedOps + Zero + Send + Sync + Debug + PartialOrd,
+        F: Float
+            + FromPrimitive
+            + SimdUnifiedOps
+            + Zero
+            + Send
+            + Sync
+            + Debug
+            + PartialOrd
+            + ordered_float::FloatCore,
     {
         let n_points = points.nrows();
         let n_queries = queries.nrows();
@@ -378,7 +406,13 @@ impl AdvancedSimdOps {
         chunk_size: usize,
     ) -> Vec<(usize, F)>
     where
-        F: Float + FromPrimitive + SimdUnifiedOps + Zero + Debug + PartialOrd,
+        F: Float
+            + FromPrimitive
+            + SimdUnifiedOps
+            + Zero
+            + Debug
+            + PartialOrd
+            + ordered_float::FloatCore,
     {
         let n_points = points.nrows();
         let dim = points.ncols();

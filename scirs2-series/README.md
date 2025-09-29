@@ -4,7 +4,7 @@
 [[![License](https://img.shields.io/badge/license-MIT%2FApache--2.0-blue.svg)]](../LICENSE)
 [![Documentation](https://img.shields.io/docsrs/scirs2-series)](https://docs.rs/scirs2-series)
 
-**Production-ready** time series analysis module for the SciRS2 scientific computing library. This first beta release (0.1.0-beta.2) provides comprehensive, tested, and optimized tools for analyzing, decomposing, and forecasting time series data with feature parity to leading Python libraries.
+**Production-ready** time series analysis module for the SciRS2 scientific computing library (v0.1.0-beta.3). Following the [SciRS2 POLICY](../SCIRS2_POLICY.md), this beta 3 release provides comprehensive, tested, and optimized tools for analyzing, decomposing, and forecasting time series data with feature parity to leading Python libraries and ecosystem consistency through scirs2-core abstractions.
 
 ## Features
 
@@ -26,21 +26,6 @@
 - **Performance Optimized**: SIMD acceleration, parallel processing, memory-efficient algorithms
 - **Rust Ecosystem Integration**: Full ndarray support, compatible with scientific Rust ecosystem
 
-## Production Readiness
-
-**🚀 First Beta Release (0.1.0-beta.2)**
-
-This release represents the culmination of the alpha development phase and is **production-ready** for time series analysis applications:
-
-- **✅ Code Quality**: Zero clippy warnings, comprehensive error handling, idiomatic Rust code
-- **✅ Testing**: 137 unit tests + 47 integration/doc tests with 100% pass rate
-- **✅ Documentation**: Complete API documentation with working examples
-- **✅ Performance**: Optimized algorithms with optional SIMD and parallel processing
-- **✅ Stability**: API is stable and ready for production use
-- **✅ Feature Complete**: Comprehensive feature set covering all major time series analysis needs
-
-**Benchmark Performance**: Comparable or superior performance to equivalent Python libraries (pandas, statsmodels, scikit-learn) while providing memory safety and zero-cost abstractions.
-
 ## Installation
 
 **First Beta Release - Production Ready**
@@ -49,15 +34,15 @@ Add the following to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-scirs2-series = "0.1.0-beta.2"
+scirs2-series = "0.1.0-beta.3"
 ```
 
 **Recommended for Production**: Enable performance optimizations:
 
 ```toml
 [dependencies]
-scirs2-series = { version = "0.1.0-beta.2", features = ["parallel", "simd"] }
-scirs2-core = { version = "0.1.0-beta.2", features = ["parallel", "simd"] }
+scirs2-series = { version = "0.1.0-beta.3", features = ["parallel", "simd"] }
+scirs2-core = { version = "0.1.0-beta.3", features = ["parallel", "simd"] }
 ```
 
 **Available Features:**

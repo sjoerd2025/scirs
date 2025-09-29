@@ -4,7 +4,7 @@
 //! adaptive mutation strategies, and elite archives for evolving computer vision pipelines.
 
 use crate::error::Result;
-use scirs2_core::{random::Random, rng};
+use scirs2_core::random::prelude::*;
 use std::collections::{HashMap, VecDeque};
 
 /// Advanced genetic algorithm for pipeline evolution with multi-objective optimization
@@ -124,7 +124,7 @@ pub struct NeuralNetworkPredictor {
 impl NeuralNetworkPredictor {
     /// Create a new neural network predictor
     pub fn new(_input_size: usize, hidden_size: usize, outputsize: usize) -> Self {
-        let mut rng = rng();
+        let mut rng = thread_rng();
 
         // Initialize weights randomly
         let input_weights = (0..hidden_size)
@@ -330,7 +330,7 @@ impl GeneticPipelineOptimizer {
         populationsize: usize,
     ) -> Vec<PipelineGenome> {
         let mut population = Vec::with_capacity(populationsize);
-        let mut rng = rng();
+        let mut rng = thread_rng();
 
         for _ in 0..populationsize {
             let mut genes = HashMap::new();
@@ -479,7 +479,7 @@ impl GeneticPipelineOptimizer {
     /// Perform adaptive evolution with multiple mutation strategies
     fn adaptive_evolution(&mut self) -> Result<Vec<PipelineGenome>> {
         let mut new_population = Vec::with_capacity(self.population.len());
-        let mut rng = rng();
+        let mut rng = thread_rng();
 
         // Keep elite solutions
         let elite_count = (self.population.len() as f64 * self.ga_params.elite_ratio) as usize;
@@ -870,7 +870,7 @@ impl GeneticPipelineOptimizer {
     pub fn evolve_generation(&mut self) -> bool {
         let elite_count = (self.population.len() as f64 * self.ga_params.elite_ratio) as usize;
         let mut new_population = Vec::with_capacity(self.population.len());
-        let mut rng = rng();
+        let mut rng = thread_rng();
 
         // Keep elite individuals
         for i in 0..elite_count {
@@ -886,14 +886,14 @@ impl GeneticPipelineOptimizer {
             let parent2 = self.tournament_selection(&mut rng);
 
             // Crossover
-            let mut offspring = if rng.random_f64() < self.ga_params.crossover_rate {
+            let mut offspring = if rng.gen::<f64>() < self.ga_params.crossover_rate {
                 self.crossover(&parent1, &parent2)
             } else {
                 parent1.clone()
             };
 
             // Mutation
-            if rng.random_f64() < self.ga_params.mutation_rate {
+            if rng.gen::<f64>() < self.ga_params.mutation_rate {
                 self.mutate(&mut offspring);
             }
 
@@ -912,11 +912,11 @@ impl GeneticPipelineOptimizer {
     /// Single-point crossover
     fn crossover(&self, parent1: &PipelineGenome, parent2: &PipelineGenome) -> PipelineGenome {
         let mut offspring_genes = HashMap::new();
-        let mut rng = rng();
+        let mut rng = thread_rng();
 
         for (param_name, &value1) in &parent1.genes {
             if let Some(&value2) = parent2.genes.get(param_name) {
-                let offspring_value = if rng.random_f64() < 0.5 {
+                let offspring_value = if rng.gen::<f64>() < 0.5 {
                     value1
                 } else {
                     value2
@@ -940,7 +940,7 @@ impl GeneticPipelineOptimizer {
 
     /// Gaussian mutation
     fn mutate(&self, genome: &mut PipelineGenome) {
-        let mut rng = rng();
+        let mut rng = thread_rng();
         let mutation_strength = 0.1;
 
         for value in genome.genes.values_mut() {

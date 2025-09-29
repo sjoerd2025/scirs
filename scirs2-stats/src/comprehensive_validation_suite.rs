@@ -716,7 +716,6 @@ mod tests {
     use crate::descriptive::mean;
 
     #[test]
-    #[ignore = "timeout"]
     fn test_comprehensive_validation_suite_creation() {
         let suite = ComprehensiveValidationSuite::default();
         assert_eq!(suite.config.production_readiness_threshold, 0.85);

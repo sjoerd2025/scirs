@@ -6,7 +6,7 @@ use crate::error::{StatsError, StatsResult};
 use crate::sampling::SampleableDistribution;
 use num_traits::{Float, NumCast};
 use rand_distr::{Distribution, Uniform as RandUniform};
-use scirs2_core::rng;
+use scirs2_core::random::prelude::*;
 
 /// Weibull distribution structure
 ///
@@ -214,7 +214,7 @@ impl<F: Float + NumCast + std::fmt::Display> Weibull<F> {
     /// assert_eq!(samples.len(), 10);
     /// ```
     pub fn rvs(&self, size: usize) -> StatsResult<Vec<F>> {
-        let mut rng = rng();
+        let mut rng = thread_rng();
         let mut samples = Vec::with_capacity(size);
 
         // Generate samples using the inverse transform sampling method
@@ -430,7 +430,6 @@ mod tests {
     use approx::assert_relative_eq;
 
     #[test]
-    #[ignore = "timeout"]
     fn test_weibull_creation() {
         // Standard Weibull with shape=1 (equivalent to exponential)
         let weibull1 = Weibull::new(1.0, 1.0, 0.0).unwrap();

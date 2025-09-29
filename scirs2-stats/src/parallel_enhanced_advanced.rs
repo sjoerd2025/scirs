@@ -754,7 +754,7 @@ where
                     let mut rng = if let Some(seed) = seed {
                         ChaCha8Rng::seed_from_u64(seed + thread_id as u64)
                     } else {
-                        ChaCha8Rng::from_rng(&mut rand::rng())
+                        ChaCha8Rng::from_rng(&mut rand::thread_rng())
                     };
 
                     let mut local_results = Vec::with_capacity(samples_per_thread);

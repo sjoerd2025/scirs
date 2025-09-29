@@ -384,7 +384,7 @@ where
         let mut rng = match self.config.seed {
             Some(seed) => StdRng::seed_from_u64(seed),
             None => {
-                let mut rng = rand::rng();
+                let mut rng = rand::thread_rng();
                 StdRng::from_rng(&mut rng)
             }
         };

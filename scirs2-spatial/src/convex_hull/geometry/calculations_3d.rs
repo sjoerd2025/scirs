@@ -4,7 +4,7 @@
 //! commonly used in convex hull algorithms.
 
 use crate::error::SpatialResult;
-use ndarray::ArrayView2;
+use scirs2_core::ndarray::ArrayView2;
 
 /// Compute the signed volume of a tetrahedron
 ///
@@ -102,7 +102,7 @@ pub fn triangle_area_3d(p0: [f64; 3], p1: [f64; 3], p2: [f64; 3]) -> f64 {
 ///
 /// ```
 /// use scirs2_spatial::convex_hull::geometry::calculations_3d::compute_polyhedron_volume;
-/// use ndarray::array;
+/// use scirs2_core::ndarray::array;
 ///
 /// // Unit tetrahedron
 /// let points = array![
@@ -167,7 +167,7 @@ pub fn compute_polyhedron_volume(
         total_volume += tet_volume.abs();
     }
 
-    Ok(total_volume / 6.0)
+    Ok(total_volume)
 }
 
 /// Compute the surface area of a 3D polyhedron
@@ -185,7 +185,7 @@ pub fn compute_polyhedron_volume(
 ///
 /// ```
 /// use scirs2_spatial::convex_hull::geometry::calculations_3d::compute_polyhedron_surface_area;
-/// use ndarray::array;
+/// use scirs2_core::ndarray::array;
 ///
 /// // Unit tetrahedron
 /// let points = array![
@@ -347,7 +347,7 @@ pub fn normalize_3d(v: [f64; 3]) -> [f64; 3] {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::arr2;
+    use scirs2_core::ndarray::arr2;
 
     #[test]
     fn test_tetrahedron_volume() {
@@ -405,7 +405,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn test_polyhedron_volume() {
         // Unit tetrahedron
         let points = arr2(&[

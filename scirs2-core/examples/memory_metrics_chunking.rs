@@ -11,12 +11,12 @@ fn main() {
 }
 
 #[cfg(feature = "memory_management")]
-use ndarray::Array2;
-#[cfg(feature = "memory_management")]
 use scirs2_core::memory::metrics::{
     format_bytes, format_memory_report, generate_memory_report, reset_memory_metrics,
     TrackedChunkProcessor2D,
 };
+#[cfg(feature = "memory_management")]
+use scirs2_core::ndarray_ext::Array2;
 #[cfg(feature = "memory_management")]
 use std::time::Instant;
 

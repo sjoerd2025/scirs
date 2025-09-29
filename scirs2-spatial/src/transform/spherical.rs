@@ -13,7 +13,7 @@
 //! convention (r, phi, theta) is sometimes used. We follow the physics convention.
 
 use crate::error::{SpatialError, SpatialResult};
-use ndarray::{array, Array1, Array2, ArrayView1, ArrayView2};
+use scirs2_core::ndarray::{array, Array1, Array2, ArrayView1, ArrayView2};
 use std::f64::consts::{PI, TAU};
 
 /// Converts Cartesian coordinates (x, y, z) to spherical coordinates (r, theta, phi)
@@ -34,7 +34,7 @@ use std::f64::consts::{PI, TAU};
 /// # Example
 ///
 /// ```
-/// use ndarray::array;
+/// use scirs2_core::ndarray::array;
 /// use scirs2_spatial::transform::spherical::cart_to_spherical;
 ///
 /// let cart = array![1.0, 1.0, 1.0]; // Point (1, 1, 1)
@@ -111,7 +111,7 @@ pub fn cart_to_spherical(cart: &ArrayView1<f64>) -> SpatialResult<Array1<f64>> {
 /// # Example
 ///
 /// ```
-/// use ndarray::array;
+/// use scirs2_core::ndarray::array;
 /// use scirs2_spatial::transform::spherical::spherical_to_cart;
 /// use std::f64::consts::PI;
 ///
@@ -171,7 +171,7 @@ pub fn spherical_to_cart(spherical: &ArrayView1<f64>) -> SpatialResult<Array1<f6
 /// # Example
 ///
 /// ```
-/// use ndarray::array;
+/// use scirs2_core::ndarray::array;
 /// use scirs2_spatial::transform::spherical::cart_to_spherical_batch;
 ///
 /// let cart = array![
@@ -218,7 +218,7 @@ pub fn cart_to_spherical_batch(cart: &ArrayView2<'_, f64>) -> SpatialResult<Arra
 /// # Example
 ///
 /// ```
-/// use ndarray::array;
+/// use scirs2_core::ndarray::array;
 /// use scirs2_spatial::transform::spherical::spherical_to_cart_batch;
 /// use std::f64::consts::PI;
 ///
@@ -267,7 +267,7 @@ pub fn spherical_to_cart_batch(spherical: &ArrayView2<'_, f64>) -> SpatialResult
 /// # Example
 ///
 /// ```
-/// use ndarray::array;
+/// use scirs2_core::ndarray::array;
 /// use scirs2_spatial::transform::spherical::geodesic_distance;
 /// use std::f64::consts::PI;
 ///
@@ -349,7 +349,7 @@ pub fn geodesic_distance(
 /// # Example
 ///
 /// ```
-/// use ndarray::array;
+/// use scirs2_core::ndarray::array;
 /// use scirs2_spatial::transform::spherical::spherical_triangle_area;
 /// use std::f64::consts::PI;
 ///

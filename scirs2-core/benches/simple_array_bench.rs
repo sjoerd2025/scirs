@@ -3,9 +3,8 @@
 //! Basic benchmarks for array operations to validate performance.
 
 use criterion::{criterion_group, criterion_main, Criterion};
-use ndarray::{Array1, Array2};
-use ndarray_rand::rand_distr::Uniform;
-use ndarray_rand::RandomExt;
+use scirs2_core::ndarray_ext::{Array1, Array2, Ix1, Ix2};
+use scirs2_core::random::{arrays::random_uniform_array, seeded_rng};
 use std::hint::black_box;
 
 #[allow(dead_code)]
@@ -28,7 +27,8 @@ fn bench_array_creation(c: &mut Criterion) {
 
     group.bench_function("random_1000", |b| {
         b.iter(|| {
-            let arr = Array1::<f64>::random(1000, Uniform::new(0.0, 1.0));
+            let mut rng = seeded_rng(42);
+            let arr = random_uniform_array(Ix1(1000), &mut rng);
             black_box(arr)
         })
     });
@@ -40,8 +40,9 @@ fn bench_array_creation(c: &mut Criterion) {
 fn bench_array_operations(c: &mut Criterion) {
     let mut group = c.benchmark_group("array_operations");
 
-    let arr1 = Array1::<f64>::random(1000, Uniform::new(0.0, 1.0));
-    let arr2 = Array1::<f64>::random(1000, Uniform::new(0.0, 1.0));
+    let mut rng = seeded_rng(42);
+    let arr1 = random_uniform_array(Ix1(1000), &mut rng);
+    let arr2 = random_uniform_array(Ix1(1000), &mut rng);
 
     group.bench_function("add_1000", |b| {
         b.iter(|| {
@@ -71,8 +72,9 @@ fn bench_array_operations(c: &mut Criterion) {
 fn benchmatrix_operations(c: &mut Criterion) {
     let mut group = c.benchmark_group("matrix_operations");
 
-    let mat1 = Array2::<f64>::random((100, 100), Uniform::new(0.0, 1.0));
-    let mat2 = Array2::<f64>::random((100, 100), Uniform::new(0.0, 1.0));
+    let mut rng = seeded_rng(42);
+    let mat1 = random_uniform_array(Ix2(100, 100), &mut rng);
+    let mat2 = random_uniform_array(Ix2(100, 100), &mut rng);
 
     group.bench_function("transpose_100x100", |b| {
         b.iter(|| {

@@ -4,6 +4,7 @@
 //! features including multi-GPU processing and specialized hardware support.
 
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
+use scirs2_core::random::prelude::*;
 use scirs2_fft::{
     // GPU backends
     gpu_sparse_fft,
@@ -44,12 +45,10 @@ fn create_sparse_signal(n: usize, sparsity: usize) -> Vec<f64> {
     }
 
     // Add minimal noise for realism
-    use rand::rngs::StdRng;
-    use rand::{Rng, SeedableRng};
-    let mut rng = StdRng::seed_from_u64(42);
+    let mut rng = thread_rng();
 
     for sample in &mut signal {
-        *sample += 0.01 * (rng.random::<f64>() - 0.5);
+        *sample += 0.01 * (rng.gen::<f64>() - 0.5);
     }
 
     signal

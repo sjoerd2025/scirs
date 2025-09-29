@@ -1637,7 +1637,6 @@ mod tests {
     use ndarray::array;
 
     #[test]
-    #[ignore = "timeout"]
     fn test_advanced_simd_optimizer_creation() {
         let config = AdvancedSimdConfig::default();
         let optimizer = AdvancedSimdOptimizer::new(config);

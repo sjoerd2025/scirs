@@ -5,10 +5,10 @@
 #![allow(dead_code)]
 
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
-use ndarray::{Array1, ArrayView1};
-use rand::prelude::*;
-use rand::rngs::StdRng;
-use rand::SeedableRng;
+use scirs2_core::ndarray::{Array1, ArrayView1};
+use scirs2_core::random::prelude::*;
+use scirs2_core::random::rngs::StdRng;
+use scirs2_core::random::SeedableRng;
 use scirs2_core::simd_ops::PlatformCapabilities;
 use scirs2_core::simd_ops::SimdUnifiedOps;
 use scirs2_graph::{

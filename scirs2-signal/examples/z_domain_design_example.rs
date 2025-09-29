@@ -3,7 +3,7 @@
 // This example shows how to use various filter design functions
 // to create different types of digital filters.
 
-use num_complex::Complex64;
+use scirs2_core::Complex64;
 use scirs2_signal::filter::{butter_bandpass_bandstop, cheby1, FilterType};
 
 #[allow(dead_code)]

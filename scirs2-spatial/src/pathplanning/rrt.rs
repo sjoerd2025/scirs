@@ -16,9 +16,9 @@
 //! 3. Extending the tree toward the sampled point
 //! 4. Repeating until the goal is reached or max iterations are exceeded
 
-use ndarray::{Array1, ArrayView1};
-use rand::rngs::StdRng;
-use rand::{Rng, SeedableRng};
+use scirs2_core::ndarray::{Array1, ArrayView1};
+use scirs2_core::random::rngs::StdRng;
+use scirs2_core::random::{Rng, SeedableRng};
 use std::fmt::Debug;
 
 use crate::distance::EuclideanDistance;
@@ -278,8 +278,8 @@ impl RRTPlanner {
 
             // Build KDTree for nearest neighbor search
             let points: Vec<_> = nodes.iter().map(|node| node.position.clone()).collect();
-            let points_array = ndarray::stack(
-                ndarray::Axis(0),
+            let points_array = scirs2_core::ndarray::stack(
+                scirs2_core::ndarray::Axis(0),
                 &points.iter().map(|p| p.view()).collect::<Vec<_>>(),
             )
             .expect("Failed to stack points");
@@ -346,8 +346,8 @@ impl RRTPlanner {
 
             // Build KDTree for nearest neighbor search
             let points: Vec<_> = nodes.iter().map(|node| node.position.clone()).collect();
-            let points_array = ndarray::stack(
-                ndarray::Axis(0),
+            let points_array = scirs2_core::ndarray::stack(
+                scirs2_core::ndarray::Axis(0),
                 &points.iter().map(|p| p.view()).collect::<Vec<_>>(),
             )
             .expect("Failed to stack points");
@@ -564,8 +564,8 @@ impl RRTPlanner {
 
             // Build KDTree for tree A
             let points_a: Vec<_> = tree_a.iter().map(|node| node.position.clone()).collect();
-            let points_array_a = ndarray::stack(
-                ndarray::Axis(0),
+            let points_array_a = scirs2_core::ndarray::stack(
+                scirs2_core::ndarray::Axis(0),
                 &points_a.iter().map(|p| p.view()).collect::<Vec<_>>(),
             )
             .expect("Failed to stack points");
@@ -596,8 +596,8 @@ impl RRTPlanner {
 
                 // Build KDTree for tree B
                 let points_b: Vec<_> = tree_b.iter().map(|node| node.position.clone()).collect();
-                let points_array_b = ndarray::stack(
-                    ndarray::Axis(0),
+                let points_array_b = scirs2_core::ndarray::stack(
+                    scirs2_core::ndarray::Axis(0),
                     &points_b.iter().map(|p| p.view()).collect::<Vec<_>>(),
                 )
                 .expect("Failed to stack points");
@@ -725,7 +725,10 @@ impl RRT2DPlanner {
         collision_step_size: f64,
     ) -> SpatialResult<Self> {
         let mut planner = RRTPlanner::new(config, 2);
-        planner = planner.with_bounds(ndarray::arr1(&min_bounds), ndarray::arr1(&max_bounds))?;
+        planner = planner.with_bounds(
+            scirs2_core::ndarray::arr1(&min_bounds),
+            scirs2_core::ndarray::arr1(&max_bounds),
+        )?;
 
         let obstacles_clone = obstacles.clone();
         planner = planner.with_collision_checker(move |from, to| {
@@ -746,8 +749,8 @@ impl RRT2DPlanner {
         goal: [f64; 2],
         goal_threshold: f64,
     ) -> SpatialResult<Option<Path<[f64; 2]>>> {
-        let start_arr = ndarray::arr1(&start);
-        let goal_arr = ndarray::arr1(&goal);
+        let start_arr = scirs2_core::ndarray::arr1(&start);
+        let goal_arr = scirs2_core::ndarray::arr1(&goal);
 
         // Check if start or goal are in collision
         for obstacle in &self.obstacles {

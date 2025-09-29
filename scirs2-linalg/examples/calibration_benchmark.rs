@@ -3,9 +3,10 @@
 //! This example benchmarks different calibration methods in terms of
 //! accuracy, performance, and memory savings.
 
-use ndarray::Array2;
-use rand::{rng, Rng};
-use rand_distr::{Cauchy, Distribution, LogNormal, Normal, Uniform};
+use scirs2_core::essentials::{Normal, Uniform};
+use scirs2_core::ndarray::Array2;
+use scirs2_core::random::prelude::*;
+use scirs2_core::random::{Cauchy, Distribution, LogNormal};
 use scirs2_linalg::quantization::calibration::{
     calibrate_matrix, CalibrationConfig, CalibrationMethod,
 };
@@ -71,7 +72,7 @@ fn main() {
 /// Generate a matrix with uniform distribution
 #[allow(dead_code)]
 fn generate_uniform_data(size: usize) -> Array2<f32> {
-    let mut rng = rand::rng();
+    let mut rng = thread_rng();
     let uniform = Uniform::new(-1.0, 1.0).unwrap();
 
     let mut data = Array2::zeros((size, size));
@@ -87,7 +88,7 @@ fn generate_uniform_data(size: usize) -> Array2<f32> {
 /// Generate a matrix with normal distribution
 #[allow(dead_code)]
 fn generate_normal_data(size: usize) -> Array2<f32> {
-    let mut rng = rand::rng();
+    let mut rng = thread_rng();
     let normal = Normal::new(0.0, 1.0).unwrap();
 
     let mut data = Array2::zeros((size, size));
@@ -103,7 +104,7 @@ fn generate_normal_data(size: usize) -> Array2<f32> {
 /// Generate a matrix with log-normal distribution
 #[allow(dead_code)]
 fn generate_lognormal_data(size: usize) -> Array2<f32> {
-    let mut rng = rand::rng();
+    let mut rng = thread_rng();
     let lognormal = LogNormal::new(0.0, 1.0).unwrap();
 
     let mut data = Array2::zeros((size, size));
@@ -119,7 +120,7 @@ fn generate_lognormal_data(size: usize) -> Array2<f32> {
 /// Generate a matrix with bimodal distribution
 #[allow(dead_code)]
 fn generate_bimodal_data(size: usize) -> Array2<f32> {
-    let mut rng = rand::rng();
+    let mut rng = thread_rng();
     let normal1 = Normal::new(-2.0, 0.5).unwrap();
     let normal2 = Normal::new(2.0, 0.5).unwrap();
 
@@ -127,7 +128,7 @@ fn generate_bimodal_data(size: usize) -> Array2<f32> {
     for i in 0..size {
         for j in 0..size {
             // 50% chance of coming from each distribution
-            if rng.random::<bool>() {
+            if rng.gen::<bool>() {
                 data[[i, j]] = normal1.sample(&mut rng);
             } else {
                 data[[i, j]] = normal2.sample(&mut rng);
@@ -141,7 +142,7 @@ fn generate_bimodal_data(size: usize) -> Array2<f32> {
 /// Generate a matrix with mixed scales in different columns
 #[allow(dead_code)]
 fn generate_mixed_scale_data(size: usize) -> Array2<f32> {
-    let mut rng = rand::rng();
+    let mut rng = thread_rng();
 
     let mut data = Array2::zeros((size, size));
 
@@ -151,28 +152,28 @@ fn generate_mixed_scale_data(size: usize) -> Array2<f32> {
     // Region 1: small values around 0.1
     for i in 0..regionsize {
         for j in 0..size {
-            data[[i, j]] = 0.1 + 0.05 * rng.random::<f32>();
+            data[[i, j]] = 0.1 + 0.05 * rng.gen::<f32>();
         }
     }
 
     // Region 2: medium values around 1.0
     for i in regionsize..(2 * regionsize) {
         for j in 0..size {
-            data[[i, j]] = 1.0 + 0.5 * rng.random::<f32>();
+            data[[i, j]] = 1.0 + 0.5 * rng.gen::<f32>();
         }
     }
 
     // Region 3: large values around 10.0
     for i in (2 * regionsize)..(3 * regionsize) {
         for j in 0..size {
-            data[[i, j]] = 10.0 + 5.0 * rng.random::<f32>();
+            data[[i, j]] = 10.0 + 5.0 * rng.gen::<f32>();
         }
     }
 
     // Region 4: very large values around 100.0
     for i in (3 * regionsize)..size {
         for j in 0..size {
-            data[[i, j]] = 100.0 + 50.0 * rng.random::<f32>();
+            data[[i, j]] = 100.0 + 50.0 * rng.gen::<f32>();
         }
     }
 
@@ -182,7 +183,7 @@ fn generate_mixed_scale_data(size: usize) -> Array2<f32> {
 /// Generate a matrix with heavy-tailed distribution (Cauchy)
 #[allow(dead_code)]
 fn generate_heavy_tailed_data(size: usize) -> Array2<f32> {
-    let mut rng = rand::rng();
+    let mut rng = thread_rng();
     let cauchy = Cauchy::new(0.0, 1.0).unwrap();
 
     let mut data = Array2::zeros((size, size));

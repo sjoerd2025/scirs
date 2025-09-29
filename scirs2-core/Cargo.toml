@@ -23,6 +23,7 @@ cached = { workspace = true, optional = true }  # Memoization and caching
 chrono = { workspace = true, features = ["serde"] }
 rand = { workspace = true }
 rand_distr = { workspace = true }
+rand_chacha = { workspace = true }
 ndarray-rand = { workspace = true, optional = true }
 serde = { workspace = true, optional = true }  # Serialization
 serde_json = { workspace = true, optional = true }  # JSON serialization
@@ -137,7 +138,7 @@ metal = ["gpu", "dep:metal", "dep:objc2", "dep:objc2-foundation", "dep:objc2-met
 wgpu_backend = ["gpu", "dep:wgpu", "dep:pollster"]  # WebGPU-specific GPU acceleration
 rocm = ["gpu"]  # ROCm-specific GPU acceleration (AMD)
 # CUDA feature is platform-conditional - only works on x86_64 Linux and Windows
-cuda = ["gpu"]  # CUDA-specific GPU acceleration (platform-conditional)
+cuda = ["gpu", "dep:cudarc"]  # CUDA-specific GPU acceleration (platform-conditional)
 memory_management = ["bincode", "tempfile"]  # Advanced memory management
 memory_efficient = ["tempfile", "bincode", "memmap2", "rayon"]  # Memory-efficient operations
 memory_efficient_all_types = ["memory_efficient", "float32", "float64", "all_ints"]  # Full type support for memory-efficient operations
@@ -498,6 +499,11 @@ harness = false
 [[bench]]
 name = "simple_array_bench"
 harness = false
+
+[[bench]]
+name = "random_performance_bench"
+harness = false
+required-features = ["random"]
 
 [[example]]
 name = "parallel_ops_example"

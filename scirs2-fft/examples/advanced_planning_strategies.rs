@@ -1,5 +1,5 @@
 use ndarray::{Array2, ShapeBuilder};
-use num_complex::Complex64;
+use scirs2_core::Complex64;
 use scirs2_fft::{
     auto_tuning::{AutoTuneConfig, FftVariant, SizeRange, SizeStep},
     fft2, get_global_planner, init_global_planner, FftPlanExecutor, PlanBuilder, PlanningConfig,

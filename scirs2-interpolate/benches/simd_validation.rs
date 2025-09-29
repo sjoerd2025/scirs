@@ -7,7 +7,7 @@
 //! - Memory layouts (cache efficiency)
 
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
+use scirs2_core::ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use scirs2_interpolate::bspline::{BSpline, ExtrapolateMode};
 use scirs2_interpolate::simd_optimized::{
     is_simd_available, simd_bspline_basis_functions, simd_bspline_batch_evaluate,
@@ -241,7 +241,7 @@ fn bench_simd_memory_layout(c: &mut Criterion) {
             strided_data[[i * 2, j]] = contiguous_data[[i, j]];
         }
     }
-    let strided_view = strided_data.slice(ndarray::s![..;2, ..]);
+    let strided_view = strided_data.slice(scirs2_core::ndarray::s![..;2, ..]);
 
     group.throughput(Throughput::Elements((size * size) as u64));
 

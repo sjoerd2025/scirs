@@ -6,7 +6,7 @@ use crate::error::{StatsError, StatsResult};
 use crate::sampling::SampleableDistribution;
 use num_traits::{Float, NumCast};
 use rand_distr::{Distribution, Geometric as RandGeometric};
-use scirs2_core::rng;
+use scirs2_core::random::prelude::*;
 
 /// Geometric distribution structure
 ///
@@ -245,7 +245,7 @@ impl<F: Float + NumCast + std::fmt::Display> Geometric<F> {
     /// assert_eq!(samples.len(), 10);
     /// ```
     pub fn rvs(&self, size: usize) -> StatsResult<Vec<F>> {
-        let mut rng = rng();
+        let mut rng = thread_rng();
         let mut samples = Vec::with_capacity(size);
 
         for _ in 0..size {
@@ -486,7 +486,6 @@ mod tests {
     use approx::assert_relative_eq;
 
     #[test]
-    #[ignore = "timeout"]
     fn test_geometric_creation() {
         // Valid p values
         let geom1 = Geometric::new(0.3).unwrap();

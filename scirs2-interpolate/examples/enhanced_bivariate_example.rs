@@ -1,4 +1,4 @@
-use ndarray::{array, Array1, Array2};
+use scirs2_core::ndarray::{array, Array1, Array2};
 use scirs2_interpolate::{
     BivariateInterpolator, RectBivariateSpline, SmoothBivariateSplineBuilder,
 };
@@ -30,8 +30,7 @@ fn generate_grid_data(nx: usize, ny: usize) -> (Array1<f64>, Array1<f64>, Array2
 /// Generate scattered data points
 #[allow(dead_code)]
 fn generate_scattered_data(_npoints: usize) -> (Array1<f64>, Array1<f64>, Array1<f64>) {
-    use rand::rngs::StdRng;
-    use rand::{Rng, SeedableRng};
+    use scirs2_core::random::prelude::*;
 
     // Create a seeded RNG for reproducibility
     let mut rng = StdRng::seed_from_u64(42);
@@ -178,8 +177,7 @@ fn smooth_bivariate_example() {
     let (x, y, mut z) = generate_scattered_data(200);
 
     // Add some noise to the z values
-    use rand::rngs::StdRng;
-    use rand::{Rng, SeedableRng};
+    use scirs2_core::random::prelude::*;
     let mut rng = StdRng::seed_from_u64(99);
 
     for i in 0..z.len() {

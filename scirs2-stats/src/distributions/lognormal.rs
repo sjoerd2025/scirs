@@ -335,7 +335,6 @@ mod tests {
     use approx::assert_relative_eq;
 
     #[test]
-    #[ignore = "timeout"]
     fn test_lognormal_creation() {
         // Standard lognormal
         let lognorm = Lognormal::new(0.0, 1.0, 0.0).unwrap();

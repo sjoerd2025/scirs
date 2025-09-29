@@ -16,7 +16,7 @@
 //!
 //! ```
 //! use scirs2_spatial::generic_traits::{SpatialScalar};
-//! use ndarray::array;
+//! use scirs2_core::ndarray::array;
 //!
 //! // Generic distance calculation (simplified example)
 //! fn calculate_distance<T>(p1: &[T], p2: &[T]) -> T
@@ -33,8 +33,8 @@
 //! let _result = calculate_distance(point1.as_slice().unwrap(), point2.as_slice().unwrap());
 //! ```
 
-use ndarray::Array1;
 use num_traits::{Float, NumCast};
+use scirs2_core::ndarray::Array1;
 use scirs2_core::simd_ops::SimdUnifiedOps;
 use std::fmt::Debug;
 
@@ -141,7 +141,7 @@ impl SpatialScalar for f32 {
             return Err("Slice lengths must match");
         }
 
-        use ndarray::Array1;
+        use scirs2_core::ndarray::Array1;
         let a_array = Array1::from(a.to_vec());
         let b_array = Array1::from(b.to_vec());
 
@@ -722,7 +722,7 @@ pub mod utils {
 /// Integration with ndarray
 pub mod ndarray_integration {
     use super::{SpatialArray, SpatialPoint, SpatialScalar};
-    use ndarray::{Array1, ArrayView1, ArrayView2, Axis};
+    use scirs2_core::ndarray::{Array1, ArrayView1, ArrayView2, Axis};
 
     /// Implementation of SpatialPoint for ndarray ArrayView1
     impl<T: SpatialScalar> SpatialPoint<T> for ArrayView1<'_, T> {
@@ -821,7 +821,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn test_point_operations() {
         let p1 = Point::new_2d(1.0f64, 2.0);
         let p2 = Point::new_2d(4.0, 6.0);
@@ -859,7 +858,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn test_distance_metrics() {
         use crate::generic_traits::DistanceMetric;
 
@@ -876,7 +874,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn test_vec_as_spatial_point() {
         let p1 = vec![1.0f64, 2.0, 3.0];
         let p2 = vec![4.0, 5.0, 6.0];
@@ -885,11 +882,11 @@ mod tests {
         assert_eq!(p1.coordinate(1), Some(2.0));
 
         let distance = p1.distance_to(&p2);
-        assert_relative_eq!(distance, (3.0f64 * 3.0).sqrt(), epsilon = 1e-10);
+        // Euclidean distance: sqrt((4-1)² + (5-2)² + (6-3)²) = sqrt(9+9+9) = sqrt(27)
+        assert_relative_eq!(distance, (27.0f64).sqrt(), epsilon = 1e-10);
     }
 
     #[test]
-    #[ignore]
     fn test_array_as_spatial_point() {
         let p1: [f32; 3] = [1.0, 2.0, 3.0];
         let p2: [f32; 3] = [4.0, 5.0, 6.0];
@@ -898,7 +895,8 @@ mod tests {
         assert_eq!(p1.coordinate(2), Some(3.0));
 
         let distance = p1.distance_to(&p2);
-        assert_relative_eq!(distance, (3.0f32 * 3.0).sqrt(), epsilon = 1e-6);
+        // Euclidean distance: sqrt((4-1)² + (5-2)² + (6-3)²) = sqrt(9+9+9) = sqrt(27)
+        assert_relative_eq!(distance, (27.0f32).sqrt(), epsilon = 1e-6);
     }
 
     #[test]
@@ -914,7 +912,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn test_dot_product() {
         let p1 = Point::new_3d(1.0f64, 2.0, 3.0);
         let p2 = Point::new_3d(4.0, 5.0, 6.0);

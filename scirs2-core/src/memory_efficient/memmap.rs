@@ -8,10 +8,10 @@
 
 use super::validation;
 use crate::error::{CoreError, CoreResult, ErrorContext, ErrorLocation};
-use bincode::{deserialize, serialize};
+use ::serde::{Deserialize, Serialize};
+use bincode::{config, serde};
 use memmap2::{Mmap, MmapMut, MmapOptions};
 use ndarray::{Array, ArrayBase, Data, Dimension, IxDyn};
-use serde::{Deserialize, Serialize};
 use std::fs::{File, OpenOptions};
 use std::io::{Read, Write};
 use std::marker::PhantomData;
@@ -480,7 +480,8 @@ where
                 };
 
                 // Serialize header to bytes
-                let header_bytes = serialize(&header).map_err(|e| {
+                let cfg = config::standard();
+                let header_bytes = serde::encode_to_vec(&header, cfg).map_err(|e| {
                     CoreError::ValidationError(
                         ErrorContext::new(format!("Failed to serialize header: {e}"))
                             .with_location(ErrorLocation::new(file!(), line!())),
@@ -495,9 +496,27 @@ where
                 // Write header to file
                 file.write_all(&header_bytes)
                     .map_err(|e| CoreError::IoError(ErrorContext::new(e.to_string())))?;
+                // Add padding so the start of the data region is aligned for type A.
+                // This avoids unaligned pointer issues when creating typed slices over the mmap.
+                let align = std::mem::align_of::<A>();
+                let mut padding_size = 0usize;
+                let header_size_unaligned = 8 + header_bytes.len();
+                if align > 1 {
+                    let rem = header_size_unaligned % align;
+                    if rem != 0 {
+                        padding_size = align - rem;
+                        // Write zero padding bytes
+                        let padding = vec![0u8; padding_size];
+                        file.write_all(&padding).map_err(|e| {
+                            CoreError::IoError(ErrorContext::new(format!(
+                                "Failed to write header padding: {e}"
+                            )))
+                        })?;
+                    }
+                }
+                let header_size = header_size_unaligned + padding_size; // 8 bytes for header length + header bytes + padding
 
-                // Calculate total file size (header length + header + data)
-                let header_size = 8 + header_bytes.len(); // 8 bytes for header length + header bytes
+                // Calculate total file size (header + padding + data)
                 let total_size = header_size + data_size;
 
                 // Set file length to accommodate header and data
@@ -1060,37 +1079,65 @@ fn read_header<A: Clone + Copy + 'static + Send + Sync>(
     }
 
     // Try to deserialize header
-    match deserialize::<MemoryMappedHeader>(&header_bytes) {
-        Ok(header) => {
-            // Validate header makes sense
-            if header.element_size == std::mem::size_of::<A>() {
-                Ok((header, 8 + header_len))
+    let cfg = config::standard();
+    match serde::decode_from_slice::<MemoryMappedHeader, _>(&header_bytes, cfg) {
+        Ok((header, _len)) => {
+            let element_size_expected = std::mem::size_of::<A>();
+            if header.element_size == element_size_expected {
+                // Compute aligned header size (including potential padding) for newer files.
+                let base_header_size = 8 + header_len; // length prefix + header bytes
+                let align = std::mem::align_of::<A>();
+                let padding = if align > 1 {
+                    (align - (base_header_size % align)) % align
+                } else {
+                    0
+                };
+                let mut aligned_header_size = base_header_size;
+                if padding > 0 && base_header_size + padding <= file_size {
+                    // Peek padding bytes (should be zeros). We are currently positioned right after the header.
+                    let mut padding_buf = vec![0u8; padding];
+                    // Attempt to read padding; if it fails, revert to unaligned header size.
+                    match file.read_exact(&mut padding_buf) {
+                        Ok(_) => {
+                            // Optional: validate all zeros; if not zeros, treat as legacy file without padding.
+                            if padding_buf.iter().all(|b| *b == 0) {
+                                aligned_header_size += padding;
+                            } else {
+                                // Non-zero padding -> legacy; reset file cursor backwards so data reads correctly.
+                                // Seek back to start of data (cannot easily without Seek here; treat as legacy by ignoring consumption)
+                                // We consumed bytes; that's acceptable because caller will start data mapping after aligned_header_size
+                                // but since we won't add padding, adjust size back.
+                                aligned_header_size = base_header_size; // do not include padding
+                            }
+                        }
+                        Err(_) => {
+                            aligned_header_size = base_header_size; // legacy file
+                        }
+                    }
+                }
+                Ok((header, aligned_header_size))
             } else {
-                // Header element size doesn't match, treat as raw data
-                let element_size = std::mem::size_of::<A>();
+                // Element size mismatch -> treat as raw data (legacy raw file)
+                let element_size = element_size_expected;
                 let total_elements = file_size / element_size;
-
                 let fallback_header = MemoryMappedHeader {
                     element_size,
                     shape: vec![total_elements],
                     total_elements,
                 };
-
-                Ok((fallback_header, 0)) // No header offset for raw files
+                Ok((fallback_header, 0))
             }
         }
         Err(_) => {
             // Failed to deserialize header, treat as raw data
             let element_size = std::mem::size_of::<A>();
             let total_elements = file_size / element_size;
-
             let header = MemoryMappedHeader {
                 element_size,
                 shape: vec![total_elements],
                 total_elements,
             };
-
-            Ok((header, 0)) // No header offset for raw files
+            Ok((header, 0))
         }
     }
 }

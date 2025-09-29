@@ -6,8 +6,8 @@
 
 use crate::convex_hull::core::ConvexHull;
 use crate::error::{SpatialError, SpatialResult};
-use ndarray::ArrayView2;
 use qhull::Qh;
+use scirs2_core::ndarray::ArrayView2;
 
 /// Handle degenerate cases for convex hull computation
 ///
@@ -26,7 +26,7 @@ use qhull::Qh;
 ///
 /// ```rust
 /// use scirs2_spatial::convex_hull::algorithms::special_cases::handle_degenerate_case;
-/// use ndarray::array;
+/// use scirs2_core::ndarray::array;
 ///
 /// // Single point
 /// let points = array![[0.0, 0.0]];
@@ -240,7 +240,7 @@ fn handle_identical_points(points: &ArrayView2<'_, f64>) -> SpatialResult<Convex
 ///
 /// ```rust
 /// use scirs2_spatial::convex_hull::algorithms::special_cases::is_all_collinear;
-/// use ndarray::array;
+/// use scirs2_core::ndarray::array;
 ///
 /// let collinear = array![[0.0, 0.0], [1.0, 0.0], [2.0, 0.0]];
 /// assert!(is_all_collinear(&collinear.view()));
@@ -379,7 +379,7 @@ fn is_all_collinear_nd(points: &ArrayView2<'_, f64>) -> bool {
 ///
 /// ```rust
 /// use scirs2_spatial::convex_hull::algorithms::special_cases::has_all_identical_points;
-/// use ndarray::array;
+/// use scirs2_core::ndarray::array;
 ///
 /// let identical = array![[1.0, 2.0], [1.0, 2.0], [1.0, 2.0]];
 /// assert!(has_all_identical_points(&identical.view()));
@@ -474,7 +474,7 @@ fn find_extreme_points_on_line(points: &ArrayView2<'_, f64>) -> SpatialResult<(u
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::arr2;
+    use scirs2_core::ndarray::arr2;
 
     #[test]
     fn test_single_point() {

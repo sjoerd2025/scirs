@@ -10,10 +10,9 @@
 use std::collections::HashMap;
 
 use ndarray::{Array1, Array2, Axis};
-use rand::rngs::StdRng;
-use rand::seq::SliceRandom;
-use rand::{rng, SeedableRng};
 use rand_distr::Uniform;
+use scirs2_core::random::prelude::*;
+use scirs2_core::random::SliceRandomExt;
 use serde::{Deserialize, Serialize};
 
 use crate::error::{DatasetsError, Result};
@@ -479,7 +478,7 @@ impl MLPipeline {
         // Create RNG
         let mut rng: Box<dyn RngCore> = match randomstate {
             Some(seed) => Box::new(StdRng::seed_from_u64(seed)),
-            None => Box::new(rng()),
+            None => Box::new(thread_rng()),
         };
 
         // Collect all indices for the oversampled dataset
@@ -733,7 +732,7 @@ impl MLPipeline {
                     indices.shuffle(&mut rng);
                 }
                 None => {
-                    let mut rng = rng();
+                    let mut rng = thread_rng();
                     indices.shuffle(&mut rng);
                 }
             }
@@ -760,7 +759,7 @@ impl MLPipeline {
                     class_group.shuffle(&mut rng);
                 }
                 None => {
-                    let mut rng = rng();
+                    let mut rng = thread_rng();
                     class_group.shuffle(&mut rng);
                 }
             }

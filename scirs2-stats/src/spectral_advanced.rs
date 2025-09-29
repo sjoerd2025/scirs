@@ -1062,7 +1062,6 @@ mod tests {
     use ndarray::array;
 
     #[test]
-    #[ignore = "timeout"]
     fn test_spectral_analyzer_creation() {
         let config = AdvancedSpectralConfig::default();
         let analyzer = AdvancedSpectralAnalyzer::<f64>::new(config);

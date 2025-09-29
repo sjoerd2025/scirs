@@ -10,8 +10,8 @@
 // at your option.
 //
 
-use ndarray::Array2;
 use scirs2_core::array_protocol::{ArrayFunction, ArrayProtocol, NdarrayWrapper, NotImplemented};
+use scirs2_core::ndarray_ext::Array2;
 use std::any::{Any, TypeId};
 use std::collections::HashMap;
 use std::marker::PhantomData;

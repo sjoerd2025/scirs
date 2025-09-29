@@ -64,7 +64,7 @@ pub struct ApiVersion;
 
 impl ApiVersion {
     /// Current API version
-    pub const CURRENT: &'static str = "0.1.0-beta.2";
+    pub const CURRENT: &'static str = "0.1.0-beta.3";
 
     /// Minimum supported API version for backward compatibility
     pub const MIN_SUPPORTED: &'static str = "0.1.0";

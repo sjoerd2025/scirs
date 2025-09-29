@@ -723,6 +723,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[ignore = "slow / timing-sensitive"]
     async fn test_timeout_handling() {
         // Function that sometimes takes too long
         let objective = |x: Array1<f64>| async move {

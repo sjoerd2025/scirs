@@ -29,7 +29,7 @@
 //!
 //! ```
 //! use scirs2_spatial::next_gen_gpu_architecture::{QuantumGpuProcessor, PhotonicAccelerator};
-//! use ndarray::array;
+//! use scirs2_core::ndarray::array;
 //!
 //! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
 //! // Quantum-GPU hybrid processing
@@ -55,8 +55,9 @@
 //! ```
 
 use crate::error::SpatialResult;
-use ndarray::{Array1, Array2, Array3, ArrayView2};
 use num_complex::Complex64;
+use scirs2_core::ndarray::{Array1, Array2, Array3, ArrayView2};
+use scirs2_core::random::quick::random_f64;
 use std::collections::VecDeque;
 use std::f64::consts::PI;
 
@@ -363,7 +364,7 @@ impl QuantumGpuProcessor {
         // Create entanglement topology
         for i in 0..self.quantum_units.len() {
             for j in (i + 1)..self.quantum_units.len() {
-                if rand::random::<f64>() < 0.3 {
+                if random_f64() < 0.3 {
                     // 30% entanglement probability
                     self.quantum_units[i].entangled_units.push(j);
                     self.quantum_units[j].entangled_units.push(i);
@@ -568,7 +569,7 @@ impl QuantumGpuProcessor {
                 // Apply quantum operations for exploration
                 for _ in 0..5 {
                     // Apply quantum rotation for exploration
-                    let rotation_angle = rand::random::<f64>() * PI;
+                    let rotation_angle = random_f64() * PI;
                     for amplitude in superposition_state.iter_mut() {
                         *amplitude *= Complex64::new(0.0, rotation_angle).exp();
                     }
@@ -598,7 +599,7 @@ impl QuantumGpuProcessor {
         }
 
         let mut cumulative = 0.0;
-        let random_value = rand::random::<f64>() * total_prob;
+        let random_value = random_f64() * total_prob;
 
         for (i, &prob) in probabilities.iter().enumerate() {
             cumulative += prob;
@@ -634,7 +635,7 @@ impl QuantumGpuProcessor {
 
                 // Apply quantum enhancement
                 if self.quantum_coherence {
-                    let quantum_enhancement = 1.0 + 0.1 * (rand::random::<f64>() - 0.5);
+                    let quantum_enhancement = 1.0 + 0.1 * (random_f64() - 0.5);
                     classical_distance *= quantum_enhancement;
                 }
 
@@ -681,7 +682,7 @@ impl QuantumGpuProcessor {
 
                     // Apply quantum fluctuation for exploration
                     if self.quantum_coherence {
-                        let quantum_fluctuation = 0.01 * (rand::random::<f64>() - 0.5);
+                        let quantum_fluctuation = 0.01 * (random_f64() - 0.5);
                         centroids[[i, j]] += quantum_fluctuation;
                     }
                 }
@@ -956,7 +957,7 @@ impl PhotonicAccelerator {
                 } else {
                     // Fallback to random initialization
                     for dim in 0..n_dims {
-                        centroids[[cluster, dim]] = rand::random::<f64>();
+                        centroids[[cluster, dim]] = random_f64();
                     }
                 }
             }
@@ -1021,7 +1022,7 @@ impl PhotonicAccelerator {
 
             waveform_energy * wavelength_score
         } else {
-            rand::random::<f64>() // Fallback
+            random_f64() // Fallback
         }
     }
 }
@@ -1029,7 +1030,7 @@ impl PhotonicAccelerator {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::array;
+    use scirs2_core::ndarray::array;
     use std::f64::consts::PI;
 
     #[tokio::test]

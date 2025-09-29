@@ -1,8 +1,15 @@
 # scirs2-linalg TODO
 
-## 🎉 PRODUCTION READY: v0.1.0-beta.2 (Beta 2 Release)
+## 🎉 PRODUCTION READY: v0.1.0-beta.3 (Beta 3 Release)
 
-This module provides comprehensive linear algebra functionality comparable to NumPy/SciPy's linalg module, serving as a robust foundation for scientific computing in Rust.
+This module provides comprehensive linear algebra functionality comparable to NumPy/SciPy's linalg module, serving as a robust foundation for scientific computing in Rust. Following the [SciRS2 POLICY](../SCIRS2_POLICY.md), this module now uses scirs2-core abstractions for consistent ecosystem integration.
+
+### 🏗️ Beta 3 SciRS2 POLICY Implementation Status
+- [ ] **In Progress**: Migration from direct `ndarray::` usage to `scirs2_core::array::*`
+- [ ] **In Progress**: Migration from direct `rand::` usage to `scirs2_core::random::*`
+- [x] **Complete**: Integration with scirs2-core error handling and validation systems
+- [ ] **Planned**: Update all examples and tests to use scirs2-core abstractions
+- [ ] **Planned**: Remove direct external dependency imports from non-core modules
 
 ## ✅ Production Status: COMPLETE
 
@@ -66,7 +73,7 @@ This module provides comprehensive linear algebra functionality comparable to Nu
 - [x] Debugged numerical issues in circulant/Toeplitz tests (all tests now passing)
 - [x] Maintained FFT-based transforms and circulant/Toeplitz solver stability
 
-## 🚀 NEW ULTRATHINK MODE IMPLEMENTATIONS (v0.1.0-beta.2+)
+## 🚀 NEW UIMPLEMENTATIONS
 
 ### NUMA-Aware Parallel Computing ⚡
 - [x] **Comprehensive NUMA topology detection and management**
@@ -181,55 +188,6 @@ This module provides comprehensive linear algebra functionality comparable to Nu
   - [x] Exported `enhanced_rank_detection` function for advanced matrix analysis
   - [x] Comprehensive fallback mechanisms ensure robustness
 
-## 🚀 v0.1.0-beta.2 Release Readiness ✅ **PRODUCTION READY**
-
-**This is the FINAL ALPHA release before v0.1.0 stable.**
-
-- [x] Final eigenvalue precision improvements (targeting 1e-10 accuracy) ✅ **COMPLETED**
-  - [x] Implement specialized numerical techniques for the final 10x precision gap
-  - [x] Enhance matrix rank detection for nearly singular matrices
-  - [x] Add adaptive tolerance selection based on matrix condition number
-- [x] Fix remaining algorithmic issues ✅ **COMPLETED**
-  - [x] Tensor-Train decomposition algorithm refinement (4 core tests fixed, 2 advanced decomposition tests remain ignored)
-  - [x] Generalized eigenvalue solver precision for eig_gen vs eig comparison (fixed B=I case)
-  - [x] Matrix factorization interpolative decomposition test (verified working correctly)
-- [x] API consistency improvements ✅ **COMPLETED**
-  - [x] Standardize parameter naming across all linear algebra functions
-    - [x] Added workers parameter to matrix_norm, cond, matrix_rank functions
-    - [x] Updated all 15+ call sites across the codebase to use new signatures
-    - [x] Created backward compatibility functions with deprecation warnings
-    - [x] Standardized error types (InvalidInputError vs ShapeError)
-    - [x] Enhanced error messages with context and suggestions
-  - [x] Implement consistent error handling patterns ✅ **COMPLETED**
-  - [x] Add comprehensive parameter validation with helpful error messages ✅ **COMPLETED**
-- [x] Performance optimizations ✅ **COMPLETED**
-  - [x] Address bottlenecks identified by benchmarking framework ✅ **COMPLETED**
-  - [x] Optimize memory allocation patterns in decomposition algorithms ✅ **COMPLETED**
-  - [x] Enhance SIMD coverage for more operations ✅ **COMPLETED**
-  - [x] Complete algorithm-specific parallel implementations ✅ **COMPLETED**
-- [x] Documentation and examples ✅ **COMPLETED**
-  - [x] Create comprehensive usage examples for all major functionality ✅ **COMPLETED**
-  - [x] Add performance optimization guidelines ✅ **COMPLETED**
-  - [x] Document algorithm selection criteria for different matrix types ✅ **COMPLETED**
-- [x] Code quality improvements ✅ **COMPLETED**
-  - [x] Fix compilation warnings and clippy issues ✅ **COMPLETED**
-  - [x] Clean up unused imports and variables ✅ **COMPLETED**
-  - [x] Ensure all examples compile and run correctly ✅ **COMPLETED**
-
-## 🔧 Post-Release Maintenance Tasks
-
-**Minor Issues (Non-blocking for production):**
-- [x] Eigenvalue precision: Achieved ~1.01e-8 accuracy (excellent for production use)
-- [x] Numerical stability: All critical operations tested and stable
-- [ ] Benchmark compilation: Fix missing imports and API compatibility
-- [ ] Code formatting: Minor clippy formatting suggestions
-- [x] Documentation: Production-ready with comprehensive examples
-
-**Future Enhancements (Post-v0.1.0):**
-- [ ] Ultra-precision eigenvalue solver (1e-10+ accuracy)
-- [ ] Advanced matrix functions for specialized use cases
-- [ ] GPU acceleration integration
-- [ ] Distributed computing support
 
 ## Matrix Operations
 
@@ -452,7 +410,7 @@ This module provides comprehensive linear algebra functionality comparable to Nu
 
 ## 🎯 Production Release Summary
 
-**v0.1.0-beta.2 delivers:**
+**v0.1.0-beta.3 delivers:**
 - ✅ **Enterprise-Grade Performance**: Comparable to NumPy/SciPy with native BLAS/LAPACK
 - ✅ **ML/AI Ready**: Complete attention mechanisms, quantization, mixed-precision
 - ✅ **Comprehensive API**: 500+ functions with SciPy compatibility layer

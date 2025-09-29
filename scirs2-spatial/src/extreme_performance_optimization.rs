@@ -33,7 +33,7 @@
 //!
 //! ```
 //! use scirs2_spatial::extreme_performance_optimization::{ExtremeOptimizer, AdvancedfastDistanceMatrix, SelfOptimizingAlgorithm};
-//! use ndarray::array;
+//! use scirs2_core::ndarray::array;
 //!
 //! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
 //! // Extreme performance distance matrix computation
@@ -64,7 +64,7 @@
 //! ```
 
 use crate::error::{SpatialError, SpatialResult};
-use ndarray::{Array1, Array2, ArrayView2};
+use scirs2_core::ndarray::{Array1, Array2, ArrayView2};
 use std::alloc::{alloc, Layout};
 use std::collections::{HashMap, VecDeque};
 use std::ptr::NonNull;
@@ -1639,7 +1639,7 @@ pub async fn benchmark_extreme_optimizations(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::array;
+    use scirs2_core::ndarray::array;
 
     #[test]
     fn test_extreme_optimizer_creation() {

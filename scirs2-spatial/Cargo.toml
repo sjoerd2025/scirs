@@ -14,10 +14,9 @@ workspace = true
 
 [dependencies]
 # Core dependencies
-scirs2-core = { workspace = true, features = ["simd", "parallel", "linalg"] }
-ndarray = { workspace = true }
+scirs2-core = { workspace = true, features = ["simd", "parallel", "linalg", "random", "types"] }
+# Removed ndarray, num-complex, rand - use scirs2-core abstractions per SciRS2 policy
 num-traits = { workspace = true }
-num-complex = { workspace = true }
 thiserror = { workspace = true }
 num = { workspace = true }
 statrs = { workspace = true }
@@ -25,6 +24,11 @@ approx = { workspace = true }
 
 # Computational geometry
 qhull = { workspace = true }
+
+# Temporary: num_complex needed for compatibility until scirs2_core::Complex64 is fully compatible
+num-complex = { workspace = true }
+
+# Temporary: rand needed for compatibility during migration to scirs2_core::random
 rand = { workspace = true }
 
 # System dependencies for NUMA
@@ -50,7 +54,7 @@ vulkan = []
 [dev-dependencies]
 approx = { workspace = true }
 criterion = { workspace = true }
-rand_chacha = { workspace = true }
+# Removed rand_chacha - use scirs2-core random abstractions per SciRS2 policy
 plotters = { workspace = true }
 num_cpus = { workspace = true }
 tokio-test = { workspace = true }

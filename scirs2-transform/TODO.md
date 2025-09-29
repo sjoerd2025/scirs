@@ -1,6 +1,8 @@
 # TODO List for scirs2-transform
 
-**Version: 0.1.0-beta.2 (Production Ready)**
+**Version: 0.1.0-beta.3 (SciRS2 POLICY & Enhanced Distributed Processing)**
+
+Following the [SciRS2 POLICY](../SCIRS2_POLICY.md), this module features ecosystem consistency and enhanced distributed processing capabilities through scirs2-core abstractions.
 
 ## Production Ready Features ✅
 
@@ -78,7 +80,7 @@
 
 ## API Stability Commitment 📝
 
-For the 0.1.0-beta.2 release, the following APIs are **stable** and backwards compatible:
+For the 0.1.0-beta.3 release, the following APIs are **stable** and backwards compatible:
 - All normalization and scaling transformers
 - Feature engineering utilities (polynomial, power transforms, discretization)
 - Dimensionality reduction algorithms (PCA, SVD, LDA, t-SNE)  

@@ -457,7 +457,7 @@ where
     fn initialize_randomization(&mut self) -> StatsResult<()> {
         let mut rng = match self.config.seed {
             Some(seed) => StdRng::seed_from_u64(seed),
-            None => StdRng::from_rng(&mut rand::rng()),
+            None => StdRng::from_rng(&mut rand::thread_rng()),
         };
 
         // Initialize scrambling matrices
@@ -617,7 +617,7 @@ where
         let mut max_discrepancy = 0.0;
         let num_test_points = 50.min(n);
 
-        let mut rng = rand::rng();
+        let mut rng = rand::thread_rng();
         for _ in 0..num_test_points {
             let mut test_point = Array1::zeros(d);
             for j in 0..d {

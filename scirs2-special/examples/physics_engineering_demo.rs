@@ -3,7 +3,7 @@
 //! This example shows various physics and engineering functions available
 //! in the scirs2-special module.
 
-use num_complex::Complex64;
+use scirs2_core::Complex64;
 use scirs2_special::physics_engineering::*;
 
 #[allow(dead_code)]

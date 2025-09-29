@@ -6,7 +6,7 @@
 use std::hint::black_box;
 
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
-use ndarray::{Array1, Array2};
+use scirs2_core::ndarray::{Array1, Array2};
 use scirs2_linalg::complex::decompositions::{complex_eig, complex_lu, complex_qr, complex_svd};
 use scirs2_linalg::*;
 use std::time::Duration;
@@ -44,8 +44,8 @@ fn create_rectmatrix(m: usize, n: usize) -> Array2<f64> {
 
 /// Create a complex matrix for complex decomposition benchmarks
 #[allow(dead_code)]
-fn create_complexmatrix(n: usize) -> Array2<num_complex::Complex64> {
-    use num_complex::Complex64;
+fn create_complexmatrix(n: usize) -> Array2<scirs2_core::Complex64> {
+    use scirs2_core::Complex64;
     Array2::from_shape_fn((n, n), |(i, j)| {
         Complex64::new(
             ((i + j) as f64 * 0.1).sin(),

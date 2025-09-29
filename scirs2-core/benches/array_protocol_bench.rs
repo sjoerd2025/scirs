@@ -2,8 +2,8 @@
 // Replacing with a simple criterion benchmark
 
 use criterion::{criterion_group, criterion_main, Criterion};
-use ndarray::Array2;
 use scirs2_core::array_protocol::{self, add, matmul, transpose, NdarrayWrapper};
+use scirs2_core::ndarray_ext::Array2;
 
 // Add bench_ndarray_matmul with criterion
 #[allow(dead_code)]

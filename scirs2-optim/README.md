@@ -7,7 +7,7 @@ This module has been **moved to an independent project** as of **SciRS2 v0.1.0-b
 ### Old (scirs2-optim)
 ```toml
 [dependencies]
-scirs2-optim = "0.1.0-beta.2"  # ❌ No longer available
+scirs2-optim = "0.1.0-beta.1"  # ❌ No longer available
 ```
 
 ### New (OptiRS)
@@ -64,5 +64,5 @@ Full documentation and examples are available in the OptiRS repository.
 **For SciRS2 core scientific computing**, continue using:
 ```toml
 [dependencies]
-scirs2 = "0.1.0-beta.2"  # Scientific computing without optimization
+scirs2 = "0.1.0-beta.3"  # Scientific computing without optimization
 ```

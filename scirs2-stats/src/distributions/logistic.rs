@@ -6,7 +6,7 @@ use crate::error::{StatsError, StatsResult};
 use crate::sampling::SampleableDistribution;
 use num_traits::{Float, NumCast};
 use rand_distr::{Distribution, Uniform as RandUniform};
-use scirs2_core::rng;
+use scirs2_core::random::prelude::*;
 
 /// Logistic distribution structure
 ///
@@ -178,7 +178,7 @@ impl<F: Float + NumCast + std::fmt::Display> Logistic<F> {
     /// assert_eq!(samples.len(), 10);
     /// ```
     pub fn rvs(&self, size: usize) -> StatsResult<Vec<F>> {
-        let mut rng = rng();
+        let mut rng = thread_rng();
         let mut samples = Vec::with_capacity(size);
 
         for _ in 0..size {
@@ -451,7 +451,6 @@ mod tests {
     use approx::assert_relative_eq;
 
     #[test]
-    #[ignore = "timeout"]
     fn test_logistic_creation() {
         // Standard Logistic (loc=0, scale=1)
         let logistic = Logistic::new(0.0, 1.0).unwrap();

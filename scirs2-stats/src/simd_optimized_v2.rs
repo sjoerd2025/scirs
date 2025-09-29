@@ -382,7 +382,6 @@ mod tests {
     use ndarray::array;
 
     #[test]
-    #[ignore = "timeout"]
     fn test_mean_simd_optimized() {
         let data = array![1.0f64, 2.0, 3.0, 4.0, 5.0];
         let mean = mean_simd_optimized(&data.view(), None).unwrap();

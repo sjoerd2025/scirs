@@ -23,9 +23,9 @@ members = [
     # Benchmarking suite
     "benches",
     
-    # Temporarily disabled due to compilation errors:
+    # Other
     "scirs2-interpolate", # Needs debugging - enabling to fix
-    # "scirs2-optimize", # 518+ compilation errors
+    "scirs2-optimize", # 518+ compilation errors
     "scirs2-stats", # Working on fixing compilation errors
     "scirs2-cluster", # Re-enabled after fixing workspace conflict
     # "scirs2-optim", # Moved to independent OptiRS project from v0.1.0-beta.2
@@ -46,7 +46,7 @@ unpredictable_function_pointer_comparisons = "allow"
 unknown_lints = "allow"
 
 [workspace.package]
-version = "0.1.0-beta.2"
+version = "0.1.0-beta.3"
 edition = "2021"
 authors = ["SciRS2 Team"]
 description = "A Rust port of SciPy with AI/ML extensions - Scientific Computing and AI Library"
@@ -59,18 +59,16 @@ categories = ["science", "mathematics", "algorithms", "ai"]
 # Core array computing
 ndarray = { version = "0.16.1", default-features = false, features = ["std", "serde", "rayon"] }
 ndarray-stats = "0.6.0"
-ndarray-stats-05 = { package = "ndarray-stats", version = "0.5.0" }
 ndarray-rand = "0.15.0"
-ndarray-rand-014 = { package = "ndarray-rand", version = "0.14.0" }
 # Numerical libraries
 num-traits = "0.2.19"
 num-complex = "0.4.6"
 num-integer = "0.1.46"
 
 # Parallelization and performance
-rayon = "1.10.0"
+rayon = "1.11.0"
 wide = "0.7.33"  # SIMD acceleration library
-num_cpus = "1.16.0"
+num_cpus = "1.17.0"
 
 # Random number generation
 rand = "0.9.2"
@@ -78,20 +76,20 @@ rand_distr = "0.5.1"
 rand_core = "0.9.3"
 rand_pcg = "0.9.0"
 rand_chacha = "0.9.0"
-fastrand = "2.0.1"
+fastrand = "2.3.0"
 
 # Development and testing
-thiserror = "1.0.69"
+thiserror = "2.0.16"
 approx = "0.5.1"
-criterion = "0.6.0"
+criterion = "0.7.0"
 once_cell = "1.21.3"
-tempfile = "3.20.0"
+tempfile = "3.23.0"
 tokio-test = "0.4.4"
 
 # Serialization
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-bincode = "1.3.3"
+bincode = { version = "2.0.1", features = ["serde"] }
 chrono = "0.4.42"
 
 # Python bindings (optional)
@@ -99,8 +97,8 @@ pyo3 = { version = "0.26.0", features = ["extension-module", "auto-initialize"] 
 numpy = { version = "0.26.0" }
 
 # Linear algebra and math (heavy dependencies - minimize features)
-nalgebra = { version = "0.33.2", default-features = false }
-rustfft = { version = "6.4.0", default-features = false }
+nalgebra = { version = "0.34.1", default-features = false }
+rustfft = { version = "6.4.1", default-features = false }
 argmin = { version = "0.10.0", default-features = false }
 sprs = { version = "0.11.3", default-features = false }
 
@@ -109,9 +107,9 @@ sprs = { version = "0.11.3", default-features = false }
 ndarray-linalg = { version = "0.17.0", default-features = false }
 
 # BLAS backends (mutually exclusive) - used conditionally by individual crates
-openblas-src = { version = "0.10.11", features = ["cblas", "lapacke"], default-features = false }
-blas-src = { version = "0.10", default-features = false }
-cblas-sys = { version = "0.1.4", default-features = false }
+openblas-src = { version = "0.10.13", features = ["cblas", "lapacke"], default-features = false }
+blas-src = { version = "0.13", default-features = false }
+cblas-sys = { version = "0.3.0", default-features = false }
 blas = { version = "0.23.0", default-features = false }
 # NOTE: intel-mkl-src removed to avoid conflicts with openblas-src
 
@@ -122,37 +120,37 @@ image = "0.25.8"
 image-025 = { package = "image", version = "0.25.8", features = ["jpeg", "png", "gif"] }
 
 # IO and file handling
-flate2 = "1.0"
+flate2 = "1.1"
 blake3 = "1.8.2"
-regex = "1.11.1"
-libc = "0.2.174"
-cached = "0.54.0"
-byteorder = "1.4"
+regex = "1.11.3"
+libc = "0.2.176"
+cached = "0.56.0"
+byteorder = "1.5"
 rmp-serde = "1.3"
 lz4 = "1.28"
 zstd = "0.13.3"
-bzip2 = "0.5.0"
+bzip2 = "0.6.0"
 sha2 = "0.10"
-crc32fast = "1.4"
+crc32fast = "1.5"
 hex = "0.4"
 digest = "0.10"
-data-encoding = "2.6"
+data-encoding = "2.9"
 glob = "0.3"
-zip = "2.2"
+zip = "5.1"
 dirs = "6.0.0"
 urlencoding = "2.1"
-url = "2.5.0"
-cron = "0.12"
+url = "2.5.7"
+cron = "0.15"
 
 # ML specific
-tokenizers = "0.21.2"
+tokenizers = "0.22.1"
 autograd = "1.1.1"
 smallvec = "1.15.1"
-uuid = { version = "1.17.0", features = ["v4"] }
+uuid = { version = "1.18.1", features = ["v4"] }
 rustc-hash = "2.1.1"
-matrixmultiply = "0.3.9"
+matrixmultiply = "0.3.10"
 num = "0.4.3"
-special = "0.10.2"
+special = "0.11.4"
 special-11 = { package = "special", version = "0.11.4" }
 unicode-normalization = "0.1"
 unicode-segmentation = "1.12"
@@ -166,107 +164,107 @@ half = { version = "2.6.0", features = ["num-traits", "serde", "alloc"] }
 crossbeam = { version = "0.8.4" }
 crossbeam-utils = { version = "0.8.21" }
 crossbeam-deque = { version = "0.8.6" }
-crossbeam-channel = { version = "0.5.13" }
-memmap2 = { version = "0.9.5" }
-bytemuck = { version = "1.21", features = ["derive"] }
+crossbeam-channel = { version = "0.5.15" }
+memmap2 = { version = "0.9.8" }
+bytemuck = { version = "1.23", features = ["derive"] }
 snap = { version = "1.1.1" }
-brotli = { version = "7.0.0" }
-cranelift-module = { version = "0.121.1" }
-cranelift-jit = { version = "0.121.1" }
-cranelift-frontend = { version = "0.121.1" }
-plotly = { version = "0.12.1" }
+brotli = { version = "8.0.2" }
+cranelift-module = { version = "0.124.1" }
+cranelift-jit = { version = "0.124.1" }
+cranelift-frontend = { version = "0.124.1" }
+plotly = { version = "0.13.5" }
 plotters = { version = "0.3.7" }
 reqwest = { version = "0.12", features = ["blocking", "json"] }
 
 # Math libraries
 libm = "0.2"
 array-init = "2.1.0"
-netcdf3 = "0.5.2"
+netcdf3 = "0.6.0"
 sobol = "1.0.2"
 halton = "0.2.1"
-ordered-float = "3.9.2"
-kamadak-exif = "0.5"
+ordered-float = "5.0.0"
+kamadak-exif = "0.6"
 hdf5 = "0.8.1"
 friedrich = "0.5.0"
-ureq = "2.9"
+ureq = "3.1"
 qhull = "0.4.0"
 parking_lot = "0.12.4"
 serde_yaml = "0.9"
-toml = "0.8"
+toml = "0.9"
 ciborium = "0.2"
 serde_cbor = "0.11.2"
 
 # Arbitrary precision libraries
 num-bigint = "0.4.6"
 num-rational = "0.4.2"
-rug = { version = "1.26.0", features = ["integer", "float", "rational", "complex"], default-features = false }
-gmp-mpfr-sys = { version = "1.6.5", default-features = false }
+rug = { version = "1.28.0", features = ["integer", "float", "rational", "complex"], default-features = false }
+gmp-mpfr-sys = { version = "1.6.8", default-features = false }
 
 # There were compatibility issues with chrono
-arrow = "56.1.0"
-arrow-array = "56.1.0"
-arrow-buffer = "56.1.0"
-arrow-cast = "56.1.0"
-arrow-data = "56.1.0"
-arrow-schema = "56.1.0"
-arrow-select = "56.1.0"
-arrow-arith = "56.1.0"
+arrow = "56.2.0"
+arrow-array = "56.2.0"
+arrow-buffer = "56.2.0"
+arrow-cast = "56.2.0"
+arrow-data = "56.2.0"
+arrow-schema = "56.2.0"
+arrow-select = "56.2.0"
+arrow-arith = "56.2.0"
 
 # Async dependencies
-tokio = { version = "1.45.1", features = ["full"] }
+tokio = { version = "1.47.1", features = ["full"] }
 futures = "0.3.31"
 futures-util = "0.3.31"
-async-trait = "0.1.83"
+async-trait = "0.1.89"
 
 # Logging
 log = "0.4"
 
 # System information
-sysinfo = "0.35.2"
+sysinfo = "0.37.1"
 
 # GPU backends
-metal = "0.31.0"
+metal = "0.32.0"
 objc2 = { version = "0.6.2"}
-objc2-foundation = "0.3.0"
-objc2-metal-performance-shaders = "0.3.0"
-opencl3 = { version = "0.11" }
-wgpu = { version = "22.1" }
+objc2-foundation = "0.3.1"
+objc2-metal-performance-shaders = "0.3.1"
+opencl3 = { version = "0.12" }
+wgpu = { version = "26.0" }
 pollster = { version = "0.4" }
-cudarc = { version = "0.12", features = ["cuda-12000"] }
+cudarc = { version = "0.17", features = ["cuda-12000"] }
 
 
 # Development and testing additions
-ctor = { version = "0.2" }
+ctor = { version = "0.5" }
 quickcheck = { version = "1.0" }
-quickcheck_macros = { version = "1.0" }
+quickcheck_macros = { version = "1.1" }
 instant = { version = "0.1" }
-proptest = { version = "1.4.0" }
+proptest = { version = "1.8.0" }
 
 # Data structures
-indexmap = { version = "2.7" }
+indexmap = { version = "2.11" }
 ahash = { version = "0.8" }
 
 # Database drivers
-rusqlite = { version = "0.32" }
-sqlx = { version = "0.8", features = ["runtime-tokio-rustls", "postgres", "mysql", "sqlite"] }
+rusqlite = { version = "=0.37.0" }
+sqlx = { version = "=0.8.6", default-features = false, features = ["runtime-tokio-rustls", "postgres", "mysql"] }
 duckdb = { version = "1.4.0" } # Must update to this version
-mongodb = { version = "2.8" }
+mongodb = { version = "3.3" }
 redis = { version = "0.32" }
 
 # Real-time streaming
-tokio-tungstenite = { version = "0.21" }
-rumqttc = { version = "0.24" }
-eventsource-client = { version = "0.12" }
-tonic = { version = "0.11" }
-prost = { version = "0.12" }
+tokio-tungstenite = { version = "0.28" }
+rumqttc = { version = "0.25" }
+eventsource-client = { version = "0.15" }
+tonic = { version = "0.14" }
+prost = { version = "0.14" }
 
 # CLI and utilities
-clap = { version = "4.4" }
+clap = { version = "4.5" }
 tar = { version = "0.4" }
 
 # Cryptography
 rsa = { version = "0.9" }
-x509-parser = { version = "0.16" }
+x509-parser = { version = "0.18" }
 
 # WASM support
 wasm-bindgen = { version = "0.2" }
@@ -277,47 +275,48 @@ serde-wasm-bindgen = { version = "0.6" }
 console_error_panic_hook = { version = "0.1" }
 
 # Machine learning
-tch = { version = "0.20" } # Must
+# Enable automatic download of libtorch to avoid manual installation hassles.
+tch = { version = "0.20", features = ["download-libtorch"] } # Auto-download libtorch
 
 # Monitoring
-prometheus = { version = "0.13" }
+prometheus = { version = "0.14" }
 
 # GUI libraries
-egui = { version = "0.27" }
-eframe = { version = "0.27" }
+egui = { version = "0.32" }
+eframe = { version = "0.32" }
 
 # Python integration (optional)
 
 # Base scirs2 crates
-scirs2-core = { version = "0.1.0-beta.2", path = "./scirs2-core" }
-scirs2 = { version = "0.1.0-beta.2", path = "./scirs2", default-features = false }
-scirs2-linalg = { version = "0.1.0-beta.2", path = "./scirs2-linalg" }
-scirs2-integrate = { version = "0.1.0-beta.2", path = "./scirs2-integrate" }
-scirs2-interpolate = { version = "0.1.0-beta.2", path = "./scirs2-interpolate" }
-scirs2-optimize = { version = "0.1.0-beta.2", path = "./scirs2-optimize" }
-scirs2-fft = { version = "0.1.0-beta.2", path = "./scirs2-fft" }
-scirs2-stats = { version = "0.1.0-beta.2", path = "./scirs2-stats" }
-scirs2-special = { version = "0.1.0-beta.2", path = "./scirs2-special" }
-scirs2-signal = { version = "0.1.0-beta.2", path = "./scirs2-signal" }
-scirs2-sparse = { version = "0.1.0-beta.2", path = "./scirs2-sparse" }
-scirs2-spatial = { version = "0.1.0-beta.2", path = "./scirs2-spatial" }
+scirs2-core = { version = "0.1.0-beta.3", path = "./scirs2-core" }
+scirs2 = { version = "0.1.0-beta.3", path = "./scirs2", default-features = false }
+scirs2-linalg = { version = "0.1.0-beta.3", path = "./scirs2-linalg" }
+scirs2-integrate = { version = "0.1.0-beta.3", path = "./scirs2-integrate" }
+scirs2-interpolate = { version = "0.1.0-beta.3", path = "./scirs2-interpolate" }
+scirs2-optimize = { version = "0.1.0-beta.3", path = "./scirs2-optimize" }
+scirs2-fft = { version = "0.1.0-beta.3", path = "./scirs2-fft" }
+scirs2-stats = { version = "0.1.0-beta.3", path = "./scirs2-stats" }
+scirs2-special = { version = "0.1.0-beta.3", path = "./scirs2-special" }
+scirs2-signal = { version = "0.1.0-beta.3", path = "./scirs2-signal" }
+scirs2-sparse = { version = "0.1.0-beta.3", path = "./scirs2-sparse" }
+scirs2-spatial = { version = "0.1.0-beta.3", path = "./scirs2-spatial" }
 
 # Advanced modules
-scirs2-cluster = { version = "0.1.0-beta.2", path = "./scirs2-cluster" }
-scirs2-ndimage = { version = "0.1.0-beta.2", path = "./scirs2-ndimage" }
-scirs2-io = { version = "0.1.0-beta.2", path = "./scirs2-io" }
-scirs2-datasets = { version = "0.1.0-beta.2", path = "./scirs2-datasets" }
+scirs2-cluster = { version = "0.1.0-beta.3", path = "./scirs2-cluster" }
+scirs2-ndimage = { version = "0.1.0-beta.3", path = "./scirs2-ndimage" }
+scirs2-io = { version = "0.1.0-beta.3", path = "./scirs2-io" }
+scirs2-datasets = { version = "0.1.0-beta.3", path = "./scirs2-datasets" }
 
 # AI/ML modules
-scirs2-neural = { version = "0.1.0-beta.2", path = "./scirs2-neural" }
+scirs2-neural = { version = "0.1.0-beta.3", path = "./scirs2-neural" }
 # scirs2-optim moved to independent OptiRS project from v0.1.0-beta.2
-scirs2-graph = { version = "0.1.0-beta.2", path = "./scirs2-graph" }
-scirs2-transform = { version = "0.1.0-beta.2", path = "./scirs2-transform" }
-scirs2-metrics = { version = "0.1.0-beta.2", path = "./scirs2-metrics", default-features = false }
-scirs2-text = { version = "0.1.0-beta.2", path = "./scirs2-text" }
-scirs2-vision = { version = "0.1.0-beta.2", path = "./scirs2-vision" }
-scirs2-series = { version = "0.1.0-beta.2", path = "./scirs2-series" }
-scirs2-autograd = { version = "0.1.0-beta.2", path = "./scirs2-autograd" }
+scirs2-graph = { version = "0.1.0-beta.3", path = "./scirs2-graph" }
+scirs2-transform = { version = "0.1.0-beta.3", path = "./scirs2-transform" }
+scirs2-metrics = { version = "0.1.0-beta.3", path = "./scirs2-metrics", default-features = false }
+scirs2-text = { version = "0.1.0-beta.3", path = "./scirs2-text" }
+scirs2-vision = { version = "0.1.0-beta.3", path = "./scirs2-vision" }
+scirs2-series = { version = "0.1.0-beta.3", path = "./scirs2-series" }
+scirs2-autograd = { version = "0.1.0-beta.3", path = "./scirs2-autograd" }
 
 
 [profile.release]

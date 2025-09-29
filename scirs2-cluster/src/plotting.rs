@@ -1002,7 +1002,7 @@ pub fn launch_interactive_visualization(
     eframe::run_native(
         "Clustering Visualization",
         options,
-        Box::new(|_| Box::new(app)),
+        Box::new(|_| Ok::<_, Box<dyn std::error::Error + Send + Sync>>(Box::new(app))),
     )
     .map_err(|e| {
         ClusteringError::ComputationError(format!("Failed to launch visualization: {}", e))

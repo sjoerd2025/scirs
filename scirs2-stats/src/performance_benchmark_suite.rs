@@ -634,7 +634,7 @@ impl AdvancedBenchmarkSuite {
         use rand::prelude::*;
         use rand_distr::{Exp, LogNormal, Normal, Pareto, Uniform};
 
-        let mut rng = rand::rng();
+        let mut rng = rand::thread_rng();
         let mut data = Array1::zeros(size);
 
         match distribution {
@@ -1580,7 +1580,6 @@ mod tests {
     use super::*;
 
     #[test]
-    #[ignore = "timeout"]
     fn test_advanced_benchmark_creation() {
         let config = AdvancedBenchmarkConfig::default();
         let suite = AdvancedBenchmarkSuite::new(config);

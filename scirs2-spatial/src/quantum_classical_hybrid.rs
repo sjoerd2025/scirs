@@ -28,7 +28,7 @@
 //!
 //! ```ignore
 //! use scirs2_spatial::quantum_classical_hybrid::{HybridSpatialOptimizer, HybridClusterer};
-//! use ndarray::array;
+//! use scirs2_core::ndarray::array;
 //!
 //! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
 //! // Quantum-classical hybrid clustering
@@ -56,7 +56,8 @@
 
 use crate::error::SpatialResult;
 use crate::quantum_inspired::{QuantumClusterer, QuantumState};
-use ndarray::{Array1, Array2, ArrayView2};
+use scirs2_core::ndarray::{Array1, Array2, ArrayView2};
+use scirs2_core::random::quick::random_f64;
 use std::time::Instant;
 
 /// Quantum-classical hybrid spatial optimizer
@@ -321,8 +322,7 @@ impl HybridSpatialOptimizer {
 
     /// Initialize optimization parameters
     fn initialize_parameters(&mut self, dim: usize) {
-        self.classical_state.parameters =
-            Array1::from_shape_fn(dim, |_| rand::random::<f64>() * 2.0 - 1.0);
+        self.classical_state.parameters = Array1::from_shape_fn(dim, |_| random_f64() * 2.0 - 1.0);
         self.classical_state.gradients = Array1::zeros(dim);
         self.classical_state.hessian_approx = Array2::eye(dim);
         self.classical_state.momentum = Array1::zeros(dim);
@@ -342,7 +342,7 @@ impl HybridSpatialOptimizer {
     {
         if !self.adaptive_switching {
             // Use fixed quantum weight
-            return Ok(rand::random::<f64>() < self.quantum_weight);
+            return Ok(random_f64() < self.quantum_weight);
         }
 
         // Adaptive selection based on performance history
@@ -360,9 +360,8 @@ impl HybridSpatialOptimizer {
 
         // Use quantum if it's been successful or we're in exploration phase
         let exploration_phase = iteration < 100;
-        let use_quantum = exploration_phase
-            || quantum_success_rate > 0.6
-            || rand::random::<f64>() < self.quantum_weight;
+        let use_quantum =
+            exploration_phase || quantum_success_rate > 0.6 || random_f64() < self.quantum_weight;
 
         Ok(use_quantum)
     }
@@ -1033,7 +1032,7 @@ impl HybridClusterer {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::array;
+    use scirs2_core::ndarray::array;
 
     #[tokio::test]
     async fn test_hybrid_spatial_optimizer() {

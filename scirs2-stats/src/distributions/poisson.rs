@@ -8,7 +8,7 @@ use crate::traits::{DiscreteDistribution, Distribution};
 use ndarray::Array1;
 use num_traits::{Float, NumCast};
 use rand_distr::{Distribution as RandDistribution, Poisson as RandPoisson};
-use scirs2_core::rng;
+use scirs2_core::random::prelude::*;
 
 /// Poisson distribution structure
 pub struct Poisson<F: Float> {
@@ -173,7 +173,7 @@ impl<F: Float + NumCast + std::fmt::Display> Poisson<F> {
     /// assert_eq!(samples.len(), 1000);
     /// ```
     pub fn rvs(&self, size: usize) -> StatsResult<Array1<F>> {
-        let mut rng = rng();
+        let mut rng = thread_rng();
         let mut samples = Vec::with_capacity(size);
 
         for _ in 0..size {
@@ -318,7 +318,6 @@ mod tests {
     use approx::assert_relative_eq;
 
     #[test]
-    #[ignore = "timeout"]
     fn test_poisson_creation() {
         // Poisson with rate (mean) 3.0
         let poisson = Poisson::new(3.0, 0.0).unwrap();

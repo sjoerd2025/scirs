@@ -277,8 +277,8 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> AdvancedStatisticalA
         // Calculate differences
         let differences: Vec<F> = group_a
             .iter()
-            .zip(group_a.iter())
-            .map(|(&_a, &b)| _a - b)
+            .zip(group_b.iter())
+            .map(|(&a, &b)| a - b)
             .collect();
         let diff_array = Array1::from(differences);
 
@@ -636,28 +636,27 @@ mod tests {
     use ndarray::array;
 
     #[test]
-    #[ignore] // FIXME: Test failing - needs investigation
     fn test_cohens_d_calculation() {
         let analyzer = AdvancedStatisticalAnalyzer::<f64>::new();
 
         let group_a = array![1.0, 2.0, 3.0, 4.0, 5.0];
-        let group_a = array![2.0, 3.0, 4.0, 5.0, 6.0];
+        let group_b = array![2.0, 3.0, 4.0, 5.0, 6.0];
 
-        let effect_size = analyzer.cohensd(group_a.view(), group_a.view()).unwrap();
+        let effect_size = analyzer.cohensd(group_a.view(), group_b.view()).unwrap();
         // The expected value should be approximately -0.632, not -1.0
         assert!((effect_size - (-0.6324555320336759)).abs() < 1e-10);
     }
 
     #[test]
-    #[ignore] // FIXME: Test failing - needs investigation
+    #[ignore] // FIXME: t-distribution CDF implementation needs fixing for proper p-value calculation
     fn test_paired_t_test() {
         let analyzer = AdvancedStatisticalAnalyzer::<f64>::new();
 
         let group_a = array![1.0, 2.0, 3.0, 4.0, 5.0];
-        let group_a = array![1.1, 2.1, 3.1, 4.1, 5.1];
+        let group_b = array![1.1, 2.1, 3.1, 4.1, 5.1];
 
         let result = analyzer
-            .paired_t_test(group_a.view(), group_a.view())
+            .paired_t_test(group_a.view(), group_b.view())
             .unwrap();
         assert!(result.p_value > 0.0);
         assert!(result.p_value <= 1.0);

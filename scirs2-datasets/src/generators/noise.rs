@@ -7,7 +7,7 @@ use ndarray::{Array1, Array2};
 use rand::prelude::*;
 use rand::rngs::StdRng;
 use rand_distr::Uniform;
-use scirs2_core::rng;
+use scirs2_core::random::prelude::*;
 use std::f64::consts::PI;
 
 /// Inject missing data into a dataset with realistic patterns
@@ -28,7 +28,7 @@ pub fn inject_missing_data(
     let mut rng = match randomseed {
         Some(_seed) => StdRng::seed_from_u64(_seed),
         None => {
-            let mut r = rng();
+            let mut r = thread_rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -127,7 +127,7 @@ pub fn inject_outliers(
     let mut rng = match randomseed {
         Some(_seed) => StdRng::seed_from_u64(_seed),
         None => {
-            let mut r = rng();
+            let mut r = thread_rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -243,7 +243,7 @@ pub fn add_time_series_noise(
     let mut rng = match randomseed {
         Some(_seed) => StdRng::seed_from_u64(_seed),
         None => {
-            let mut r = rng();
+            let mut r = thread_rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };

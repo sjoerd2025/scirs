@@ -6,7 +6,7 @@
 
 #![allow(clippy::needless_range_loop)]
 
-use ndarray::{array, ArrayView2};
+use scirs2_core::ndarray::{array, ArrayView2};
 use scirs2_spatial::polygon::{
     convex_hull_graham, is_simple_polygon, point_in_polygon, point_on_boundary, polygon_area,
     polygon_centroid, polygon_contains_polygon,

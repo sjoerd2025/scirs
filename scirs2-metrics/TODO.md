@@ -1,6 +1,6 @@
 # SciRS2 Metrics - Production Release Summary
 
-SciRS2 Metrics has reached production readiness with version 0.1.0. This document summarizes the comprehensive features implemented and provides guidance for future development.
+SciRS2 Metrics has reached production readiness with version 0.1.0-beta.3. Following the [SciRS2 POLICY](../SCIRS2_POLICY.md), this document summarizes the comprehensive features implemented with ecosystem consistency and enhanced performance optimizations.
 
 ## Production Release Highlights
 

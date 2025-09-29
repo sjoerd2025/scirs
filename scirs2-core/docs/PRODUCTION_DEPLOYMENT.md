@@ -1,591 +1,820 @@
-# Production Deployment Guide for SciRS2
-
-This guide provides comprehensive instructions for deploying SciRS2 in production environments, including monitoring, observability, and operational best practices.
+# SciRS2 Core 1.0 Production Deployment Guide
 
 ## Table of Contents
 
-1. [Environment Requirements](#environment-requirements)
-2. [Installation and Configuration](#installation-and-configuration)
-3. [Performance Tuning](#performance-tuning)
-4. [Monitoring and Observability](#monitoring-and-observability)
-5. [Security Configuration](#security-configuration)
-6. [High Availability Setup](#high-availability-setup)
-7. [Troubleshooting](#troubleshooting)
-8. [Maintenance and Updates](#maintenance-and-updates)
+1. [Overview](#overview)
+2. [System Requirements](#system-requirements)
+3. [Installation](#installation)
+4. [Configuration](#configuration)
+5. [Performance Optimization](#performance-optimization)
+6. [Monitoring and Observability](#monitoring-and-observability)
+7. [Security Considerations](#security-considerations)
+8. [Scalability and High Availability](#scalability-and-high-availability)
+9. [Troubleshooting](#troubleshooting)
+10. [Maintenance and Updates](#maintenance-and-updates)
+11. [Best Practices](#best-practices)
 
-## Environment Requirements
+## Overview
 
-### Minimum System Requirements
+SciRS2 Core 1.0 is a production-ready scientific computing library built in Rust, offering SciPy-compatible APIs with enhanced performance, safety, and concurrency. This guide covers enterprise-grade deployment considerations for production environments.
 
-- **CPU**: x86_64 or ARM64 with SIMD support
-- **Memory**: 4GB RAM minimum, 16GB+ recommended for large datasets
-- **Storage**: 100MB for base installation, additional space for data caching
-- **OS**: Linux (Ubuntu 20.04+, RHEL 8+), macOS 10.15+, Windows 10+
+### Key Features for Production
 
-### Recommended Production Environment
+- **API Stability**: Frozen 1.0 API surface with backward compatibility guarantees
+- **Performance**: SIMD acceleration, multi-core parallelism, and GPU computing
+- **Memory Efficiency**: Advanced memory management and out-of-core computation
+- **Observability**: Comprehensive metrics, tracing, and audit logging
+- **Security**: Built-in security features and vulnerability management
+- **Cross-Platform**: Support for Linux, macOS, and Windows environments
 
-- **CPU**: 8+ cores with AVX2/NEON support
-- **Memory**: 32GB+ RAM with ECC
-- **Storage**: NVMe SSD with high IOPS
-- **Network**: High-bandwidth, low-latency for distributed workloads
-- **GPU**: CUDA-compatible or Metal-compatible for acceleration (optional)
+## System Requirements
 
-### Software Dependencies
+### Minimum Requirements
+
+#### Hardware
+- **CPU**: x86_64 or ARM64 architecture
+- **Memory**: 4GB RAM (8GB recommended for large datasets)
+- **Storage**: 1GB available disk space
+- **Network**: Standard network connectivity for distributed features
+
+#### Software
+- **Rust**: 1.70.0 or later (MSRV - Minimum Supported Rust Version)
+- **Operating System**: 
+  - Linux (Ubuntu 20.04+, RHEL 8+, CentOS 8+)
+  - macOS 11.0+
+  - Windows 10 / Windows Server 2019+
+
+### Recommended Production Requirements
+
+#### Hardware
+- **CPU**: Multi-core x86_64 with AVX2 support (Intel Haswell+ or AMD Zen+)
+- **Memory**: 16GB+ RAM for optimal performance
+- **Storage**: SSD with 10GB+ available space
+- **GPU**: Optional NVIDIA GPU with CUDA 11.0+ or AMD GPU with ROCm 4.0+
+
+#### Software Dependencies
+- **BLAS/LAPACK**: 
+  - Linux: OpenBLAS 0.3.20+ or Intel MKL 2022+
+  - macOS: System Accelerate framework
+  - Windows: OpenBLAS 0.3.20+ or Intel MKL 2022+
+- **Compiler**: GCC 9+ or Clang 11+ for native compilation
+
+## Installation
+
+### Using Cargo (Recommended)
 
 ```toml
-# Cargo.toml dependencies for production
+# Cargo.toml
 [dependencies]
-scirs2-core = { version = "0.1.0-beta.2", features = [
-    "production",
-    "monitoring",
-    "security",
-    "parallel",
-    "simd",
-    "memory_efficient",
-] }
+scirs2-core = { version = "1.0", features = ["production"] }
+
+# Optional: Enable specific features for your use case
+scirs2-core = { 
+    version = "1.0", 
+    features = [
+        "production",    # All production features
+        "parallel",      # Multi-core processing
+        "simd",          # SIMD acceleration
+        "gpu",           # GPU computing
+        "memory_efficient", # Large dataset support
+        "observability", # Monitoring and tracing
+        "linalg",        # Linear algebra operations
+    ]
+}
 ```
 
-## Installation and Configuration
+### Feature Flags for Production
 
-### 1. Basic Installation
+#### Core Production Features
+```toml
+# Essential for production deployments
+features = [
+    "production",        # Enables all production features
+    "observability",     # Metrics, tracing, audit logging
+    "versioning",        # API compatibility management
+    "data_validation",   # Comprehensive input validation
+    "leak_detection",    # Memory leak detection
+]
+```
 
+#### Performance Features
+```toml
+# For high-performance computing
+features = [
+    "simd",             # SIMD vector operations
+    "parallel",         # Multi-core parallelism
+    "gpu",              # GPU acceleration
+    "memory_efficient", # Memory-mapped operations
+    "linalg",           # Optimized linear algebra
+]
+```
+
+#### Backend-Specific Features
+```toml
+# Linux/Windows with OpenBLAS
+features = ["openblas"]
+
+# Intel systems with MKL
+features = ["intel-mkl"]
+
+# macOS with Accelerate
+features = ["accelerate"]
+
+# NVIDIA GPU support
+features = ["cuda"]
+
+# AMD GPU support  
+features = ["rocm"]
+```
+
+### System Package Dependencies
+
+#### Ubuntu/Debian
 ```bash
-# Install via Cargo
-cargo install scirs2-core --features production
+# Essential build dependencies
+sudo apt update
+sudo apt install build-essential pkg-config libssl-dev
 
-# Or add to your project
-cargo add scirs2-core --features production,monitoring,security
+# BLAS/LAPACK support
+sudo apt install libopenblas-dev liblapack-dev
+
+# Optional: GPU support
+sudo apt install nvidia-cuda-toolkit  # For NVIDIA
 ```
 
-### 2. Environment Configuration
+#### RHEL/CentOS/Fedora
+```bash
+# Essential build dependencies
+sudo dnf install gcc pkg-config openssl-devel
 
-Create a production configuration file:
+# BLAS/LAPACK support
+sudo dnf install openblas-devel lapack-devel
+
+# Optional: GPU support
+sudo dnf install cuda-toolkit  # For NVIDIA (from NVIDIA repos)
+```
+
+#### macOS
+```bash
+# Install Xcode command line tools
+xcode-select --install
+
+# Optional: Install Homebrew dependencies
+brew install pkg-config openssl
+```
+
+#### Windows
+```powershell
+# Using vcpkg (recommended)
+vcpkg install openblas:x64-windows
+vcpkg install lapack:x64-windows
+
+# Or use pre-built binaries from official sources
+```
+
+## Configuration
+
+### Environment Variables
+
+#### Core Configuration
+```bash
+# Set the number of threads for parallel operations
+export SCIRS2_NUM_THREADS=8
+
+# Configure memory limits (in MB)
+export SCIRS2_MEMORY_LIMIT=8192
+
+# Enable/disable specific features
+export SCIRS2_ENABLE_GPU=true
+export SCIRS2_ENABLE_SIMD=true
+export SCIRS2_ENABLE_VALIDATION=true
+```
+
+#### Performance Tuning
+```bash
+# BLAS threading (set to 1 for Rust-level parallelism)
+export OPENBLAS_NUM_THREADS=1
+export MKL_NUM_THREADS=1
+export VECLIB_MAXIMUM_THREADS=1
+
+# Memory allocation
+export SCIRS2_CHUNK_SIZE=1048576      # 1MB chunks
+export SCIRS2_PREFETCH_SIZE=4194304   # 4MB prefetch
+
+# GPU configuration
+export CUDA_DEVICE_ORDER=PCI_BUS_ID
+export CUDA_VISIBLE_DEVICES=0,1       # Use first two GPUs
+```
+
+#### Observability Configuration
+```bash
+# Enable comprehensive logging
+export SCIRS2_LOG_LEVEL=info
+export SCIRS2_ENABLE_TRACING=true
+export SCIRS2_AUDIT_LOG=true
+
+# Metrics collection
+export SCIRS2_METRICS_ENDPOINT=http://prometheus:9090
+export SCIRS2_METRICS_INTERVAL=30     # seconds
+
+# Performance profiling
+export SCIRS2_ENABLE_PROFILING=false  # Disable in production unless needed
+```
+
+### Configuration File
+
+Create `/etc/scirs2/config.toml` or `~/.config/scirs2/config.toml`:
 
 ```toml
-# scirs2.toml
-[production]
-log_level = "info"
-enable_metrics = true
-enable_profiling = false
-cache_size = "1GB"
+[runtime]
+num_threads = 8
+memory_limit_mb = 8192
+enable_gpu = true
+enable_simd = true
 
 [performance]
-simd_enabled = true
-parallel_threads = 0  # Auto-detect
-gpu_acceleration = true
-memory_limit = "16GB"
+chunk_size = 1048576
+prefetch_size = 4194304
+enable_adaptive_optimization = true
+
+[observability]
+log_level = "info"
+enable_tracing = true
+enable_audit_log = true
+metrics_endpoint = "http://prometheus:9090"
+metrics_interval = 30
 
 [security]
-input_validation = "strict"
-audit_logging = true
-secure_defaults = true
+enable_input_validation = true
+enable_memory_protection = true
+max_allocation_size = 1073741824  # 1GB
 
-[monitoring]
-metrics_endpoint = "127.0.0.1:9090"
-health_check_interval = 30
-log_rotation = true
-max_log_size = "100MB"
+[features]
+parallel = true
+simd = true
+gpu = false  # Override for specific environments
+memory_efficient = true
 ```
 
-### 3. Initialization
+### Runtime Configuration API
 
 ```rust
-use scirs2_core::{Config, set_global_config};
+use scirs2_core::config::{Config, ConfigValue};
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // Load production configuration
-    let config = Config::from_file("scirs2.toml")?;
-    set_global_config(config)?;
-    
-    // Initialize production features
-    scirs2_core::production::initialize()?;
-    
-    // Your application code here
-    Ok(())
-}
+// Configure at runtime
+let mut config = Config::default();
+config.set("runtime.num_threads", ConfigValue::USize(8))?;
+config.set("performance.enable_simd", ConfigValue::Bool(true))?;
+
+// Apply configuration globally
+scirs2_core::set_global_config(config)?;
 ```
 
-## Performance Tuning
+## Performance Optimization
 
-### 1. Memory Configuration
+### SIMD Optimization
 
 ```rust
-use scirs2_core::memory_efficient::{AdaptiveChunkingBuilder, MemoryMappedArray};
+use scirs2_core::simd_ops::{SimdUnifiedOps, PlatformCapabilities};
 
-// Configure adaptive chunking for large datasets
-let chunking = AdaptiveChunkingBuilder::new()
-    .with_memory_limit(8 * 1024 * 1024 * 1024) // 8GB
-    .with_parallel_threshold(100_000)
-    .with_cache_size(512 * 1024 * 1024) // 512MB cache
-    .build();
+// Check platform capabilities
+let capabilities = PlatformCapabilities::detect();
+println!("SIMD support: {:?}", capabilities);
 
-// Use memory-mapped arrays for very large data
-let data = MemoryMappedArray::<f64>::create("large_dataset.dat", &[1_000_000, 1_000])?;
+// Use SIMD operations for arrays
+use ndarray::Array1;
+let a = Array1::from(vec![1.0f32; 1000]);
+let b = Array1::from(vec![2.0f32; 1000]);
+
+// Automatic SIMD acceleration
+let result = f32::simd_add(&a.view(), &b.view());
 ```
 
-### 2. SIMD and Parallel Optimization
+### Parallel Processing
 
 ```rust
-use scirs2_core::{simd_ops::SimdUnifiedOps, parallel_ops::*};
-
-// Enable automatic SIMD detection
-scirs2_core::simd_ops::PlatformCapabilities::detect();
+use scirs2_core::parallel_ops::*;
 
 // Configure parallel execution
-set_num_threads(num_cpus::get());
+set_num_threads(8);
 
-// Use optimized operations
-let result = f64::simd_add(&array_a.view(), &array_b.view());
+// Parallel array operations
+let data: Vec<f64> = (0..1_000_000).map(|i| i as f64).collect();
+let result: Vec<f64> = par_chunks(&data, 1000)
+    .map(|chunk| chunk.iter().sum::<f64>())
+    .collect();
 ```
 
-### 3. GPU Acceleration
+### Memory Optimization
 
 ```rust
-#[cfg(feature = "gpu")]
+use scirs2_core::memory_efficient::*;
+use scirs2_core::memory::{BufferPool, global_buffer_pool};
+
+// Use memory-mapped arrays for large datasets
+let mmap = create_mmap("large_data.bin", &[1_000_000])?;
+let mut array = MemoryMappedArray::<f64>::from_mmap(mmap, &[1_000_000])?;
+
+// Configure adaptive chunking
+let chunking = AdaptiveChunkingBuilder::new()
+    .with_chunk_size(1_048_576)  // 1MB chunks
+    .with_memory_limit(8_589_934_592)  // 8GB limit
+    .build()?;
+
+// Process data in chunks
+let result = chunk_wise_op(&array, |chunk| {
+    chunk.mapv(|x| x * 2.0)
+}, &chunking)?;
+```
+
+### GPU Acceleration
+
+```rust
 use scirs2_core::gpu::{GpuContext, GpuBackend};
 
-#[cfg(feature = "gpu")]
-fn setup_gpu() -> Result<(), Box<dyn std::error::Error>> {
-    let context = GpuContext::new(GpuBackend::Cuda)?;
-    context.set_memory_limit(4 * 1024 * 1024 * 1024)?; // 4GB
-    Ok(())
-}
+// Initialize GPU context
+let gpu_context = GpuContext::new(GpuBackend::CUDA)?;
+
+// GPU-accelerated operations
+let gpu_array = gpu_context.allocate_buffer(data.len())?;
+gpu_context.copy_to_device(&data, &gpu_array)?;
+
+// Execute GPU kernel
+let result = gpu_context.execute_kernel("vector_add", &[&gpu_array, &gpu_array])?;
 ```
 
 ## Monitoring and Observability
 
-### 1. Metrics Collection
+### Metrics Collection
 
 ```rust
-use scirs2_core::observability::{Counter, Gauge, Histogram, Timer};
+use scirs2_core::metrics::{global_metrics_registry, Counter, Gauge, Timer};
 
-// Define application metrics
-static OPERATIONS_TOTAL: Counter = Counter::new("scirs2_operations_total");
-static MEMORY_USAGE: Gauge = Gauge::new("scirs2_memory_usage_bytes");
-static COMPUTATION_TIME: Histogram = Histogram::new("scirs2_computation_seconds");
+// Built-in metrics
+let registry = global_metrics_registry();
+let operations_counter = registry.counter("scirs2_operations_total", "Total operations")?;
+let memory_gauge = registry.gauge("scirs2_memory_usage_bytes", "Memory usage")?;
+let compute_timer = registry.timer("scirs2_compute_duration", "Computation time")?;
 
-fn tracked_computation() -> Result<(), Box<dyn std::error::Error>> {
-    let _timer = Timer::start("computation");
-    OPERATIONS_TOTAL.increment();
-    
+// Record metrics
+operations_counter.increment();
+memory_gauge.set(1_073_741_824.0);  // 1GB
+let _timer_guard = compute_timer.start();
+```
+
+### Tracing and Logging
+
+```rust
+use scirs2_core::observability::tracing::{trace_operation, TracingContext};
+
+// Trace operations
+let trace_ctx = TracingContext::new("scientific_computation");
+trace_operation(&trace_ctx, "matrix_multiplication", || {
     // Your computation here
-    
-    MEMORY_USAGE.set(get_memory_usage());
-    Ok(())
-}
-```
-
-### 2. Health Checks
-
-```rust
-use scirs2_core::observability::health::{HealthCheck, HealthStatus};
-
-fn health_check() -> HealthStatus {
-    let mut checks = Vec::new();
-    
-    // Check memory usage
-    checks.push(HealthCheck {
-        name: "memory_usage".to_string(),
-        status: if get_memory_usage() < 0.9 * get_memory_limit() {
-            "healthy".to_string()
-        } else {
-            "unhealthy".to_string()
-        },
-        details: Some(format!("Memory usage: {:.1}%", get_memory_usage_percent())),
-    });
-    
-    // Check GPU availability
-    #[cfg(feature = "gpu")]
-    checks.push(HealthCheck {
-        name: "gpu_availability".to_string(),
-        status: if scirs2_core::gpu::is_available() {
-            "healthy".to_string()
-        } else {
-            "degraded".to_string()
-        },
-        details: None,
-    });
-    
-    HealthStatus { checks }
-}
-```
-
-### 3. Logging Configuration
-
-```rust
-use scirs2_core::observability::audit::{AuditEvent, AuditLogger};
-
-fn setup_logging() -> Result<(), Box<dyn std::error::Error>> {
-    let logger = AuditLogger::new()
-        .with_file_output("/var/log/scirs2/audit.log")
-        .with_rotation(100_000_000) // 100MB
-        .with_format("json");
-    
-    logger.log_event(AuditEvent {
-        timestamp: std::time::SystemTime::now(),
-        event_type: "application_start".to_string(),
-        user: std::env::var("USER").unwrap_or("unknown".to_string()),
-        details: "SciRS2 application started".to_string(),
-    })?;
-    
-    Ok(())
-}
-```
-
-### 4. Prometheus Integration
-
-```toml
-# Add to Cargo.toml
-[dependencies]
-prometheus = "0.13"
-```
-
-```rust
-use prometheus::{register_counter, register_histogram, Counter, Histogram};
-
-lazy_static::lazy_static! {
-    static ref OPERATIONS_COUNTER: Counter = register_counter!(
-        "scirs2_operations_total", "Total number of operations"
-    ).unwrap();
-    
-    static ref COMPUTATION_HISTOGRAM: Histogram = register_histogram!(
-        "scirs2_computation_duration_seconds", "Time spent in computations"
-    ).unwrap();
-}
-
-// Export metrics endpoint
-fn metrics_handler() -> String {
-    let encoder = prometheus::TextEncoder::new();
-    let metric_families = prometheus::gather();
-    encoder.encode_to_string(&metric_families).unwrap()
-}
-```
-
-## Security Configuration
-
-### 1. Input Validation
-
-```rust
-use scirs2_core::validation::{ValidationConfig, Validator};
-
-fn setup_security() -> Result<(), Box<dyn std::error::Error>> {
-    let config = ValidationConfig::production()
-        .with_strict_bounds_checking()
-        .with_input_sanitization()
-        .with_memory_limits();
-    
-    Validator::set_global_config(config)?;
-    Ok(())
-}
-```
-
-### 2. Audit Logging
-
-```rust
-use scirs2_core::observability::audit::AuditLogger;
-
-fn security_event(event: &str, details: &str) {
-    AuditLogger::global().log_security_event(event, details);
-}
-
-// Usage in critical operations
-fn process_sensitive_data(data: &[f64]) -> Result<Vec<f64>, Box<dyn std::error::Error>> {
-    security_event("data_processing_start", &format!("Processing {} elements", data.len()));
-    
-    // Validate input
-    scirs2_core::validation::check_array_finite(data, "input_data")?;
-    
-    // Process data
-    let result = data.iter().map(|x| x * 2.0).collect();
-    
-    security_event("data_processing_complete", "Processing completed successfully");
     Ok(result)
-}
+})?;
 ```
 
-## High Availability Setup
-
-### 1. Load Balancing Configuration
+### Health Monitoring
 
 ```rust
-use scirs2_core::distributed::{LoadBalancer, WorkerNode};
+use scirs2_core::metrics::{HealthMonitor, HealthCheck, HealthStatus};
 
-fn setup_ha_cluster() -> Result<(), Box<dyn std::error::Error>> {
-    let nodes = vec![
-        WorkerNode::new("worker-1", "192.168.1.10:8080"),
-        WorkerNode::new("worker-2", "192.168.1.11:8080"),
-        WorkerNode::new("worker-3", "192.168.1.12:8080"),
-    ];
-    
-    let load_balancer = LoadBalancer::new()
-        .with_strategy("round_robin")
-        .with_health_checks(true)
-        .with_failure_timeout(std::time::Duration::from_secs(30));
-    
-    for node in nodes {
-        load_balancer.add_node(node);
+// Built-in health checks
+let health_monitor = HealthMonitor::new();
+health_monitor.add_check(HealthCheck::new(
+    "memory_usage",
+    || {
+        let usage = get_memory_usage()?;
+        if usage < 0.9 { HealthStatus::Healthy } else { HealthStatus::Unhealthy }
     }
+));
+
+// Check system health
+let status = health_monitor.check_health();
+println!("System health: {:?}", status);
+```
+
+### Integration with Monitoring Systems
+
+#### Prometheus Integration
+```rust
+use scirs2_core::observability::metrics::PrometheusExporter;
+
+// Export metrics to Prometheus
+let exporter = PrometheusExporter::new("0.0.0.0:9090")?;
+exporter.start()?;
+```
+
+#### Jaeger Tracing
+```rust
+use scirs2_core::observability::tracing::JaegerExporter;
+
+// Export traces to Jaeger
+let jaeger = JaegerExporter::new("http://jaeger:14268/api/traces")?;
+jaeger.start()?;
+```
+
+## Security Considerations
+
+### Input Validation
+
+```rust
+use scirs2_core::validation::data::{ValidationSchema, Validator};
+
+// Define validation schema
+let schema = ValidationSchema::new()
+    .field("input_data", DataType::FloatArray)
+    .constraint("input_data", Constraint::FiniteValues)
+    .constraint("input_data", Constraint::MaxSize(1_000_000));
+
+// Validate input
+let validator = Validator::new(schema);
+validator.validate(&input_data)?;
+```
+
+### Memory Safety
+
+```rust
+use scirs2_core::memory::{LeakDetector, MemoryCheckpoint};
+
+// Enable memory leak detection in development
+#[cfg(debug_assertions)]
+{
+    let leak_detector = LeakDetector::new();
+    let checkpoint = leak_detector.checkpoint();
     
-    Ok(())
+    // Your code here
+    
+    leak_detector.check_leaks(&checkpoint)?;
 }
 ```
 
-### 2. State Management
+### Secure Communication
 
 ```rust
-use scirs2_core::cache::{Cache, CacheConfig};
+use scirs2_core::observability::audit::{AuditLog, AuditEvent};
 
-fn setup_distributed_cache() -> Result<(), Box<dyn std::error::Error>> {
-    let cache_config = CacheConfig::new()
-        .with_size_limit(1024 * 1024 * 1024) // 1GB
-        .with_ttl(std::time::Duration::from_secs(3600)) // 1 hour
-        .with_persistence("/var/cache/scirs2");
-    
-    Cache::initialize_global(cache_config)?;
-    Ok(())
-}
+// Audit sensitive operations
+let audit_log = AuditLog::new();
+audit_log.log(AuditEvent::new(
+    "data_access",
+    "user123",
+    "Accessed sensitive dataset",
+))?;
+```
+
+### Best Practices
+
+1. **Always validate inputs** in production environments
+2. **Enable audit logging** for compliance requirements
+3. **Use memory protection** features for critical applications
+4. **Regularly update dependencies** for security patches
+5. **Monitor resource usage** to prevent DoS conditions
+
+## Scalability and High Availability
+
+### Horizontal Scaling
+
+```rust
+use scirs2_core::distributed::{ClusterConfig, DistributedArray};
+
+// Configure distributed computing
+let cluster_config = ClusterConfig::new()
+    .with_nodes(vec!["node1:8080", "node2:8080", "node3:8080"])
+    .with_replication_factor(2);
+
+// Distributed arrays
+let distributed_data = DistributedArray::from_local_array(data, cluster_config)?;
+let result = distributed_data.parallel_map(|chunk| process_chunk(chunk))?;
+```
+
+### Load Balancing
+
+```rust
+use scirs2_core::resource::{ResourceManager, LoadBalancer};
+
+// Automatic load balancing
+let load_balancer = LoadBalancer::new()
+    .with_strategy(LoadBalancingStrategy::RoundRobin)
+    .with_health_checks(true);
+
+// Distribute work across available resources
+let results = load_balancer.distribute_work(tasks)?;
+```
+
+### Fault Tolerance
+
+```rust
+use scirs2_core::error::recovery::{CircuitBreaker, RetryPolicy};
+
+// Configure circuit breaker
+let circuit_breaker = CircuitBreaker::new()
+    .with_failure_threshold(5)
+    .with_timeout(Duration::from_secs(30));
+
+// Automatic retry with exponential backoff
+let retry_policy = RetryPolicy::new()
+    .with_max_attempts(3)
+    .with_exponential_backoff(Duration::from_millis(100));
+
+// Resilient operation execution
+let result = circuit_breaker.execute_with_retry(|| {
+    risky_computation()
+}, retry_policy)?;
 ```
 
 ## Troubleshooting
 
 ### Common Issues
 
-#### 1. Memory Exhaustion
+#### Performance Issues
 
-**Symptoms**: OutOfMemory errors, slow performance
-**Solution**:
-```rust
-// Reduce memory usage
-let chunking = AdaptiveChunkingBuilder::new()
-    .with_memory_limit(available_memory() / 2)
-    .with_aggressive_cleanup(true)
-    .build();
-```
-
-#### 2. SIMD Not Available
-
-**Symptoms**: Slower than expected performance
-**Diagnosis**:
-```rust
-use scirs2_core::simd_ops::PlatformCapabilities;
-
-fn diagnose_simd() {
-    let caps = PlatformCapabilities::detect();
-    println!("SIMD capabilities: {:?}", caps);
-    
-    if !caps.has_avx2() && !caps.has_neon() {
-        println!("Warning: No advanced SIMD support detected");
-    }
-}
-```
-
-#### 3. GPU Initialization Failure
-
-**Symptoms**: GPU features not working
-**Diagnosis**:
-```rust
-#[cfg(feature = "gpu")]
-fn diagnose_gpu() {
-    match scirs2_core::gpu::GpuContext::new(scirs2_core::gpu::GpuBackend::Cuda) {
-        Ok(_) => println!("CUDA GPU available"),
-        Err(e) => println!("CUDA not available: {}", e),
-    }
-}
-```
-
-### Performance Analysis
-
-```rust
-use scirs2_core::profiling::{Profiler, ProfileScope};
-
-fn performance_analysis() -> Result<(), Box<dyn std::error::Error>> {
-    let profiler = Profiler::new();
-    profiler.start()?;
-    
-    {
-        let _scope = ProfileScope::new("computation");
-        // Your computation here
-    }
-    
-    let report = profiler.generate_report()?;
-    println!("Performance report: {}", report);
-    
-    Ok(())
-}
-```
-
-### Log Analysis
-
+**Problem**: Slower than expected performance
 ```bash
-# Analyze error patterns
-grep "ERROR" /var/log/scirs2/app.log | tail -20
+# Check CPU utilization
+htop
 
-# Check memory usage trends
-grep "memory_usage" /var/log/scirs2/metrics.log | tail -50
+# Check memory usage
+free -h
 
-# Monitor GPU utilization
-grep "gpu" /var/log/scirs2/performance.log | tail -30
+# Check NUMA topology
+numactl --hardware
+
+# Profile the application
+cargo build --release --features profiling
+SCIRS2_ENABLE_PROFILING=true ./your_app
+```
+
+**Solution**: 
+- Ensure SIMD is enabled and supported
+- Verify optimal thread count (usually equal to CPU cores)
+- Check memory bandwidth limitations
+- Consider GPU acceleration for compute-intensive workloads
+
+#### Memory Issues
+
+**Problem**: Out of memory errors
+```rust
+// Enable memory monitoring
+use scirs2_core::memory::metrics::{MemoryMetricsCollector, take_snapshot};
+
+let collector = MemoryMetricsCollector::new();
+let snapshot = take_snapshot();
+println!("Memory usage: {:?}", snapshot);
+```
+
+**Solution**:
+- Use memory-efficient operations for large datasets
+- Enable adaptive chunking
+- Increase system memory or reduce dataset size
+- Use memory-mapped arrays for very large data
+
+#### GPU Issues
+
+**Problem**: GPU operations failing
+```bash
+# Check GPU status
+nvidia-smi  # For NVIDIA
+rocm-smi    # For AMD
+
+# Verify CUDA installation
+nvcc --version
+
+# Check GPU memory
+nvidia-smi --query-gpu=memory.used,memory.total --format=csv
+```
+
+**Solution**:
+- Verify GPU drivers are installed and up-to-date
+- Check CUDA/ROCm toolkit installation
+- Ensure sufficient GPU memory
+- Verify CUDA_VISIBLE_DEVICES environment variable
+
+### Debug Configuration
+
+```toml
+[debug]
+enable_debug_logging = true
+memory_tracking = true
+performance_profiling = true
+validate_all_operations = true
+
+[logging]
+level = "debug"
+file = "/var/log/scirs2/debug.log"
+max_size = "100MB"
+max_files = 10
+```
+
+### Diagnostic Tools
+
+```rust
+use scirs2_core::diagnostic::{SystemInfo, PerformanceDiagnostic};
+
+// System diagnostics
+let system_info = SystemInfo::collect();
+println!("System info: {:#?}", system_info);
+
+// Performance diagnostics
+let perf_diag = PerformanceDiagnostic::run_comprehensive_test();
+println!("Performance report: {}", perf_diag.generate_report());
 ```
 
 ## Maintenance and Updates
 
-### 1. Version Compatibility Checking
+### Updating SciRS2
 
+#### Semantic Versioning
+- **Patch updates (1.0.x)**: Bug fixes, safe to update automatically
+- **Minor updates (1.x.0)**: New features, backward compatible
+- **Major updates (x.0.0)**: Breaking changes, requires migration planning
+
+#### Update Process
+```bash
+# Check current version
+cargo metadata | grep scirs2-core
+
+# Update to latest patch version
+cargo update -p scirs2-core
+
+# Update to specific version
+cargo update -p scirs2-core@1.0.5
+```
+
+#### Compatibility Checking
 ```rust
-use scirs2_core::api_freeze::{is_version_compatible, current_library_version};
+use scirs2_core::versioning::{VersionManager, check_compatibility};
 
-fn check_compatibility() -> Result<(), Box<dyn std::error::Error>> {
-    let current = current_library_version();
-    let required = scirs2_core::Version::new(0, 1, 0);
-    
-    if !is_version_compatible(&required) {
-        return Err("Version compatibility check failed".into());
-    }
-    
-    println!("Version compatibility: OK (current: {})", current);
-    Ok(())
-}
+// Check API compatibility before upgrading
+let version_manager = VersionManager::new();
+let compatibility = version_manager.check_compatibility(
+    &current_version,
+    &target_version
+)?;
+
+println!("Compatibility: {:?}", compatibility);
 ```
 
-### 2. Graceful Shutdown
+### Backup and Recovery
 
-```rust
-use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::Arc;
+#### Configuration Backup
+```bash
+# Backup configuration files
+tar -czf scirs2-config-backup.tar.gz /etc/scirs2/ ~/.config/scirs2/
 
-fn setup_graceful_shutdown() -> Arc<AtomicBool> {
-    let shutdown = Arc::new(AtomicBool::new(false));
-    let shutdown_clone = shutdown.clone();
-    
-    ctrlc::set_handler(move || {
-        println!("Received shutdown signal, cleaning up...");
-        shutdown_clone.store(true, Ordering::Relaxed);
-    }).expect("Error setting shutdown handler");
-    
-    shutdown
-}
-
-fn main_loop(shutdown: Arc<AtomicBool>) {
-    while !shutdown.load(Ordering::Relaxed) {
-        // Main application logic
-        std::thread::sleep(std::time::Duration::from_millis(100));
-    }
-    
-    // Cleanup
-    scirs2_core::cache::flush_all();
-    scirs2_core::observability::audit::AuditLogger::global().flush();
-    println!("Shutdown complete");
-}
+# Backup application data
+rsync -av /path/to/data/ /backup/location/
 ```
 
-### 3. Backup and Recovery
+#### Recovery Procedures
+```bash
+# Restore configuration
+tar -xzf scirs2-config-backup.tar.gz -C /
 
-```rust
-use scirs2_core::io::{backup_state, restore_state};
-
-fn backup_application_state() -> Result<(), Box<dyn std::error::Error>> {
-    let backup_path = format!("/backup/scirs2-state-{}.bak", 
-        chrono::Utc::now().format("%Y%m%d-%H%M%S"));
-    
-    backup_state(&backup_path)?;
-    println!("Application state backed up to: {}", backup_path);
-    
-    Ok(())
-}
-
-fn restore_application_state(backup_path: &str) -> Result<(), Box<dyn std::error::Error>> {
-    restore_state(backup_path)?;
-    println!("Application state restored from: {}", backup_path);
-    
-    Ok(())
-}
+# Verify system health after recovery
+scirs2-health-check --comprehensive
 ```
 
-## Configuration Examples
+### Performance Monitoring
 
-### Development Environment
+```bash
+# Monitor resource usage
+watch -n 1 'ps aux | grep scirs2'
 
-```toml
-# scirs2-dev.toml
-[production]
-log_level = "debug"
-enable_metrics = true
-enable_profiling = true
+# Monitor memory allocation patterns
+valgrind --tool=massif ./your_scirs2_app
 
-[performance]
-simd_enabled = true
-parallel_threads = 4
-memory_limit = "4GB"
-
-[security]
-input_validation = "relaxed"
-audit_logging = false
+# Profile CPU usage
+perf record -g ./your_scirs2_app
+perf report
 ```
 
-### Production Environment
+## Best Practices
 
-```toml
-# scirs2-prod.toml
-[production]
-log_level = "warn"
-enable_metrics = true
-enable_profiling = false
+### Development Best Practices
 
-[performance]
-simd_enabled = true
-parallel_threads = 0  # Auto-detect
-memory_limit = "32GB"
+1. **Use feature flags appropriately**
+   ```toml
+   # Development
+   features = ["testing", "profiling", "debug"]
+   
+   # Production
+   features = ["production", "parallel", "simd"]
+   ```
 
-[security]
-input_validation = "strict"
-audit_logging = true
-secure_defaults = true
+2. **Implement proper error handling**
+   ```rust
+   use scirs2_core::{CoreResult, CoreError};
+   
+   fn robust_computation() -> CoreResult<f64> {
+       let result = risky_operation()
+           .map_err(|e| CoreError::ComputationError(e.into()))?;
+       Ok(result)
+   }
+   ```
 
-[monitoring]
-metrics_endpoint = "0.0.0.0:9090"
-health_check_interval = 10
-```
+3. **Use validation for all inputs**
+   ```rust
+   use scirs2_core::validation::{check_finite, check_positive};
+   
+   fn safe_computation(data: &[f64], scale: f64) -> CoreResult<Vec<f64>> {
+       check_finite(data, "input data")?;
+       check_positive(scale, "scale factor")?;
+       // Safe to proceed
+   }
+   ```
 
-### High-Performance Computing
+### Deployment Best Practices
 
-```toml
-# scirs2-hpc.toml
-[production]
-log_level = "error"
-enable_metrics = true
-enable_profiling = true
+1. **Use containerization for consistent environments**
+   ```dockerfile
+   FROM rust:1.70-slim
+   
+   # Install system dependencies
+   RUN apt-get update && apt-get install -y \
+       libopenblas-dev \
+       liblapack-dev \
+       pkg-config
+   
+   # Copy and build application
+   COPY . /app
+   WORKDIR /app
+   RUN cargo build --release --features production
+   
+   # Runtime configuration
+   ENV SCIRS2_NUM_THREADS=8
+   ENV SCIRS2_ENABLE_SIMD=true
+   
+   CMD ["./target/release/your-app"]
+   ```
 
-[performance]
-simd_enabled = true
-parallel_threads = 0
-gpu_acceleration = true
-memory_limit = "128GB"
+2. **Implement health checks**
+   ```rust
+   use scirs2_core::metrics::{HealthMonitor, global_health_monitor};
+   
+   // HTTP health endpoint
+   async fn health_check() -> impl Reply {
+       let health = global_health_monitor().check_health();
+       if health.is_healthy() {
+           warp::reply::with_status("OK", StatusCode::OK)
+       } else {
+           warp::reply::with_status("UNHEALTHY", StatusCode::SERVICE_UNAVAILABLE)
+       }
+   }
+   ```
 
-[memory_efficient]
-aggressive_chunking = true
-memory_mapping = true
-compression = true
-```
+3. **Configure proper logging**
+   ```rust
+   use scirs2_core::logging::{LogConfig, StructuredLogger};
+   
+   let log_config = LogConfig::new()
+       .with_level("info")
+       .with_file("/var/log/scirs2/app.log")
+       .with_rotation(true)
+       .with_structured_format(true);
+   
+   StructuredLogger::init(log_config)?;
+   ```
 
-## Deployment Checklist
+### Security Best Practices
 
-- [ ] System requirements verified
-- [ ] Configuration files created and validated
-- [ ] Security settings configured
-- [ ] Monitoring and logging enabled
-- [ ] Health checks implemented
-- [ ] Performance tuning applied
-- [ ] Backup procedures established
-- [ ] Graceful shutdown implemented
-- [ ] Documentation updated
-- [ ] Team trained on operations
+1. **Validate all external inputs**
+2. **Use secure communication channels**
+3. **Implement proper authentication and authorization**
+4. **Enable audit logging for compliance**
+5. **Regularly update dependencies**
+6. **Use minimal privilege principles**
+
+### Performance Best Practices
+
+1. **Profile before optimizing**
+2. **Use appropriate data structures**
+3. **Leverage SIMD and parallel operations**
+4. **Minimize memory allocations**
+5. **Use memory-efficient algorithms for large datasets**
+6. **Consider GPU acceleration for appropriate workloads**
 
 ## Support and Resources
 
-- **Documentation**: Full API documentation at [docs.rs](https://docs.rs/scirs2-core)
-- **Examples**: Production examples in `/examples/production/`
-- **Community**: GitHub Discussions for questions and support
-- **Security**: Report security issues to security@scirs2.org
-- **Performance**: Performance optimization guides in `/docs/performance/`
+### Documentation
+- [API Documentation](https://docs.rs/scirs2-core/1.0)
+- [User Guide](https://scirs2.org/guide)
+- [Examples Repository](https://github.com/cool-japan/scirs/tree/main/examples)
 
-For enterprise support and consulting, contact: enterprise@scirs2.org
+### Community
+- [GitHub Issues](https://github.com/cool-japan/scirs/issues)
+- [Discussion Forum](https://github.com/cool-japan/scirs/discussions)
+- [Stack Overflow](https://stackoverflow.com/questions/tagged/scirs2)
+
+### Professional Support
+- Enterprise support available through official channels
+- Training and consulting services
+- Custom feature development
+
+---
+
+**Version**: SciRS2 Core 1.0  
+**Last Updated**: 2025-06-29  
+**Authors**: SciRS2 Development Team  
+**License**: See LICENSE file for details

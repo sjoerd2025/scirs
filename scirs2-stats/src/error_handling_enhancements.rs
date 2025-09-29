@@ -379,7 +379,6 @@ mod tests {
     use super::*;
 
     #[test]
-    #[ignore = "timeout"]
     fn test_advanced_context_builder() {
         let context = AdvancedContextBuilder::new(10000)
             .memory_usage(256.0)

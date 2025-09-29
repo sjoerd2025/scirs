@@ -12,13 +12,13 @@
 
 //! Example demonstrating neural network implementation using the array protocol.
 
-use ndarray::{Array, Array1, Array2, Ix2, Ix4};
 use scirs2_core::array_protocol::{
     self,
     ml_ops::ActivationFunc,
     neural::{create_simple_cnn, Conv2D, Dropout, Layer, Linear, MaxPool2D, Sequential},
     GPUBackend, GPUConfig, GPUNdarray, NdarrayWrapper,
 };
+use scirs2_core::ndarray_ext::{Array, Array1, Array2, Ix2, Ix4};
 
 #[allow(dead_code)]
 fn main() {

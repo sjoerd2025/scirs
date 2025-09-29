@@ -3,7 +3,7 @@
 //! This example shows how to control the number of worker threads for FFT operations.
 
 use ndarray::Array2;
-use num_complex::Complex64;
+use scirs2_core::Complex64;
 use scirs2_fft::{fft2, get_global_pool, get_workers, with_workers};
 use std::time::Instant;
 

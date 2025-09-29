@@ -1,6 +1,6 @@
 use crate::error::SpatialResult;
 use crate::rtree::node::{Entry, EntryWithDistance, Node, RTree, Rectangle};
-use ndarray::ArrayView1;
+use scirs2_core::ndarray::ArrayView1;
 use std::cmp::Ordering;
 use std::collections::BinaryHeap;
 
@@ -276,7 +276,7 @@ impl<T: Clone> RTree<T> {
 mod tests {
     use super::*;
     use approx::assert_relative_eq;
-    use ndarray::array;
+    use scirs2_core::ndarray::array;
 
     #[test]
     fn test_rtree_nearest_neighbors() {

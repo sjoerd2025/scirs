@@ -1,7 +1,7 @@
-use ndarray::{array, Array2};
 use scirs2_core::ndarray_ext::stats::{
     bincount, corrcoef, cov, digitize, histogram, histogram2d, quantile,
 };
+use scirs2_core::ndarray_ext::{array, Array2};
 
 #[allow(dead_code)]
 fn main() {

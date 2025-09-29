@@ -531,7 +531,7 @@ impl BenchmarkSuite {
     fn generate_testdata(&self, size: usize) -> StatsResult<Array1<f64>> {
         use rand_distr::{Distribution, Normal};
 
-        let mut rng = rand::rng();
+        let mut rng = rand::thread_rng();
         let normal = Normal::new(0.0, 1.0).map_err(|e| {
             StatsError::ComputationError(format!("Failed to create normal distribution: {}", e))
         })?;
@@ -549,7 +549,7 @@ impl BenchmarkSuite {
     ) -> StatsResult<Array1<f64>> {
         use rand_distr::{Distribution, Normal};
 
-        let mut rng = rand::rng();
+        let mut rng = rand::thread_rng();
         let normal = Normal::new(0.0, 1.0).map_err(|e| {
             StatsError::ComputationError(format!("Failed to create normal distribution: {}", e))
         })?;
@@ -568,7 +568,7 @@ impl BenchmarkSuite {
     fn generate_matrixdata(&self, rows: usize, cols: usize) -> StatsResult<Array2<f64>> {
         use rand_distr::{Distribution, Normal};
 
-        let mut rng = rand::rng();
+        let mut rng = rand::thread_rng();
         let normal = Normal::new(0.0, 1.0).map_err(|e| {
             StatsError::ComputationError(format!("Failed to create normal distribution: {}", e))
         })?;
@@ -941,7 +941,6 @@ mod tests {
     use super::*;
 
     #[test]
-    #[ignore = "timeout"]
     fn test_benchmark_suite_creation() {
         let suite = BenchmarkSuite::new();
         assert_eq!(suite.config.datasizes.len(), 5);
@@ -949,7 +948,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_testdata_generation() {
         let suite = BenchmarkSuite::new();
         let data = suite.generate_testdata(1000).unwrap();
@@ -957,7 +955,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_correlateddata_generation() {
         let suite = BenchmarkSuite::new();
         let basedata = suite.generate_testdata(100).unwrap();
@@ -966,7 +963,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_complexity_classification() {
         let suite = BenchmarkSuite::new();
 

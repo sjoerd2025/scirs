@@ -1,5 +1,5 @@
-use ndarray::{s, Array2};
 use scirs2_core::memory_efficient::{MemoryMappedArray, MemoryMappedSlicing};
+use scirs2_core::ndarray_ext::{s, Array2};
 use std::fs::File;
 use std::io::Write;
 use std::path::Path;

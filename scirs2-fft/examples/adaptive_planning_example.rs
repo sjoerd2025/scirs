@@ -1,4 +1,4 @@
-use num_complex::Complex64;
+use scirs2_core::Complex64;
 use scirs2_fft::planning_adaptive::{AdaptiveExecutor, AdaptivePlanningConfig};
 use std::time::{Duration, Instant};
 

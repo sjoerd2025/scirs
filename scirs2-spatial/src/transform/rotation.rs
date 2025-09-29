@@ -4,8 +4,8 @@
 //! including quaternions, rotation matrices, Euler angles, and axis-angle representations.
 
 use crate::error::{SpatialError, SpatialResult};
-use ndarray::{array, Array1, Array2, ArrayView1, ArrayView2};
 use num_traits::Float;
+use scirs2_core::ndarray::{array, Array1, Array2, ArrayView1, ArrayView2};
 use std::f64::consts::PI;
 use std::fmt;
 
@@ -76,7 +76,7 @@ impl EulerConvention {
 ///
 /// ```
 /// use scirs2_spatial::transform::Rotation;
-/// use ndarray::array;
+/// use scirs2_core::ndarray::array;
 ///
 /// // Create a rotation from a quaternion [w, x, y, z]
 /// let quat = array![std::f64::consts::FRAC_1_SQRT_2, std::f64::consts::FRAC_1_SQRT_2, 0.0, 0.0]; // 90 degree rotation around X
@@ -131,7 +131,7 @@ impl Rotation {
     ///
     /// ```
     /// use scirs2_spatial::transform::Rotation;
-    /// use ndarray::array;
+    /// use scirs2_core::ndarray::array;
     ///
     /// // Create a quaternion for a 90-degree rotation around the x-axis
     /// let quat = array![std::f64::consts::FRAC_1_SQRT_2, std::f64::consts::FRAC_1_SQRT_2, 0.0, 0.0];
@@ -175,7 +175,7 @@ impl Rotation {
     ///
     /// ```
     /// use scirs2_spatial::transform::Rotation;
-    /// use ndarray::array;
+    /// use scirs2_core::ndarray::array;
     ///
     /// // Create a rotation matrix for a 90-degree rotation around the z-axis
     /// let matrix = array![
@@ -264,7 +264,7 @@ impl Rotation {
     ///
     /// ```
     /// use scirs2_spatial::transform::Rotation;
-    /// use ndarray::array;
+    /// use scirs2_core::ndarray::array;
     /// use std::f64::consts::PI;
     ///
     /// // Create a rotation using Euler angles in the XYZ convention
@@ -379,7 +379,7 @@ impl Rotation {
     ///
     /// ```
     /// use scirs2_spatial::transform::Rotation;
-    /// use ndarray::array;
+    /// use scirs2_core::ndarray::array;
     /// use std::f64::consts::PI;
     ///
     /// // Create a rotation for a 90-degree rotation around the x-axis
@@ -434,7 +434,7 @@ impl Rotation {
     ///
     /// ```
     /// use scirs2_spatial::transform::Rotation;
-    /// use ndarray::array;
+    /// use scirs2_core::ndarray::array;
     /// use std::f64::consts::PI;
     ///
     /// let angles = array![0.0, 0.0, PI/2.0];
@@ -482,7 +482,7 @@ impl Rotation {
     ///
     /// ```
     /// use scirs2_spatial::transform::Rotation;
-    /// use ndarray::array;
+    /// use scirs2_core::ndarray::array;
     /// use std::f64::consts::PI;
     ///
     /// let rot = Rotation::from_rotvec(&array![PI/2.0, 0.0, 0.0].view()).unwrap();
@@ -633,7 +633,7 @@ impl Rotation {
     ///
     /// ```
     /// use scirs2_spatial::transform::Rotation;
-    /// use ndarray::array;
+    /// use scirs2_core::ndarray::array;
     /// use std::f64::consts::PI;
     ///
     /// let angles = array![PI/2.0, 0.0, 0.0];
@@ -683,7 +683,7 @@ impl Rotation {
     ///
     /// ```
     /// use scirs2_spatial::transform::Rotation;
-    /// use ndarray::array;
+    /// use scirs2_core::ndarray::array;
     ///
     /// let angles = array![0.0, 0.0, 0.0];
     /// let rot = Rotation::from_euler(&angles.view(), "xyz").unwrap();
@@ -704,7 +704,7 @@ impl Rotation {
     ///
     /// ```
     /// use scirs2_spatial::transform::Rotation;
-    /// use ndarray::array;
+    /// use scirs2_core::ndarray::array;
     /// use std::f64::consts::PI;
     ///
     /// let angles = array![0.0, 0.0, PI/4.0];
@@ -735,7 +735,7 @@ impl Rotation {
     ///
     /// ```
     /// use scirs2_spatial::transform::Rotation;
-    /// use ndarray::array;
+    /// use scirs2_core::ndarray::array;
     /// use std::f64::consts::PI;
     ///
     /// let angles = array![0.0, 0.0, PI/2.0];
@@ -770,7 +770,7 @@ impl Rotation {
     ///
     /// ```
     /// use scirs2_spatial::transform::Rotation;
-    /// use ndarray::array;
+    /// use scirs2_core::ndarray::array;
     /// use std::f64::consts::PI;
     ///
     /// let angles = array![0.0, 0.0, PI/2.0];
@@ -805,7 +805,7 @@ impl Rotation {
     ///
     /// ```
     /// use scirs2_spatial::transform::Rotation;
-    /// use ndarray::array;
+    /// use scirs2_core::ndarray::array;
     /// use std::f64::consts::PI;
     ///
     /// // Rotate 90 degrees around X, then 90 degrees around Y
@@ -853,7 +853,7 @@ impl Rotation {
     ///
     /// ```
     /// use scirs2_spatial::transform::Rotation;
-    /// use ndarray::array;
+    /// use scirs2_core::ndarray::array;
     ///
     /// let identity = Rotation::identity();
     /// let vec = array![1.0, 2.0, 3.0];
@@ -879,7 +879,7 @@ impl Rotation {
     /// let random_rot = Rotation::random();
     /// ```
     pub fn random() -> Rotation {
-        use rand::Rng;
+        use scirs2_core::random::Rng;
         let mut rng = rand::rng();
 
         // Generate random quaternion using method from:
@@ -918,7 +918,7 @@ impl Rotation {
     ///
     /// ```
     /// use scirs2_spatial::transform::Rotation;
-    /// use ndarray::array;
+    /// use scirs2_core::ndarray::array;
     /// use std::f64::consts::PI;
     ///
     /// let rot1 = Rotation::identity();
@@ -961,11 +961,9 @@ impl Rotation {
         let theta_0 = dot.acos();
         let sin_theta_0 = theta_0.sin();
 
-        let theta = theta_0 * t;
-        let sin_theta = theta.sin();
-
-        let s0 = (theta_0 - theta).cos() / sin_theta_0;
-        let s1 = sin_theta / sin_theta_0;
+        // Use correct SLERP formula
+        let s0 = ((1.0 - t) * theta_0).sin() / sin_theta_0;
+        let s1 = (t * theta_0).sin() / sin_theta_0;
 
         let result = q1 * s0 + &q2 * s1;
         Rotation { quat: result }
@@ -985,7 +983,7 @@ impl Rotation {
     ///
     /// ```
     /// use scirs2_spatial::transform::Rotation;
-    /// use ndarray::array;
+    /// use scirs2_core::ndarray::array;
     /// use std::f64::consts::PI;
     ///
     /// # fn example() -> Result<(), Box<dyn std::error::Error>> {
@@ -1156,7 +1154,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn test_slerp_interpolation() {
         // Test SLERP between identity and 90-degree Z rotation
         let rot1 = Rotation::identity();

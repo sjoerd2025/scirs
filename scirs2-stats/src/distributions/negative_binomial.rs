@@ -6,8 +6,7 @@ use crate::error::{StatsError, StatsResult};
 use crate::sampling::SampleableDistribution;
 use num_traits::{Float, NumCast};
 use rand_distr::Distribution;
-use scirs2_core::rng;
-use scirs2_core::Rng;
+use scirs2_core::random::prelude::*;
 use statrs::function::gamma::ln_gamma;
 
 /// Negative Binomial distribution structure
@@ -364,7 +363,7 @@ impl<F: Float + NumCast + std::fmt::Display> NegativeBinomial<F> {
     /// assert_eq!(samples.len(), 10);
     /// ```
     pub fn rvs(&self, size: usize) -> StatsResult<Vec<F>> {
-        let mut rng = rng();
+        let mut rng = thread_rng();
         let mut samples = Vec::with_capacity(size);
 
         // For integer r, we can use a sum of geometric variables
@@ -378,7 +377,9 @@ impl<F: Float + NumCast + std::fmt::Display> NegativeBinomial<F> {
                     // Generate geometric random variable (# failures before first success)
                     let u: f64 = rng.gen_range(0.0..1.0);
                     let p_f64 = <f64 as num_traits::NumCast>::from(self.p).unwrap_or(0.5);
-                    let geom_sample = (u.ln() / (1.0_f64 - p_f64).ln()).floor() as usize;
+                    let geom_sample = (u.ln()
+                        / (F::from(1.0).unwrap().to_f64().unwrap() - p_f64).ln())
+                    .floor() as usize;
                     sum += geom_sample;
                 }
                 samples.push(F::from(sum).unwrap());
@@ -672,7 +673,6 @@ mod tests {
     use approx::assert_relative_eq;
 
     #[test]
-    #[ignore = "timeout"]
     fn test_negative_binomial_creation() {
         // Valid parameters
         let nb1 = NegativeBinomial::new(5.0, 0.3).unwrap();

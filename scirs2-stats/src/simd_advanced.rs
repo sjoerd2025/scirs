@@ -693,7 +693,7 @@ where
     fn compute_vector_moments(&self, chunk: &ArrayView1<F>) -> StatsResult<(F, F, F, F, F, F)> {
         let sum = F::simd_sum(chunk);
         let sum_sq = F::simd_sum_squares(chunk);
-        let sum_cube = F::simd_sum_cubes(chunk);
+        let sum_cube = <F as scirs2_core::simd_ops::SimdUnifiedOps>::simd_sum_cubes(chunk);
         let sum_quad = F::simd_sum_quads(chunk);
         let min_val = F::simd_min_element(chunk);
         let max_val = F::simd_max_element(chunk);

@@ -6,8 +6,8 @@
 
 use crate::error::SpatialResult;
 use crate::kdtree::KDTree;
-use ndarray::{Array1, ArrayView2};
 use num_traits::Float;
+use scirs2_core::ndarray::{Array1, ArrayView2};
 use std::marker::{Send, Sync};
 
 /// Extension trait to add optimized operations to the KDTree
@@ -202,7 +202,7 @@ impl<T: Float + Send + Sync + 'static, D: crate::distance::Distance<T> + 'static
 mod tests {
     use super::*;
     use crate::kdtree::KDTree;
-    use ndarray::array;
+    use scirs2_core::ndarray::array;
 
     #[test]
     fn test_batch_nearest_neighbor() {

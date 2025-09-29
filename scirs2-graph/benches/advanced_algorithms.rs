@@ -7,9 +7,9 @@
 #![allow(dead_code)]
 
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
-use rand::prelude::*;
-use rand::rngs::StdRng;
-use rand::SeedableRng;
+use scirs2_core::random::prelude::*;
+use scirs2_core::random::rngs::StdRng;
+use scirs2_core::random::SeedableRng;
 use scirs2_graph::{
     algorithms::{community::*, flow::*, matching::*, motifs::*, random_walk::*, similarity::*},
     embeddings::*,

@@ -10,6 +10,7 @@ use scirs2_core::parallel_ops::*;
 use std::fmt::Debug;
 use std::sync::{Arc, Mutex};
 
+use super::gradient::Interpolator; // bring interpolate() into scope
 use super::natural::{InterpolationMethod, NaturalNeighborInterpolator};
 use super::voronoi_cell::VoronoiDiagram;
 use crate::error::InterpolateResult;
@@ -27,7 +28,8 @@ pub struct ParallelNaturalNeighborInterpolator<
         + Sync
         + ndarray::ScalarOperand
         + 'static
-        + std::cmp::PartialOrd,
+        + std::cmp::PartialOrd
+        + ordered_float::FloatCore,
 > {
     /// The underlying sequential interpolator
     interpolator: NaturalNeighborInterpolator<F>,
@@ -44,7 +46,8 @@ impl<
             + Sync
             + ndarray::ScalarOperand
             + 'static
-            + std::cmp::PartialOrd,
+            + std::cmp::PartialOrd
+            + ordered_float::FloatCore,
     > ParallelNaturalNeighborInterpolator<F>
 {
     /// Creates a new parallel Natural Neighbor interpolator
@@ -168,7 +171,15 @@ impl<
 /// A new parallel Natural Neighbor interpolator
 #[allow(dead_code)]
 pub fn make_parallel_natural_neighbor_interpolator<
-    F: Float + FromPrimitive + Debug + Send + Sync + ndarray::ScalarOperand + 'static + std::cmp::Ord,
+    F: Float
+        + FromPrimitive
+        + Debug
+        + Send
+        + Sync
+        + ndarray::ScalarOperand
+        + 'static
+        + std::cmp::Ord
+        + ordered_float::FloatCore,
 >(
     points: Array2<F>,
     values: Array1<F>,
@@ -196,7 +207,8 @@ pub fn make_parallel_sibson_interpolator<
         + Sync
         + ndarray::ScalarOperand
         + 'static
-        + std::cmp::PartialOrd,
+        + std::cmp::PartialOrd
+        + ordered_float::FloatCore,
 >(
     points: Array2<F>,
     values: Array1<F>,
@@ -223,7 +235,8 @@ pub fn make_parallel_laplace_interpolator<
         + Sync
         + ndarray::ScalarOperand
         + 'static
-        + std::cmp::PartialOrd,
+        + std::cmp::PartialOrd
+        + ordered_float::FloatCore,
 >(
     points: Array2<F>,
     values: Array1<F>,

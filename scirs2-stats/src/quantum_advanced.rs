@@ -1146,7 +1146,6 @@ mod tests {
     use ndarray::array;
 
     #[test]
-    #[ignore = "timeout"]
     fn test_quantum_analyzer_creation() {
         let config = QuantumConfig::default();
         let analyzer = AdvancedQuantumAnalyzer::<f64>::new(config);
@@ -1979,7 +1978,7 @@ impl<F: Float + NumCast + std::fmt::Display> AdvancedQuantumAnalyzer<F> {
     fn generate_quantum_noise(&self) -> F {
         // Simulate quantum noise from environmental decoherence
 
-        let mut rng = rand::rng();
+        let mut rng = rand::thread_rng();
         let noise: f64 = rng.gen_range(-0.01..0.01);
         F::from(noise).unwrap()
     }

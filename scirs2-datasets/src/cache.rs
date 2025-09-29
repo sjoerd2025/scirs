@@ -168,11 +168,15 @@ pub fn fetch_data(
         .call()
         .map_err(|e| format!("Failed to download {filename}: {e}"))?;
 
-    let mut reader = response.into_reader();
+    // Read body into memory (ureq 3.x: use into_body which implements Read)
+    let mut body = response.into_body();
+    let bytes = body
+        .read_to_vec()
+        .map_err(|e| format!("Failed to read response body: {e}"))?;
     let mut file = std::fs::File::create(&temp_file)
         .map_err(|e| format!("Failed to create temp file: {e}"))?;
-
-    std::io::copy(&mut reader, &mut file).map_err(|e| format!("Failed to download file: {e}"))?;
+    file.write_all(&bytes)
+        .map_err(|e| format!("Failed to write downloaded file: {e}"))?;
 
     // Verify the SHA256 hash of the downloaded file if provided
     if !entry.sha256.is_empty() {

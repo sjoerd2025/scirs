@@ -3,9 +3,10 @@
 //! Run with: cargo bench --bench transform_bench
 
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
-use ndarray::{Array2, ArrayBase, Axis, Data};
-use ndarray_rand::rand::distributions::Uniform;
-use ndarray_rand::RandomExt;
+use scirs2_core::ndarray::RandomExt;
+use scirs2_core::ndarray::{Array2, ArrayBase, Axis, Data, Ix2};
+use scirs2_core::random::prelude::*;
+use scirs2_core::random::OptimizedArrayRandom;
 use scirs2_transform::*;
 use std::hint::black_box;
 
@@ -19,7 +20,12 @@ fn bench_normalization(c: &mut Criterion) {
 
     for &n_samples in SAMPLE_SIZES {
         for &n_features in FEATURE_SIZES {
-            let data = Array2::random((n_samples, n_features), Uniform::new(-100.0, 100.0));
+            let mut rng = thread_rng();
+            let data = Array2::random_bulk(
+                Ix2(n_samples, n_features),
+                Uniform::new(-100.0, 100.0).unwrap(),
+                &mut rng,
+            );
 
             // MinMax normalization
             group.throughput(Throughput::Elements((n_samples * n_features) as u64));
@@ -84,7 +90,12 @@ fn bench_simd_normalization(c: &mut Criterion) {
 
     for &n_samples in SAMPLE_SIZES {
         for &n_features in FEATURE_SIZES {
-            let data = Array2::random((n_samples, n_features), Uniform::new(-100.0, 100.0));
+            let mut rng = thread_rng();
+            let data = Array2::random_bulk(
+                Ix2(n_samples, n_features),
+                Uniform::new(-100.0, 100.0).unwrap(),
+                &mut rng,
+            );
 
             // SIMD MinMax normalization
             group.throughput(Throughput::Elements((n_samples * n_features) as u64));
@@ -123,7 +134,12 @@ fn bench_scaling(c: &mut Criterion) {
 
     for &n_samples in SAMPLE_SIZES {
         for &n_features in FEATURE_SIZES {
-            let data = Array2::random((n_samples, n_features), Uniform::new(-100.0, 100.0));
+            let mut rng = thread_rng();
+            let data = Array2::random_bulk(
+                Ix2(n_samples, n_features),
+                Uniform::new(-100.0, 100.0).unwrap(),
+                &mut rng,
+            );
 
             // MaxAbsScaler
             group.throughput(Throughput::Elements((n_samples * n_features) as u64));
@@ -171,7 +187,12 @@ fn bench_feature_engineering(c: &mut Criterion) {
         // Smaller sizes for polynomial features
         for &n_features in &[5, 10, 20] {
             // Fewer features due to polynomial expansion
-            let data = Array2::random((n_samples, n_features), Uniform::new(-10.0, 10.0));
+            let mut rng = thread_rng();
+            let data = Array2::random_bulk(
+                Ix2(n_samples, n_features),
+                Uniform::new(-10.0, 10.0).unwrap(),
+                &mut rng,
+            );
 
             // Polynomial features (degree 2)
             group.throughput(Throughput::Elements((n_samples * n_features) as u64));
@@ -228,7 +249,12 @@ fn bench_dimensionality_reduction(c: &mut Criterion) {
     for &n_samples in &[100, 500] {
         // Smaller sizes for expensive operations
         for &n_features in &[20, 50] {
-            let data = Array2::random((n_samples, n_features), Uniform::new(-10.0, 10.0));
+            let mut rng = thread_rng();
+            let data = Array2::random_bulk(
+                Ix2(n_samples, n_features),
+                Uniform::new(-10.0, 10.0).unwrap(),
+                &mut rng,
+            );
             let n_components = n_features / 2;
 
             // PCA
@@ -274,11 +300,16 @@ fn bench_imputation(c: &mut Criterion) {
         for &n_features in &[10, 20] {
             // Smaller feature sizes for imputation
             // Create data with missing values
-            let mut data = Array2::random((n_samples, n_features), Uniform::new(-10.0, 10.0));
+            let mut rng = thread_rng();
+            let mut data = Array2::random_bulk(
+                Ix2(n_samples, n_features),
+                Uniform::new(-10.0, 10.0).unwrap(),
+                &mut rng,
+            );
             // Insert NaN values randomly (about 10%)
             for i in 0..n_samples {
                 for j in 0..n_features {
-                    if rand::random::<f64>() < 0.1 {
+                    if thread_rng().gen::<f64>() < 0.1 {
                         data[[i, j]] = f64::NAN;
                     }
                 }
@@ -332,7 +363,12 @@ fn bench_pipeline(c: &mut Criterion) {
 
     for &n_samples in &[100, 1000] {
         for &n_features in &[10, 20] {
-            let data = Array2::random((n_samples, n_features), Uniform::new(-10.0, 10.0));
+            let mut rng = thread_rng();
+            let data = Array2::random_bulk(
+                Ix2(n_samples, n_features),
+                Uniform::new(-10.0, 10.0).unwrap(),
+                &mut rng,
+            );
 
             // Simple pipeline: StandardScaler -> PCA
             group.throughput(Throughput::Elements((n_samples * n_features) as u64));

@@ -1,8 +1,8 @@
 //! SIMD Performance Benchmark - Test SIMD vs Scalar Performance
 
 use criterion::{criterion_group, criterion_main, Criterion};
-use ndarray::Array2;
-use rand::{rngs::StdRng, Rng, SeedableRng};
+use scirs2_core::ndarray::Array2;
+use scirs2_core::random::{rngs::StdRng, Rng, SeedableRng};
 use scirs2_spatial::distance::euclidean;
 use scirs2_spatial::simd_distance::{
     parallel_pdist, simd_euclidean_distance, simd_manhattan_distance,

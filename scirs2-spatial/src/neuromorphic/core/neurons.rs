@@ -66,7 +66,7 @@ impl SpikingNeuron {
             membrane_potential: 0.0,
             threshold: 1.0,
             refractory_period: 2.0,
-            time_since_spike: 0.0,
+            time_since_spike: 2.1, // Start outside refractory period
             leak_constant: 0.1,
             input_current: 0.0,
             position,
@@ -93,7 +93,7 @@ impl SpikingNeuron {
             membrane_potential: 0.0,
             threshold,
             refractory_period,
-            time_since_spike: 0.0,
+            time_since_spike: refractory_period + 0.1, // Start outside refractory period
             leak_constant,
             input_current: 0.0,
             position,
@@ -416,7 +416,6 @@ mod tests {
     use super::*;
 
     #[test]
-    #[ignore]
     fn test_spiking_neuron_creation() {
         let neuron = SpikingNeuron::new(vec![0.0, 0.0]);
         assert_eq!(neuron.position(), &[0.0, 0.0]);
@@ -426,7 +425,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn test_neuron_spiking() {
         let mut neuron = SpikingNeuron::new(vec![0.0, 0.0]);
 

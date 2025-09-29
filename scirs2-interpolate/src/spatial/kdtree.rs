@@ -22,7 +22,7 @@ use crate::error::{InterpolateError, InterpolateResult};
 
 /// A node in the KD-tree
 #[derive(Debug, Clone)]
-struct KdNode<F: Float> {
+struct KdNode<F: Float + ordered_float::FloatCore> {
     /// Index of the point in the original data
     idx: usize,
 
@@ -72,7 +72,7 @@ struct KdNode<F: Float> {
 #[derive(Debug, Clone)]
 pub struct KdTree<F>
 where
-    F: Float + FromPrimitive + Debug + std::cmp::PartialOrd,
+    F: Float + FromPrimitive + Debug + std::cmp::PartialOrd + ordered_float::FloatCore,
 {
     /// The original points used to build the tree
     points: Array2<F>,
@@ -95,7 +95,7 @@ where
 
 impl<F> KdTree<F>
 where
-    F: Float + FromPrimitive + Debug + std::cmp::PartialOrd,
+    F: Float + FromPrimitive + Debug + std::cmp::PartialOrd + ordered_float::FloatCore,
 {
     /// Create a new KD-tree from points
     ///
@@ -285,7 +285,7 @@ where
         }
 
         // Initialize nearest neighbor search
-        let mut best_dist = F::infinity();
+        let mut best_dist = <F as num_traits::Float>::infinity();
         let mut best_idx = 0;
 
         // Start recursive search
@@ -453,7 +453,7 @@ where
         }
 
         // Calculate distance to the splitting plane
-        let plane_dist = (query_val - node_val).abs();
+        let plane_dist = num_traits::Float::abs(query_val - node_val);
 
         // If the second subtree could contain a closer point, search it too
         if plane_dist < *best_dist {
@@ -495,7 +495,7 @@ where
         // Get the current farthest distance in our k-nearest set
         let farthest_dist = match heap.peek() {
             Some(&(dist_, _)) => dist_.into_inner(),
-            None => F::infinity(),
+            None => <F as num_traits::Float>::infinity(),
         };
 
         // Determine which side to search first (the side the query point is on)
@@ -515,7 +515,7 @@ where
         }
 
         // Calculate distance to the splitting plane
-        let plane_dist = (query_val - node_val).abs();
+        let plane_dist = num_traits::Float::abs(query_val - node_val);
 
         // If the second subtree could contain a closer point, search it too
         if plane_dist < farthest_dist || heap.len() < k {
@@ -567,7 +567,7 @@ where
         }
 
         // Calculate distance to the splitting plane
-        let plane_dist = (query_val - node_val).abs();
+        let plane_dist = num_traits::Float::abs(query_val - node_val);
 
         // If the second subtree could contain points within radius, search it too
         if plane_dist <= radius {
@@ -581,7 +581,7 @@ where
     fn linear_nearest_neighbor(&self, query: &[F]) -> InterpolateResult<(usize, F)> {
         let n_points = self.points.shape()[0];
 
-        let mut min_dist = F::infinity();
+        let mut min_dist = <F as num_traits::Float>::infinity();
         let mut min_idx = 0;
 
         for i in 0..n_points {
@@ -769,7 +769,7 @@ where
         use std::collections::BinaryHeap;
 
         let mut heap: BinaryHeap<(OrderedFloat<F>, usize)> = BinaryHeap::with_capacity(k + 1);
-        let mut search_radius = max_distance.unwrap_or(F::infinity());
+        let mut search_radius = max_distance.unwrap_or(<F as num_traits::Float>::infinity());
 
         // Start recursive search with adaptive radius
         self.search_k_nearest_optimized(
@@ -801,7 +801,7 @@ where
     ) -> InterpolateResult<Vec<(usize, F)>> {
         let n_points = self.points.shape()[0];
         let k = k.min(n_points);
-        let max_dist = max_distance.unwrap_or(F::infinity());
+        let max_dist = max_distance.unwrap_or(<F as num_traits::Float>::infinity());
 
         let mut distances: Vec<(usize, F)> = Vec::with_capacity(n_points);
 
@@ -889,7 +889,7 @@ where
         }
 
         // Calculate distance to the splitting plane
-        let plane_dist = (query_val - node_val).abs();
+        let plane_dist = num_traits::Float::abs(query_val - node_val);
 
         // Only search the second subtree if it could contain better points
         if plane_dist <= kth_dist {

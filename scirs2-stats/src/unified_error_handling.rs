@@ -325,7 +325,6 @@ mod tests {
     use crate::error_handling_v2::ErrorCode;
 
     #[test]
-    #[ignore = "timeout"]
     fn test_unified_error_handler() {
         let handler = UnifiedErrorHandler::new();
 

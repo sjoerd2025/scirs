@@ -8,6 +8,7 @@ use std::fmt;
 
 pub mod blas;
 pub mod complex;
+pub mod elementwise;
 pub mod ml;
 pub mod reduction;
 pub mod transform;
@@ -236,6 +237,30 @@ impl KernelRegistry {
         // Register BLAS kernels
         registry.register(Box::new(blas::gemm::GemmKernel::new()));
         registry.register(Box::new(blas::axpy::AxpyKernel::new()));
+        registry.register(Box::new(blas::gemv::GemvKernel::new()));
+
+        // Register elementwise kernels
+        registry.register(Box::new(elementwise::ElementwiseAddKernel::new()));
+        registry.register(Box::new(elementwise::ElementwiseSubKernel::new()));
+        registry.register(Box::new(elementwise::ElementwiseMulKernel::new()));
+        registry.register(Box::new(elementwise::ElementwiseDivKernel::new()));
+        registry.register(Box::new(elementwise::ElementwisePowKernel::new()));
+        registry.register(Box::new(elementwise::ElementwiseSqrtKernel::new()));
+        registry.register(Box::new(elementwise::ElementwiseExpKernel::new()));
+        registry.register(Box::new(elementwise::ElementwiseLogKernel::new()));
+
+        // Register optimization kernels
+        registry.register(Box::new(create_adam_optimizer_kernel()));
+        registry.register(Box::new(create_sgd_optimizer_kernel()));
+        registry.register(Box::new(create_rmsprop_optimizer_kernel()));
+        registry.register(Box::new(create_adagrad_optimizer_kernel()));
+        registry.register(Box::new(create_lamb_optimizer_kernel()));
+
+        // Register utility kernels
+        registry.register(Box::new(create_memcpy_kernel()));
+        registry.register(Box::new(create_fill_kernel()));
+        registry.register(Box::new(create_reduce_sum_kernel()));
+        registry.register(Box::new(create_reduce_max_kernel()));
 
         // Register transform kernels
         registry.register(Box::new(transform::fft::FftKernel::new()));
@@ -437,6 +462,213 @@ fn createerror_estimate_kernel() -> BaseKernel {
 
     BaseKernel::new(
         "error_estimate",
+        cuda_source,
+        cuda_source,
+        "",
+        "",
+        cuda_source,
+        metadata,
+    )
+}
+
+/// Create Adam optimizer kernel for GPU acceleration
+#[allow(dead_code)]
+fn create_adam_optimizer_kernel() -> BaseKernel {
+    let cuda_source = include_str!("adam_optimizer.cu");
+    let metadata = KernelMetadata {
+        workgroup_size: [256, 1, 1],
+        local_memory_usage: 0,
+        supports_tensor_cores: false,
+        operationtype: OperationType::ComputeIntensive,
+        backend_metadata: HashMap::new(),
+    };
+
+    BaseKernel::new(
+        "adam_optimizer",
+        cuda_source,
+        cuda_source,
+        "",
+        "",
+        cuda_source,
+        metadata,
+    )
+}
+
+/// Create SGD optimizer kernel for GPU acceleration
+#[allow(dead_code)]
+fn create_sgd_optimizer_kernel() -> BaseKernel {
+    let cuda_source = include_str!("sgd_optimizer.cu");
+    let metadata = KernelMetadata {
+        workgroup_size: [256, 1, 1],
+        local_memory_usage: 0,
+        supports_tensor_cores: false,
+        operationtype: OperationType::MemoryIntensive,
+        backend_metadata: HashMap::new(),
+    };
+
+    BaseKernel::new(
+        "sgd_optimizer",
+        cuda_source,
+        cuda_source,
+        "",
+        "",
+        cuda_source,
+        metadata,
+    )
+}
+
+/// Create RMSprop optimizer kernel for GPU acceleration
+#[allow(dead_code)]
+fn create_rmsprop_optimizer_kernel() -> BaseKernel {
+    let cuda_source = include_str!("rmsprop_optimizer.cu");
+    let metadata = KernelMetadata {
+        workgroup_size: [256, 1, 1],
+        local_memory_usage: 0,
+        supports_tensor_cores: false,
+        operationtype: OperationType::ComputeIntensive,
+        backend_metadata: HashMap::new(),
+    };
+
+    BaseKernel::new(
+        "rmsprop_optimizer",
+        cuda_source,
+        cuda_source,
+        "",
+        "",
+        cuda_source,
+        metadata,
+    )
+}
+
+/// Create Adagrad optimizer kernel for GPU acceleration
+#[allow(dead_code)]
+fn create_adagrad_optimizer_kernel() -> BaseKernel {
+    let cuda_source = include_str!("adagrad_optimizer.cu");
+    let metadata = KernelMetadata {
+        workgroup_size: [256, 1, 1],
+        local_memory_usage: 0,
+        supports_tensor_cores: false,
+        operationtype: OperationType::ComputeIntensive,
+        backend_metadata: HashMap::new(),
+    };
+
+    BaseKernel::new(
+        "adagrad_optimizer",
+        cuda_source,
+        cuda_source,
+        "",
+        "",
+        cuda_source,
+        metadata,
+    )
+}
+
+/// Create LAMB optimizer kernel for GPU acceleration
+#[allow(dead_code)]
+fn create_lamb_optimizer_kernel() -> BaseKernel {
+    let cuda_source = include_str!("lamb_optimizer.cu");
+    let metadata = KernelMetadata {
+        workgroup_size: [256, 1, 1],
+        local_memory_usage: 0,
+        supports_tensor_cores: false,
+        operationtype: OperationType::ComputeIntensive,
+        backend_metadata: HashMap::new(),
+    };
+
+    BaseKernel::new(
+        "lamb_optimizer",
+        cuda_source,
+        cuda_source,
+        "",
+        "",
+        cuda_source,
+        metadata,
+    )
+}
+
+/// Create memory copy kernel for GPU acceleration
+#[allow(dead_code)]
+fn create_memcpy_kernel() -> BaseKernel {
+    let cuda_source = include_str!("memcpy.cu");
+    let metadata = KernelMetadata {
+        workgroup_size: [256, 1, 1],
+        local_memory_usage: 0,
+        supports_tensor_cores: false,
+        operationtype: OperationType::MemoryIntensive,
+        backend_metadata: HashMap::new(),
+    };
+
+    BaseKernel::new(
+        "memcpy",
+        cuda_source,
+        cuda_source,
+        "",
+        "",
+        cuda_source,
+        metadata,
+    )
+}
+
+/// Create fill kernel for GPU acceleration
+#[allow(dead_code)]
+fn create_fill_kernel() -> BaseKernel {
+    let cuda_source = include_str!("fill.cu");
+    let metadata = KernelMetadata {
+        workgroup_size: [256, 1, 1],
+        local_memory_usage: 0,
+        supports_tensor_cores: false,
+        operationtype: OperationType::MemoryIntensive,
+        backend_metadata: HashMap::new(),
+    };
+
+    BaseKernel::new(
+        "fill",
+        cuda_source,
+        cuda_source,
+        "",
+        "",
+        cuda_source,
+        metadata,
+    )
+}
+
+/// Create reduce sum kernel for GPU acceleration
+#[allow(dead_code)]
+fn create_reduce_sum_kernel() -> BaseKernel {
+    let cuda_source = include_str!("reduce_sum.cu");
+    let metadata = KernelMetadata {
+        workgroup_size: [256, 1, 1],
+        local_memory_usage: 1024, // Shared memory for reduction
+        supports_tensor_cores: false,
+        operationtype: OperationType::ComputeIntensive,
+        backend_metadata: HashMap::new(),
+    };
+
+    BaseKernel::new(
+        "reduce_sum",
+        cuda_source,
+        cuda_source,
+        "",
+        "",
+        cuda_source,
+        metadata,
+    )
+}
+
+/// Create reduce max kernel for GPU acceleration
+#[allow(dead_code)]
+fn create_reduce_max_kernel() -> BaseKernel {
+    let cuda_source = include_str!("reduce_max.cu");
+    let metadata = KernelMetadata {
+        workgroup_size: [256, 1, 1],
+        local_memory_usage: 1024, // Shared memory for reduction
+        supports_tensor_cores: false,
+        operationtype: OperationType::ComputeIntensive,
+        backend_metadata: HashMap::new(),
+    };
+
+    BaseKernel::new(
+        "reduce_max",
         cuda_source,
         cuda_source,
         "",

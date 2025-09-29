@@ -4,7 +4,7 @@
 //! optimization algorithms across various test problems, metrics, and scenarios.
 
 use crate::error::ScirsResult;
-use ndarray::{Array1, ArrayView1};
+use scirs2_core::ndarray::{Array1, ArrayView1};
 use std::collections::HashMap;
 use std::path::Path;
 use std::time::{Duration, Instant};
@@ -180,8 +180,8 @@ impl TestProblem {
 
     /// Generate random starting points for the problem
     pub fn generate_starting_points(&self, count: usize) -> ScirsResult<Vec<Array1<f64>>> {
-        use rand::{rng, Rng};
-        let mut rng = rand::rng();
+        use scirs2_core::random::{thread_rng, Rng};
+        let mut rng = thread_rng();
         let mut points = Vec::with_capacity(count);
 
         for _ in 0..count {
@@ -844,7 +844,7 @@ pub mod benchmark_suites {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::array;
+    use scirs2_core::ndarray::array;
 
     #[test]
     fn test_test_functions() {

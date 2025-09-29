@@ -4,8 +4,8 @@
 //! neuromorphic, and hybrid algorithms compared to classical approaches.
 
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
-use ndarray::{Array1, Array2};
-use rand::{rngs::StdRng, Rng, SeedableRng};
+use scirs2_core::ndarray::{Array1, Array2};
+use scirs2_core::random::{rngs::StdRng, Rng, SeedableRng};
 use std::time::Duration;
 
 use scirs2_spatial::{
@@ -236,13 +236,13 @@ fn benchmark_distance_computation(c: &mut Criterion) {
         // Benchmark batch SIMD distances
         if data.nrows() >= 2 {
             let half = data.nrows() / 2;
-            let data1 = data.slice(ndarray::s![..half, ..]).to_owned();
-            let data2 = data.slice(ndarray::s![half.., ..]).to_owned();
+            let data1 = data.slice(scirs2_core::ndarray::s![..half, ..]).to_owned();
+            let data2 = data.slice(scirs2_core::ndarray::s![half.., ..]).to_owned();
 
             group.bench_with_input(
                 BenchmarkId::new("simd_batch", name),
                 &(data1, data2),
-                |b, (data1, data2)| {
+                |b, (data1, data2): &(Array2<f64>, Array2<f64>)| {
                     b.iter(|| simd_euclidean_distance_batch(&data1.view(), &data2.view()).unwrap());
                 },
             );

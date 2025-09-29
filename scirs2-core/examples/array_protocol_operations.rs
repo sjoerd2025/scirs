@@ -12,11 +12,11 @@
 
 //! Example demonstrating the array protocol operations with different array types.
 
-use ndarray::{Array2, Ix2};
 use scirs2_core::array_protocol::{
     self, add, matmul, reshape, sum, transpose, DistributedBackend, DistributedConfig,
     DistributedNdarray, DistributionStrategy, GPUBackend, GPUConfig, GPUNdarray, NdarrayWrapper,
 };
+use scirs2_core::ndarray_ext::{Array2, Ix2};
 
 #[allow(dead_code)]
 fn main() {

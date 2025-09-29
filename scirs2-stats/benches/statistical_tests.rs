@@ -4,9 +4,9 @@
 //! in scirs2-stats across different sample sizes and data conditions.
 
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
-use ndarray::{Array1, Array2};
-use rand::prelude::*;
-use rand_distr::{Normal, StandardNormal};
+use scirs2_core::ndarray::{Array1, Array2};
+use scirs2_core::random::prelude::*;
+use scirs2_core::random::{Distribution, StandardNormal};
 use scirs2_stats::tests::ttest::Alternative;
 use scirs2_stats::{
     anderson_darling,
@@ -32,9 +32,9 @@ use std::hint::black_box;
 /// Generate random normal data
 #[allow(dead_code)]
 fn generate_normaldata(n: usize, mean: f64, std: f64) -> Array1<f64> {
-    let mut rng = rand::rng();
+    let mut rng = thread_rng();
     let normal = Normal::new(mean, std).unwrap();
-    Array1::from_shape_fn(n, |_| normal.sample(&mut rng))
+    Array1::from_shape_fn(n, |_| rng.sample(normal))
 }
 
 /// Benchmark t-tests
@@ -230,9 +230,9 @@ fn bench_correlations(c: &mut Criterion) {
 
     for &n in &samplesizes {
         // Generate correlated data
-        let mut rng = rand::rng();
-        let x: Array1<f64> = Array1::from_shape_fn(n, |_| StandardNormal.sample(&mut rng));
-        let noise: Array1<f64> = Array1::from_shape_fn(n, |_| StandardNormal.sample(&mut rng));
+        let mut rng = thread_rng();
+        let x: Array1<f64> = Array1::from_shape_fn(n, |_| rng.sample(StandardNormal));
+        let noise: Array1<f64> = Array1::from_shape_fn(n, |_| rng.sample(StandardNormal));
         let y = &x * 0.8 + &noise * 0.2; // Correlation ~ 0.8
 
         // Pearson correlation

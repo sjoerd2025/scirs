@@ -6,7 +6,7 @@ use crate::error::{StatsError, StatsResult};
 use crate::sampling::SampleableDistribution;
 use ndarray::{Array1, ArrayBase, Data, Ix1};
 use rand_distr::{Distribution, Gamma as RandGamma};
-use scirs2_core::rng;
+use scirs2_core::random::prelude::*;
 use std::fmt::Debug;
 
 /// Implementation of the natural logarithm of the gamma function
@@ -273,7 +273,7 @@ impl Dirichlet {
     /// assert_eq!(samples[0].len(), 3);
     /// ```
     pub fn rvs(&self, size: usize) -> StatsResult<Vec<Array1<f64>>> {
-        let mut rng = rng();
+        let mut rng = thread_rng();
         let mut samples = Vec::with_capacity(size);
 
         // Generate samples using the gamma method:
@@ -373,7 +373,6 @@ mod tests {
     use ndarray::array;
 
     #[test]
-    #[ignore = "timeout"]
     fn test_dirichlet_creation() {
         // Uniform Dirichlet
         let alpha = array![1.0, 1.0, 1.0];

@@ -6,9 +6,9 @@
 use criterion::{
     black_box, criterion_group, criterion_main, BenchmarkId, Criterion, PlotConfiguration,
 };
-use ndarray::{Array1, Array2, ArrayView1};
-use rand::prelude::*;
-use rand_distr::{Exp, Gamma as GammaDist, Normal, StandardNormal, Uniform};
+use scirs2_core::ndarray::{Array1, Array2, ArrayView1};
+use scirs2_core::random::prelude::*;
+use scirs2_core::random::{Distribution, Exp, StandardNormal};
 use scirs2_stats::tests::ttest::Alternative;
 use scirs2_stats::*;
 use scirs2_stats::{coefficient_of_variation_simd, mad_simd, quantiles_simd};
@@ -36,35 +36,35 @@ mod data_generators {
     use super::*;
 
     pub fn normal(n: usize, mean: f64, std: f64) -> Array1<f64> {
-        let mut rng = rand::rng();
+        let mut rng = thread_rng();
         let normal = Normal::new(mean, std).unwrap();
-        Array1::from_shape_fn(n, |_| normal.sample(&mut rng))
+        Array1::from_shape_fn(n, |_| rng.sample(normal))
     }
 
     pub fn uniform(n: usize, low: f64, high: f64) -> Array1<f64> {
-        let mut rng = rand::rng();
+        let mut rng = thread_rng();
         let uniform = Uniform::new(low, high).unwrap();
-        Array1::from_shape_fn(n, |_| uniform.sample(&mut rng))
+        Array1::from_shape_fn(n, |_| rng.sample(uniform))
     }
 
     pub fn exponential(n: usize, lambda: f64) -> Array1<f64> {
-        let mut rng = rand::rng();
+        let mut rng = thread_rng();
         let exp = Exp::new(lambda).unwrap();
-        Array1::from_shape_fn(n, |_| exp.sample(&mut rng))
+        Array1::from_shape_fn(n, |_| rng.sample(exp))
     }
 
     pub fn multivariate_normal(n: usize, dim: usize) -> Array2<f64> {
-        let mut rng = rand::rng();
+        let mut rng = thread_rng();
         let normal = StandardNormal;
-        Array2::from_shape_fn((n, dim), |_| normal.sample(&mut rng))
+        Array2::from_shape_fn((n, dim), |_| rng.sample(normal))
     }
 
     pub fn correlateddata(n: usize, correlation: f64) -> (Array1<f64>, Array1<f64>) {
-        let mut rng = rand::rng();
+        let mut rng = thread_rng();
         let normal = StandardNormal;
-        let x = Array1::from_shape_fn(n, |_| normal.sample(&mut rng));
-        let noise = Array1::from_shape_fn(n, |_| normal.sample(&mut rng));
-        let y = correlation * &x + (1.0 - correlation.powi(2)).sqrt() * noise;
+        let x = Array1::from_shape_fn(n, |_| rng.sample(normal));
+        let noise = Array1::from_shape_fn(n, |_| rng.sample(normal));
+        let y = correlation * &x + (1.0 - correlation.powi(2)).sqrt() * &noise;
         (x, y)
     }
 }

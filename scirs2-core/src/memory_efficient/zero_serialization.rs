@@ -607,7 +607,8 @@ impl<A: ZeroCopySerializable> ZeroCopySerialization<A> for MemoryMappedArray<A> 
         };
 
         // Serialize header
-        let header_bytes = bincode::serialize(&header).map_err(|e| {
+        let cfg = bincode::config::standard();
+        let header_bytes = bincode::serde::encode_to_vec(&header, cfg).map_err(|e| {
             CoreError::ValidationError(
                 ErrorContext::new(format!("{e}"))
                     .with_location(ErrorLocation::new(file!(), line!())),
@@ -671,12 +672,14 @@ impl<A: ZeroCopySerializable> ZeroCopySerialization<A> for MemoryMappedArray<A> 
         file.read_exact(&mut header_bytes)?;
 
         // Deserialize header
-        let header: ZeroCopyHeader = bincode::deserialize(&header_bytes).map_err(|e| {
-            CoreError::ValidationError(
-                ErrorContext::new(format!("{e}"))
-                    .with_location(ErrorLocation::new(file!(), line!())),
-            )
-        })?;
+        let cfg = bincode::config::standard();
+        let (header, _len): (ZeroCopyHeader, usize) =
+            bincode::serde::decode_from_slice(&header_bytes, cfg).map_err(|e| {
+                CoreError::ValidationError(
+                    ErrorContext::new(format!("{e}"))
+                        .with_location(ErrorLocation::new(file!(), line!())),
+                )
+            })?;
 
         // Validate type
         if header.element_size != mem::size_of::<A>() {
@@ -932,12 +935,14 @@ impl<A: ZeroCopySerializable> MemoryMappedArray<A> {
         file.read_exact(&mut header_bytes)?;
 
         // Deserialize header
-        let header: ZeroCopyHeader = bincode::deserialize(&header_bytes).map_err(|e| {
-            CoreError::ValidationError(
-                ErrorContext::new(format!("{e}"))
-                    .with_location(ErrorLocation::new(file!(), line!())),
-            )
-        })?;
+        let cfg = bincode::config::standard();
+        let (header, _len): (ZeroCopyHeader, usize) =
+            bincode::serde::decode_from_slice(&header_bytes, cfg).map_err(|e| {
+                CoreError::ValidationError(
+                    ErrorContext::new(format!("{e}"))
+                        .with_location(ErrorLocation::new(file!(), line!())),
+                )
+            })?;
 
         // Parse metadata JSON or return empty object if none
         match header.metadata_json {
@@ -1048,12 +1053,14 @@ impl<A: ZeroCopySerializable> MemoryMappedArray<A> {
         file.read_exact(&mut header_bytes)?;
 
         // Deserialize header
-        let mut header: ZeroCopyHeader = bincode::deserialize(&header_bytes).map_err(|e| {
-            CoreError::ValidationError(
-                ErrorContext::new(format!("{e}"))
-                    .with_location(ErrorLocation::new(file!(), line!())),
-            )
-        })?;
+        let cfg = bincode::config::standard();
+        let (mut header, _len): (ZeroCopyHeader, usize) =
+            bincode::serde::decode_from_slice(&header_bytes, cfg).map_err(|e| {
+                CoreError::ValidationError(
+                    ErrorContext::new(format!("{e}"))
+                        .with_location(ErrorLocation::new(file!(), line!())),
+                )
+            })?;
 
         // Update metadata
         header.metadata_json = Some(serde_json::to_string(&metadata).map_err(|e| {
@@ -1064,7 +1071,8 @@ impl<A: ZeroCopySerializable> MemoryMappedArray<A> {
         })?);
 
         // Serialize updated header
-        let new_header_bytes = bincode::serialize(&header).map_err(|e| {
+        let cfg = bincode::config::standard();
+        let new_header_bytes = bincode::serde::encode_to_vec(&header, cfg).map_err(|e| {
             CoreError::ValidationError(
                 ErrorContext::new(format!("{e}"))
                     .with_location(ErrorLocation::new(file!(), line!())),

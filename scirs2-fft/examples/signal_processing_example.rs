@@ -14,7 +14,7 @@ fn main() {
 /*
 // Original code preserved for future use:
 
-use num_complex::Complex64;
+use scirs2_core::Complex64;
 use scirs2_fft::fft::{self, fft};
 use scirs2_fft::signal_processing::{
     convolve, cross_correlate, design_fir_filter, fir_filter, frequency_filter, FilterSpec,

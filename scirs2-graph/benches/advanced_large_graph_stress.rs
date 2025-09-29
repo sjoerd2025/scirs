@@ -4,7 +4,7 @@
 //! (>1M nodes) using Advanced mode for optimization.
 
 use criterion::{criterion_group, criterion_main, Criterion};
-use rand::{rng, Rng};
+use scirs2_core::random::prelude::*;
 use scirs2_graph::advanced::{
     create_enhanced_advanced_processor, create_large_graph_advanced_processor,
     create_realtime_advanced_processor, execute_with_enhanced_advanced, AdvancedConfig,
@@ -330,10 +330,7 @@ fn stress_test_algorithms(
     // Test 1: Connected Components (Real algorithm)
     println!("  Testing connected components...");
     let start = Instant::now();
-    let result =
-        execute_with_enhanced_advanced(processor, graph, "stress_connected_components", |g| {
-            Ok(connected_components(g))
-        });
+    let result = execute_with_enhanced_advanced(graph, |g| Ok(connected_components(g)));
     let elapsed = start.elapsed();
     results.insert(format!("{}_connected_components", test_name), elapsed);
     match result {
@@ -344,7 +341,7 @@ fn stress_test_algorithms(
     // Test 2: PageRank (Memory and computation intensive)
     println!("  Testing PageRank...");
     let start = Instant::now();
-    let result = execute_with_enhanced_advanced(processor, graph, "stress_pagerank", |g| {
+    let result = execute_with_enhanced_advanced(graph, |g| {
         pagerank_centrality(g, 0.85, 1e-4) // Using pagerank_centrality for undirected graphs
     });
     let elapsed = start.elapsed();
@@ -361,10 +358,7 @@ fn stress_test_algorithms(
     // Test 3: Community Detection (Complex algorithm)
     println!("  Testing community detection...");
     let start = Instant::now();
-    let result =
-        execute_with_enhanced_advanced(processor, graph, "stress_community_detection", |g| {
-            Ok(louvain_communities_result(g))
-        });
+    let result = execute_with_enhanced_advanced(graph, |g| Ok(louvain_communities_result(g)));
     let elapsed = start.elapsed();
     results.insert(format!("{}_community_detection", test_name), elapsed);
     match result {
@@ -381,10 +375,9 @@ fn stress_test_algorithms(
         println!("  Testing shortest paths...");
         let start = Instant::now();
         let source_node = graph.nodes().into_iter().next().cloned().unwrap_or(0);
-        let result =
-            execute_with_enhanced_advanced(processor, graph, "stress_shortest_paths", |g| {
-                dijkstra_path(g, &source_node, &(g.node_count() / 2))
-            });
+        let result = execute_with_enhanced_advanced(graph, |g| {
+            dijkstra_path(g, &source_node, &(g.node_count() / 2))
+        });
         let elapsed = start.elapsed();
         results.insert(format!("{}_shortest_paths", test_name), elapsed);
         match result {
@@ -398,25 +391,24 @@ fn stress_test_algorithms(
     // Test 5: Memory pressure test
     println!("  Testing memory optimization...");
     let start = Instant::now();
-    let result =
-        execute_with_enhanced_advanced(processor, graph, "stress_memory_optimization", |g| {
-            // Memory-intensive operation: collect all edges and process them
-            let edges: Vec<_> = g
-                .edges()
-                .into_iter()
-                .map(|edge| (edge.source, edge.target, edge.weight))
-                .collect();
-            let mut memory_test_data = Vec::with_capacity(edges.len() * 2);
+    let result = execute_with_enhanced_advanced(graph, |g| {
+        // Memory-intensive operation: collect all edges and process them
+        let edges: Vec<_> = g
+            .edges()
+            .into_iter()
+            .map(|edge| (edge.source, edge.target, edge.weight))
+            .collect();
+        let mut memory_test_data = Vec::with_capacity(edges.len() * 2);
 
-            for (source, target, weight) in &edges {
-                memory_test_data.push(*source as f64 * weight);
-                memory_test_data.push(*target as f64 * weight);
-            }
+        for (source, target, weight) in &edges {
+            memory_test_data.push(*source as f64 * weight);
+            memory_test_data.push(*target as f64 * weight);
+        }
 
-            // Simulate computation
-            let result: f64 = memory_test_data.iter().sum();
-            Ok(result as usize)
-        });
+        // Simulate computation
+        let result: f64 = memory_test_data.iter().sum();
+        Ok(result as usize)
+    });
     let elapsed = start.elapsed();
     results.insert(format!("{}_memory_optimization", test_name), elapsed);
     match result {
@@ -452,12 +444,11 @@ fn extreme_stress_test(
     // Test 1: Memory-optimized connected components
     println!("  🔗 Testing connected components (memory-optimized)...");
     let start = Instant::now();
-    let result =
-        execute_with_enhanced_advanced(processor, graph, "extreme_connected_components", |g| {
-            use scirs2_graph::algorithms::connectivity::connected_components;
-            let components = connected_components(g);
-            Ok(format!("Found {} components", components.len()))
-        });
+    let result = execute_with_enhanced_advanced(graph, |g| {
+        use scirs2_graph::algorithms::connectivity::connected_components;
+        let components = connected_components(g);
+        Ok(format!("Found {} components", components.len()))
+    });
     let elapsed = start.elapsed();
     let memory_after = get_memory_usage();
     println!(
@@ -487,7 +478,7 @@ fn extreme_stress_test(
         // Only for manageable sizes
         println!("  📈 Testing streaming PageRank...");
         let start = Instant::now();
-        let result = execute_with_enhanced_advanced(processor, graph, "extreme_pagerank", |_g| {
+        let result = execute_with_enhanced_advanced(graph, |_g| {
             // Skip pagerank for regular graphs as it requires DiGraph
             // Just return a dummy value for benchmarking purposes
             Ok(format!("Skipped PageRank (requires DiGraph, got Graph)"))
@@ -519,7 +510,7 @@ fn extreme_stress_test(
     // Test 3: Memory pressure test
     println!("  💾 Testing memory pressure handling...");
     let start = Instant::now();
-    let result = execute_with_enhanced_advanced(processor, graph, "extreme_memory_pressure", |g| {
+    let result = execute_with_enhanced_advanced(graph, |g| {
         // Deliberately create memory pressure
         let mut memory_hog: Vec<Vec<f64>> = Vec::new();
         let chunk_size = 100_000;
@@ -601,7 +592,7 @@ fn failure_recovery_stress_test(
     // Test 1: Algorithm timeout simulation
     println!("  ⏰ Testing timeout handling...");
     let start = Instant::now();
-    let result = execute_with_enhanced_advanced(processor, graph, "timeout_test", |_g| {
+    let result = execute_with_enhanced_advanced(graph, |_g| {
         // Simulate a long-running algorithm
         std::thread::sleep(Duration::from_millis(100));
         Ok("Timeout test completed")
@@ -628,7 +619,7 @@ fn failure_recovery_stress_test(
     // Test 2: Memory allocation failure simulation
     println!("  💾 Testing memory allocation failure...");
     let start = Instant::now();
-    let result = execute_with_enhanced_advanced(processor, graph, "memory_failure_test", |g| {
+    let result = execute_with_enhanced_advanced(graph, |g| {
         // Try to allocate a large amount of memory
         let node_count = g.node_count();
         if node_count > 1_000_000 {
@@ -663,16 +654,13 @@ fn failure_recovery_stress_test(
 
     // Run a series of operations
     for i in 0..3 {
-        let _ =
-            execute_with_enhanced_advanced(processor, graph, &format!("state_test_{}", i), |g| {
-                Ok(g.node_count() + i)
-            });
+        let _ = execute_with_enhanced_advanced(graph, |g| Ok(g.node_count() + i));
     }
 
     let stats_after = processor.get_optimization_stats();
     let elapsed = start.elapsed();
 
-    if stats_after.total_optimizations >= stats_before.total_optimizations {
+    if stats_after.total_operations >= stats_before.total_operations {
         results.insert(
             "processor_state_recovery".to_string(),
             (elapsed, "✅ Processor state maintained".to_string()),
@@ -749,7 +737,7 @@ fn concurrent_processor_stress_test(
                 thread_elapsed,
                 cc_result.is_ok(),
                 pr_result.is_ok(),
-                stats.total_optimizations,
+                stats.total_operations,
                 stats.average_speedup,
             ));
         });
@@ -770,7 +758,7 @@ fn concurrent_processor_stress_test(
         .iter()
         .filter(|(_, _, cc_ok, pr_ok, _, _)| *cc_ok && *pr_ok)
         .count();
-    let total_optimizations: usize = results_guard.iter().map(|(_, _, _, _, opt, _)| opt).sum();
+    let total_operations: usize = results_guard.iter().map(|(_, _, _, _, opt, _)| opt).sum();
     let avg_speedup: f64 = results_guard
         .iter()
         .map(|(_, _, _, _, _, speedup)| speedup)
@@ -785,7 +773,7 @@ fn concurrent_processor_stress_test(
                 "✅ {}/{} threads successful, {} total optimizations, {:.2}x avg speedup",
                 successful_threads,
                 results_guard.len(),
-                total_optimizations,
+                total_operations,
                 avg_speedup
             ),
         ),
@@ -877,13 +865,12 @@ fn bench_memory_usage(c: &mut Criterion) {
                 let mut processor = create_large_graph_advanced_processor();
 
                 // Simulate memory-intensive operations
-                let _results =
-                    execute_with_enhanced_advanced(&mut processor, &graph, "memory_test", |g| {
-                        // Force memory allocation
-                        let nodes: Vec<_> = g.nodes().into_iter().collect();
-                        let _edges: Vec<_> = g.edges().into_iter().collect();
-                        Ok(nodes.len())
-                    });
+                let _results = execute_with_enhanced_advanced(&graph, |g| {
+                    // Force memory allocation
+                    let nodes: Vec<_> = g.nodes().into_iter().collect();
+                    let _edges: Vec<_> = g.edges().into_iter().collect();
+                    Ok(nodes.len())
+                });
 
                 black_box(processor.get_optimization_stats())
             })
@@ -1097,29 +1084,24 @@ fn bench_memory_usage_analysis(c: &mut Criterion) {
                 let start = Instant::now();
                 for _ in 0..iters {
                     // Memory-intensive operations
-                    let result = execute_with_enhanced_advanced(
-                        &mut processor,
-                        &graph,
-                        "memory_stress",
-                        |g| {
-                            // Simulate various memory access patterns
-                            let mut memory_data = Vec::new();
+                    let result = execute_with_enhanced_advanced(&graph, |g| {
+                        // Simulate various memory access patterns
+                        let mut memory_data = Vec::new();
 
-                            // Sequential access
-                            for node in g.nodes() {
-                                memory_data.push(*node as f64);
-                            }
+                        // Sequential access
+                        for node in g.nodes() {
+                            memory_data.push(*node as f64);
+                        }
 
-                            // Random access simulation
-                            let mut rng = rng();
-                            for _ in 0..1000 {
-                                let idx = rng.gen_range(0..memory_data.len());
-                                memory_data[idx] *= 1.1;
-                            }
+                        // Random access simulation
+                        let mut rng = rng();
+                        for _ in 0..1000 {
+                            let idx = rng.gen_range(0..memory_data.len());
+                            memory_data[idx] *= 1.1;
+                        }
 
-                            Ok(memory_data.len())
-                        },
-                    );
+                        Ok(memory_data.len())
+                    });
                     black_box(result);
                 }
                 start.elapsed()
@@ -1149,11 +1131,10 @@ fn bench_scaling_analysis(c: &mut Criterion) {
             b.iter_custom(|iters| {
                 let start = Instant::now();
                 for _ in 0..iters {
-                    let result =
-                        execute_with_enhanced_advanced(&mut processor, &graph, "scaling_cc", |g| {
-                            use scirs2_graph::algorithms::connectivity::connected_components;
-                            Ok(connected_components(g))
-                        });
+                    let result = execute_with_enhanced_advanced(&graph, |g| {
+                        use scirs2_graph::algorithms::connectivity::connected_components;
+                        Ok(connected_components(g))
+                    });
                     black_box(result);
                 }
                 start.elapsed()
@@ -1164,13 +1145,12 @@ fn bench_scaling_analysis(c: &mut Criterion) {
             b.iter_custom(|iters| {
                 let start = Instant::now();
                 for _ in 0..iters {
-                    let result =
-                        execute_with_enhanced_advanced(&mut processor, &graph, "scaling_pr", |g| {
-                            // Convert to DiGraph if needed or compute an alternative metric
-                            let node_count = g.node_count();
-                            let edge_count = g.edge_count();
-                            Ok(node_count + edge_count) // Return a simple metric instead
-                        });
+                    let result = execute_with_enhanced_advanced(&graph, |g| {
+                        // Convert to DiGraph if needed or compute an alternative metric
+                        let node_count = g.node_count();
+                        let edge_count = g.edge_count();
+                        Ok(node_count + edge_count) // Return a simple metric instead
+                    });
                     black_box(result);
                 }
                 start.elapsed()
@@ -1412,14 +1392,16 @@ pub fn run_comprehensive_stress_tests() {
 
     let stats = processor.get_optimization_stats();
     println!("  📊 Final optimization statistics:");
-    println!("    Total optimizations: {}", stats.total_optimizations);
-    println!("    Average speedup: {:.2}x", stats.average_speedup);
-    println!("    GPU utilization: {:.1}%", stats.gpu_utilization * 100.0);
+    println!("    Total optimizations: {}", stats.total_operations);
+    // Average speedup field not available in current AdvancedStats
+    // println!("    Average speedup: {:.2}x", stats.average_speedup);
+    println!("    GPU utilization: {:.1}%", stats.gpu_utilization_percent);
     println!("    Memory efficiency: {:.2}", stats.memory_efficiency);
-    println!(
-        "    Neural RL exploration rate: {:.3}",
-        stats.neural_rl_epsilon
-    );
+    // Neural RL epsilon field not available in current AdvancedStats
+    // println!(
+    //     "    Neural RL exploration rate: {:.3}",
+    //     stats.neural_rl_epsilon
+    // );
 
     println!("\n✅ Comprehensive stress tests completed!");
 }

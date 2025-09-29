@@ -4,7 +4,7 @@
 //! discovering optimal processing architectures for computer vision tasks.
 
 use crate::error::Result;
-use scirs2_core::rng;
+use scirs2_core::random::prelude::*;
 use std::collections::HashMap;
 use std::time::Instant;
 
@@ -241,7 +241,7 @@ impl NeuralArchitectureSearch {
     /// Random architecture search
     fn random_search(&self, numcandidates: usize) -> Vec<ProcessingArchitecture> {
         let mut candidates = Vec::new();
-        let mut rng = rng();
+        let mut rng = thread_rng();
 
         for i in 0..numcandidates {
             let depth =
@@ -284,7 +284,7 @@ impl NeuralArchitectureSearch {
 
         // Evolve existing population
         let mut new_population = Vec::new();
-        let mut rng = rng();
+        let mut rng = thread_rng();
 
         // Select best performing architectures
         let mut ranked_archs: Vec<_> = self
@@ -379,7 +379,7 @@ impl NeuralArchitectureSearch {
         parent1: &ProcessingArchitecture,
         parent2: &ProcessingArchitecture,
     ) -> ProcessingArchitecture {
-        let mut rng = rng();
+        let mut rng = thread_rng();
         let min_depth = parent1.layers.len().min(parent2.layers.len());
         let crossover_point = rng.gen_range(1..min_depth);
 
@@ -412,11 +412,11 @@ impl NeuralArchitectureSearch {
         &self,
         mut architecture: ProcessingArchitecture,
     ) -> ProcessingArchitecture {
-        let mut rng = rng();
+        let mut rng = thread_rng();
 
         // Randomly mutate some layers
         for layer in &mut architecture.layers {
-            if rng.random_f64() < 0.1 {
+            if rng.gen::<f64>() < 0.1 {
                 // 10% mutation rate
                 let idx = rng.gen_range(0..self._searchspace.layer_types.len());
                 *layer = self._searchspace.layer_types[idx].clone();

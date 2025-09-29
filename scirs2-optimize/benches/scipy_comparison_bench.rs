@@ -4,8 +4,8 @@
 //! their SciPy counterparts on a variety of test problems.
 
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
-use ndarray::{array, Array1, ArrayView1};
-use rand::{rng, Rng};
+use scirs2_core::ndarray::{array, Array1, ArrayView1};
+use scirs2_core::random::{thread_rng, Rng};
 use scirs2_optimize::global::{differential_evolution, DifferentialEvolutionOptions};
 use scirs2_optimize::least_squares::least_squares;
 use scirs2_optimize::unconstrained::{minimize, Method, Options};
@@ -15,7 +15,7 @@ use std::time::Duration;
 /// Standard test functions for optimization benchmarking
 #[allow(dead_code)]
 mod test_functions {
-    use ndarray::ArrayView1;
+    use scirs2_core::ndarray::ArrayView1;
 
     /// Rosenbrock function (2D)
     pub fn rosenbrock(x: &ArrayView1<f64>) -> f64 {
@@ -136,42 +136,61 @@ fn get_benchmark_problems() -> Vec<BenchmarkConfig> {
         BenchmarkConfig {
             name: "Rosenbrock",
             function: test_functions::rosenbrock,
-            initial_points: vec![array![0.0, 0.0], array![-1.0, 1.0], array![2.0, 2.0]],
+            initial_points: vec![
+                scirs2_core::ndarray::array![0.0, 0.0],
+                scirs2_core::ndarray::array![-1.0, 1.0],
+                scirs2_core::ndarray::array![2.0, 2.0],
+            ],
             optimal_value: 0.0,
             dimensions: vec![2],
         },
         BenchmarkConfig {
             name: "Sphere",
             function: test_functions::sphere,
-            initial_points: vec![array![1.0, 1.0], array![5.0, 5.0]],
+            initial_points: vec![
+                scirs2_core::ndarray::array![1.0, 1.0],
+                scirs2_core::ndarray::array![5.0, 5.0],
+            ],
             optimal_value: 0.0,
             dimensions: vec![2, 10, 50],
         },
         BenchmarkConfig {
             name: "Rastrigin",
             function: test_functions::rastrigin,
-            initial_points: vec![array![1.0, 1.0], array![4.0, 4.0]],
+            initial_points: vec![
+                scirs2_core::ndarray::array![1.0, 1.0],
+                scirs2_core::ndarray::array![4.0, 4.0],
+            ],
             optimal_value: 0.0,
             dimensions: vec![2, 10],
         },
         BenchmarkConfig {
             name: "Ackley",
             function: test_functions::ackley,
-            initial_points: vec![array![1.0, 1.0], array![2.5, 2.5]],
+            initial_points: vec![
+                scirs2_core::ndarray::array![1.0, 1.0],
+                scirs2_core::ndarray::array![2.5, 2.5],
+            ],
             optimal_value: 0.0,
             dimensions: vec![2, 10],
         },
         BenchmarkConfig {
             name: "Beale",
             function: test_functions::beale,
-            initial_points: vec![array![1.0, 1.0], array![0.0, 0.0]],
+            initial_points: vec![
+                scirs2_core::ndarray::array![1.0, 1.0],
+                scirs2_core::ndarray::array![0.0, 0.0],
+            ],
             optimal_value: 0.0,
             dimensions: vec![2],
         },
         BenchmarkConfig {
             name: "Himmelblau",
             function: test_functions::himmelblau,
-            initial_points: vec![array![0.0, 0.0], array![1.0, 1.0]],
+            initial_points: vec![
+                scirs2_core::ndarray::array![0.0, 0.0],
+                scirs2_core::ndarray::array![1.0, 1.0],
+            ],
             optimal_value: 0.0,
             dimensions: vec![2],
         },
@@ -326,13 +345,13 @@ fn bench_least_squares(c: &mut Criterion) {
         let x_data: Vec<f64> = (0..n).map(|i| i as f64 / n as f64).collect();
         let y_data: Vec<f64> = x_data
             .iter()
-            .map(|&x| 2.0 + 3.0 * x + 0.1 * rand::rng().random::<f64>())
+            .map(|&x| 2.0 + 3.0 * x + 0.1 * thread_rng().gen::<f64>())
             .collect();
         let mut data_vec = x_data;
         data_vec.extend(y_data);
         let data = Array1::from_vec(data_vec);
 
-        let x0 = array![0.0, 0.0];
+        let x0 = scirs2_core::ndarray::array![0.0, 0.0];
 
         group.bench_with_input(
             BenchmarkId::new("LM", n),
@@ -343,7 +362,7 @@ fn bench_least_squares(c: &mut Criterion) {
                         residual,
                         x0,
                         scirs2_optimize::least_squares::Method::LevenbergMarquardt,
-                        None::<fn(&[f64], &[f64]) -> ndarray::Array2<f64>>,
+                        None::<fn(&[f64], &[f64]) -> scirs2_core::ndarray::Array2<f64>>,
                         data,
                         Some(scirs2_optimize::least_squares::Options {
                             ..Default::default()

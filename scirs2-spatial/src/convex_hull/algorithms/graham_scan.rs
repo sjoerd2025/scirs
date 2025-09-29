@@ -7,8 +7,8 @@
 use crate::convex_hull::core::ConvexHull;
 use crate::convex_hull::geometry::calculations_2d::{compute_2d_hull_equations, cross_product_2d};
 use crate::error::{SpatialError, SpatialResult};
-use ndarray::ArrayView2;
 use qhull::Qh;
+use scirs2_core::ndarray::ArrayView2;
 
 /// Compute convex hull using Graham scan algorithm (2D only)
 ///
@@ -34,7 +34,7 @@ use qhull::Qh;
 ///
 /// ```rust
 /// use scirs2_spatial::convex_hull::algorithms::graham_scan::compute_graham_scan;
-/// use ndarray::array;
+/// use scirs2_core::ndarray::array;
 ///
 /// let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [0.5, 0.5]];
 /// let hull = compute_graham_scan(&points.view()).unwrap();
@@ -172,7 +172,7 @@ pub fn compute_graham_scan(points: &ArrayView2<'_, f64>) -> SpatialResult<Convex
 ///
 /// ```rust
 /// use scirs2_spatial::convex_hull::algorithms::graham_scan::find_start_point;
-/// use ndarray::array;
+/// use scirs2_core::ndarray::array;
 ///
 /// let points = array![[1.0, 1.0], [0.0, 0.0], [2.0, 0.0], [0.0, 1.0]];
 /// let start_idx = find_start_point(&points.view());
@@ -210,7 +210,7 @@ pub fn find_start_point(points: &ArrayView2<'_, f64>) -> usize {
 ///
 /// ```rust
 /// use scirs2_spatial::convex_hull::algorithms::graham_scan::sort_by_polar_angle;
-/// use ndarray::array;
+/// use scirs2_core::ndarray::array;
 ///
 /// let points = array![[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]];
 /// let reference = [0.0, 0.0];
@@ -272,7 +272,7 @@ pub fn is_ccw_turn(p1: [f64; 2], p2: [f64; 2], p3: [f64; 2]) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::arr2;
+    use scirs2_core::ndarray::arr2;
 
     #[test]
     fn test_graham_scan_basic() {

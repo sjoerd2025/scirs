@@ -898,7 +898,6 @@ mod tests {
     use ndarray::array;
 
     #[test]
-    #[ignore = "timeout"]
     fn test_lda_basic() {
         // Create non-degenerate data with proper variance in multiple dimensions
         let x = array![

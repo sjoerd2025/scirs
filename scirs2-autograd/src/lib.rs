@@ -134,6 +134,7 @@ pub mod evaluation;
 mod gradient;
 pub mod gradient_clipping;
 pub mod graph;
+pub mod high_performance;
 pub mod hooks;
 pub mod integration;
 pub mod ndarray_ext;
@@ -235,4 +236,10 @@ pub(crate) use graph::Graph;
 
 pub use crate::error::{AutogradError, EvalError, OpError, Result};
 pub use crate::graph::{run, Context};
-pub use crate::variable::VariableEnvironment;
+pub use crate::high_performance::{
+    memory_efficient_grad_accumulation, parallel_gradient_computation, simd_backward_pass,
+    ultra_backward_pass,
+};
+pub use crate::variable::{
+    AutogradTensor, SafeVariable, SafeVariableEnvironment, VariableEnvironment,
+};

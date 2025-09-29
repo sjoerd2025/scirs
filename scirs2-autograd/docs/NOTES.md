@@ -32,7 +32,7 @@ We've made several enhancements to the matrix operations for improved numerical 
 
 ## Testing Challenges
 
-Due to the current state of the tensor evaluation system in this alpha version of the library (0.1.0-alpha.3), we were unable to directly test these enhancements using the high-level tensor API. The current implementation of `Graph::eval_tensors` appears to be a placeholder that always returns zero tensors.
+Due to the current state of the tensor evaluation system in this beta version of the library (0.1.0-beta.3), we were unable to directly test these enhancements using the high-level tensor API. The current implementation of `Graph::eval_tensors` appears to be a placeholder that always returns zero tensors.
 
 To properly test these enhancements, we need one of the following:
 1. A fully implemented evaluation system in the library

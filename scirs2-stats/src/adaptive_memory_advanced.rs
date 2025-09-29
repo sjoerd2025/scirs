@@ -2764,7 +2764,6 @@ mod tests {
     use super::*;
 
     #[test]
-    #[ignore = "timeout"]
     fn test_adaptive_memory_manager_creation() {
         let manager = AdaptiveMemoryManager::<f64>::new();
         let stats = manager.get_memory_stats();
@@ -2772,7 +2771,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_memory_allocation() {
         let manager = AdaptiveMemoryManager::<f64>::new();
         let ptr = manager.allocate(1024).unwrap();
@@ -2783,7 +2781,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_performance_metrics() {
         let manager = AdaptiveMemoryManager::<f64>::new();
         let metrics = manager.get_performance_metrics();
@@ -2804,7 +2801,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_config_update() {
         let mut manager = AdaptiveMemoryManager::<f64>::new();
         let mut new_config = AdaptiveMemoryConfig::default();

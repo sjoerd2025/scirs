@@ -30,7 +30,7 @@
 //!
 //! ```
 //! use scirs2_spatial::ai_driven_optimization::{AIAlgorithmSelector, MetaLearningOptimizer};
-//! use ndarray::array;
+//! use scirs2_core::ndarray::array;
 //!
 //! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
 //! // AI-driven algorithm selection
@@ -60,7 +60,7 @@
 //! ```
 
 use crate::error::{SpatialError, SpatialResult};
-use ndarray::{Array1, Array2, ArrayView2, Axis};
+use scirs2_core::ndarray::{Array1, Array2, ArrayView2, Axis};
 use std::collections::{HashMap, VecDeque};
 use std::time::Instant;
 
@@ -1549,7 +1549,7 @@ impl MetaLearningModel {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::array;
+    use scirs2_core::ndarray::array;
 
     #[tokio::test]
     #[ignore]

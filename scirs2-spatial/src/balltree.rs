@@ -22,8 +22,8 @@
 use crate::distance::{Distance, EuclideanDistance};
 use crate::error::{SpatialError, SpatialResult};
 use crate::safe_conversions::*;
-use ndarray::{Array1, Array2, ArrayView2};
 use num_traits::Float;
+use scirs2_core::ndarray::{Array1, Array2, ArrayView2};
 use std::cmp::Ordering;
 use std::marker::PhantomData;
 
@@ -711,7 +711,7 @@ mod tests {
     use super::BallTree;
     use crate::distance::euclidean;
     use approx::assert_relative_eq;
-    use ndarray::arr2;
+    use scirs2_core::ndarray::arr2;
 
     #[test]
     fn test_ball_tree_construction() {

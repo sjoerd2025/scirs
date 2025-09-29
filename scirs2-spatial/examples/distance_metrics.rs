@@ -1,4 +1,4 @@
-use ndarray::array;
+use scirs2_core::ndarray::array;
 use scirs2_spatial::distance::*;
 
 #[allow(dead_code)]

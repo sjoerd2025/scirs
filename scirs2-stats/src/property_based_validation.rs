@@ -1034,7 +1034,6 @@ mod tests {
     use super::*;
 
     #[test]
-    #[ignore = "timeout"]
     fn test_property_validator_creation() {
         let validator = PropertyBasedValidator::default();
         assert_eq!(validator.config.test_cases_per_property, 1000);
@@ -1042,7 +1041,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_mean_translation_invariance() {
         let property = MeanTranslationInvariance;
         let testdata = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
@@ -1053,7 +1051,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_variance_translation_invariance() {
         let property = VarianceTranslationInvariance;
         let testdata = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0]);

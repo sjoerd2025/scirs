@@ -5,8 +5,8 @@
 //! homeostatic regulation, metaplasticity, and neuromodulation for spatial learning.
 
 use crate::error::SpatialResult;
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
-use rand::Rng;
+use scirs2_core::ndarray::{Array1, Array2, ArrayView1, ArrayView2};
+use scirs2_core::random::Rng;
 use std::collections::VecDeque;
 
 /// Advanced memristive learning system with synaptic plasticity and homeostasis
@@ -26,7 +26,7 @@ use std::collections::VecDeque;
 ///
 /// # Example
 /// ```rust
-/// use ndarray::{Array1, Array2};
+/// use scirs2_core::ndarray::{Array1, Array2};
 /// use scirs2_spatial::neuromorphic::algorithms::AdvancedMemristiveLearning;
 /// use scirs2_spatial::neuromorphic::MemristiveDeviceType;
 ///
@@ -1496,7 +1496,7 @@ impl LearningHistory {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::array;
+    use scirs2_core::ndarray::array;
 
     #[test]
     fn test_advanced_memristive_learning_creation() {

@@ -14,7 +14,7 @@
 //! Run with: cargo run --example comprehensive_validation_framework
 
 use ndarray::Array1;
-use num_complex::Complex64;
+use scirs2_core::Complex64;
 use scirs2_special::*;
 use std::f64::consts::PI;
 use std::time::Instant;

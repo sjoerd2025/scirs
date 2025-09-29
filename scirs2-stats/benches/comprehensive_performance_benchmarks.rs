@@ -5,9 +5,9 @@
 //! parallel processing implementations.
 
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
-use ndarray::{Array1, Array2, Axis};
-use rand::rngs::StdRng;
-use rand::{Rng, SeedableRng};
+use scirs2_core::ndarray::{Array1, Array2, Axis};
+use scirs2_core::random::rngs::StdRng;
+use scirs2_core::random::{Rng, SeedableRng};
 use scirs2_stats::distributions::{
     beta::Beta, gamma::Gamma, normal::Normal, uniform::Uniform as StatsUniform,
 };

@@ -1,7 +1,7 @@
 //! Simple example testing the CZT functionality
 
 use ndarray::Array1;
-use num_complex::Complex;
+use scirs2_core::Complex;
 use scirs2_fft::{czt, zoom_fft};
 
 #[allow(dead_code)]

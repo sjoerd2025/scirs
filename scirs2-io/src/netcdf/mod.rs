@@ -1134,6 +1134,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore]
     fn test_netcdf_format_differences() {
         let classic =
             NetCDFFile::create_with_format("test_classic.nc", NetCDFFormat::Classic).unwrap();

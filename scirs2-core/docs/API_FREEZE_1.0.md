@@ -175,9 +175,9 @@ For questions about API stability or migration:
 ## Version History
 
 - **1.0.0** - Initial stable release with frozen API
-- **0.1.0-beta.2** - Final beta before API freeze
+- **0.1.0-beta.3** - Final beta before API freeze
 
 ---
 
 *This document is part of the scirs2-core 1.0 release.*
-*Last updated: 2025-06-27*
+*Last updated: 2025-07-27*

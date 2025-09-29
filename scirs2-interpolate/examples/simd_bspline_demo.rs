@@ -136,7 +136,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         // 5. Accuracy verification
         println!("\n5. Accuracy Verification:");
 
-        let test_points = Array1::from_vec(vec![0.5, 1.0, 2.5, 3.14159, 5.0, 7.5, 8.9, 9.5]);
+        let test_points = Array1::from_vec(vec![
+            0.5,
+            1.0,
+            2.5,
+            std::f64::consts::PI,
+            5.0,
+            7.5,
+            8.9,
+            9.5,
+        ]);
 
         println!("   Testing {} specific points:", test_points.len());
 

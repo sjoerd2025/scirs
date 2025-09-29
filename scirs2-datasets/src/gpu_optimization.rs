@@ -9,8 +9,9 @@ use crate::gpu::{GpuBackend, GpuContext};
 use ndarray::{Array2, Axis};
 // Use local GPU implementation to avoid feature flag issues
 // TODO: Re-enable core GPU integration when features are stabilized
-use rand_distr::Uniform;
 use scirs2_core::parallel_ops::*;
+use scirs2_core::random::prelude::*;
+use scirs2_core::random::rand_distributions::Uniform;
 use std::collections::HashMap;
 use std::sync::Arc;
 
@@ -828,7 +829,7 @@ impl AdvancedGpuOptimizer {
         use rand::{rng, Rng};
         use rand_distr::{Distribution, Normal, Uniform};
 
-        let _rng = rng();
+        let _rng = thread_rng();
         let total_elements = rows * cols;
 
         // Generate data in parallel chunks
@@ -838,7 +839,7 @@ impl AdvancedGpuOptimizer {
             .into_par_iter()
             .chunks(chunk_size)
             .flat_map(|chunk| {
-                let mut local_rng = rng();
+                let mut local_rng = thread_rng();
                 chunk
                     .into_iter()
                     .map(|_| match distribution {

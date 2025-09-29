@@ -293,7 +293,7 @@ impl<F: Float + NumCast + Debug + std::fmt::Display> Exponential<F> {
     /// assert_eq!(samples.len(), 1000);
     /// ```
     pub fn rvs_vec(&self, size: usize) -> StatsResult<Vec<F>> {
-        let mut rng = rand::rng();
+        let mut rng = rand::thread_rng();
         let mut samples = Vec::with_capacity(size);
 
         for _ in 0..size {
@@ -362,7 +362,6 @@ mod tests {
     use approx::assert_relative_eq;
 
     #[test]
-    #[ignore = "timeout"]
     fn test_exponential_creation() {
         // Basic exponential distribution with rate=1
         let exp = Exponential::new(1.0, 0.0).unwrap();

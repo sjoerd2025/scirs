@@ -1,5 +1,5 @@
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
-use rand::Rng;
+use scirs2_core::random::prelude::*;
 use scirs2_fft::{
     sparse_fft::{sparse_fft, SparseFFTAlgorithm, WindowFunction},
     sparse_fft_gpu::{gpu_sparse_fft, GPUBackend},

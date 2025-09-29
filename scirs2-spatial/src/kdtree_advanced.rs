@@ -18,7 +18,7 @@
 //!
 //! ```
 //! use scirs2_spatial::kdtree_advanced::{AdvancedKDTree, KDTreeConfig};
-//! use ndarray::array;
+//! use scirs2_core::ndarray::array;
 //!
 //! # fn example() -> Result<(), Box<dyn std::error::Error>> {
 //! // Create advanced-optimized KD-Tree
@@ -41,7 +41,7 @@
 
 use crate::error::{SpatialError, SpatialResult};
 use crate::memory_pool::DistancePool;
-use ndarray::{Array2, ArrayView1, ArrayView2};
+use scirs2_core::ndarray::{Array2, ArrayView1, ArrayView2};
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
 use std::cmp::Ordering;
@@ -806,7 +806,7 @@ mod tests {
     use super::{AdvancedKDTree, BoundingBox, KDTreeConfig};
     #[allow(unused_imports)]
     use approx::assert_relative_eq;
-    use ndarray::array;
+    use scirs2_core::ndarray::array;
 
     #[test]
     fn test_advanced_kdtree_creation() {

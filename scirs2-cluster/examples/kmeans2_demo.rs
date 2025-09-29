@@ -2,9 +2,9 @@
 //!
 //! This example shows how to use kmeans2 with different initialization strategies.
 
-use ndarray::{Array1, Array2};
-use rand::Rng;
 use scirs2_cluster::vq::{kmeans2, whiten, MinitMethod, MissingMethod};
+use scirs2_core::ndarray::{Array1, Array2};
+use scirs2_core::random::prelude::*;
 
 #[allow(dead_code)]
 fn generate_blobs(
@@ -12,7 +12,7 @@ fn generate_blobs(
     centers: &Array2<f64>,
     cluster_std: f64,
 ) -> (Array2<f64>, Array1<i32>) {
-    let mut rng = rand::rng();
+    let mut rng = thread_rng();
     let n_features = centers.shape()[1];
     let n_clusters = centers.shape()[0];
     let samples_per_cluster = n_samples / n_clusters;
@@ -31,7 +31,7 @@ fn generate_blobs(
         for idx in start_idx..end_idx {
             for j in 0..n_features {
                 let center = centers[[i, j]];
-                data[[idx, j]] = center + cluster_std * (rng.random::<f64>() - 0.5) * 2.0;
+                data[[idx, j]] = center + cluster_std * (rng.gen::<f64>() - 0.5) * 2.0;
             }
             labels[idx] = i as i32;
         }

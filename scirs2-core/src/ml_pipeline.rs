@@ -1400,9 +1400,9 @@ mod tests {
 
     #[test]
     fn test_feature_value_conversions() {
-        let float_val = FeatureValue::Float64(3.14);
-        assert_eq!(float_val.as_f64(), Some(3.14));
-        assert_eq!(float_val.as_string(), "3.14");
+        let float_val = FeatureValue::Float64(3.15);
+        assert_eq!(float_val.as_f64(), Some(3.15));
+        assert_eq!(float_val.as_string(), "3.15");
 
         let int_val = FeatureValue::Int32(42);
         assert_eq!(int_val.as_f64(), Some(42.0));

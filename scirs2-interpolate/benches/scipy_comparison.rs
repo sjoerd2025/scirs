@@ -1,5 +1,8 @@
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
-use ndarray::{Array1, Array2};
+use scirs2_core::essentials::Uniform;
+use scirs2_core::ndarray::{Array1, Array2};
+use scirs2_core::random::prelude::*;
+use scirs2_core::random::Distribution;
 use std::hint::black_box;
 use std::time::Duration;
 
@@ -30,8 +33,10 @@ use pyo3::prelude::*;
 fn generate_1d_data(n: usize, noise: bool) -> (Array1<f64>, Array1<f64>) {
     let x = Array1::linspace(0.0, 10.0, n);
     let y = if noise {
+        let mut rng = thread_rng();
+        let uniform_dist = Uniform::new(0.0, 1.0).unwrap();
         x.mapv(|xi: f64| {
-            (xi * 0.5).sin() + 0.1 * xi + 0.05 * (3.0 * xi).cos() + 0.01 * rand::random::<f64>()
+            (xi * 0.5).sin() + 0.1 * xi + 0.05 * (3.0 * xi).cos() + 0.01 * rng.sample(uniform_dist)
         })
     } else {
         x.mapv(|xi: f64| (xi * 0.5).sin() + 0.1 * xi + 0.05 * (3.0 * xi).cos())
@@ -46,6 +51,9 @@ fn generate_2d_data(n: usize, noise: bool) -> (Array2<f64>, Array1<f64>) {
     let mut values = Array1::zeros(n);
 
     let sqrt_n = (n as f64).sqrt() as usize;
+    let mut rng = thread_rng();
+    let uniform_dist = Uniform::new(0.0, 1.0).unwrap();
+
     for i in 0..sqrt_n {
         for j in 0..sqrt_n {
             let idx = i * sqrt_n + j;
@@ -56,7 +64,7 @@ fn generate_2d_data(n: usize, noise: bool) -> (Array2<f64>, Array1<f64>) {
                 points[[idx, 1]] = y;
                 values[idx] = (x * 0.1).sin() * (y * 0.1).cos() + 0.05 * x + 0.02 * y;
                 if noise {
-                    values[idx] += 0.01 * rand::random::<f64>();
+                    values[idx] += 0.01 * rng.sample(uniform_dist);
                 }
             }
         }

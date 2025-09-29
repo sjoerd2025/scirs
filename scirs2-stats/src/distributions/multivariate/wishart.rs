@@ -6,7 +6,7 @@ use crate::error::{StatsError, StatsResult};
 use crate::sampling::SampleableDistribution;
 use ndarray::{Array1, Array2, ArrayBase, Data, Ix2};
 use rand_distr::{ChiSquared, Distribution, Normal as RandNormal};
-use scirs2_core::rng;
+use scirs2_core::random::prelude::*;
 use std::fmt::Debug;
 
 // Import helper functions from the multivariate module
@@ -328,7 +328,7 @@ impl Wishart {
     /// assert_eq!(samples[0].shape(), &[2, 2]);
     /// ```
     pub fn rvs(&self, size: usize) -> StatsResult<Vec<Array2<f64>>> {
-        let mut rng = rng();
+        let mut rng = thread_rng();
         let normal_dist = RandNormal::new(0.0, 1.0).unwrap();
         let mut samples = Vec::with_capacity(size);
 
@@ -536,7 +536,6 @@ mod tests {
     use ndarray::array;
 
     #[test]
-    #[ignore = "timeout"]
     fn test_wishart_creation() {
         // 2x2 Wishart with identity scale
         let scale = array![[1.0, 0.0], [0.0, 1.0]];

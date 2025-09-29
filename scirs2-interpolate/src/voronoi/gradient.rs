@@ -11,13 +11,19 @@ use super::natural::{InterpolationMethod, NaturalNeighborInterpolator};
 use crate::error::{InterpolateError, InterpolateResult};
 
 /// Trait for interpolators that can calculate values at query points
-pub trait Interpolator<F: Float + FromPrimitive + Debug> {
+pub trait Interpolator<F: Float + FromPrimitive + Debug + ordered_float::FloatCore> {
     /// Interpolate at a single query point
     fn interpolate(&self, query: &ArrayView1<F>) -> InterpolateResult<F>;
 }
 
 impl<
-        F: Float + FromPrimitive + Debug + ndarray::ScalarOperand + 'static + std::cmp::PartialOrd,
+        F: Float
+            + FromPrimitive
+            + Debug
+            + ndarray::ScalarOperand
+            + 'static
+            + std::cmp::PartialOrd
+            + ordered_float::FloatCore,
     > Interpolator<F> for NaturalNeighborInterpolator<F>
 {
     fn interpolate(&self, query: &ArrayView1<F>) -> InterpolateResult<F> {
@@ -27,7 +33,7 @@ impl<
 }
 
 /// Trait for interpolators that can compute gradients
-pub trait GradientEstimation<F: Float + FromPrimitive + Debug> {
+pub trait GradientEstimation<F: Float + FromPrimitive + Debug + ordered_float::FloatCore> {
     /// Computes the gradient of the interpolated function at a query point
     ///
     /// # Arguments
@@ -55,7 +61,8 @@ impl<
             + ndarray::ScalarOperand
             + 'static
             + for<'a> std::iter::Sum<&'a F>
-            + std::cmp::PartialOrd,
+            + std::cmp::PartialOrd
+            + ordered_float::FloatCore,
     > GradientEstimation<F> for NaturalNeighborInterpolator<F>
 {
     fn gradient(&self, query: &ArrayView1<F>) -> InterpolateResult<Array1<F>> {
@@ -123,12 +130,13 @@ impl<
                     // Compute distance from query to neighbor
                     let mut distance = F::zero();
                     for d in 0..dim {
-                        distance = distance + (neighbor_point[d] - query[d]).powi(2);
+                        distance =
+                            distance + num_traits::Float::powi(neighbor_point[d] - query[d], 2);
                     }
                     distance = distance.sqrt();
 
                     // Skip very close points to avoid numerical issues
-                    if distance < F::epsilon() {
+                    if distance < <F as num_traits::Float>::epsilon() {
                         continue;
                     }
 
@@ -199,7 +207,7 @@ fn finite_difference_gradient<F, T>(
     query: &ArrayView1<F>,
 ) -> InterpolateResult<Array1<F>>
 where
-    F: Float + FromPrimitive + Debug,
+    F: Float + FromPrimitive + Debug + ordered_float::FloatCore,
     T: GradientEstimation<F> + Interpolator<F>,
 {
     let dim = query.len();
@@ -262,7 +270,9 @@ where
 }
 
 /// Information returned by interpolation with gradient
-pub struct InterpolateWithGradientResult<F: Float + FromPrimitive + Debug> {
+pub struct InterpolateWithGradientResult<
+    F: Float + FromPrimitive + Debug + ordered_float::FloatCore,
+> {
     /// The interpolated value
     pub value: F,
 
@@ -271,7 +281,7 @@ pub struct InterpolateWithGradientResult<F: Float + FromPrimitive + Debug> {
 }
 
 /// Extension trait for interpolators to compute interpolated values with gradients
-pub trait InterpolateWithGradient<F: Float + FromPrimitive + Debug> {
+pub trait InterpolateWithGradient<F: Float + FromPrimitive + Debug + ordered_float::FloatCore> {
     /// Interpolates a value and computes its gradient at a query point
     ///
     /// # Arguments
@@ -304,7 +314,8 @@ impl<
             + ndarray::ScalarOperand
             + 'static
             + for<'a> std::iter::Sum<&'a F>
-            + std::cmp::PartialOrd,
+            + std::cmp::PartialOrd
+            + ordered_float::FloatCore,
     > InterpolateWithGradient<F> for NaturalNeighborInterpolator<F>
 {
     fn interpolate_with_gradient(

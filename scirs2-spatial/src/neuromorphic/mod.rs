@@ -34,7 +34,7 @@
 //!
 //! ## Basic Spiking Neural Network Clustering
 //! ```rust,ignore
-//! use ndarray::Array2;
+//! use scirs2_core::ndarray::Array2;
 //! use scirs2_spatial::neuromorphic::SpikingNeuralClusterer;
 //!
 //! let points = Array2::from_shape_vec((4, 2), vec![
@@ -53,7 +53,7 @@
 //!
 //! ## Competitive Learning with Homeostasis
 //! ```rust,ignore
-//! use ndarray::Array2;
+//! use scirs2_core::ndarray::Array2;
 //! use scirs2_spatial::neuromorphic::HomeostaticNeuralClusterer;
 //!
 //! let points = Array2::from_shape_vec((4, 2), vec![
@@ -69,7 +69,7 @@
 //!
 //! ## Advanced Memristive Learning
 //! ```rust,ignore
-//! use ndarray::{Array1, Array2};
+//! use scirs2_core::ndarray::{Array1, Array2};
 //! use scirs2_spatial::neuromorphic::{AdvancedMemristiveLearning, MemristiveDeviceType};
 //!
 //! let mut learning_system = AdvancedMemristiveLearning::new(
@@ -95,7 +95,7 @@
 //!
 //! ## Event-driven Neuromorphic Processing
 //! ```rust,ignore
-//! use ndarray::Array2;
+//! use scirs2_core::ndarray::Array2;
 //! use scirs2_spatial::neuromorphic::NeuromorphicProcessor;
 //!
 //! let points = Array2::from_shape_vec((3, 2), vec![
@@ -355,7 +355,7 @@ impl NeuromorphicFactory {
         }
 
         if config.has_capability(&NeuromorphicCapability::HomeostaticRegulation) {
-            let target_rates = ndarray::Array1::from_elem(config.num_neurons, 0.1);
+            let target_rates = scirs2_core::ndarray::Array1::from_elem(config.num_neurons, 0.1);
             system = system.with_homeostatic_regulation(target_rates);
         }
 
@@ -384,7 +384,7 @@ impl NeuromorphicFactory {
 pub mod utils {
     use super::*;
     use crate::error::SpatialResult;
-    use ndarray::ArrayView2;
+    use scirs2_core::ndarray::ArrayView2;
 
     /// Convert spatial data to spike events
     ///
@@ -507,7 +507,7 @@ pub mod utils {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::Array2;
+    use scirs2_core::ndarray::Array2;
 
     #[test]
     fn test_neuromorphic_config() {

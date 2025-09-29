@@ -1,8 +1,8 @@
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
-use ndarray::{Array1, Array2, ArrayView2};
+use scirs2_core::ndarray::{Array1, Array2, ArrayView2};
 use scirs2_linalg::quantization::{
     calibration::{calibrate_matrix, CalibrationConfig, CalibrationMethod},
-    quantize_matrix, quantize_vector, QuantizationMethod,
+    quantize_matrix, QuantizationMethod,
 };
 
 #[cfg(feature = "simd")]
@@ -97,7 +97,7 @@ fn bench_quantized_ops(c: &mut Criterion) {
             let (qb, qb_params) =
                 quantize_matrix(&matrix_b.view(), bits, QuantizationMethod::Symmetric);
             // We don't need qv since we're directly using vector.view() in the benchmark
-            let _ = quantize_vector(&vector.view(), bits, QuantizationMethod::Symmetric);
+            // TODO: Add quantize_vector benchmark when the function is implemented
 
             // Benchmark regular vs. quantized matrix multiplication
             group.bench_with_input(

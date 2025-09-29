@@ -1,9 +1,7 @@
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
-use ndarray::{Array1, Array2};
-use rand::distr::Uniform;
-use rand::{Rng, SeedableRng};
-use rand_chacha::ChaCha8Rng;
 use scirs2_core::memory::BufferPool;
+use scirs2_core::ndarray::{Array1, Array2};
+use scirs2_core::random::prelude::*;
 use scirs2_linalg::{det, solve};
 use std::hint::black_box;
 use std::time::Instant;
@@ -14,7 +12,7 @@ const MEMORY_TEST_SIZES: &[usize] = &[100, 500, 1000, 2000];
 /// Generate test data with specific memory characteristics
 #[allow(dead_code)]
 fn generate_memory_test_data(size: usize) -> Array2<f64> {
-    let mut rng = ChaCha8Rng::seed_from_u64(SEED);
+    let mut rng = StdRng::seed_from_u64(SEED);
     let uniform = Uniform::new(-1.0, 1.0).unwrap();
     Array2::from_shape_fn((size, size), |_| rng.sample(uniform))
 }
@@ -301,7 +299,8 @@ fn bench_zero_copy_operations(c: &mut Criterion) {
         group.bench_with_input(BenchmarkId::new("zero_copy_slice", size), &size, |b, &s| {
             b.iter(|| {
                 let half_size = s / 2;
-                let slice = large_matrix.slice(ndarray::s![0..half_size, 0..half_size]);
+                let slice =
+                    large_matrix.slice(scirs2_core::ndarray::s![0..half_size, 0..half_size]);
                 let _norm = slice.map(|&x| x * x).sum();
                 black_box(_norm);
             })
@@ -311,7 +310,7 @@ fn bench_zero_copy_operations(c: &mut Criterion) {
             b.iter(|| {
                 let half_size = s / 2;
                 let submatrix = large_matrix
-                    .slice(ndarray::s![0..half_size, 0..half_size])
+                    .slice(scirs2_core::ndarray::s![0..half_size, 0..half_size])
                     .to_owned();
                 let _norm = submatrix.map(|&x| x * x).sum();
                 black_box(_norm);

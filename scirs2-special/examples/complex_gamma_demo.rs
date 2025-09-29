@@ -3,7 +3,7 @@
 //! This example showcases the complex number support for gamma functions
 //! in scirs2-special, including gamma, loggamma, digamma, and beta functions.
 
-use num_complex::Complex64;
+use scirs2_core::Complex64;
 use scirs2_special::{beta_complex, digamma_complex, gamma_complex, loggamma_complex};
 
 #[allow(dead_code)]

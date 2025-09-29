@@ -5,7 +5,7 @@
 
 use ndarray::{Array2, ArrayView2};
 use rand_distr::{Distribution, Normal};
-use scirs2_core::rng;
+use scirs2_core::random::prelude::*;
 use scirs2_linalg::prelude::*;
 
 // Simple struct to represent a neural network layer
@@ -54,7 +54,7 @@ fn main() {
 /// Create a simple example network with 2 layers
 #[allow(dead_code)]
 fn create_example_network() -> Vec<SimpleLayer> {
-    let mut rng = rng();
+    let mut rng = thread_rng();
 
     // Create first layer (32 input features -> 64 hidden features)
     // Use Kaiming/He initialization for weights (assuming ReLU activation)
@@ -99,7 +99,7 @@ fn create_example_network() -> Vec<SimpleLayer> {
 /// Create test input data
 #[allow(dead_code)]
 fn create_test_input(_batchsize: usize, inputsize: usize) -> Array2<f32> {
-    let mut rng = rng();
+    let mut rng = thread_rng();
     let mut input = Array2::zeros((_batchsize, inputsize));
 
     for i in 0.._batchsize {

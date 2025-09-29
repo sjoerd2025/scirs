@@ -4,7 +4,7 @@
 //! used across the scirs2 ecosystem. All modules should use these operations
 //! instead of implementing their own SIMD code.
 
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
+use ndarray::{Array1, Array2, ArrayView1, ArrayView2, ArrayViewMut1};
 use num_traits::Zero;
 
 /// Unified SIMD operations trait
@@ -93,6 +93,69 @@ pub trait SimdUnifiedOps: Sized + Copy + PartialOrd + Zero {
 
     /// Check if SIMD is available for this type
     fn simd_available() -> bool;
+
+    /// Ultra-optimized sum reduction (alias for simd_sum for compatibility)
+    fn simd_sum_f32_ultra(a: &ArrayView1<Self>) -> Self {
+        Self::simd_sum(a)
+    }
+
+    /// Ultra-optimized subtraction (alias for simd_sub for compatibility)
+    fn simd_sub_f32_ultra(
+        a: &ArrayView1<Self>,
+        b: &ArrayView1<Self>,
+        result: &mut ArrayViewMut1<Self>,
+    );
+
+    /// Ultra-optimized multiplication (alias for simd_mul for compatibility)
+    fn simd_mul_f32_ultra(
+        a: &ArrayView1<Self>,
+        b: &ArrayView1<Self>,
+        result: &mut ArrayViewMut1<Self>,
+    );
+
+    /// Ultra-optimized cubes sum (power 3 sum)
+    fn simd_sum_cubes(a: &ArrayView1<Self>) -> Self;
+
+    /// Ultra-optimized division (alias for simd_div for compatibility)
+    fn simd_div_f32_ultra(
+        a: &ArrayView1<Self>,
+        b: &ArrayView1<Self>,
+        result: &mut ArrayViewMut1<Self>,
+    );
+
+    /// Ultra-optimized sine function
+    fn simd_sin_f32_ultra(a: &ArrayView1<Self>, result: &mut ArrayViewMut1<Self>);
+
+    /// Ultra-optimized addition (alias for simd_add for compatibility)
+    fn simd_add_f32_ultra(
+        a: &ArrayView1<Self>,
+        b: &ArrayView1<Self>,
+        result: &mut ArrayViewMut1<Self>,
+    );
+
+    /// Ultra-optimized fused multiply-add
+    fn simd_fma_f32_ultra(
+        a: &ArrayView1<Self>,
+        b: &ArrayView1<Self>,
+        c: &ArrayView1<Self>,
+        result: &mut ArrayViewMut1<Self>,
+    );
+
+    /// Ultra-optimized power function
+    fn simd_pow_f32_ultra(
+        a: &ArrayView1<Self>,
+        b: &ArrayView1<Self>,
+        result: &mut ArrayViewMut1<Self>,
+    );
+
+    /// Ultra-optimized exponential function
+    fn simd_exp_f32_ultra(a: &ArrayView1<Self>, result: &mut ArrayViewMut1<Self>);
+
+    /// Ultra-optimized cosine function
+    fn simd_cos_f32_ultra(a: &ArrayView1<Self>, result: &mut ArrayViewMut1<Self>);
+
+    /// Ultra-optimized dot product
+    fn simd_dot_f32_ultra(a: &ArrayView1<Self>, b: &ArrayView1<Self>) -> Self;
 }
 
 // Implementation for f32
@@ -351,6 +414,89 @@ impl SimdUnifiedOps for f32 {
     #[cfg(not(feature = "simd"))]
     fn simd_available() -> bool {
         false
+    }
+
+    fn simd_sub_f32_ultra(
+        a: &ArrayView1<Self>,
+        b: &ArrayView1<Self>,
+        result: &mut ArrayViewMut1<Self>,
+    ) {
+        let sub_result = Self::simd_sub(a, b);
+        result.assign(&sub_result);
+    }
+
+    fn simd_mul_f32_ultra(
+        a: &ArrayView1<Self>,
+        b: &ArrayView1<Self>,
+        result: &mut ArrayViewMut1<Self>,
+    ) {
+        let mul_result = Self::simd_mul(a, b);
+        result.assign(&mul_result);
+    }
+
+    fn simd_sum_cubes(a: &ArrayView1<Self>) -> Self {
+        // Calculate sum of cubes: sum(x^3)
+        a.iter().map(|&x| x * x * x).sum()
+    }
+
+    fn simd_div_f32_ultra(
+        a: &ArrayView1<Self>,
+        b: &ArrayView1<Self>,
+        result: &mut ArrayViewMut1<Self>,
+    ) {
+        let div_result = Self::simd_div(a, b);
+        result.assign(&div_result);
+    }
+
+    fn simd_sin_f32_ultra(a: &ArrayView1<Self>, result: &mut ArrayViewMut1<Self>) {
+        let sin_result = a.mapv(|x| x.sin());
+        result.assign(&sin_result);
+    }
+
+    fn simd_add_f32_ultra(
+        a: &ArrayView1<Self>,
+        b: &ArrayView1<Self>,
+        result: &mut ArrayViewMut1<Self>,
+    ) {
+        let add_result = Self::simd_add(a, b);
+        result.assign(&add_result);
+    }
+
+    fn simd_fma_f32_ultra(
+        a: &ArrayView1<Self>,
+        b: &ArrayView1<Self>,
+        c: &ArrayView1<Self>,
+        result: &mut ArrayViewMut1<Self>,
+    ) {
+        let fma_result = Self::simd_fma(a, b, c);
+        result.assign(&fma_result);
+    }
+
+    fn simd_pow_f32_ultra(
+        a: &ArrayView1<Self>,
+        b: &ArrayView1<Self>,
+        result: &mut ArrayViewMut1<Self>,
+    ) {
+        let pow_result = a
+            .iter()
+            .zip(b.iter())
+            .map(|(&x, &y)| x.powf(y))
+            .collect::<Vec<_>>();
+        result.assign(&Array1::from_vec(pow_result));
+    }
+
+    fn simd_exp_f32_ultra(a: &ArrayView1<Self>, result: &mut ArrayViewMut1<Self>) {
+        let exp_result = a.mapv(|x| x.exp());
+        result.assign(&exp_result);
+    }
+
+    fn simd_cos_f32_ultra(a: &ArrayView1<Self>, result: &mut ArrayViewMut1<Self>) {
+        let cos_result = a.mapv(|x| x.cos());
+        result.assign(&cos_result);
+    }
+
+    fn simd_dot_f32_ultra(a: &ArrayView1<Self>, b: &ArrayView1<Self>) -> Self {
+        Self::simd_dot(a, b)
     }
 }
 
@@ -611,6 +757,89 @@ impl SimdUnifiedOps for f64 {
     fn simd_available() -> bool {
         false
     }
+
+    fn simd_sub_f32_ultra(
+        a: &ArrayView1<Self>,
+        b: &ArrayView1<Self>,
+        result: &mut ArrayViewMut1<Self>,
+    ) {
+        let sub_result = Self::simd_sub(a, b);
+        result.assign(&sub_result);
+    }
+
+    fn simd_mul_f32_ultra(
+        a: &ArrayView1<Self>,
+        b: &ArrayView1<Self>,
+        result: &mut ArrayViewMut1<Self>,
+    ) {
+        let mul_result = Self::simd_mul(a, b);
+        result.assign(&mul_result);
+    }
+
+    fn simd_sum_cubes(a: &ArrayView1<Self>) -> Self {
+        // Calculate sum of cubes: sum(x^3)
+        a.iter().map(|&x| x * x * x).sum()
+    }
+
+    fn simd_div_f32_ultra(
+        a: &ArrayView1<Self>,
+        b: &ArrayView1<Self>,
+        result: &mut ArrayViewMut1<Self>,
+    ) {
+        let div_result = Self::simd_div(a, b);
+        result.assign(&div_result);
+    }
+
+    fn simd_sin_f32_ultra(a: &ArrayView1<Self>, result: &mut ArrayViewMut1<Self>) {
+        let sin_result = a.mapv(|x| x.sin());
+        result.assign(&sin_result);
+    }
+
+    fn simd_add_f32_ultra(
+        a: &ArrayView1<Self>,
+        b: &ArrayView1<Self>,
+        result: &mut ArrayViewMut1<Self>,
+    ) {
+        let add_result = Self::simd_add(a, b);
+        result.assign(&add_result);
+    }
+
+    fn simd_fma_f32_ultra(
+        a: &ArrayView1<Self>,
+        b: &ArrayView1<Self>,
+        c: &ArrayView1<Self>,
+        result: &mut ArrayViewMut1<Self>,
+    ) {
+        let fma_result = Self::simd_fma(a, b, c);
+        result.assign(&fma_result);
+    }
+
+    fn simd_pow_f32_ultra(
+        a: &ArrayView1<Self>,
+        b: &ArrayView1<Self>,
+        result: &mut ArrayViewMut1<Self>,
+    ) {
+        let pow_result = a
+            .iter()
+            .zip(b.iter())
+            .map(|(&x, &y)| x.powf(y))
+            .collect::<Vec<_>>();
+        result.assign(&Array1::from_vec(pow_result));
+    }
+
+    fn simd_exp_f32_ultra(a: &ArrayView1<Self>, result: &mut ArrayViewMut1<Self>) {
+        let exp_result = a.mapv(|x| x.exp());
+        result.assign(&exp_result);
+    }
+
+    fn simd_cos_f32_ultra(a: &ArrayView1<Self>, result: &mut ArrayViewMut1<Self>) {
+        let cos_result = a.mapv(|x| x.cos());
+        result.assign(&cos_result);
+    }
+
+    fn simd_dot_f32_ultra(a: &ArrayView1<Self>, b: &ArrayView1<Self>) -> Self {
+        Self::simd_dot(a, b)
+    }
 }
 
 /// Platform capability detection
@@ -678,6 +907,36 @@ impl PlatformCapabilities {
                 features = features.join(", ")
             )
         }
+    }
+
+    /// Check if AVX2 is available
+    pub fn has_avx2(&self) -> bool {
+        self.avx2_available
+    }
+
+    /// Check if AVX512 is available
+    pub fn has_avx512(&self) -> bool {
+        self.avx512_available
+    }
+
+    /// Check if SSE is available (fallback to SIMD availability)
+    pub fn has_sse(&self) -> bool {
+        self.simd_available || self.neon_available || self.avx2_available
+    }
+
+    /// Get the number of CPU cores
+    pub fn num_cores(&self) -> usize {
+        std::thread::available_parallelism()
+            .map(|n| n.get())
+            .unwrap_or(1)
+    }
+
+    /// Get the cache line size in bytes
+    pub fn cache_line_size(&self) -> usize {
+        // Standard cache line size on most modern processors
+        // x86/x64: typically 64 bytes
+        // ARM: typically 64 bytes (Apple Silicon, newer ARM)
+        64
     }
 }
 
@@ -842,6 +1101,146 @@ impl Default for AutoOptimizer {
     fn default() -> Self {
         Self::new()
     }
+}
+
+/// Standalone ultra-optimized dot product function for f32
+pub fn simd_dot_f32_ultra(a: &ArrayView1<f32>, b: &ArrayView1<f32>) -> f32 {
+    f32::simd_dot_f32_ultra(a, b)
+}
+
+/// Standalone ultra-optimized FMA function for f32
+pub fn simd_fma_f32_ultra(
+    a: &ArrayView1<f32>,
+    b: &ArrayView1<f32>,
+    c: &ArrayView1<f32>,
+    result: &mut ArrayViewMut1<f32>,
+) {
+    f32::simd_fma_f32_ultra(a, b, c, result)
+}
+
+/// Additional standalone functions that might be needed
+pub fn simd_add_f32_adaptive(a: &ArrayView1<f32>, b: &ArrayView1<f32>) -> Array1<f32> {
+    f32::simd_add_adaptive(a, b)
+}
+
+pub fn simd_mul_f32_hyperoptimized(a: &ArrayView1<f32>, b: &ArrayView1<f32>) -> Array1<f32> {
+    f32::simd_mul(a, b)
+}
+
+/// Helper functions for Vec<T> compatibility
+/// These functions accept Vec<T> and internally convert to Array types
+
+/// Helper function for Vec-based SIMD multiplication
+pub fn simd_mul_f32_ultra_vec(a: &Vec<f32>, b: &Vec<f32>, result: &mut Vec<f32>) {
+    let a_array = Array1::from_vec(a.clone());
+    let b_array = Array1::from_vec(b.clone());
+    let mut result_array = Array1::from_vec(result.clone());
+
+    f32::simd_mul_f32_ultra(
+        &a_array.view(),
+        &b_array.view(),
+        &mut result_array.view_mut(),
+    );
+    *result = result_array.to_vec();
+}
+
+/// Helper function for Vec-based SIMD addition
+pub fn simd_add_f32_ultra_vec(a: &Vec<f32>, b: &Vec<f32>, result: &mut Vec<f32>) {
+    let a_array = Array1::from_vec(a.clone());
+    let b_array = Array1::from_vec(b.clone());
+    let mut result_array = Array1::from_vec(result.clone());
+
+    f32::simd_add_f32_ultra(
+        &a_array.view(),
+        &b_array.view(),
+        &mut result_array.view_mut(),
+    );
+    *result = result_array.to_vec();
+}
+
+/// Helper function for Vec-based SIMD division
+pub fn simd_div_f32_ultra_vec(a: &Vec<f32>, b: &Vec<f32>, result: &mut Vec<f32>) {
+    let a_array = Array1::from_vec(a.clone());
+    let b_array = Array1::from_vec(b.clone());
+    let mut result_array = Array1::from_vec(result.clone());
+
+    f32::simd_div_f32_ultra(
+        &a_array.view(),
+        &b_array.view(),
+        &mut result_array.view_mut(),
+    );
+    *result = result_array.to_vec();
+}
+
+/// Helper function for Vec-based SIMD sine
+pub fn simd_sin_f32_ultra_vec(a: &Vec<f32>, result: &mut Vec<f32>) {
+    let a_array = Array1::from_vec(a.clone());
+    let mut result_array = Array1::from_vec(result.clone());
+
+    f32::simd_sin_f32_ultra(&a_array.view(), &mut result_array.view_mut());
+    *result = result_array.to_vec();
+}
+
+/// Helper function for Vec-based SIMD subtraction
+pub fn simd_sub_f32_ultra_vec(a: &Vec<f32>, b: &Vec<f32>, result: &mut Vec<f32>) {
+    let a_array = Array1::from_vec(a.clone());
+    let b_array = Array1::from_vec(b.clone());
+    let mut result_array = Array1::from_vec(result.clone());
+
+    f32::simd_sub_f32_ultra(
+        &a_array.view(),
+        &b_array.view(),
+        &mut result_array.view_mut(),
+    );
+    *result = result_array.to_vec();
+}
+
+/// Helper function for Vec-based SIMD FMA
+pub fn simd_fma_f32_ultra_vec(a: &Vec<f32>, b: &Vec<f32>, c: &Vec<f32>, result: &mut Vec<f32>) {
+    let a_array = Array1::from_vec(a.clone());
+    let b_array = Array1::from_vec(b.clone());
+    let c_array = Array1::from_vec(c.clone());
+    let mut result_array = Array1::from_vec(result.clone());
+
+    f32::simd_fma_f32_ultra(
+        &a_array.view(),
+        &b_array.view(),
+        &c_array.view(),
+        &mut result_array.view_mut(),
+    );
+    *result = result_array.to_vec();
+}
+
+/// Helper function for Vec-based SIMD power
+pub fn simd_pow_f32_ultra_vec(a: &Vec<f32>, b: &Vec<f32>, result: &mut Vec<f32>) {
+    let a_array = Array1::from_vec(a.clone());
+    let b_array = Array1::from_vec(b.clone());
+    let mut result_array = Array1::from_vec(result.clone());
+
+    f32::simd_pow_f32_ultra(
+        &a_array.view(),
+        &b_array.view(),
+        &mut result_array.view_mut(),
+    );
+    *result = result_array.to_vec();
+}
+
+/// Helper function for Vec-based SIMD exp
+pub fn simd_exp_f32_ultra_vec(a: &Vec<f32>, result: &mut Vec<f32>) {
+    let a_array = Array1::from_vec(a.clone());
+    let mut result_array = Array1::from_vec(result.clone());
+
+    f32::simd_exp_f32_ultra(&a_array.view(), &mut result_array.view_mut());
+    *result = result_array.to_vec();
+}
+
+/// Helper function for Vec-based SIMD cos
+pub fn simd_cos_f32_ultra_vec(a: &Vec<f32>, result: &mut Vec<f32>) {
+    let a_array = Array1::from_vec(a.clone());
+    let mut result_array = Array1::from_vec(result.clone());
+
+    f32::simd_cos_f32_ultra(&a_array.view(), &mut result_array.view_mut());
+    *result = result_array.to_vec();
 }
 
 #[cfg(test)]

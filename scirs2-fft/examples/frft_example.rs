@@ -1,6 +1,6 @@
 //! Example of using Fractional Fourier Transform
 
-use num_complex::Complex64;
+use scirs2_core::Complex64;
 use scirs2_fft::{frft, frft_complex};
 use std::f64::consts::PI;
 

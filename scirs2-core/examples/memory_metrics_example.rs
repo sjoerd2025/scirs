@@ -11,13 +11,13 @@ fn main() {
 }
 
 #[cfg(feature = "memory_management")]
-use ndarray::{Array2, Array3};
-#[cfg(feature = "memory_management")]
 use scirs2_core::memory::metrics::{
     format_bytes, format_memory_report, generate_memory_report, track_allocation,
     track_deallocation, track_resize, MemoryEvent, MemoryEventType, MemoryMetricsCollector,
     MemoryMetricsConfig,
 };
+#[cfg(feature = "memory_management")]
+use scirs2_core::ndarray_ext::{Array2, Array3};
 #[cfg(feature = "memory_management")]
 use std::thread;
 #[cfg(feature = "memory_management")]

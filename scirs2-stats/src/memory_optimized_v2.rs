@@ -426,7 +426,6 @@ mod tests {
     use ndarray::array;
 
     #[test]
-    #[ignore = "timeout"]
     fn test_memory_pool() {
         let pool = MemoryPool::<f64>::new(MemoryConfig::default());
 

@@ -3,9 +3,9 @@
 //! This example demonstrates the high-performance batch type conversion capabilities
 //! in SciRS2 Core, including SIMD acceleration and parallel processing.
 
-use num_complex::Complex64;
 use scirs2_core::batch_conversions::{utils::*, BatchConversionConfig, BatchConverter};
 use scirs2_core::error::CoreResult;
+use scirs2_core::Complex64;
 use std::time::Instant;
 
 #[allow(dead_code)]
@@ -243,7 +243,7 @@ fn demo_complex_conversions() -> CoreResult<()> {
 
     // Convert complex numbers
     let start = Instant::now();
-    let result: Vec<num_complex::Complex32> = converter.convert_complex_slice(&complex_data)?;
+    let result: Vec<scirs2_core::Complex32> = converter.convert_complex_slice(&complex_data)?;
     let conversion_time = start.elapsed();
 
     println!("Complex conversion completed in {:?}", conversion_time);

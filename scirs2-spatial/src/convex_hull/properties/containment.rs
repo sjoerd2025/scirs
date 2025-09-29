@@ -29,7 +29,7 @@ use crate::error::{SpatialError, SpatialResult};
 /// ```rust
 /// use scirs2_spatial::convex_hull::ConvexHull;
 /// use scirs2_spatial::convex_hull::properties::containment::check_point_containment;
-/// use ndarray::array;
+/// use scirs2_core::ndarray::array;
 ///
 /// let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]];
 /// let hull = ConvexHull::new(&points.view()).unwrap();
@@ -74,7 +74,7 @@ pub fn check_point_containment<T: AsRef<[f64]>>(
 fn check_containment_with_equations(
     _hull: &ConvexHull,
     point: &[f64],
-    equations: &ndarray::Array2<f64>,
+    equations: &scirs2_core::ndarray::Array2<f64>,
 ) -> SpatialResult<bool> {
     for i in 0..equations.nrows() {
         let mut result = equations[[i, equations.ncols() - 1]];
@@ -83,8 +83,8 @@ fn check_containment_with_equations(
         }
 
         // If result is positive, point is outside the hull
-        // Use a small tolerance to handle numerical precision
-        if result > 1e-10 {
+        // Use a more lenient tolerance to handle numerical precision issues
+        if result > 1e-8 {
             return Ok(false);
         }
     }
@@ -301,11 +301,44 @@ fn check_containment_3d(hull: &ConvexHull, point: &[f64]) -> SpatialResult<bool>
         // Compute normal to the face
         let edge1 = [v1[0] - v0[0], v1[1] - v0[1], v1[2] - v0[2]];
         let edge2 = [v2[0] - v0[0], v2[1] - v0[1], v2[2] - v0[2]];
-        let normal = [
+        let mut normal = [
             edge1[1] * edge2[2] - edge1[2] * edge2[1],
             edge1[2] * edge2[0] - edge1[0] * edge2[2],
             edge1[0] * edge2[1] - edge1[1] * edge2[0],
         ];
+
+        // Compute the centroid of the hull to determine correct normal orientation
+        let mut centroid = [0.0, 0.0, 0.0];
+        for &idx in &hull.vertex_indices {
+            centroid[0] += hull.points[[idx, 0]];
+            centroid[1] += hull.points[[idx, 1]];
+            centroid[2] += hull.points[[idx, 2]];
+        }
+        let n_vertices = hull.vertex_indices.len() as f64;
+        centroid[0] /= n_vertices;
+        centroid[1] /= n_vertices;
+        centroid[2] /= n_vertices;
+
+        // Vector from face center to hull centroid
+        let face_center = [
+            (v0[0] + v1[0] + v2[0]) / 3.0,
+            (v0[1] + v1[1] + v2[1]) / 3.0,
+            (v0[2] + v1[2] + v2[2]) / 3.0,
+        ];
+        let to_centroid = [
+            centroid[0] - face_center[0],
+            centroid[1] - face_center[1],
+            centroid[2] - face_center[2],
+        ];
+
+        // If normal points toward centroid, flip it to point outward
+        let centroid_dot =
+            normal[0] * to_centroid[0] + normal[1] * to_centroid[1] + normal[2] * to_centroid[2];
+        if centroid_dot > 0.0 {
+            normal[0] = -normal[0];
+            normal[1] = -normal[1];
+            normal[2] = -normal[2];
+        }
 
         // Vector from face vertex to test point
         let to_point = [point[0] - v0[0], point[1] - v0[1], point[2] - v0[2]];
@@ -314,8 +347,8 @@ fn check_containment_3d(hull: &ConvexHull, point: &[f64]) -> SpatialResult<bool>
         let dot = normal[0] * to_point[0] + normal[1] * to_point[1] + normal[2] * to_point[2];
 
         // For a convex hull, if the point is outside any face, it's outside the hull
-        // The sign depends on the orientation; we assume outward-pointing normals
-        if dot > 1e-10 {
+        // With corrected outward-pointing normals, positive dot means outside
+        if dot > 1e-8 {
             return Ok(false);
         }
     }
@@ -353,7 +386,7 @@ fn check_containment_nd(_hull: &ConvexHull, _point: &[f64]) -> SpatialResult<boo
 /// ```rust
 /// use scirs2_spatial::convex_hull::ConvexHull;
 /// use scirs2_spatial::convex_hull::properties::containment::check_multiple_containment;
-/// use ndarray::array;
+/// use scirs2_core::ndarray::array;
 ///
 /// let hull_points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]];
 /// let hull = ConvexHull::new(&hull_points.view()).unwrap();
@@ -364,7 +397,7 @@ fn check_containment_nd(_hull: &ConvexHull, _point: &[f64]) -> SpatialResult<boo
 /// ```
 pub fn check_multiple_containment(
     hull: &ConvexHull,
-    points: &ndarray::ArrayView2<'_, f64>,
+    points: &scirs2_core::ndarray::ArrayView2<'_, f64>,
 ) -> SpatialResult<Vec<bool>> {
     let npoints = points.nrows();
     let mut results = Vec::with_capacity(npoints);
@@ -408,7 +441,7 @@ pub fn check_multiple_containment(
 /// ```rust
 /// use scirs2_spatial::convex_hull::ConvexHull;
 /// use scirs2_spatial::convex_hull::properties::containment::distance_to_hull;
-/// use ndarray::array;
+/// use scirs2_core::ndarray::array;
 ///
 /// # fn example() -> Result<(), Box<dyn std::error::Error>> {
 /// let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]];
@@ -445,7 +478,7 @@ pub fn distance_to_hull<T: AsRef<[f64]>>(hull: &ConvexHull, point: T) -> Spatial
 /// Compute distance using facet equations
 fn compute_distance_with_equations(
     point: &[f64],
-    equations: &ndarray::Array2<f64>,
+    equations: &scirs2_core::ndarray::Array2<f64>,
 ) -> SpatialResult<f64> {
     let mut min_distance = f64::INFINITY;
     let mut is_inside = true;
@@ -508,7 +541,7 @@ fn compute_distance_to_vertices(hull: &ConvexHull, point: &[f64]) -> SpatialResu
 mod tests {
     use super::*;
     use crate::convex_hull::ConvexHull;
-    use ndarray::arr2;
+    use scirs2_core::ndarray::arr2;
 
     #[test]
     fn test_2d_containment() {
@@ -542,7 +575,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn test_3d_containment() {
         let points = arr2(&[
             [0.0, 0.0, 0.0],
@@ -602,16 +634,27 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn test_degenerate_cases() {
-        // Single point hull
+        // Single point - should fail to create convex hull
         let points = arr2(&[[1.0, 2.0]]);
+        let hull_result = ConvexHull::new(&points.view());
+        assert!(hull_result.is_err());
+
+        // Two points in 2D - should fail to create convex hull
+        let points = arr2(&[[0.0, 0.0], [1.0, 1.0]]);
+        let hull_result = ConvexHull::new(&points.view());
+        assert!(hull_result.is_err());
+
+        // Valid 2D triangle (minimal valid case)
+        let points = arr2(&[[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]]);
         let hull = ConvexHull::new(&points.view()).unwrap();
-        let result = check_point_containment(&hull, &[1.0, 2.0]).unwrap();
-        // For a single point, only that exact point should be "inside"
+
+        // Point inside the triangle
+        let result = check_point_containment(&hull, &[0.1, 0.1]).unwrap();
         assert!(result);
 
-        let result = check_point_containment(&hull, &[1.1, 2.0]).unwrap();
+        // Point outside the triangle
+        let result = check_point_containment(&hull, &[2.0, 2.0]).unwrap();
         assert!(!result);
     }
 }

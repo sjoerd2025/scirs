@@ -10,7 +10,7 @@ use ndarray::Array1;
 use num_traits::Float;
 use rand_distr::uniform::SampleUniform;
 use rand_distr::Distribution as RandDistribution;
-use scirs2_core::rng;
+use scirs2_core::random::prelude::*;
 use std::fmt::Debug;
 use std::marker::PhantomData;
 // Use simple approximations for bessel functions
@@ -318,7 +318,7 @@ impl<F: Float + SampleUniform + Debug + 'static + std::fmt::Display> Distributio
         let kappa_f64 = self.kappa.to_f64().unwrap();
 
         // Generate samples using custom implementation
-        let mut rng = rng();
+        let mut rng = thread_rng();
         let mut samples = Array1::zeros(size);
         for i in 0..size {
             let sample = self.sample_von_mises(mu_f64, kappa_f64, &mut rng);
@@ -372,7 +372,7 @@ impl<F: Float + SampleUniform + Debug + 'static + std::fmt::Display> CircularDis
         let kappa_f64 = self.kappa.to_f64().unwrap();
 
         // Generate a single sample using custom implementation
-        let mut rng = rng();
+        let mut rng = thread_rng();
         let sample = self.sample_von_mises(mu_f64, kappa_f64, &mut rng);
         Ok(F::from(sample).unwrap())
     }
@@ -433,7 +433,6 @@ mod tests {
     use scirs2_core::ScientificNumber;
 
     #[test]
-    #[ignore = "timeout"]
     fn test_von_mises_creation() {
         // Valid parameters
         let vm = von_mises(0.0f64, 1.0);

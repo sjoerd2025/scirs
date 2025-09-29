@@ -4,7 +4,7 @@
 //! commonly used in convex hull algorithms.
 
 use crate::error::SpatialResult;
-use ndarray::{Array2, ArrayView2};
+use scirs2_core::ndarray::{Array2, ArrayView2};
 
 /// Compute cross product for three 2D points (returns z-component of 3D cross product)
 ///
@@ -79,7 +79,7 @@ pub fn distance_squared_2d(p1: [f64; 2], p2: [f64; 2]) -> f64 {
 ///
 /// ```
 /// use scirs2_spatial::convex_hull::geometry::calculations_2d::compute_2d_hull_equations;
-/// use ndarray::array;
+/// use scirs2_core::ndarray::array;
 ///
 /// let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]];
 /// let vertices = vec![0, 1, 2];
@@ -134,7 +134,7 @@ pub fn compute_2d_hull_equations(
 ///
 /// ```
 /// use scirs2_spatial::convex_hull::geometry::calculations_2d::compute_polygon_area;
-/// use ndarray::array;
+/// use scirs2_core::ndarray::array;
 ///
 /// // Unit square
 /// let points = array![[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]];
@@ -182,7 +182,7 @@ pub fn compute_polygon_area(
 ///
 /// ```
 /// use scirs2_spatial::convex_hull::geometry::calculations_2d::compute_polygon_perimeter;
-/// use ndarray::array;
+/// use scirs2_core::ndarray::array;
 ///
 /// // Unit square
 /// let points = array![[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]];
@@ -274,7 +274,7 @@ pub fn polar_angle(reference: [f64; 2], point: [f64; 2]) -> f64 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::arr2;
+    use scirs2_core::ndarray::arr2;
 
     #[test]
     fn test_cross_product_2d() {

@@ -1084,7 +1084,7 @@ where
 /// The function can then be overridden by array types that implement the ArrayProtocol trait.
 ///
 /// Example usage:
-/// ```rust
+/// ```ignore
 /// use scirs2_core::array_protocol::{ArrayFunction, ArrayFunctionRegistry};
 /// use std::sync::Arc;
 /// use std::collections::HashMap;

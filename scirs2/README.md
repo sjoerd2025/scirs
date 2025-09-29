@@ -6,6 +6,8 @@
 
 SciRS2 is a comprehensive scientific computing library for Rust, inspired by SciPy and designed to provide a complete ecosystem for numerical computation, statistical analysis, and scientific algorithms.
 
+**Important**: From v0.1.0-beta.3, SciRS2 follows the [SciRS2 POLICY](../scirs2-core/SCIRS2_POLICY.md) for consistent ecosystem architecture with layered abstractions.
+
 ## Overview
 
 This is the main SciRS2 crate, which provides a convenient facade over the ecosystem of specialized sub-crates. Each sub-crate focuses on a specific domain of scientific computing, while this crate re-exports their functionality in a unified interface.
@@ -36,23 +38,23 @@ Add the following to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-scirs2 = "0.1.0-beta.2"  # Main package with default features
+scirs2 = "0.1.0-beta.3"  # Main package with default features
 ```
 
 You can enable only the features you need:
 
 ```toml
 [dependencies]
-scirs2 = { version = "0.1.0-beta.2", features = ["linalg", "stats", "optimize"] }
+scirs2 = { version = "0.1.0-beta.3", features = ["linalg", "stats", "optimize"] }
 ```
 
 Or use specific modules directly:
 
 ```toml
 [dependencies]
-scirs2-core = "0.1.0-beta.2"
-scirs2-linalg = "0.1.0-beta.2"
-scirs2-stats = "0.1.0-beta.2"
+scirs2-core = "0.1.0-beta.3"
+scirs2-linalg = "0.1.0-beta.3"
+scirs2-stats = "0.1.0-beta.3"
 ```
 
 Basic usage examples:
@@ -118,7 +120,6 @@ This crate uses feature flags to control which sub-crates are included:
 - `datasets`: Dataset utilities
 - `io`: I/O utilities
 - `neural`: Neural networks
-- `optim`: Optimization for machine learning
 - `graph`: Graph algorithms
 - `transform`: Data transformation
 - `metrics`: Evaluation metrics
@@ -131,12 +132,24 @@ This crate uses feature flags to control which sub-crates are included:
 
 SciRS2 follows a modular architecture where each domain of scientific computing is implemented in a separate crate. This main crate provides a unified interface by re-exporting their functionality.
 
+### SciRS2 POLICY (New in Beta 3)
+
+Starting with v0.1.0-beta.3, SciRS2 follows a strict layered architecture:
+
+- **Core-Only Dependencies**: Only `scirs2-core` uses external dependencies directly
+- **Unified Abstractions**: All other crates use scirs2-core abstractions for `rand`, `ndarray`, etc.
+- **Ecosystem Consistency**: Ensures consistent APIs, centralized version control, and type safety
+- **Performance Benefits**: Enables better optimization through centralized abstractions
+
+See the [SciRS2 Ecosystem Policy](../scirs2-core/SCIRS2_POLICY.md) for complete details.
+
 ### Architecture Benefits
 
 - **Modular Development**: Each domain can be developed and tested independently
 - **Reduced Compilation Time**: Users can include only the features they need
 - **Flexible Dependencies**: Sub-crates can have different dependency requirements
 - **Focused Documentation**: Each domain has its own focused documentation
+- **Consistent API**: Unified interfaces through scirs2-core abstractions
 
 ### Module Structure
 

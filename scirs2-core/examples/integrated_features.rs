@@ -11,7 +11,7 @@ use scirs2_core::logging::{LogLevel, Logger, ProgressTracker};
 use scirs2_core::profiling::{Profiler, Timer};
 
 #[cfg(feature = "random")]
-use scirs2_core::random::{DistributionExt, Random};
+use scirs2_core::random::{CoreRandom, DistributionExt, Random};
 
 #[cfg(feature = "memory_management")]
 use scirs2_core::memory::{BufferPool, ZeroCopyView};
@@ -70,7 +70,7 @@ fn run_integrated_example() {
     let timer_step1 = Timer::start("step1_generate_data");
     logger.debug("Generating random data");
 
-    let mut rng = Random::default();
+    let mut rng = CoreRandom::default();
     let normal_distribution = Normal::new(0.0, 1.0).unwrap();
 
     // Use memory management for efficient buffer usage

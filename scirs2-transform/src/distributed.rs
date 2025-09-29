@@ -289,8 +289,9 @@ impl DistributedCoordinator {
         }
 
         // Serialize task for transmission with compression
-        let task_data = bincode::serialize(task).map_err(|e| {
-            TransformError::DistributedError(format!("Failed to serialize task: {}", e))
+        let cfg = bincode::config::standard();
+        let task_data = bincode::serde::encode_to_vec(task, cfg).map_err(|e| {
+            TransformError::DistributedError(format!("Failed to serialize task (bincode2): {}", e))
         })?;
 
         // Compress task data for network efficiency
@@ -310,9 +311,14 @@ impl DistributedCoordinator {
                 parameters: _,
                 data_partition,
             } => {
-                let serialized_data = bincode::serialize(data_partition).map_err(|e| {
-                    TransformError::DistributedError(format!("Failed to serialize fit data: {}", e))
-                })?;
+                let cfg = bincode::config::standard();
+                let serialized_data =
+                    bincode::serde::encode_to_vec(data_partition, cfg).map_err(|e| {
+                        TransformError::DistributedError(format!(
+                            "Failed to serialize fit data (bincode2): {}",
+                            e
+                        ))
+                    })?;
                 Self::execute_fit_task(&serialized_data).await?
             }
             DistributedTask::Transform {
@@ -320,12 +326,14 @@ impl DistributedCoordinator {
                 transformer_state,
                 data_partition,
             } => {
-                let serialized_data = bincode::serialize(data_partition).map_err(|e| {
-                    TransformError::DistributedError(format!(
-                        "Failed to serialize transform data: {}",
-                        e
-                    ))
-                })?;
+                let cfg = bincode::config::standard();
+                let serialized_data =
+                    bincode::serde::encode_to_vec(data_partition, cfg).map_err(|e| {
+                        TransformError::DistributedError(format!(
+                            "Failed to serialize transform data (bincode2): {}",
+                            e
+                        ))
+                    })?;
                 Self::execute_transform_task(&serialized_data, transformer_state).await?
             }
             DistributedTask::Aggregate {
@@ -392,9 +400,14 @@ impl DistributedCoordinator {
     /// Execute fit task locally or remotely
     async fn execute_fit_task(data: &[u8]) -> Result<Vec<u8>> {
         // Deserialize input data
-        let input_data: Vec<f64> = bincode::deserialize(data).map_err(|e| {
-            TransformError::DistributedError(format!("Failed to deserialize fit data: {}", e))
-        })?;
+        let cfg = bincode::config::standard();
+        let (input_data, _len): (Vec<f64>, usize) = bincode::serde::decode_from_slice(data, cfg)
+            .map_err(|e| {
+                TransformError::DistributedError(format!(
+                    "Failed to deserialize fit data (bincode2): {}",
+                    e
+                ))
+            })?;
 
         // Perform actual computation (example: compute mean for standardization)
         let mean = input_data.iter().sum::<f64>() / input_data.len() as f64;
@@ -403,24 +416,34 @@ impl DistributedCoordinator {
 
         let fit_params = vec![mean, variance.sqrt()]; // mean and std
 
-        bincode::serialize(&fit_params).map_err(|e| {
-            TransformError::DistributedError(format!("Failed to serialize fit results: {}", e))
+        let cfg = bincode::config::standard();
+        bincode::serde::encode_to_vec(&fit_params, cfg).map_err(|e| {
+            TransformError::DistributedError(format!(
+                "Failed to serialize fit results (bincode2): {}",
+                e
+            ))
         })
     }
 
     /// Execute transform task locally or remotely  
     async fn execute_transform_task(data: &[u8], params: &[u8]) -> Result<Vec<u8>> {
         // Deserialize input data and parameters
-        let input_data: Vec<f64> = bincode::deserialize(data).map_err(|e| {
-            TransformError::DistributedError(format!("Failed to deserialize transform data: {}", e))
-        })?;
+        let cfg = bincode::config::standard();
+        let (input_data, _len): (Vec<f64>, usize) = bincode::serde::decode_from_slice(data, cfg)
+            .map_err(|e| {
+                TransformError::DistributedError(format!(
+                    "Failed to deserialize transform data (bincode2): {}",
+                    e
+                ))
+            })?;
 
-        let fit_params: Vec<f64> = bincode::deserialize(params).map_err(|e| {
-            TransformError::DistributedError(format!(
-                "Failed to deserialize transform params: {}",
-                e
-            ))
-        })?;
+        let (fit_params, _len): (Vec<f64>, usize) = bincode::serde::decode_from_slice(params, cfg)
+            .map_err(|e| {
+                TransformError::DistributedError(format!(
+                    "Failed to deserialize transform params (bincode2): {}",
+                    e
+                ))
+            })?;
 
         if fit_params.len() < 2 {
             return Err(TransformError::DistributedError(
@@ -434,9 +457,9 @@ impl DistributedCoordinator {
         // Apply standardization transformation
         let transformed_data: Vec<f64> = input_data.iter().map(|x| (x - mean) / std).collect();
 
-        bincode::serialize(&transformed_data).map_err(|e| {
+        bincode::serde::encode_to_vec(&transformed_data, cfg).map_err(|e| {
             TransformError::DistributedError(format!(
-                "Failed to serialize transform results: {}",
+                "Failed to serialize transform results (bincode2): {}",
                 e
             ))
         })
@@ -448,12 +471,14 @@ impl DistributedCoordinator {
 
         // Deserialize and combine all partial _results
         for result_data in _partialresults {
-            let partial_data: Vec<f64> = bincode::deserialize(result_data).map_err(|e| {
-                TransformError::DistributedError(format!(
-                    "Failed to deserialize partial result: {}",
-                    e
-                ))
-            })?;
+            let cfg = bincode::config::standard();
+            let (partial_data, _len): (Vec<f64>, usize) =
+                bincode::serde::decode_from_slice(result_data, cfg).map_err(|e| {
+                    TransformError::DistributedError(format!(
+                        "Failed to deserialize partial result (bincode2): {}",
+                        e
+                    ))
+                })?;
             all_data.extend(partial_data);
         }
 
@@ -470,9 +495,10 @@ impl DistributedCoordinator {
 
         let aggregated_result = vec![mean, min_val, max_val, all_data.len() as f64];
 
-        bincode::serialize(&aggregated_result).map_err(|e| {
+        let cfg = bincode::config::standard();
+        bincode::serde::encode_to_vec(&aggregated_result, cfg).map_err(|e| {
             TransformError::DistributedError(format!(
-                "Failed to serialize aggregated _results: {}",
+                "Failed to serialize aggregated _results (bincode2): {}",
                 e
             ))
         })
@@ -642,10 +668,15 @@ impl DistributedPCA {
         self.coordinator.submit_task(aggregate_task).await?;
         let final_result = self.coordinator.get_result(&aggregate_task_id).await?;
 
-        // Deserialize final components
-        let components: Vec<f64> = bincode::deserialize(&final_result.result).map_err(|e| {
-            TransformError::ComputationError(format!("Failed to deserialize components: {}", e))
-        })?;
+        // Deserialize final components (bincode2)
+        let cfg = bincode::config::standard();
+        let (components, _len): (Vec<f64>, usize) =
+            bincode::serde::decode_from_slice(&final_result.result, cfg).map_err(|e| {
+                TransformError::ComputationError(format!(
+                    "Failed to deserialize components (bincode2): {}",
+                    e
+                ))
+            })?;
 
         // Reshape to proper dimensions (placeholder implementation)
         self.components = Some(
@@ -671,7 +702,9 @@ impl DistributedPCA {
         // Submit transform tasks
         for (i, partition) in partitions.iter().enumerate() {
             let task_id = format!("pca_transform_{}", i);
-            let transformer_state = bincode::serialize(self.components.as_ref().unwrap()).unwrap();
+            let cfg = bincode::config::standard();
+            let transformer_state =
+                bincode::serde::encode_to_vec(self.components.as_ref().unwrap(), cfg).unwrap();
 
             let task = DistributedTask::Transform {
                 task_id: task_id.clone(),
@@ -687,7 +720,9 @@ impl DistributedPCA {
         let mut all_results = Vec::new();
         for task_id in task_ids {
             let result = self.coordinator.get_result(&task_id).await?;
-            let transformed_partition: Vec<f64> = bincode::deserialize(&result.result).unwrap();
+            let cfg = bincode::config::standard();
+            let (transformed_partition, _len): (Vec<f64>, usize) =
+                bincode::serde::decode_from_slice(&result.result, cfg).unwrap();
             all_results.extend(transformed_partition);
         }
 

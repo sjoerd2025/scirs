@@ -6,7 +6,7 @@
 #![allow(unused_imports)]
 
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
-use rand::{rng, Rng};
+use scirs2_core::random::prelude::*;
 use scirs2_graph::{algorithms, generators, measures, DiGraph, EdgeWeight, Graph, Node};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -153,7 +153,7 @@ fn bench_graph_generation(c: &mut Criterion) {
                 &(node_count, density),
                 |b, &(n, p)| {
                     b.iter(|| {
-                        let mut rng = rng();
+                        let mut rng = thread_rng();
                         let g = generators::erdos_renyi_graph(n, p, &mut rng).unwrap();
                         black_box(g)
                     });
@@ -167,7 +167,7 @@ fn bench_graph_generation(c: &mut Criterion) {
             &node_count,
             |b, &n| {
                 b.iter(|| {
-                    let mut rng = rng();
+                    let mut rng = thread_rng();
                     let g = generators::barabasi_albert_graph(n, 3, &mut rng).unwrap();
                     black_box(g)
                 });
@@ -193,15 +193,15 @@ fn bench_large_algorithms(c: &mut Criterion) {
     // Pre-generate test graphs
     let test_graphs = vec![
         ("small", {
-            let mut rng = rng();
+            let mut rng = thread_rng();
             generators::barabasi_albert_graph(100_000, 3, &mut rng).unwrap()
         }),
         ("medium", {
-            let mut rng = rng();
+            let mut rng = thread_rng();
             generators::barabasi_albert_graph(500_000, 3, &mut rng).unwrap()
         }),
         ("large", {
-            let mut rng = rng();
+            let mut rng = thread_rng();
             generators::barabasi_albert_graph(1_000_000, 3, &mut rng).unwrap()
         }),
     ];
@@ -334,7 +334,7 @@ fn run_stress_test_suite(config: StressTestConfig) -> StressTestResults {
         let gen_start = Instant::now();
         let pre_gen_memory = memory::get_current_memory_mb();
 
-        let mut rng = rng();
+        let mut rng = thread_rng();
         match generators::barabasi_albert_graph(node_count, 3, &mut rng) {
             Ok(graph) => {
                 let gen_time = gen_start.elapsed();
@@ -412,8 +412,8 @@ fn test_algorithm(
         }
         "clustering_coefficient" => {
             // Sample-based for large graphs
-            use rand::prelude::*;
-            let mut rng = rng();
+            use scirs2_core::random::prelude::*;
+            let mut rng = thread_rng();
             let mut sum = 0.0;
             if let Ok(coefficients) = measures::clustering_coefficient(graph) {
                 for _ in 0..config.sample_size.min(graph.node_count()) {

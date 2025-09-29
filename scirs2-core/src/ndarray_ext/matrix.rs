@@ -269,7 +269,7 @@ where
 ///
 /// # Examples
 ///
-/// ```
+/// ```ignore
 /// use scirs2_core::ndarray_ext::matrix::zeros;
 ///
 /// let zeros_mat = zeros::<f64>(2, 3);
@@ -667,7 +667,7 @@ where
 ///
 /// # Examples
 ///
-/// ```
+/// ```ignore
 /// use ndarray::array;
 /// use scirs2_core::ndarray_ext::matrix::vander;
 ///

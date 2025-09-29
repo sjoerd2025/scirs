@@ -1,4 +1,4 @@
-use ndarray::array;
+use scirs2_core::ndarray::array;
 use scirs2_spatial::pathplanning::VisibilityGraphPlanner;
 
 #[allow(dead_code)]

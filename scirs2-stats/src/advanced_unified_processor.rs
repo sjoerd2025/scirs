@@ -909,7 +909,6 @@ mod tests {
     use ndarray::array;
 
     #[test]
-    #[ignore = "timeout"]
     fn test_advanced_processor_creation() {
         let processor = create_advanced_processor();
         assert!(processor.capabilities.has_sse2()); // Most modern systems have SSE2

@@ -1,8 +1,8 @@
-use ndarray::Array;
 use scirs2_core::memory_efficient::{
     ArithmeticOps, BroadcastOps, ChunkingStrategy, MemoryMappedArray, MemoryMappedChunks,
     ZeroCopyOps,
 };
+use scirs2_core::ndarray_ext::Array;
 // Removed unused statrs import
 use std::fs::File;
 use std::io::Write;

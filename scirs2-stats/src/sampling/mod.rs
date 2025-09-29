@@ -194,7 +194,7 @@ where
         Some(seed_value) => rand::rngs::StdRng::seed_from_u64(seed_value),
         None => {
             // Get a seed from the system RNG
-            let mut rng = rand::rng();
+            let mut rng = rand::thread_rng();
             let seed = rng.random::<u64>();
             rand::rngs::StdRng::seed_from_u64(seed)
         }
@@ -285,7 +285,7 @@ where
     let mut rng = match seed {
         Some(seed_value) => rand::rngs::StdRng::seed_from_u64(seed_value),
         None => {
-            let mut rng = rand::rng();
+            let mut rng = rand::thread_rng();
             let seed = rng.random::<u64>();
             rand::rngs::StdRng::seed_from_u64(seed)
         }
@@ -377,7 +377,7 @@ where
     let mut rng = match seed {
         Some(seed_value) => rand::rngs::StdRng::seed_from_u64(seed_value),
         None => {
-            let mut rng = rand::rng();
+            let mut rng = rand::thread_rng();
             let seed = rng.random::<u64>();
             rand::rngs::StdRng::seed_from_u64(seed)
         }
@@ -470,7 +470,7 @@ where
     let mut rng = match seed {
         Some(seed_value) => rand::rngs::StdRng::seed_from_u64(seed_value),
         None => {
-            let mut rng = rand::rng();
+            let mut rng = rand::thread_rng();
             let seed = rng.random::<u64>();
             rand::rngs::StdRng::seed_from_u64(seed)
         }
@@ -552,7 +552,7 @@ where
     let mut rng = match seed {
         Some(seed_value) => rand::rngs::StdRng::seed_from_u64(seed_value),
         None => {
-            let mut rng = rand::rng();
+            let mut rng = rand::thread_rng();
             let seed = rng.random::<u64>();
             rand::rngs::StdRng::seed_from_u64(seed)
         }
@@ -643,7 +643,7 @@ where
     let mut rng = match seed {
         Some(seed_value) => rand::rngs::StdRng::seed_from_u64(seed_value + 1),
         None => {
-            let mut rng = rand::rng();
+            let mut rng = rand::thread_rng();
             let seed = rng.random::<u64>();
             rand::rngs::StdRng::seed_from_u64(seed)
         }

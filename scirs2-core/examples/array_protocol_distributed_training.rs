@@ -16,7 +16,6 @@
 use std::collections::HashMap;
 use tempfile::tempdir;
 
-use ndarray::Array2;
 use scirs2_core::array_protocol::{
     self,
     auto_device::{set_auto_device_config, AutoDeviceConfig},
@@ -30,6 +29,7 @@ use scirs2_core::array_protocol::{
     training::{CrossEntropyLoss, DataLoader, InMemoryDataset, Trainer},
     GPUBackend, NdarrayWrapper,
 };
+use scirs2_core::ndarray_ext::Array2;
 
 #[allow(dead_code)]
 fn main() {

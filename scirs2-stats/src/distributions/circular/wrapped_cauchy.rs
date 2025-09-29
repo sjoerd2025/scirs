@@ -168,7 +168,7 @@ impl<F: Float + SampleUniform + Debug + 'static + std::fmt::Display> CircularDis
 
         // Method 1: Inverse transform sampling
         // Generate uniform random number in [0, 1)
-        let mut rng = rand::rng();
+        let mut rng = rand::thread_rng();
         let u: f64 = rng.random();
 
         // Convert to angle using inverse CDF
@@ -239,7 +239,6 @@ mod tests {
     use scirs2_core::ScientificNumber;
 
     #[test]
-    #[ignore = "timeout"]
     fn test_wrapped_cauchy_creation() {
         // Valid parameters
         let wc = wrapped_cauchy(0.0f64, 0.5);

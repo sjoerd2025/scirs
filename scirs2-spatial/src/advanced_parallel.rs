@@ -20,7 +20,7 @@
 //!
 //! ```
 //! use scirs2_spatial::advanced_parallel::{AdvancedParallelDistanceMatrix, WorkStealingConfig};
-//! use ndarray::array;
+//! use scirs2_core::ndarray::array;
 //!
 //! # fn example() -> Result<(), Box<dyn std::error::Error>> {
 //! // Configure work-stealing parallel processing
@@ -41,7 +41,7 @@
 use crate::error::SpatialResult;
 use crate::memory_pool::DistancePool;
 use crate::simd_distance::hardware_specific_simd::HardwareOptimizedDistances;
-use ndarray::{Array1, Array2, ArrayView2};
+use scirs2_core::ndarray::{Array1, Array2, ArrayView2};
 use scirs2_core::simd_ops::PlatformCapabilities;
 use std::collections::VecDeque;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
@@ -1256,7 +1256,7 @@ pub fn report_advanced_parallel_capabilities() {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::array;
+    use scirs2_core::ndarray::array;
 
     #[test]
     fn test_work_stealing_config() {

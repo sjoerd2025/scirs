@@ -4,11 +4,11 @@
 [![License](https://img.shields.io/badge/license-MIT%2FApache--2.0-blue.svg)](../LICENSE)
 [![Documentation](https://img.shields.io/docsrs/scirs2-datasets)](https://docs.rs/scirs2-datasets)
 
-A production-ready collection of dataset utilities for the SciRS2 scientific computing library. This module provides comprehensive functionality for loading, generating, and working with datasets commonly used in scientific computing, machine learning, and statistical analysis.
+A production-ready collection of dataset utilities for the SciRS2 scientific computing library (v0.1.0-beta.3). Following the [SciRS2 POLICY](../SCIRS2_POLICY.md), this module provides comprehensive functionality for loading, generating, and working with datasets commonly used in scientific computing, machine learning, and statistical analysis with enhanced random generation capabilities.
 
-## 🚀 Production Status - First Beta (0.1.0-beta.2)
+## 🚀 Production Status - Beta 3 (0.1.0-beta.3)
 
-This is the first beta release with all core functionality implemented, thoroughly tested (117+ tests), and production-ready. The API is stable and follows Rust best practices with zero-warning builds.
+This release features SciRS2 POLICY implementation with all core functionality implemented, thoroughly tested (117+ tests), and production-ready. The API is stable and follows Rust best practices with zero-warning builds and ecosystem consistency.
 
 ## ✨ Features
 
@@ -25,14 +25,14 @@ Add to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-scirs2-datasets = "0.1.0-beta.2"
+scirs2-datasets = "0.1.0-beta.3"
 ```
 
 For remote dataset downloading capabilities:
 
 ```toml
 [dependencies]
-scirs2-datasets = { version = "0.1.0-beta.2", features = ["download"] }
+scirs2-datasets = { version = "0.1.0-beta.3", features = ["download"] }
 ```
 
 ## Quick Start

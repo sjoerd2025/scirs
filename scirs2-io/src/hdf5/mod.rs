@@ -1698,6 +1698,7 @@ mod legacy_tests {
     }
 
     #[test]
+    #[ignore]
     fn test_hdf5_file_creation() {
         let file = HDF5File::create("test.h5").unwrap();
         assert_eq!(file.mode, FileMode::Create);

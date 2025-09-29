@@ -992,7 +992,6 @@ mod tests {
     use super::*;
 
     #[test]
-    #[ignore = "timeout"]
     fn test_platform_info_creation() {
         let platform = PlatformInfo::current_platform();
         assert!(!platform.os.is_empty());

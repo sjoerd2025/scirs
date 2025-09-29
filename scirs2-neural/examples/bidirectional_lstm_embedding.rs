@@ -610,7 +610,7 @@ fn shuffle_dataset<T: Clone, U: Clone>(xs: &[T], ys: &[U]) -> (Vec<T>, Vec<U>) {
     );
     let mut indices: Vec<usize> = (0..xs.len()).collect();
     let mut rng = SmallRng::from_seed([42; 32]);
-    use rand::seq::SliceRandom;
+    use scirs2_core::random::seq::SliceRandom;
     indices.shuffle(&mut rng);
     let mut shuffled_xs = Vec::with_capacity(xs.len());
     let mut shuffled_ys = Vec::with_capacity(ys.len());

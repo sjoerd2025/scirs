@@ -6,7 +6,7 @@ use crate::error::{StatsError, StatsResult};
 use crate::sampling::SampleableDistribution;
 use num_traits::{Float, NumCast};
 use rand_distr::{Bernoulli as RandBernoulli, Distribution};
-use scirs2_core::rng;
+use scirs2_core::random::prelude::*;
 use scirs2_core::validation::check_probability;
 
 /// Bernoulli distribution structure
@@ -223,7 +223,7 @@ impl<F: Float + NumCast + std::fmt::Display> Bernoulli<F> {
     /// assert_eq!(samples.len(), 10);
     /// ```
     pub fn rvs(&self, size: usize) -> StatsResult<Vec<F>> {
-        let mut rng = rng();
+        let mut rng = thread_rng();
         let mut samples = Vec::with_capacity(size);
         let zero = F::zero();
         let one = F::one();
@@ -503,7 +503,6 @@ mod tests {
     use approx::assert_relative_eq;
 
     #[test]
-    #[ignore = "timeout"]
     fn test_bernoulli_creation() {
         // Valid p values
         let bern1 = Bernoulli::new(0.0).unwrap();

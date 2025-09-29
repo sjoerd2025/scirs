@@ -14,7 +14,7 @@
 //! Run with: cargo run --example interactive_proof_explorer
 
 use ndarray::{Array1, Array2};
-use num_complex::Complex64;
+use scirs2_core::Complex64;
 use scirs2_special::*;
 use std::collections::HashMap;
 use std::f64::consts::PI;

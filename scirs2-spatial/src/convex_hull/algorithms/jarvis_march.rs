@@ -9,8 +9,8 @@ use crate::convex_hull::geometry::calculations_2d::{
     compute_2d_hull_equations, cross_product_2d, distance_squared_2d,
 };
 use crate::error::{SpatialError, SpatialResult};
-use ndarray::ArrayView2;
 use qhull::Qh;
+use scirs2_core::ndarray::ArrayView2;
 
 /// Compute convex hull using Jarvis march (Gift Wrapping) algorithm (2D only)
 ///
@@ -39,7 +39,7 @@ use qhull::Qh;
 ///
 /// ```rust
 /// use scirs2_spatial::convex_hull::algorithms::jarvis_march::compute_jarvis_march;
-/// use ndarray::array;
+/// use scirs2_core::ndarray::array;
 ///
 /// let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [0.5, 0.5]];
 /// let hull = compute_jarvis_march(&points.view()).unwrap();
@@ -149,7 +149,7 @@ pub fn compute_jarvis_march(points: &ArrayView2<'_, f64>) -> SpatialResult<Conve
 ///
 /// ```rust
 /// use scirs2_spatial::convex_hull::algorithms::jarvis_march::find_leftmost_point;
-/// use ndarray::array;
+/// use scirs2_core::ndarray::array;
 ///
 /// let points = array![[1.0, 0.0], [0.0, 1.0], [2.0, 0.0], [0.0, 0.0]];
 /// let leftmost = find_leftmost_point(&points.view());
@@ -187,7 +187,7 @@ pub fn find_leftmost_point(points: &ArrayView2<'_, f64>) -> usize {
 ///
 /// ```rust
 /// use scirs2_spatial::convex_hull::algorithms::jarvis_march::find_most_counterclockwise;
-/// use ndarray::array;
+/// use scirs2_core::ndarray::array;
 ///
 /// let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]];
 /// let current = 0; // [0.0, 0.0]
@@ -284,7 +284,7 @@ pub fn is_more_counterclockwise(
 ///
 /// ```rust
 /// use scirs2_spatial::convex_hull::algorithms::jarvis_march::jarvis_step;
-/// use ndarray::array;
+/// use scirs2_core::ndarray::array;
 ///
 /// let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]];
 /// let current = 0; // Start from [0.0, 0.0]
@@ -320,7 +320,7 @@ pub fn jarvis_step(points: &ArrayView2<'_, f64>, current: usize) -> usize {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::arr2;
+    use scirs2_core::ndarray::arr2;
 
     #[test]
     fn test_jarvis_march_basic() {

@@ -12,7 +12,7 @@
 //!
 //! ```
 //! use scirs2_spatial::voronoi::Voronoi;
-//! use ndarray::array;
+//! use scirs2_core::ndarray::array;
 //!
 //! // Create a set of 2D points
 //! let points = array![
@@ -40,7 +40,7 @@
 
 use crate::delaunay::Delaunay;
 use crate::error::{SpatialError, SpatialResult};
-use ndarray::{Array1, Array2, ArrayView2};
+use scirs2_core::ndarray::{Array1, Array2, ArrayView2};
 use std::collections::HashMap;
 
 /// A structure for representing Voronoi diagrams
@@ -92,7 +92,7 @@ impl Voronoi {
     ///
     /// ```
     /// use scirs2_spatial::voronoi::Voronoi;
-    /// use ndarray::array;
+    /// use scirs2_core::ndarray::array;
     ///
     /// let points = array![
     ///     [0.0, 0.0],
@@ -148,7 +148,7 @@ impl Voronoi {
                         } else {
                             // Add a small perturbation to points and retry
                             let mut perturbedpoints = points.to_owned();
-                            use rand::Rng;
+                            use scirs2_core::random::Rng;
                             let mut rng = rand::rng();
 
                             for i in 0..npoints {
@@ -631,7 +631,7 @@ impl Voronoi {
 ///
 /// ```
 /// use scirs2_spatial::voronoi::voronoi;
-/// use ndarray::array;
+/// use scirs2_core::ndarray::array;
 ///
 /// let points = array![
 ///     [0.0, 0.0],
@@ -651,7 +651,7 @@ pub fn voronoi(points: &ArrayView2<'_, f64>, furthestsite: bool) -> SpatialResul
 mod tests {
     use super::*;
     use approx::assert_relative_eq;
-    use ndarray::arr2;
+    use scirs2_core::ndarray::arr2;
 
     #[test]
     fn test_voronoi_square() {

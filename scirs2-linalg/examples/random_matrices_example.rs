@@ -1,7 +1,7 @@
 //! Example demonstrating random matrix generation utilities
 
-use rand::SeedableRng;
-use rand_chacha::ChaCha8Rng;
+use scirs2_core::random::prelude::*;
+use scirs2_core::ChaCha8Rng;
 use scirs2_linalg::error::LinalgResult;
 use scirs2_linalg::random_matrices::{
     random_complexmatrix, random_hermitian, randommatrix, Distribution1D, MatrixType,
@@ -322,7 +322,7 @@ fn print_sparsematrix(matrix: &ndarray::Array2<f64>) {
 }
 
 #[allow(dead_code)]
-fn print_complexmatrix(matrix: &ndarray::Array2<num_complex::Complex<f64>>) {
+fn print_complexmatrix(matrix: &ndarray::Array2<scirs2_core::Complex<f64>>) {
     for row in matrix.rows() {
         print!("[");
         for (i, &val) in row.iter().enumerate() {

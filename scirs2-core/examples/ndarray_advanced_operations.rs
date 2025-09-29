@@ -1,9 +1,9 @@
 // Example demonstrating the advanced ndarray operations
 
-use ndarray::{array, Array};
 use scirs2_core::ndarray_ext::manipulation::{
     argmax, argmin, flip_2d, gradient, meshgrid, pad_2d, repeat_2d, roll_2d, tile_2d, unique,
 };
+use scirs2_core::ndarray_ext::{array, Array};
 
 #[allow(dead_code)]
 fn print_title(title: &str) {

@@ -948,7 +948,7 @@ impl<F: Float + FromPrimitive + Debug + ndarray::ScalarOperand + 'static> Vorono
                     // Compute distance
                     let mut dist_sq = F::zero();
                     for j in 0..dim {
-                        dist_sq = dist_sq + (site[j] - query_point[j]).powi(2);
+                        dist_sq = dist_sq + num_traits::Float::powi(site[j] - query_point[j], 2);
                     }
                     let dist = dist_sq.sqrt();
 

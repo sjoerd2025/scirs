@@ -930,7 +930,6 @@ mod tests {
     use super::*;
 
     #[test]
-    #[ignore = "timeout"]
     fn test_fluent_stats_creation() {
         let _stats: FluentStats<f64> = stats();
         assert!(true); // Just test compilation

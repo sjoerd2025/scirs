@@ -287,7 +287,7 @@ impl<F: Float + FromPrimitive + Send + Sync> ParallelQueryProcessor<F> {
 /// Default implementation of OptimizedSpatialSearch for KdTree
 impl<F> OptimizedSpatialSearch<F> for KdTree<F>
 where
-    F: Float + FromPrimitive + Debug + Send + Sync,
+    F: Float + FromPrimitive + Debug + Send + Sync + ordered_float::FloatCore,
 {
     fn batch_k_nearest_neighbors(
         &self,
@@ -362,7 +362,7 @@ where
 /// Default implementation of OptimizedSpatialSearch for BallTree
 impl<F> OptimizedSpatialSearch<F> for BallTree<F>
 where
-    F: Float + FromPrimitive + Debug + Send + Sync,
+    F: Float + FromPrimitive + Debug + Send + Sync + ordered_float::FloatCore,
 {
     fn batch_k_nearest_neighbors(
         &self,

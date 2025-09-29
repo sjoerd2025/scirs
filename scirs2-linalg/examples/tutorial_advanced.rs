@@ -168,7 +168,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("6. Complex Number Support");
     println!("------------------------");
 
-    use num_complex::Complex;
+    use scirs2_core::Complex;
     use scirs2_linalg::complex::{complex_inverse, complex_matmul};
 
     let complex_a = array![

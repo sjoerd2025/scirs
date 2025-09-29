@@ -4,8 +4,8 @@
 //! operations, providing a foundation for convex hull computations.
 
 use crate::error::{SpatialError, SpatialResult};
-use ndarray::{Array2, ArrayView2};
 use qhull::Qh;
+use scirs2_core::ndarray::{Array2, ArrayView2};
 
 /// Algorithms available for computing convex hulls
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
@@ -56,7 +56,7 @@ impl ConvexHull {
     ///
     /// ```
     /// use scirs2_spatial::convex_hull::ConvexHull;
-    /// use ndarray::array;
+    /// use scirs2_core::ndarray::array;
     ///
     /// let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [0.5, 0.5]];
     /// let hull = ConvexHull::new(&points.view()).unwrap();
@@ -85,7 +85,7 @@ impl ConvexHull {
     ///
     /// ```
     /// use scirs2_spatial::convex_hull::{ConvexHull, ConvexHullAlgorithm};
-    /// use ndarray::array;
+    /// use scirs2_core::ndarray::array;
     ///
     /// let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [0.5, 0.5]];
     /// let hull = ConvexHull::new_with_algorithm(&points.view(), ConvexHullAlgorithm::GrahamScan).unwrap();
@@ -150,7 +150,7 @@ impl ConvexHull {
     ///
     /// ```
     /// use scirs2_spatial::convex_hull::ConvexHull;
-    /// use ndarray::array;
+    /// use scirs2_core::ndarray::array;
     ///
     /// let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [0.5, 0.5]];
     /// let hull = ConvexHull::new(&points.view()).unwrap();
@@ -203,7 +203,7 @@ impl ConvexHull {
     ///
     /// ```
     /// use scirs2_spatial::convex_hull::ConvexHull;
-    /// use ndarray::array;
+    /// use scirs2_core::ndarray::array;
     ///
     /// let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [0.5, 0.5]];
     /// let hull = ConvexHull::new(&points.view()).unwrap();
@@ -226,7 +226,7 @@ impl ConvexHull {
     ///
     /// ```
     /// use scirs2_spatial::convex_hull::ConvexHull;
-    /// use ndarray::array;
+    /// use scirs2_core::ndarray::array;
     ///
     /// let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [0.5, 0.5]];
     /// let hull = ConvexHull::new(&points.view()).unwrap();
@@ -251,7 +251,7 @@ impl ConvexHull {
     ///
     /// ```
     /// use scirs2_spatial::convex_hull::ConvexHull;
-    /// use ndarray::array;
+    /// use scirs2_core::ndarray::array;
     ///
     /// let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [0.5, 0.5]];
     /// let hull = ConvexHull::new(&points.view()).unwrap();
@@ -280,7 +280,7 @@ impl ConvexHull {
     ///
     /// ```
     /// use scirs2_spatial::convex_hull::ConvexHull;
-    /// use ndarray::array;
+    /// use scirs2_core::ndarray::array;
     ///
     /// let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]];
     /// let hull = ConvexHull::new(&points.view()).unwrap();
@@ -314,7 +314,7 @@ impl ConvexHull {
     ///
     /// ```
     /// use scirs2_spatial::convex_hull::ConvexHull;
-    /// use ndarray::array;
+    /// use scirs2_core::ndarray::array;
     ///
     /// // Create a square with area 1
     /// let points = array![[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]];
@@ -344,7 +344,7 @@ impl ConvexHull {
     ///
     /// ```
     /// use scirs2_spatial::convex_hull::ConvexHull;
-    /// use ndarray::array;
+    /// use scirs2_core::ndarray::array;
     ///
     /// // Create a 3D cube
     /// let points = array![

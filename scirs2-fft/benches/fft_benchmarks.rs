@@ -4,8 +4,8 @@
 //! and measuring performance across different input sizes.
 
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
-use ndarray::Array1;
-use num_complex::Complex64;
+use scirs2_core::ndarray::Array1;
+use scirs2_core::Complex64;
 use scirs2_fft::{fft, fft2, fftn, frft, ifft, irfft, rfft};
 use std::f64::consts::PI;
 use std::hint::black_box;
@@ -152,8 +152,8 @@ fn bench_memory_efficient(c: &mut Criterion) {
 
         group.bench_with_input(
             BenchmarkId::new("fft_inplace", size),
-            &mut signal,
-            |b, signal| {
+            &signal,
+            |b, signal: &Vec<Complex64>| {
                 b.iter(|| {
                     let mut data = signal.clone();
                     use scirs2_fft::memory_efficient::{fft_inplace, FftMode};

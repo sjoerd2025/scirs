@@ -1,5 +1,5 @@
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
-use ndarray::{Array1, Array2, Array3};
+use scirs2_core::ndarray::{Array1, Array2, Array3};
 use scirs2_ndimage::filters::{
     bilateral_filter,
     filter_functions,

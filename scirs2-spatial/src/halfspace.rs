@@ -20,7 +20,7 @@
 //!
 //! ```
 //! # use scirs2_spatial::halfspace::{HalfspaceIntersection, Halfspace};
-//! # use ndarray::array;
+//! # use scirs2_core::ndarray::array;
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! // Define halfspaces for a unit square: x ≥ 0, y ≥ 0, x ≤ 1, y ≤ 1
 //! let halfspaces = vec![
@@ -44,7 +44,7 @@
 
 use crate::convex_hull::ConvexHull;
 use crate::error::{SpatialError, SpatialResult};
-use ndarray::{arr1, Array1, Array2, ArrayView1};
+use scirs2_core::ndarray::{arr1, Array1, Array2, ArrayView1};
 use statrs::statistics::Statistics;
 
 /// Representation of a halfspace: a·x ≤ b
@@ -72,7 +72,7 @@ impl Halfspace {
     ///
     /// ```
     /// use scirs2_spatial::halfspace::Halfspace;
-    /// use ndarray::array;
+    /// use scirs2_core::ndarray::array;
     ///
     /// // Halfspace x + y ≤ 1
     /// let hs = Halfspace::new(array![1.0, 1.0], 1.0);
@@ -207,7 +207,7 @@ impl HalfspaceIntersection {
     ///
     /// ```
     /// # use scirs2_spatial::halfspace::{HalfspaceIntersection, Halfspace};
-    /// # use ndarray::array;
+    /// # use scirs2_core::ndarray::array;
     /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
     /// let halfspaces = vec![
     ///     Halfspace::new(array![-1.0, 0.0], 0.0),   // x ≥ 0

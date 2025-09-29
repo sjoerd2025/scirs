@@ -3,11 +3,8 @@
 use crate::error::{DatasetsError, Result};
 use crate::utils::Dataset;
 use ndarray::{Array1, Array2};
-use rand::prelude::*;
-use rand::rngs::StdRng;
-use rand_distr::Distribution;
-use rand_distr::Uniform;
-use scirs2_core::rng;
+use scirs2_core::random::prelude::*;
+use scirs2_core::random::rand_distributions::{Distribution, Uniform};
 use std::f64::consts::PI;
 
 /// Generate a random classification dataset with clusters
@@ -61,7 +58,7 @@ pub fn make_classification(
     let mut rng = match randomseed {
         Some(_seed) => StdRng::seed_from_u64(_seed),
         None => {
-            let mut r = rng();
+            let mut r = thread_rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -189,7 +186,7 @@ pub fn make_regression(
     let mut rng = match randomseed {
         Some(_seed) => StdRng::seed_from_u64(_seed),
         None => {
-            let mut r = rng();
+            let mut r = thread_rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -277,7 +274,7 @@ pub fn make_time_series(
     let mut rng = match randomseed {
         Some(_seed) => StdRng::seed_from_u64(_seed),
         None => {
-            let mut r = rng();
+            let mut r = thread_rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -384,7 +381,7 @@ pub fn make_blobs(
     let mut rng = match randomseed {
         Some(_seed) => StdRng::seed_from_u64(_seed),
         None => {
-            let mut r = rng();
+            let mut r = thread_rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -475,7 +472,7 @@ pub fn make_spirals(
     let mut rng = match randomseed {
         Some(_seed) => StdRng::seed_from_u64(_seed),
         None => {
-            let mut r = rng();
+            let mut r = thread_rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -552,7 +549,7 @@ pub fn make_moons(n_samples: usize, noise: f64, randomseed: Option<u64>) -> Resu
     let mut rng = match randomseed {
         Some(_seed) => StdRng::seed_from_u64(_seed),
         None => {
-            let mut r = rng();
+            let mut r = thread_rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -649,7 +646,7 @@ pub fn make_circles(
     let mut rng = match randomseed {
         Some(_seed) => StdRng::seed_from_u64(_seed),
         None => {
-            let mut r = rng();
+            let mut r = thread_rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -762,7 +759,7 @@ pub fn make_anisotropic_blobs(
     let mut rng = match randomseed {
         Some(_seed) => StdRng::seed_from_u64(_seed),
         None => {
-            let mut r = rng();
+            let mut r = thread_rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -900,7 +897,7 @@ pub fn make_hierarchical_clusters(
     let mut rng = match randomseed {
         Some(_seed) => StdRng::seed_from_u64(_seed),
         None => {
-            let mut r = rng();
+            let mut r = thread_rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };

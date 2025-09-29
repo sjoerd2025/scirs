@@ -6,14 +6,17 @@
 
 Computer vision module for SciRS2, providing comprehensive functionality for image processing, feature detection, segmentation, and color transformations.
 
-## Production Status (0.1.0-beta.2)
+⚠️ **SciRS2 POLICY Migration**: This module is currently being updated to follow the [SciRS2 POLICY](../SCIRS2_POLICY.md) - migration from direct `rand::` usage to scirs2-core abstractions is in progress.
 
-**✅ PRODUCTION READY** - Final alpha release with complete functionality:
+## Production Status (0.1.0-beta.3)
+
+**✅ PRODUCTION READY** - Beta 3 release with SciRS2 POLICY implementation:
 - **217 unit tests** passing with zero warnings
 - **Comprehensive API** covering all major computer vision operations
 - **Working examples** demonstrating real-world usage
 - **Performance optimized** with parallel processing support
 - **SciPy-compatible design** for familiar scientific computing workflows
+- **Ecosystem Consistency**: Migrating to scirs2-core abstractions for consistent APIs
 
 ## Overview
 
@@ -206,14 +209,14 @@ Add `scirs2-vision` to your dependencies in `Cargo.toml`:
 
 ```toml
 [dependencies]
-scirs2-vision = "0.1.0-beta.2"
+scirs2-vision = "0.1.0-beta.3"
 ```
 
 To enable optimizations through the core module, add feature flags:
 
 ```toml
 [dependencies]
-scirs2-vision = { version = "0.1.0-beta.2", features = ["parallel"] }
+scirs2-vision = { version = "0.1.0-beta.3", features = ["parallel"] }
 ```
 
 ## Documentation
@@ -276,7 +279,7 @@ This project is dual-licensed under:
 You can choose to use either license. See the [LICENSE](../LICENSE) file for details.
 ## Production Readiness
 
-This **0.1.0-beta.2** release represents a mature, production-ready computer vision library suitable for:
+This **0.1.0-beta.3** release represents a mature, production-ready computer vision library suitable for:
 
 ### 🏭 Production Applications
 - **Scientific Computing**: Research applications requiring reliable computer vision algorithms

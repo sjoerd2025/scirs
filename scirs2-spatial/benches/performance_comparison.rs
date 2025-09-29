@@ -4,8 +4,8 @@
 //! comparing against reference implementations, and producing detailed
 //! performance reports with charts and statistics.
 
-use ndarray::Array2;
-use rand::{rngs::StdRng, Rng, SeedableRng};
+use scirs2_core::ndarray::Array2;
+use scirs2_core::random::{rngs::StdRng, Rng, SeedableRng};
 use scirs2_spatial::{
     distance::{euclidean, pdist},
     simd_distance::{parallel_pdist, simd_euclidean_distance_batch, simd_knn_search},

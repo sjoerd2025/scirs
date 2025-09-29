@@ -1,8 +1,6 @@
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
-use ndarray::{Array1, Array2};
-use rand::distr::Uniform;
-use rand::{Rng, SeedableRng};
-use rand_chacha::ChaCha8Rng;
+use scirs2_core::ndarray::{Array1, Array2};
+use scirs2_core::random::prelude::*;
 use scirs2_linalg::{cholesky, det, inv, lstsq, lu, matrix_norm, qr, solve};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -43,7 +41,7 @@ struct ComparisonSummary {
 /// Generate test data with controlled properties
 #[allow(dead_code)]
 fn generate_test_data(size: usize) -> (Array2<f64>, Array1<f64>) {
-    let mut rng = ChaCha8Rng::seed_from_u64(SEED);
+    let mut rng = StdRng::seed_from_u64(SEED);
     let uniform = Uniform::new(-1.0, 1.0).unwrap();
     let matrix = Array2::from_shape_fn((size, size), |_| rng.sample(uniform));
     let vector = Array1::from_shape_fn(size, |_| rng.sample(uniform));
@@ -53,7 +51,7 @@ fn generate_test_data(size: usize) -> (Array2<f64>, Array1<f64>) {
 /// Generate positive definite matrix for stable operations
 #[allow(dead_code)]
 fn generate_spd_matrix(size: usize) -> Array2<f64> {
-    let mut rng = ChaCha8Rng::seed_from_u64(SEED);
+    let mut rng = StdRng::seed_from_u64(SEED);
     let uniform = Uniform::new(-1.0, 1.0).unwrap();
     let a = Array2::from_shape_fn((size, size), |_| rng.sample(uniform));
     let at = a.t();

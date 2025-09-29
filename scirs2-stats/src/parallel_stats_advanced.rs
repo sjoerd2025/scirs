@@ -1298,7 +1298,6 @@ mod tests {
     use ndarray::array;
 
     #[test]
-    #[ignore = "timeout"]
     fn test_advanced_parallel_config() {
         let config = AdvancedParallelConfig::default();
         assert!(config.adaptive_work_distribution);

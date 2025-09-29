@@ -1,5 +1,5 @@
 use ndarray::Array2;
-use num_complex::Complex64;
+use scirs2_core::Complex64;
 use scirs2_fft::fft::{fft, fft2};
 use scirs2_fft::memory_efficient::{fft2_efficient, fft_inplace, FftMode};
 use scirs2_fft::PlanCache;

@@ -21,7 +21,7 @@
 //!
 //! ```
 //! use scirs2_spatial::simd_distance::{simd_euclidean_distance_batch, parallel_pdist};
-//! use ndarray::array;
+//! use scirs2_core::ndarray::array;
 //!
 //! # fn example() -> Result<(), Box<dyn std::error::Error>> {
 //! // SIMD batch distance calculation
@@ -40,7 +40,7 @@
 //! ```
 
 use crate::error::{SpatialError, SpatialResult};
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
+use scirs2_core::ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::SimdUnifiedOps;
 
@@ -480,7 +480,7 @@ fn linear_to_condensed_indices(_linearidx: usize, n: usize) -> (usize, usize) {
 /// Advanced-optimized SIMD-accelerated clustering algorithms
 pub mod advanced_simd_clustering {
     use crate::error::{SpatialError, SpatialResult};
-    use ndarray::{Array1, Array2, ArrayView2};
+    use scirs2_core::ndarray::{Array1, Array2, ArrayView2};
     use scirs2_core::simd_ops::SimdUnifiedOps;
 
     /// Advanced-optimized SIMD K-means implementation with vectorized operations
@@ -641,8 +641,8 @@ pub mod advanced_simd_clustering {
             &self,
             points: &ArrayView2<'_, f64>,
             centroids: &ArrayView2<'_, f64>,
-            assignments: &mut ndarray::ArrayViewMut1<usize>,
-            distance_buffer: &mut ndarray::ArrayViewMut2<f64>,
+            assignments: &mut scirs2_core::ndarray::ArrayViewMut1<usize>,
+            distance_buffer: &mut scirs2_core::ndarray::ArrayViewMut2<f64>,
         ) -> SpatialResult<()> {
             let n_points = points.nrows();
 
@@ -687,10 +687,10 @@ pub mod advanced_simd_clustering {
         fn update_centroids_vectorized(
             &self,
             points: &ArrayView2<'_, f64>,
-            assignments: &ndarray::ArrayView1<usize>,
-            centroids: &mut ndarray::ArrayViewMut2<f64>,
-            centroid_sums: &mut ndarray::ArrayViewMut2<f64>,
-            centroid_counts: &mut ndarray::ArrayViewMut1<f64>,
+            assignments: &scirs2_core::ndarray::ArrayView1<usize>,
+            centroids: &mut scirs2_core::ndarray::ArrayViewMut2<f64>,
+            centroid_sums: &mut scirs2_core::ndarray::ArrayViewMut2<f64>,
+            centroid_counts: &mut scirs2_core::ndarray::ArrayViewMut1<f64>,
         ) -> SpatialResult<()> {
             let n_points = points.nrows();
             let _n_dims = points.ncols();
@@ -736,15 +736,18 @@ pub mod advanced_simd_clustering {
         /// SIMD-accelerated convergence checking
         fn check_convergence_simd(
             &self,
-            current: &ndarray::ArrayView1<usize>,
-            previous: &ndarray::ArrayView1<usize>,
+            current: &scirs2_core::ndarray::ArrayView1<usize>,
+            previous: &scirs2_core::ndarray::ArrayView1<usize>,
         ) -> bool {
             // Use SIMD to compare assignment arrays efficiently
             !current.is_empty() && current.iter().zip(previous.iter()).all(|(a, b)| a == b)
         }
 
         /// Compute maximum centroid movement using SIMD operations
-        fn compute_max_centroid_movement(&self, centroids: &ndarray::ArrayView2<f64>) -> f64 {
+        fn compute_max_centroid_movement(
+            &self,
+            centroids: &scirs2_core::ndarray::ArrayView2<f64>,
+        ) -> f64 {
             // For simplicity, return a small value indicating convergence
             // In a full implementation, this would compare with previous _centroids
             self.tolerance * 0.5
@@ -842,7 +845,7 @@ pub mod advanced_simd_clustering {
 /// Hardware-specific SIMD optimizations for maximum performance
 pub mod hardware_specific_simd {
     use crate::error::{SpatialError, SpatialResult};
-    use ndarray::{s, Array1, Array2, ArrayView1, ArrayView2};
+    use scirs2_core::ndarray::{s, Array1, Array2, ArrayView1, ArrayView2};
     use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
 
     /// Advanced-optimized distance calculations with hardware-specific code paths
@@ -1049,7 +1052,7 @@ pub mod hardware_specific_simd {
         fn compute_distance_block(
             &self,
             points: &ArrayView2<'_, f64>,
-            result: &mut ndarray::ArrayViewMut2<f64>,
+            result: &mut scirs2_core::ndarray::ArrayViewMut2<f64>,
             i_range: std::ops::Range<usize>,
             j_range: std::ops::Range<usize>,
         ) -> SpatialResult<()> {
@@ -1179,7 +1182,7 @@ pub mod hardware_specific_simd {
 /// Mixed-precision SIMD operations for enhanced performance
 pub mod mixed_precision_simd {
     use crate::error::{SpatialError, SpatialResult};
-    use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
+    use scirs2_core::ndarray::{Array1, Array2, ArrayView1, ArrayView2};
     use scirs2_core::parallel_ops::*;
     use scirs2_core::simd_ops::SimdUnifiedOps;
 
@@ -1273,7 +1276,7 @@ pub mod mixed_precision_simd {
 pub mod bench {
     use super::mixed_precision_simd::simd_euclidean_distance_batch_f32;
     use crate::simd_euclidean_distance_batch;
-    use ndarray::ArrayView2;
+    use scirs2_core::ndarray::ArrayView2;
     use scirs2_core::simd_ops::PlatformCapabilities;
     use std::time::Instant;
 
@@ -1397,10 +1400,9 @@ mod tests {
         simd_manhattan_distance,
     };
     use approx::assert_relative_eq;
-    use ndarray::array;
+    use scirs2_core::ndarray::array;
 
     #[test]
-    #[ignore]
     fn test_simd_euclidean_distance() {
         let a = vec![1.0, 2.0, 3.0];
         let b = vec![4.0, 5.0, 6.0];
@@ -1412,7 +1414,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn test_simd_manhattan_distance() {
         let a = vec![1.0, 2.0, 3.0];
         let b = vec![4.0, 5.0, 6.0];
@@ -1424,7 +1425,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn test_simd_batch_distance() {
         let points1 = array![[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]];
         let points2 = array![[2.0, 3.0], [4.0, 5.0], [6.0, 7.0]];
@@ -1447,7 +1447,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn test_parallel_pdist() {
         let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]];
 
@@ -1464,7 +1463,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn test_parallel_cdist() {
         let points1 = array![[0.0, 0.0], [1.0, 1.0]];
         let points2 = array![[1.0, 0.0], [0.0, 1.0], [2.0, 2.0]];
@@ -1481,7 +1479,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn test_simd_knn_search() {
         let data_points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0], [2.0, 2.0]];
         let query_points = array![[0.5, 0.5], [1.5, 1.5]];
@@ -1518,7 +1515,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn test_simd_chebyshev_distance() {
         let a = vec![1.0, 2.0, 3.0];
         let b = vec![4.0, 5.0, 1.0];
@@ -1530,7 +1526,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn test_different_metrics() {
         let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]];
 
@@ -1560,7 +1555,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn test_large_dimension_vectors() {
         // Simple test case first
         let a = vec![0.0, 1.0, 2.0];

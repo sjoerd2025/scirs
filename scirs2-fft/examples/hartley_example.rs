@@ -80,7 +80,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("   Hartley transform: {hartley_result:?}");
 
     // Compute FFT and derive Hartley from it
-    use num_complex::Complex64;
+    use scirs2_core::Complex64;
     use scirs2_fft::fft::fft;
 
     let mut complex_signal = Array1::<Complex64>::zeros(test_signal.len());

@@ -8,7 +8,7 @@
 //! # Examples
 //!
 //! ```
-//! use ndarray::Array1;
+//! use scirs2_core::ndarray::Array1;
 //! use scirs2_spatial::pathplanning::{PotentialFieldPlanner, PotentialConfig};
 //!
 //! // Create a configuration for the potential field planner
@@ -40,10 +40,10 @@
 //! }
 //! ```
 
-use ndarray::{Array1, ArrayView1};
 use num_traits::Float;
-// use rand::rngs::StdRng;
-// use rand::{Rng, SeedableRng};
+use scirs2_core::ndarray::{Array1, ArrayView1};
+// use scirs2_core::random::rngs::StdRng;
+// use scirs2_core::random::{Rng, SeedableRng};
 // use std::collections::HashMap;
 
 use crate::error::{SpatialError, SpatialResult};
@@ -657,7 +657,7 @@ impl PotentialFieldPlanner {
         path_points: &mut Vec<Array1<f64>>,
         total_distance: &mut f64,
     ) -> bool {
-        use rand::Rng;
+        use scirs2_core::random::Rng;
         let mut rng = rand::rng();
 
         // Try multiple random directions

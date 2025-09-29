@@ -310,14 +310,12 @@ mod tests {
     use super::*;
 
     #[test]
-    #[ignore = "timeout"]
     fn test_fluent_api_creation() {
         let _stats = stats::<f64>();
         assert!(true); // Compilation test
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_quick_functions() {
         let _desc = quick_descriptive::<f64>();
         let _corr = quick_correlation::<f64>();
@@ -325,7 +323,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_method_chaining() {
         let _chain = stats::<f64>()
             .parallel(true)
@@ -340,7 +337,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_configuration_options() {
         let config = FluentStatsConfig {
             auto_optimization_level: AutoOptimizationLevel::Intelligent,

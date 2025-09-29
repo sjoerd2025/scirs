@@ -1,7 +1,7 @@
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
-use ndarray::{Array2, ShapeBuilder};
-use ndarray_rand::rand_distr::Uniform;
-use ndarray_rand::RandomExt;
+use scirs2_core::ndarray::RandomExt;
+use scirs2_core::ndarray::{Array2, ShapeBuilder};
+use scirs2_core::random::prelude::*;
 use scirs2_linalg::prelude::*;
 use std::hint::black_box;
 
@@ -21,8 +21,16 @@ fn bench_matmul_optimizations(c: &mut Criterion) {
         .with_algorithm(OptAlgorithm::Adaptive);
 
     for size in &sizes {
-        let a = Array2::<f64>::random((*size, *size).f(), Uniform::new(-1.0, 1.0));
-        let b = Array2::<f64>::random((*size, *size).f(), Uniform::new(-1.0, 1.0));
+        let a = Array2::from_shape_fn((*size, *size), |_| {
+            let mut rng = thread_rng();
+            let uniform_dist = Uniform::new(-1.0, 1.0).unwrap();
+            rng.sample(uniform_dist)
+        });
+        let b = Array2::from_shape_fn((*size, *size), |_| {
+            let mut rng = thread_rng();
+            let uniform_dist = Uniform::new(-1.0, 1.0).unwrap();
+            rng.sample(uniform_dist)
+        });
 
         // Standard ndarray matrix multiplication
         group.bench_with_input(BenchmarkId::new("standard", size), size, |bench_, _data| {
@@ -57,8 +65,16 @@ fn bench_inplace_operations(c: &mut Criterion) {
     let mut group = c.benchmark_group("inplace_operations");
 
     for size in &sizes {
-        let a = Array2::<f64>::random((*size, *size).f(), Uniform::new(-1.0, 1.0));
-        let b = Array2::<f64>::random((*size, *size).f(), Uniform::new(-1.0, 1.0));
+        let a = Array2::from_shape_fn((*size, *size), |_| {
+            let mut rng = thread_rng();
+            let uniform_dist = Uniform::new(-1.0, 1.0).unwrap();
+            rng.sample(uniform_dist)
+        });
+        let b = Array2::from_shape_fn((*size, *size), |_| {
+            let mut rng = thread_rng();
+            let uniform_dist = Uniform::new(-1.0, 1.0).unwrap();
+            rng.sample(uniform_dist)
+        });
 
         // Standard addition (creates new array)
         group.bench_with_input(
@@ -117,7 +133,11 @@ fn bench_transpose_optimizations(c: &mut Criterion) {
     let mut group = c.benchmark_group("transpose_optimizations");
 
     for size in &sizes {
-        let a = Array2::<f64>::random((*size, *size).f(), Uniform::new(-1.0, 1.0));
+        let a = Array2::from_shape_fn((*size, *size), |_| {
+            let mut rng = thread_rng();
+            let uniform_dist = Uniform::new(-1.0, 1.0).unwrap();
+            rng.sample(uniform_dist)
+        });
 
         // Standard transpose
         group.bench_with_input(BenchmarkId::new("standard", size), size, |bench_, _data| {
@@ -148,8 +168,16 @@ fn bench_parallel_vs_serial(c: &mut Criterion) {
     group.sample_size(10);
 
     for size in &sizes {
-        let a = Array2::<f64>::random((*size, *size).f(), Uniform::new(-1.0, 1.0));
-        let b = Array2::<f64>::random((*size, *size).f(), Uniform::new(-1.0, 1.0));
+        let a = Array2::from_shape_fn((*size, *size), |_| {
+            let mut rng = thread_rng();
+            let uniform_dist = Uniform::new(-1.0, 1.0).unwrap();
+            rng.sample(uniform_dist)
+        });
+        let b = Array2::from_shape_fn((*size, *size), |_| {
+            let mut rng = thread_rng();
+            let uniform_dist = Uniform::new(-1.0, 1.0).unwrap();
+            rng.sample(uniform_dist)
+        });
 
         // Serial execution
         let config_serial = OptConfig::default()

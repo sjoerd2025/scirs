@@ -374,7 +374,7 @@ where
             InitializationMethod::Random => {
                 // Random selection from data points
                 use scirs2_core::random::Random;
-                let mut init_rng = rand::rng();
+                let mut init_rng = rand::thread_rng();
                 let mut rng = match self.config.seed {
                     Some(seed) => Random::seed(seed),
                     None => Random::seed(init_rng.random()),
@@ -433,7 +433,7 @@ where
     /// K-means++ initialization
     fn kmeans_plus_plus_init(&self, data: &ArrayView2<F>) -> StatsResult<Array2<F>> {
         use scirs2_core::random::Random;
-        let mut init_rng = rand::rng();
+        let mut init_rng = rand::thread_rng();
         let mut rng = match self.config.seed {
             Some(seed) => Random::seed(seed),
             None => Random::seed(init_rng.random()),
@@ -1550,7 +1550,6 @@ mod tests {
     use ndarray::array;
 
     #[test]
-    #[ignore = "timeout"]
     fn test_advanced_gmm_basic() {
         let data = array![
             [1.0, 2.0],
@@ -1880,7 +1879,7 @@ where
         let mut means = Array2::zeros((self.max_components, n_features));
 
         use scirs2_core::random::Random;
-        let mut init_rng = rand::rng();
+        let mut init_rng = rand::thread_rng();
         let mut rng = match self.config.seed {
             Some(seed) => Random::seed(seed),
             None => Random::seed(init_rng.random()),

@@ -1,5 +1,5 @@
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
-use ndarray::{Array2, Array3};
+use scirs2_core::ndarray::{Array2, Array3};
 use scirs2_ndimage::interpolation::{
     affine_transform, map_coordinates, rotate, shift, zoom, InterpolationOrder,
 };

@@ -1,4 +1,4 @@
-use ndarray::array;
+use scirs2_core::ndarray::array;
 use scirs2_spatial::transform::spherical::{
     cart_to_spherical, cart_to_spherical_batch, geodesic_distance, spherical_to_cart,
     spherical_to_cart_batch, spherical_triangle_area,

@@ -28,7 +28,7 @@
 //!
 //! ```ignore
 //! use scirs2_spatial::neuromorphic_quantum_fusion::{QuantumSpikingClusterer, NeuralQuantumOptimizer};
-//! use ndarray::array;
+//! use scirs2_core::ndarray::array;
 //!
 //! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
 //! // Quantum-enhanced spiking neural clustering
@@ -57,8 +57,9 @@
 use crate::error::{SpatialError, SpatialResult};
 use crate::neuromorphic::SpikingNeuron;
 use crate::quantum_inspired::QuantumState;
-use ndarray::{Array1, Array2, ArrayView2};
 use num_complex::Complex64;
+use scirs2_core::ndarray::{Array1, Array2, ArrayView2};
+use scirs2_core::random::quick::random_f64;
 use std::f64::consts::PI;
 use std::time::Instant;
 
@@ -289,7 +290,7 @@ impl QuantumSpikingClusterer {
             let position = if i < n_points {
                 points.row(i).to_vec()
             } else {
-                (0..n_dims).map(|_| rand::random::<f64>()).collect()
+                (0..n_dims).map(|_| random_f64()).collect()
             };
 
             let classical_neuron = SpikingNeuron::new(position);
@@ -334,7 +335,7 @@ impl QuantumSpikingClusterer {
     async fn create_quantum_entanglement(&mut self) -> SpatialResult<()> {
         for i in 0..self.quantum_neurons.len() {
             for j in (i + 1)..self.quantum_neurons.len() {
-                if rand::random::<f64>() < self.quantum_entanglement {
+                if random_f64() < self.quantum_entanglement {
                     // Create bidirectional entanglement
                     self.quantum_neurons[i].entangled_neurons.push(j);
                     self.quantum_neurons[j].entangled_neurons.push(i);
@@ -394,10 +395,10 @@ impl QuantumSpikingClusterer {
                     let synapse = QuantumSynapse {
                         source_neuron: i,
                         target_neuron: j,
-                        classical_weight: rand::random::<f64>() * 0.1 - 0.05, // Small random weights
+                        classical_weight: random_f64() * 0.1 - 0.05, // Small random weights
                         quantum_entanglement: Complex64::new(
-                            rand::random::<f64>() * 0.1,
-                            rand::random::<f64>() * 0.1,
+                            random_f64() * 0.1,
+                            random_f64() * 0.1,
                         ),
                         stdp_rule: STDPRule {
                             learning_rate_plus: 0.01,
@@ -446,7 +447,7 @@ impl QuantumSpikingClusterer {
                             coord_range.1 // Maximum
                         } else {
                             coord_range.0 // Minimum
-                        } + rand::random::<f64>() * (coord_range.1 - coord_range.0) * 0.1;
+                        } + random_f64() * (coord_range.1 - coord_range.0) * 0.1;
                     // Small random perturbation
                 }
             }
@@ -957,7 +958,7 @@ impl QuantumSpikingClusterer {
                 // Apply mutation
                 for j in 0..centroids.ncols() {
                     let mutation_strength = 0.1;
-                    let mutation = (rand::random::<f64>() - 0.5) * mutation_strength;
+                    let mutation = (random_f64() - 0.5) * mutation_strength;
                     centroids[[i, j]] += mutation;
                 }
             }
@@ -1022,7 +1023,7 @@ impl QuantumSpikingClusterer {
             let exploration_strength = 0.02 * plasticity_factor;
 
             for j in 0..centroids.ncols() {
-                let exploration_noise = (rand::random::<f64>() - 0.5) * exploration_strength;
+                let exploration_noise = (random_f64() - 0.5) * exploration_strength;
                 centroids[[i, j]] += exploration_noise;
             }
         }
@@ -1288,8 +1289,7 @@ impl NeuralQuantumOptimizer {
         // Initialize neural network and quantum explorer
         self.initialize_neural_quantum_system(_paramdim).await?;
 
-        let mut best_params =
-            Array1::from_shape_fn(_paramdim, |_| rand::random::<f64>() * 2.0 - 1.0);
+        let mut best_params = Array1::from_shape_fn(_paramdim, |_| random_f64() * 2.0 - 1.0);
         let mut best_value = objective_function(&best_params);
 
         // Optimization loop
@@ -1349,8 +1349,8 @@ impl NeuralQuantumOptimizer {
         for _ in 0..5 {
             // 5 adaptive neurons
             let neuron = AdaptiveNeuron {
-                weights: Array1::from_shape_fn(_paramdim, |_| rand::random::<f64>() * 0.1 - 0.05),
-                bias: rand::random::<f64>() * 0.1 - 0.05,
+                weights: Array1::from_shape_fn(_paramdim, |_| random_f64() * 0.1 - 0.05),
+                bias: random_f64() * 0.1 - 0.05,
                 learning_rate: self.neural_adaptation_rate,
                 activation: 0.0,
                 quantum_enhancement: 1.0,
@@ -1574,7 +1574,7 @@ pub struct NeuralQuantumOptimizationResult {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::array;
+    use scirs2_core::ndarray::array;
 
     #[tokio::test]
     #[ignore] // Quantum neural speedup assertion may fail in CI

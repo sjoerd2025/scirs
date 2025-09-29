@@ -29,7 +29,7 @@
 //! // Buffer is automatically returned to pool when dropped (RAII)
 //! ```
 
-use ndarray::{Array2, ArrayViewMut1, ArrayViewMut2};
+use scirs2_core::ndarray::{Array2, ArrayViewMut1, ArrayViewMut2};
 use std::alloc::{GlobalAlloc, Layout, System};
 use std::collections::VecDeque;
 use std::ptr::NonNull;
@@ -759,7 +759,7 @@ impl DistancePool {
 }
 
 // Use ndarray's s! macro
-use ndarray::s;
+use scirs2_core::ndarray::s;
 
 /// RAII wrapper for distance buffers with automatic return to pool
 pub struct DistanceBuffer<'a> {

@@ -14,7 +14,7 @@
 //! ## 2D Calculations
 //! ```rust
 //! use scirs2_spatial::convex_hull::geometry::calculations_2d::{cross_product_2d, compute_polygon_area};
-//! use ndarray::array;
+//! use scirs2_core::ndarray::array;
 //!
 //! // Check orientation of three points
 //! let p1 = [0.0, 0.0];
@@ -50,7 +50,7 @@
 //! ## High-Dimensional Calculations
 //! ```rust
 //! use scirs2_spatial::convex_hull::geometry::high_dimensional::{compute_centroid, compute_bounding_box};
-//! use ndarray::array;
+//! use scirs2_core::ndarray::array;
 //!
 //! let points = array![
 //!     [0.0, 0.0, 0.0, 0.0],

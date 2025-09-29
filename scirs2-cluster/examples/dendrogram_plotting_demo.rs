@@ -3,8 +3,8 @@
 //! This example shows how to use the dendrogram plotting features in scirs2-cluster
 //! to create publication-ready dendrograms from hierarchical clustering results.
 
-use ndarray::Array2;
 use scirs2_cluster::hierarchy::{linkage, LinkageMethod, Metric};
+use scirs2_core::ndarray::Array2;
 
 #[cfg(feature = "plotters")]
 use scirs2_cluster::{save_dendrogram_plot, PlotFormat, PlotOutput};
@@ -247,8 +247,8 @@ fn create_dendrograms(
 /// Create sample hierarchical data with distinct clusters
 #[allow(dead_code)]
 fn create_sample_data() -> Array2<f64> {
-    use rand::prelude::*;
-    use rand_distr::Normal;
+    use scirs2_core::essentials::Normal;
+    use scirs2_core::random::prelude::*;
 
     let mut rng = StdRng::seed_from_u64(12345);
     let mut data = Vec::with_capacity(60); // 12 points * 5 features

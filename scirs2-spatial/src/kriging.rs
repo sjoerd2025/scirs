@@ -23,7 +23,7 @@
 //!
 //! ```
 //! use scirs2_spatial::kriging::{OrdinaryKriging, VariogramModel};
-//! use ndarray::array;
+//! use scirs2_core::ndarray::array;
 //!
 //! // Sample data points (x, y, z)
 //! let points = array![
@@ -47,7 +47,7 @@
 //! ```
 
 use crate::error::{SpatialError, SpatialResult};
-use ndarray::{s, Array1, Array2, ArrayView1, ArrayView2};
+use scirs2_core::ndarray::{s, Array1, Array2, ArrayView1, ArrayView2};
 
 /// Variogram model types for Kriging
 #[derive(Debug, Clone)]
@@ -297,7 +297,7 @@ impl OrdinaryKriging {
     ///
     /// ```
     /// use scirs2_spatial::kriging::{OrdinaryKriging, VariogramModel};
-    /// use ndarray::array;
+    /// use scirs2_core::ndarray::array;
     ///
     /// let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]];
     /// let values = array![1.0, 2.0, 3.0];
@@ -364,7 +364,7 @@ impl OrdinaryKriging {
     ///
     /// ```
     /// use scirs2_spatial::kriging::{OrdinaryKriging, VariogramModel};
-    /// use ndarray::array;
+    /// use scirs2_core::ndarray::array;
     ///
     /// let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]];
     /// let values = array![1.0, 2.0, 3.0, 4.0];
@@ -838,7 +838,7 @@ impl SimpleKriging {
 mod tests {
     use super::*;
     use approx::assert_relative_eq;
-    use ndarray::arr1;
+    use scirs2_core::ndarray::arr1;
 
     #[test]
     fn test_variogram_models() {

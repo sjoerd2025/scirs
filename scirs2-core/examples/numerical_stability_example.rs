@@ -3,7 +3,7 @@
 //! This example shows how the stable algorithms avoid common numerical
 //! pitfalls like catastrophic cancellation, overflow, and loss of precision.
 
-use ndarray::{array, Array1, Array2};
+use scirs2_core::ndarray_ext::{array, Array1, Array2};
 use scirs2_core::numeric::stability::*;
 use scirs2_core::numeric::stable_algorithms::*;
 use scirs2_core::CoreResult;

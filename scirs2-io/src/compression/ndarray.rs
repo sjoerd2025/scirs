@@ -7,8 +7,9 @@ use std::fs::File;
 use std::io::{Read, Write};
 use std::path::Path;
 
+use ::serde::{Deserialize, Serialize};
+use bincode::{config, serde as bincode_serde};
 use ndarray::{ArrayBase, Data, Dimension, IxDyn, OwnedRepr};
-use serde::{Deserialize, Serialize};
 
 use super::{compress_data, decompress_data, CompressionAlgorithm};
 use crate::error::{IoError, Result};
@@ -75,8 +76,10 @@ where
     D: Dimension + Serialize,
 {
     // Convert array data to a flat vector for compression
-    let flat_data: Vec<u8> =
-        bincode::serialize(array).map_err(|e| IoError::SerializationError(e.to_string()))?;
+    // bincode2: encode array structure (shape + data) via serde-compatible API
+    let cfg = config::standard();
+    let flat_data: Vec<u8> = bincode_serde::encode_to_vec(array, cfg)
+        .map_err(|e| IoError::SerializationError(e.to_string()))?;
 
     // Compress the flattened data
     let level = level.unwrap_or(6);
@@ -102,7 +105,7 @@ where
     };
 
     // Serialize and save to file
-    let serialized = bincode::serialize(&compressed_array)
+    let serialized = bincode_serde::encode_to_vec(&compressed_array, cfg)
         .map_err(|e| IoError::SerializationError(e.to_string()))?;
 
     File::create(path)
@@ -138,8 +141,10 @@ where
         .map_err(|e| IoError::FileError(format!("Failed to read input file: {e}")))?;
 
     // Deserialize the compressed array structure
-    let compressed_array: CompressedArray = bincode::deserialize(&serialized)
-        .map_err(|e| IoError::DeserializationError(e.to_string()))?;
+    let cfg = config::standard();
+    let (compressed_array, _len): (CompressedArray, usize) =
+        bincode_serde::decode_from_slice(&serialized, cfg)
+            .map_err(|e| IoError::DeserializationError(e.to_string()))?;
 
     // Determine algorithm from metadata
     let algorithm = match compressed_array.metadata.algorithm.as_str() {
@@ -159,8 +164,9 @@ where
     let decompressed_data = decompress_data(&compressed_array.data, algorithm)?;
 
     // Deserialize the array
-    let array: ArrayBase<OwnedRepr<A>, D> = bincode::deserialize(&decompressed_data)
-        .map_err(|e| IoError::DeserializationError(e.to_string()))?;
+    let (array, _len): (ArrayBase<OwnedRepr<A>, D>, usize) =
+        bincode_serde::decode_from_slice(&decompressed_data, cfg)
+            .map_err(|e| IoError::DeserializationError(e.to_string()))?;
 
     Ok(array)
 }
@@ -214,7 +220,8 @@ where
             .collect();
 
         // Serialize the chunk
-        let serialized_chunk = bincode::serialize(&chunk_data)
+        let cfg = config::standard();
+        let serialized_chunk = bincode_serde::encode_to_vec(&chunk_data, cfg)
             .map_err(|e| IoError::SerializationError(e.to_string()))?;
 
         // Compress the chunk
@@ -255,8 +262,9 @@ where
         .map_err(|e| IoError::FileError(format!("Failed to create output file: {e}")))?;
 
     // Write metadata _size and metadata first
-    let serialized_metadata =
-        bincode::serialize(&metadata).map_err(|e| IoError::SerializationError(e.to_string()))?;
+    let cfg = config::standard();
+    let serialized_metadata = bincode_serde::encode_to_vec(&metadata, cfg)
+        .map_err(|e| IoError::SerializationError(e.to_string()))?;
 
     let metadata_size = serialized_metadata.len() as u64;
     file.write_all(&metadata_size.to_le_bytes())
@@ -315,8 +323,10 @@ where
     file.read_exact(&mut metadata_bytes)
         .map_err(|e| IoError::FileError(format!("Failed to read metadata: {e}")))?;
 
-    let metadata: CompressedArrayMetadata = bincode::deserialize(&metadata_bytes)
-        .map_err(|e| IoError::DeserializationError(e.to_string()))?;
+    let cfg = config::standard();
+    let (metadata, _len): (CompressedArrayMetadata, usize) =
+        bincode_serde::decode_from_slice(&metadata_bytes, cfg)
+            .map_err(|e| IoError::DeserializationError(e.to_string()))?;
 
     // Determine algorithm from metadata
     let algorithm = match metadata.algorithm.as_str() {
@@ -361,8 +371,9 @@ where
         let decompressed_chunk = decompress_data(&chunk_bytes, algorithm)?;
 
         // Deserialize chunk elements and add to our collection
-        let chunk_elements: Vec<A> = bincode::deserialize(&decompressed_chunk)
-            .map_err(|e| IoError::DeserializationError(e.to_string()))?;
+        let (chunk_elements, _len): (Vec<A>, usize) =
+            bincode_serde::decode_from_slice(&decompressed_chunk, cfg)
+                .map_err(|e| IoError::DeserializationError(e.to_string()))?;
 
         all_elements.extend(chunk_elements);
     }
@@ -400,8 +411,9 @@ where
     D: Dimension + Serialize,
 {
     // Serialize the array once
-    let serialized =
-        bincode::serialize(array).map_err(|e| IoError::SerializationError(e.to_string()))?;
+    let cfg = config::standard();
+    let serialized = bincode_serde::encode_to_vec(array, cfg)
+        .map_err(|e| IoError::SerializationError(e.to_string()))?;
 
     let original_size = serialized.len();
 

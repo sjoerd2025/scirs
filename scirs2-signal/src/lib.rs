@@ -29,6 +29,7 @@ pub use error::{SignalError, SignalResult};
 
 // Core modules
 pub mod convolve;
+pub mod convolve_parallel;
 pub mod measurements;
 pub mod utils;
 
@@ -95,7 +96,8 @@ pub mod simd_advanced;
 // pub mod multitaper;
 
 // Re-export core functionality
-pub use convolve::{convolve, correlate};
+pub use convolve::{convolve, convolve_simd_ultra, correlate};
+pub use convolve_parallel::{parallel_convolve1d, parallel_convolve_simd_ultra};
 pub use measurements::{peak_to_peak, peak_to_rms, rms, snr, thd};
 
 // Re-export key filter functionality
@@ -105,7 +107,7 @@ pub use filter::{analyze_filter, butter, filtfilt, firwin, FilterType};
 pub use lti::{design_tf, impulse_response, lsim, step_response, TransferFunction};
 
 // Re-export key spectral analysis functionality
-pub use spectral::{periodogram, spectrogram, stft, welch};
+pub use spectral::{get_window_simd_ultra, periodogram, spectrogram, stft, welch};
 
 // Re-export key DWT functionality
 pub use dwt::{
@@ -123,7 +125,7 @@ pub use parametric_advanced_enhanced::{
     AdvancedEnhancedConfig, HighResolutionConfig, MultitaperParametricConfig,
     RobustParametricConfig,
 };
-pub use swt::{iswt, swt};
+pub use swt::{iswt, swt, swt_decompose_simd_pipelined};
 pub use tv::{tv_denoise_1d, tv_denoise_2d};
 pub use waveforms::{chirp, sawtooth, square};
 

@@ -5,8 +5,8 @@
 
 use crate::convex_hull::core::ConvexHull;
 use crate::error::{SpatialError, SpatialResult};
-use ndarray::{Array2, ArrayView2};
 use qhull::Qh;
+use scirs2_core::ndarray::{Array2, ArrayView2};
 
 /// Compute convex hull using QHull algorithm
 ///
@@ -31,7 +31,7 @@ use qhull::Qh;
 ///
 /// ```rust
 /// use scirs2_spatial::convex_hull::algorithms::qhull::compute_qhull;
-/// use ndarray::array;
+/// use scirs2_core::ndarray::array;
 ///
 /// let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [0.5, 0.5]];
 /// let hull = compute_qhull(&points.view()).unwrap();
@@ -68,7 +68,7 @@ pub fn compute_qhull(points: &ArrayView2<'_, f64>) -> SpatialResult<ConvexHull> 
         Err(_) => {
             // Add some random jitter to points
             let mut perturbed_points = vec![];
-            use rand::Rng;
+            use scirs2_core::random::Rng;
             let mut rng = rand::rng();
 
             for i in 0..npoints {
@@ -439,7 +439,7 @@ fn handle_special_case_3d(points: &ArrayView2<'_, f64>) -> SpatialResult<ConvexH
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::arr2;
+    use scirs2_core::ndarray::arr2;
 
     #[test]
     fn test_qhull_2d() {

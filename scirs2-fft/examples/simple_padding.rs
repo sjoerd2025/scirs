@@ -1,7 +1,7 @@
 //! Simple example demonstrating automatic padding
 
 use ndarray::Array1;
-use num_complex::Complex;
+use scirs2_core::Complex;
 use scirs2_fft::{auto_pad_complex, AutoPadConfig, PaddingMode};
 
 #[allow(dead_code)]

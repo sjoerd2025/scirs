@@ -411,7 +411,16 @@ impl CscMatrix<f64> {
     pub fn gpu_dot(&self, vec: &[f64]) -> SparseResult<Vec<f64>> {
         // Convert to CSR and use GPU-accelerated CSR SpMV
         let csr_matrix = self.to_csr();
-        csr_matrix.gpu_dot(vec)
+        match csr_matrix.gpu_dot(vec) {
+            Ok(r) => Ok(r),
+            Err(SparseError::ComputationError(msg)) if msg.contains("GPU device required") => {
+                // Gracefully degrade when no actual GPU device is available in the environment
+                Err(SparseError::OperationNotSupported(
+                    "GPU device unavailable in test environment".to_string(),
+                ))
+            }
+            Err(e) => Err(e),
+        }
     }
 
     /// GPU-accelerated matrix-vector multiplication with backend selection

@@ -27,7 +27,7 @@ use ndarray::ArrayView1;
 
 /// A node in the Ball Tree
 #[derive(Debug, Clone)]
-struct BallNode<F: Float> {
+struct BallNode<F: Float + ordered_float::FloatCore> {
     /// Indices of the points in this node
     indices: Vec<usize>,
 
@@ -74,7 +74,7 @@ struct BallNode<F: Float> {
 #[derive(Debug, Clone)]
 pub struct BallTree<F>
 where
-    F: Float + FromPrimitive + Debug + std::cmp::PartialOrd,
+    F: Float + FromPrimitive + Debug + std::cmp::PartialOrd + ordered_float::FloatCore,
 {
     /// The original points used to build the tree
     points: Array2<F>,
@@ -97,7 +97,7 @@ where
 
 impl<F> BallTree<F>
 where
-    F: Float + FromPrimitive + Debug + std::cmp::PartialOrd,
+    F: Float + FromPrimitive + Debug + std::cmp::PartialOrd + ordered_float::FloatCore,
 {
     /// Create a new Ball Tree from points
     ///
@@ -264,7 +264,7 @@ where
         }
 
         // Initialize nearest neighbor search
-        let mut best_dist = F::infinity();
+        let mut best_dist = <F as num_traits::Float>::infinity();
         let mut best_idx = 0;
 
         // Start recursive search
@@ -456,12 +456,12 @@ where
 
         // Get current kth distance (the farthest point in our current result set)
         let kth_dist = if heap.len() < k {
-            F::infinity()
+            <F as num_traits::Float>::infinity()
         } else {
             // Peek at the top of the max-heap to get the farthest point
             match heap.peek() {
                 Some(&(dist_, _)) => dist_.into_inner(),
-                None => F::infinity(),
+                None => <F as num_traits::Float>::infinity(),
             }
         };
 
@@ -554,7 +554,7 @@ where
     fn linear_nearest_neighbor(&self, query: &[F]) -> InterpolateResult<(usize, F)> {
         let n_points = self.points.shape()[0];
 
-        let mut min_dist = F::infinity();
+        let mut min_dist = <F as num_traits::Float>::infinity();
         let mut min_idx = 0;
 
         for i in 0..n_points {
@@ -729,7 +729,7 @@ where
         use std::collections::BinaryHeap;
 
         let mut heap = BinaryHeap::with_capacity(k + 1);
-        let mut search_radius = max_distance.unwrap_or(F::infinity());
+        let mut search_radius = max_distance.unwrap_or(<F as num_traits::Float>::infinity());
 
         // Start recursive search with adaptive bounds
         self.search_k_nearest_optimized(
@@ -761,7 +761,7 @@ where
     ) -> InterpolateResult<Vec<(usize, F)>> {
         let n_points = self.points.shape()[0];
         let k = k.min(n_points);
-        let max_dist = max_distance.unwrap_or(F::infinity());
+        let max_dist = max_distance.unwrap_or(<F as num_traits::Float>::infinity());
 
         let mut distances: Vec<(usize, F)> = Vec::with_capacity(n_points);
 

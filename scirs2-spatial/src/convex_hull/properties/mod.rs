@@ -15,7 +15,7 @@
 //! ```rust
 //! use scirs2_spatial::convex_hull::ConvexHull;
 //! use scirs2_spatial::convex_hull::properties::volume::compute_volume;
-//! use ndarray::array;
+//! use scirs2_core::ndarray::array;
 //!
 //! // 2D square with area 1
 //! let points = array![[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]];
@@ -28,7 +28,7 @@
 //! ```rust
 //! use scirs2_spatial::convex_hull::ConvexHull;
 //! use scirs2_spatial::convex_hull::properties::surface_area::{compute_surface_area, compute_compactness};
-//! use ndarray::array;
+//! use scirs2_core::ndarray::array;
 //!
 //! let points = array![[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]];
 //! let hull = ConvexHull::new(&points.view()).unwrap();
@@ -44,7 +44,7 @@
 //! ```rust
 //! use scirs2_spatial::convex_hull::ConvexHull;
 //! use scirs2_spatial::convex_hull::properties::containment::{check_point_containment, distance_to_hull};
-//! use ndarray::array;
+//! use scirs2_core::ndarray::array;
 //!
 //! # fn example() -> Result<(), Box<dyn std::error::Error>> {
 //! let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]];
@@ -65,7 +65,7 @@
 //! ```rust
 //! use scirs2_spatial::convex_hull::ConvexHull;
 //! use scirs2_spatial::convex_hull::properties::*;
-//! use ndarray::array;
+//! use scirs2_core::ndarray::array;
 //!
 //! let points = array![[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]];
 //! let hull = ConvexHull::new(&points.view()).unwrap();
@@ -143,7 +143,7 @@ pub struct HullAnalysis {
 /// ```rust
 /// use scirs2_spatial::convex_hull::ConvexHull;
 /// use scirs2_spatial::convex_hull::properties::analyze_hull;
-/// use ndarray::array;
+/// use scirs2_core::ndarray::array;
 ///
 /// let points = array![[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]];
 /// let hull = ConvexHull::new(&points.view()).unwrap();
@@ -220,7 +220,7 @@ pub fn analyze_hull(
 /// ```rust
 /// use scirs2_spatial::convex_hull::ConvexHull;
 /// use scirs2_spatial::convex_hull::properties::get_hull_statistics;
-/// use ndarray::array;
+/// use scirs2_core::ndarray::array;
 ///
 /// let points = array![[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]];
 /// let hull = ConvexHull::new(&points.view()).unwrap();
@@ -327,7 +327,7 @@ pub fn get_hull_statistics(
 mod tests {
     use super::*;
     use crate::convex_hull::ConvexHull;
-    use ndarray::arr2;
+    use scirs2_core::ndarray::arr2;
 
     #[test]
     fn test_analyze_hull() {

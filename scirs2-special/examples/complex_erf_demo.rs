@@ -3,7 +3,7 @@
 //! This example showcases the complex number support for error functions
 //! in scirs2-special, including erf, erfc, erfcx, and Faddeeva functions.
 
-use num_complex::Complex64;
+use scirs2_core::Complex64;
 use scirs2_special::{erf_complex, erfc_complex, erfcx_complex, faddeeva_complex};
 
 #[allow(dead_code)]

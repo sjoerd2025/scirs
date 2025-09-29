@@ -5,7 +5,7 @@
 //! of rotating bodies like planets.
 
 use ndarray::Array1;
-use num_complex::Complex64;
+use scirs2_core::Complex64;
 use scirs2_special::{
     ellip_harm, ellip_harm_2, ellip_harm_array, ellip_harm_coefficients, ellip_harm_complex,
     ellip_normal,

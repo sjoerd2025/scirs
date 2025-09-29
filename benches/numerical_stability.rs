@@ -1,8 +1,6 @@
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
-use ndarray::{Array1, Array2, ArrayView2};
-use rand::distr::Uniform;
-use rand::{Rng, SeedableRng};
-use rand_chacha::ChaCha8Rng;
+use scirs2_core::ndarray::{Array1, Array2, ArrayView2};
+use scirs2_core::random::prelude::*;
 use scirs2_linalg::{det, inv, lu, matrix_norm, qr, solve, svd, vector_norm, LinalgError};
 use serde::{Deserialize, Serialize};
 use std::f64;
@@ -25,7 +23,7 @@ struct StabilityTestResult {
 /// Generate matrices with specific condition numbers for stability testing
 #[allow(dead_code)]
 fn generate_conditioned_matrix(size: usize, condition_number: f64) -> Array2<f64> {
-    let mut rng = ChaCha8Rng::seed_from_u64(SEED);
+    let mut rng = StdRng::seed_from_u64(SEED);
 
     // Generate random orthogonal matrices U and V via QR decomposition
     let uniform = Uniform::new(-1.0, 1.0).unwrap();

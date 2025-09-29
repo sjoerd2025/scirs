@@ -1,6 +1,6 @@
-use num_complex::Complex64;
 use plotly::common::Title;
 use plotly::{common::Mode, layout::Axis, Layout, Plot, Scatter};
+use scirs2_core::Complex64;
 use scirs2_fft::{
     adaptive_sparse_fft, fft, frequency_pruning_sparse_fft, reconstruct_spectrum, sparse_fft,
     sparse_fft::SparseFFTAlgorithm, sparse_fft2, spectral_flatness_sparse_fft,

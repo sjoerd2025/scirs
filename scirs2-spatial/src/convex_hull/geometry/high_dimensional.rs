@@ -5,7 +5,7 @@
 //! convex hull algorithms.
 
 use crate::error::SpatialResult;
-use ndarray::ArrayView2;
+use scirs2_core::ndarray::ArrayView2;
 
 /// Compute volume for high-dimensional convex hulls using facet equations
 ///
@@ -26,7 +26,7 @@ use ndarray::ArrayView2;
 ///
 /// ```
 /// use scirs2_spatial::convex_hull::geometry::high_dimensional::compute_high_dim_volume;
-/// use ndarray::array;
+/// use scirs2_core::ndarray::array;
 ///
 /// // 4D hypercube vertices (subset)
 /// let points = array![
@@ -188,7 +188,7 @@ pub fn estimate_facet_area(
 ///
 /// ```
 /// use scirs2_spatial::convex_hull::geometry::high_dimensional::compute_high_dim_surface_area;
-/// use ndarray::array;
+/// use scirs2_core::ndarray::array;
 ///
 /// // 4D simplex
 /// let points = array![
@@ -248,7 +248,7 @@ pub fn compute_high_dim_surface_area(
 ///
 /// ```
 /// use scirs2_spatial::convex_hull::geometry::high_dimensional::compute_centroid;
-/// use ndarray::array;
+/// use scirs2_core::ndarray::array;
 ///
 /// let points = array![
 ///     [0.0, 0.0, 0.0],
@@ -293,7 +293,7 @@ pub fn compute_centroid(points: &ArrayView2<'_, f64>, vertex_indices: &[usize]) 
 ///
 /// ```
 /// use scirs2_spatial::convex_hull::geometry::high_dimensional::compute_bounding_box;
-/// use ndarray::array;
+/// use scirs2_core::ndarray::array;
 ///
 /// let points = array![
 ///     [0.0, 5.0, -1.0],
@@ -342,7 +342,7 @@ pub fn compute_bounding_box(
 ///
 /// ```
 /// use scirs2_spatial::convex_hull::geometry::high_dimensional::compute_characteristic_size;
-/// use ndarray::array;
+/// use scirs2_core::ndarray::array;
 ///
 /// let points = array![
 ///     [0.0, 0.0, 0.0],
@@ -380,7 +380,7 @@ pub fn compute_characteristic_size(points: &ArrayView2<'_, f64>, vertex_indices:
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::arr2;
+    use scirs2_core::ndarray::arr2;
 
     #[test]
     fn test_compute_centroid() {

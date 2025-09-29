@@ -6,7 +6,7 @@
 //! to explore solution spaces more efficiently than classical methods.
 
 use crate::error::{SpatialError, SpatialResult};
-use ndarray::Array2;
+use scirs2_core::ndarray::Array2;
 
 // Import quantum concepts
 use super::super::concepts::QuantumState;
@@ -27,7 +27,7 @@ use std::f64::consts::PI;
 ///
 /// # Example
 /// ```rust
-/// use ndarray::Array2;
+/// use scirs2_core::ndarray::Array2;
 /// use scirs2_spatial::quantum_inspired::algorithms::QuantumSpatialOptimizer;
 ///
 /// // Create distance matrix for TSP
@@ -535,7 +535,7 @@ impl QuantumSpatialOptimizer {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::Array2;
+    use scirs2_core::ndarray::Array2;
 
     #[test]
     fn test_qaoa_optimizer_creation() {

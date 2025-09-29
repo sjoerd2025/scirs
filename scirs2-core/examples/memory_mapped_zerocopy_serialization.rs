@@ -8,9 +8,9 @@
 //! 5. Compare performance with traditional serialization methods
 //! 6. Implement and use custom types with zero-copy serialization
 
-use ndarray::{Array, Array1, Array2, Array3, IxDyn};
 use scirs2_core::error::{CoreError, CoreResult, ErrorContext, ErrorLocation};
 use scirs2_core::memory_efficient::{AccessMode, MemoryMappedArray, ZeroCopySerializable};
+use scirs2_core::ndarray_ext::{Array, Array1, Array2, Array3, IxDyn};
 use serde_json::json;
 use std::fs::File;
 use std::io::Write;
@@ -479,7 +479,7 @@ fn performance_comparison(tempdir: &Path) -> Result<(), Box<dyn std::error::Erro
     // 2. Traditional serialization (using bincode)
     let traditional_path = tempdir.join("traditional_perf.bin");
     let start = Instant::now();
-    let serialized = bincode::serialize(&data)?;
+    let serialized = bincode::serde::encode_to_vec(&data, bincode::config::standard())?;
     let mut file = File::create(&traditional_path)?;
     file.write_all(&serialized)?;
     let traditional_save_time = start.elapsed();
@@ -495,7 +495,8 @@ fn performance_comparison(tempdir: &Path) -> Result<(), Box<dyn std::error::Erro
     let mut file = File::open(&traditional_path)?;
     let mut buffer = Vec::new();
     std::io::Read::read_to_end(&mut file, &mut buffer)?;
-    let loaded_traditional: Array2<f64> = bincode::deserialize(&buffer)?;
+    let (loaded_traditional, _len): (Array2<f64>, usize) =
+        bincode::serde::decode_from_slice(&buffer, bincode::config::standard())?;
     let traditional_load_time = start.elapsed();
 
     // 5. Array access time (zero-copy)
@@ -511,7 +512,8 @@ fn performance_comparison(tempdir: &Path) -> Result<(), Box<dyn std::error::Erro
     let zero_copy_access_time = start.elapsed();
 
     // 6. Array access time (traditional)
-    let loaded_traditional: Array2<f64> = bincode::deserialize(&buffer)?;
+    let (loaded_traditional, _len): (Array2<f64>, usize) =
+        bincode::serde::decode_from_slice(&buffer, bincode::config::standard())?;
     let start = Instant::now();
     let mut _sum = 0.0;
     for i in 0..10 {

@@ -1,4 +1,4 @@
-use num_complex::Complex64;
+use scirs2_core::Complex64;
 use scirs2_fft::auto_tuning::{AutoTuneConfig, AutoTuner, FftVariant, SizeRange, SizeStep};
 use std::time::Instant;
 

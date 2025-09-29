@@ -173,8 +173,12 @@ mod tests {
 
     #[test]
     fn test_quick_tune_kmeans() {
-        let data = Array2::from_shape_vec((10, 2), (0..20).map(|x| x as f64).collect()).unwrap();
+        // Use more samples (50) to support the default search space (up to 20 clusters)
+        let data = Array2::from_shape_vec((50, 2), (0..100).map(|x| x as f64).collect()).unwrap();
         let result = quick_tune_kmeans(data.view(), Some(5));
-        assert!(result.is_ok());
+        match result {
+            Ok(_) => (),
+            Err(e) => panic!("quick_tune_kmeans failed: {:?}", e),
+        }
     }
 }

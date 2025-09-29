@@ -5,7 +5,7 @@
 //! fundamental in computational geometry and are used in CAD systems, GIS
 //! applications, and computer graphics.
 
-use ndarray::{array, Array2};
+use scirs2_core::ndarray::{array, Array2};
 use scirs2_spatial::boolean_ops::{
     compute_polygon_area, is_convex_polygon, is_self_intersecting, polygon_difference,
     polygon_intersection, polygon_symmetric_difference, polygon_union,

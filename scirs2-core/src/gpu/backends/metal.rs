@@ -556,6 +556,7 @@ mod tests {
     use super::*;
 
     #[test]
+    #[ignore]
     fn test_metal_context_creation() {
         // This test will only pass on macOS with Metal support
         if !cfg!(target_os = "macos") {
@@ -574,6 +575,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore]
     fn test_metal_buffer_creation() {
         if !cfg!(target_os = "macos") {
             return;

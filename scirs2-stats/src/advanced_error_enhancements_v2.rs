@@ -747,7 +747,7 @@ use rand::{rng, seq::SliceRandom};
 
 #[allow(dead_code)]
 fn bootstrap_augment(data: &Array1<f64>, targetsize: usize) -> Array1<f64> {
-    let mut rng = rand::rng();
+    let mut rng = rand::thread_rng();
     let mut augmented = Vec::with_capacity(targetsize);
     
     for _ in 0..targetsize {
@@ -981,7 +981,6 @@ mod tests {
     use super::*;
 
     #[test]
-    #[ignore = "timeout"]
     fn test_error_enhancement_creation() {
         let error = StatsError::invalid_argument("Test error");
         let enhanced = create_enhanced_error_context(error, "test_function", "test_module", 100);

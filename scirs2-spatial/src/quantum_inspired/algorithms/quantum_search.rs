@@ -4,8 +4,8 @@
 //! principles for enhanced spatial data retrieval and neighbor searching.
 
 use crate::error::{SpatialError, SpatialResult};
-use ndarray::{Array2, ArrayView1, ArrayView2};
 use num_complex::Complex64;
+use scirs2_core::ndarray::{Array2, ArrayView1, ArrayView2};
 use std::f64::consts::PI;
 
 // Import quantum concepts
@@ -26,7 +26,7 @@ use super::super::concepts::QuantumState;
 ///
 /// # Example
 /// ```rust
-/// use ndarray::Array2;
+/// use scirs2_core::ndarray::Array2;
 /// use scirs2_spatial::quantum_inspired::algorithms::QuantumNearestNeighbor;
 ///
 /// let points = Array2::from_shape_vec((3, 2), vec![0.0, 0.0, 1.0, 1.0, 2.0, 2.0]).unwrap();
@@ -35,7 +35,7 @@ use super::super::concepts::QuantumState;
 ///     .with_quantum_encoding(true)
 ///     .with_amplitude_amplification(true);
 ///
-/// let query = ndarray::arr1(&[0.5, 0.5]);
+/// let query = scirs2_core::ndarray::arr1(&[0.5, 0.5]);
 /// let (indices, distances) = searcher.query_quantum(&query.view(), 2).unwrap();
 /// ```
 #[derive(Debug, Clone)]
@@ -356,7 +356,7 @@ impl QuantumNearestNeighbor {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::Array2;
+    use scirs2_core::ndarray::Array2;
 
     #[test]
     fn test_quantum_nearest_neighbor_creation() {
@@ -373,7 +373,7 @@ mod tests {
         let points = Array2::from_shape_vec((3, 2), vec![0.0, 0.0, 1.0, 1.0, 2.0, 2.0]).unwrap();
         let searcher = QuantumNearestNeighbor::new(&points.view()).unwrap();
 
-        let query = ndarray::arr1(&[0.5, 0.5]);
+        let query = scirs2_core::ndarray::arr1(&[0.5, 0.5]);
         let (indices, distances) = searcher.query_quantum(&query.view(), 2).unwrap();
 
         assert_eq!(indices.len(), 2);
@@ -411,7 +411,7 @@ mod tests {
         let points = Array2::from_shape_vec((2, 2), vec![0.0, 0.0, 1.0, 1.0]).unwrap();
         let searcher = QuantumNearestNeighbor::new(&points.view()).unwrap();
 
-        let query = ndarray::arr1(&[0.5, 0.5]);
+        let query = scirs2_core::ndarray::arr1(&[0.5, 0.5]);
         let result = searcher.query_quantum(&query.view(), 5);
 
         assert!(result.is_err());

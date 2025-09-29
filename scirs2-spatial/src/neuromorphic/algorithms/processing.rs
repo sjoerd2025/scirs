@@ -5,8 +5,8 @@
 //! dynamics for spatial data processing.
 
 use crate::error::{SpatialError, SpatialResult};
-use ndarray::{Array2, ArrayView2};
-use rand::Rng;
+use scirs2_core::ndarray::{Array2, ArrayView2};
+use scirs2_core::random::Rng;
 use std::collections::{HashMap, VecDeque};
 
 // Import core neuromorphic components
@@ -28,7 +28,7 @@ use super::super::core::SpikeEvent;
 ///
 /// # Example
 /// ```rust
-/// use ndarray::Array2;
+/// use scirs2_core::ndarray::Array2;
 /// use scirs2_spatial::neuromorphic::algorithms::NeuromorphicProcessor;
 ///
 /// let points = Array2::from_shape_vec((3, 2), vec![
@@ -487,7 +487,7 @@ impl NeuromorphicProcessor {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::Array2;
+    use scirs2_core::ndarray::Array2;
 
     #[test]
     fn test_processor_creation() {

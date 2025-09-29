@@ -1,8 +1,8 @@
 # scirs2-io Production Status
 
-**Version**: 0.1.0-beta.2 (Beta 2 Release)
+**Version**: 0.1.0-beta.3 (Beta 3 Release - SciRS2 POLICY & Enhanced Real-time Streaming)
 
-This module provides production-ready input/output functionality for scientific data formats, comparable to SciPy's io module.
+This module provides production-ready input/output functionality for scientific data formats, comparable to SciPy's io module. Following the [SciRS2 POLICY](../SCIRS2_POLICY.md), this release features enhanced real-time streaming capabilities and ecosystem consistency.
 
 ## Production-Ready Features ✅
 
@@ -117,6 +117,6 @@ For production release contributions:
 
 ---
 
-**Status**: Production-ready for 0.1.0-beta.2 release
+**Status**: Production-ready for 0.1.0-beta.3 release
 **Quality Level**: Enterprise-ready with comprehensive testing
 **API Stability**: Stable (semver compatibility maintained)

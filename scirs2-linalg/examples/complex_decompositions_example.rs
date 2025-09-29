@@ -4,7 +4,7 @@
 //! including LU, QR, SVD, Cholesky, and eigenvalue decompositions.
 
 use ndarray::{array, Array2};
-use num_complex::Complex;
+use scirs2_core::Complex;
 use scirs2_linalg::complex::*;
 use scirs2_linalg::LinalgResult;
 

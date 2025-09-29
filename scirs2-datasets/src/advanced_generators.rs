@@ -7,8 +7,8 @@
 use crate::error::{DatasetsError, Result};
 use crate::utils::Dataset;
 use ndarray::{Array1, Array2, Axis};
-use rand::{rng, Rng};
 use rand_distr::Uniform;
+use scirs2_core::random::prelude::*;
 
 /// Configuration for adversarial example generation
 #[derive(Debug, Clone)]
@@ -497,7 +497,7 @@ impl AdvancedGenerator {
             // Apply concept drift
             if task_id > 0 {
                 let drift = Array2::from_shape_fn((n_classes, n_features), |_| {
-                    rng().random::<f64>() * concept_drift_strength
+                    thread_rng().random::<f64>() * concept_drift_strength
                 });
                 base_centers = base_centers + drift;
             }
@@ -551,7 +551,7 @@ impl AdvancedGenerator {
                 let mut perturbations = Array2::zeros((n_samples, n_features));
                 for i in 0..n_samples {
                     for j in 0..n_features {
-                        let sign = if rng().random::<f64>() > 0.5 {
+                        let sign = if thread_rng().random::<f64>() > 0.5 {
                             1.0
                         } else {
                             -1.0
@@ -567,7 +567,7 @@ impl AdvancedGenerator {
                 for _iter in 0..config.iterations {
                     for i in 0..n_samples {
                         for j in 0..n_features {
-                            let gradient = rng().random::<f64>() * 2.0 - 1.0; // Simulated gradient
+                            let gradient = thread_rng().random::<f64>() * 2.0 - 1.0; // Simulated gradient
                             perturbations[[i, j]] += config.step_size * gradient.signum();
                             // Clip to epsilon ball
                             perturbations[[i, j]] =
@@ -580,7 +580,7 @@ impl AdvancedGenerator {
             AttackMethod::RandomNoise => {
                 // Random noise baseline
                 let perturbations = Array2::from_shape_fn((n_samples, n_features), |_| {
-                    (rng().random::<f64>() * 2.0 - 1.0) * config.epsilon
+                    (thread_rng().random::<f64>() * 2.0 - 1.0) * config.epsilon
                 });
                 Ok(perturbations)
             }
@@ -589,7 +589,7 @@ impl AdvancedGenerator {
                 let mut perturbations = Array2::zeros(data.dim());
                 for i in 0..data.nrows() {
                     for j in 0..data.ncols() {
-                        let noise = rng().random::<f64>() * 2.0 - 1.0;
+                        let noise = thread_rng().random::<f64>() * 2.0 - 1.0;
                         perturbations[[i, j]] = config.epsilon * noise;
                     }
                 }
@@ -625,7 +625,7 @@ impl AdvancedGenerator {
         config: &AnomalyConfig,
     ) -> Result<Array2<f64>> {
         use rand::Rng;
-        let mut rng = rng();
+        let mut rng = thread_rng();
 
         match config.anomaly_type {
             AnomalyType::Point => {
@@ -693,7 +693,7 @@ impl AdvancedGenerator {
 
     fn generate_shuffle_indices(&self, n_samples: usize) -> Result<Vec<usize>> {
         use rand::Rng;
-        let mut rng = rng();
+        let mut rng = thread_rng();
         let mut indices: Vec<usize> = (0..n_samples).collect();
 
         // Simple shuffle using Fisher-Yates
@@ -724,7 +724,7 @@ impl AdvancedGenerator {
     fn generate_shared_features(&self, n_samples: usize, n_features: usize) -> Result<Array2<f64>> {
         // Generate shared _features using multivariate normal distribution
         let data = Array2::from_shape_fn((n_samples, n_features), |_| {
-            rng().random::<f64>() * 2.0 - 1.0 // Standard normal approximation
+            thread_rng().random::<f64>() * 2.0 - 1.0 // Standard normal approximation
         });
         Ok(data)
     }
@@ -738,7 +738,7 @@ impl AdvancedGenerator {
         // Generate task-specific _features with slight bias per task
         let task_bias = task_id as f64 * 0.1;
         let data = Array2::from_shape_fn((n_samples, n_features), |_| {
-            rng().random::<f64>() * 2.0 - 1.0 + task_bias
+            thread_rng().random::<f64>() * 2.0 - 1.0 + task_bias
         });
         Ok(data)
     }
@@ -786,7 +786,7 @@ impl AdvancedGenerator {
                         .enumerate()
                         .map(|(j, &x)| x * (j as f64 + 1.0) * correlation)
                         .sum::<f64>();
-                    weighted_sum + rng().random::<f64>() * noise
+                    weighted_sum + thread_rng().random::<f64>() * noise
                 });
                 Ok(target)
             }
@@ -881,7 +881,7 @@ impl AdvancedGenerator {
 
     fn generate_class_centers(&self, n_classes: usize, n_features: usize) -> Result<Array2<f64>> {
         let centers = Array2::from_shape_fn((n_classes, n_features), |_| {
-            rng().random::<f64>() * 4.0 - 2.0
+            thread_rng().random::<f64>() * 4.0 - 2.0
         });
         Ok(centers)
     }
@@ -1106,10 +1106,19 @@ mod tests {
         assert_eq!(adversarial_dataset.n_samples(), base_dataset.n_samples());
         assert_eq!(adversarial_dataset.n_features(), base_dataset.n_features());
 
-        // Check that the data has been perturbed
-        let original_mean = base_dataset.data.mean().unwrap_or(0.0);
-        let adversarial_mean = adversarial_dataset.data.mean().unwrap_or(0.0);
-        assert!((original_mean - adversarial_mean).abs() > 1e-6);
+        // Check that the data has been perturbed (mean difference can cancel; use max absolute diff)
+        let diff = &adversarial_dataset.data - &base_dataset.data;
+        let mut max_abs = 0.0_f64;
+        for v in diff.iter() {
+            let a = v.abs();
+            if a > max_abs {
+                max_abs = a;
+            }
+        }
+        assert!(
+            max_abs > 1e-9,
+            "Adversarial perturbation appears to be zero (max abs diff = {max_abs})"
+        );
     }
 
     #[test]

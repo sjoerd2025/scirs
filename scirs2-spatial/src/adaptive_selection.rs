@@ -29,7 +29,7 @@
 //!
 //! ```
 //! use scirs2_spatial::adaptive_selection::{AdaptiveAlgorithmSelector, SelectionContext};
-//! use ndarray::array;
+//! use scirs2_core::ndarray::array;
 //!
 //! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
 //! // Create adaptive selector with multiple strategies
@@ -62,7 +62,7 @@
 //! ```
 
 use crate::error::{SpatialError, SpatialResult};
-use ndarray::{Array1, Array2, ArrayView2};
+use scirs2_core::ndarray::{Array1, Array2, ArrayView2};
 use statrs::statistics::Statistics;
 use std::collections::{HashMap, VecDeque};
 use std::sync::Arc;
@@ -1615,7 +1615,7 @@ pub struct ExecutionResult {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::array;
+    use scirs2_core::ndarray::array;
 
     #[test]
     fn test_selection_context() {

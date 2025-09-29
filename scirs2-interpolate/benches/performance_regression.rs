@@ -5,7 +5,7 @@
 //! on stable, reproducible measurements across different operations and scales.
 
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
-use ndarray::{Array1, Array2};
+use scirs2_core::ndarray::{Array1, Array2};
 use scirs2_interpolate::{
     advanced::{
         enhanced_rbf::{EnhancedRBFInterpolator, KernelWidthStrategy},

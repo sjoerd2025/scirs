@@ -164,7 +164,7 @@ fn main() {
 /// Helper function to evaluate filter response at a frequency
 #[allow(dead_code)]
 fn evaluate_filter_response(b: &[f64], w: f64) -> num_complex::Complex64 {
-    use num_complex::Complex64;
+    use scirs2_core::Complex64;
 
     let z = Complex64::new(w.cos(), w.sin());
     let mut response = Complex64::zero();

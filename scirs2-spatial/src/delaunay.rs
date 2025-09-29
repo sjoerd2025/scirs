@@ -13,7 +13,7 @@
 //!
 //! ```
 //! use scirs2_spatial::delaunay::Delaunay;
-//! use ndarray::array;
+//! use scirs2_core::ndarray::array;
 //!
 //! // Create a set of 2D points
 //! let points = array![
@@ -38,8 +38,8 @@
 //! ```
 
 use crate::error::{SpatialError, SpatialResult};
-use ndarray::Array2;
 use qhull::Qh;
+use scirs2_core::ndarray::Array2;
 use std::collections::{HashMap, HashSet};
 use std::fmt::Debug;
 
@@ -121,7 +121,7 @@ impl Delaunay {
     ///
     /// ```
     /// use scirs2_spatial::delaunay::Delaunay;
-    /// use ndarray::array;
+    /// use scirs2_core::ndarray::array;
     ///
     /// let points = array![
     ///     [0.0, 0.0],
@@ -193,7 +193,7 @@ impl Delaunay {
 
                 // Add some random jitter to _points
                 let mut perturbed_points = vec![];
-                use rand::Rng;
+                use scirs2_core::random::Rng;
                 let mut rng = rand::rng();
 
                 for i in 0..npoints {
@@ -253,7 +253,7 @@ impl Delaunay {
     ///
     /// ```
     /// use scirs2_spatial::delaunay::Delaunay;
-    /// use ndarray::array;
+    /// use scirs2_core::ndarray::array;
     ///
     /// let points = array![
     ///     [0.0, 0.0],
@@ -941,7 +941,7 @@ impl Delaunay {
     ///
     /// ```
     /// use scirs2_spatial::delaunay::Delaunay;
-    /// use ndarray::array;
+    /// use scirs2_core::ndarray::array;
     ///
     /// let points = array![
     ///     [0.0, 0.0],
@@ -1095,7 +1095,7 @@ impl Delaunay {
     ///
     /// ```
     /// use scirs2_spatial::delaunay::Delaunay;
-    /// use ndarray::array;
+    /// use scirs2_core::ndarray::array;
     ///
     /// let points = array![
     ///     [0.0, 0.0],
@@ -1139,8 +1139,8 @@ impl Delaunay {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::arr2;
-    use rand::Rng;
+    use scirs2_core::ndarray::arr2;
+    use scirs2_core::random::Rng;
     // use approx::assert_relative_eq;
 
     #[test]

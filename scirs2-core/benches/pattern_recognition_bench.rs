@@ -76,7 +76,7 @@ fn block_pattern(rows: usize, cols: usize, blocksize: usize) -> Vec<usize> {
 /// Simulate random access pattern
 #[allow(dead_code)]
 fn random_pattern(rows: usize, cols: usize, count: usize) -> Vec<usize> {
-    use rand::{rngs::StdRng, Rng, SeedableRng};
+    use scirs2_core::random::{Rng, SeedableRng, StdRng};
     let mut rng = StdRng::seed_from_u64(42);
     let max_idx = rows * cols;
 

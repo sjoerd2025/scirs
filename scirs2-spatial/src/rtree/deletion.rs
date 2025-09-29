@@ -1,6 +1,6 @@
 use crate::error::SpatialResult;
 use crate::rtree::node::{Entry, Node, RTree, Rectangle};
-use ndarray::ArrayView1;
+use scirs2_core::ndarray::ArrayView1;
 
 impl<T: Clone> RTree<T> {
     /// Delete a data point from the R-tree
@@ -332,12 +332,12 @@ impl<T: Clone> RTree<T> {
     }
 }
 
-use ndarray::Array1;
+use scirs2_core::ndarray::Array1;
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::array;
+    use scirs2_core::ndarray::array;
 
     #[test]
     fn test_rtree_delete() {

@@ -1669,7 +1669,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Test failing - needs investigation
+    #[ignore = "GPU availability varies by environment"]
     fn test_should_use_gpu() {
         let computer = GpuMetricsComputer::new(GpuAccelConfig::default()).unwrap();
         assert!(!computer.should_use_gpu(500));

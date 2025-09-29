@@ -3,7 +3,7 @@
 //! This example demonstrates the use of SIMD-accelerated real-valued FFT operations
 //! for improved performance, particularly on ARM platforms with NEON.
 
-use num_complex::Complex64;
+use scirs2_core::Complex64;
 use scirs2_fft::rfft;
 use scirs2_fft::simd_fft::simd_support_available;
 use scirs2_fft::simd_rfft::rfft_adaptive;

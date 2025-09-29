@@ -59,7 +59,7 @@ fn demo_basic_functions() -> Result<(), Box<dyn std::error::Error>> {
     println!("Bi(1.0) = {:.10}", bi(1.0));
 
     // Lambert W function
-    use num_complex::Complex64;
+    use scirs2_core::Complex64;
     let w = lambert_w(Complex64::new(1.0, 0.0), 0, 1e-12)?;
     println!("W(1) = {:.10}", w.re);
 

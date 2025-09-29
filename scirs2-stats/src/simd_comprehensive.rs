@@ -1092,7 +1092,6 @@ mod tests {
     use ndarray::array;
 
     #[test]
-    #[ignore = "timeout"]
     fn test_advanced_simd_processor_creation() {
         let processor = AdvancedComprehensiveSimdProcessor::<f64>::new();
         assert!(processor.config.f64_lanes >= 1);
@@ -1114,7 +1113,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_simd_single_pass_moments() {
         let processor = AdvancedComprehensiveSimdProcessor::<f64>::new();
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0];

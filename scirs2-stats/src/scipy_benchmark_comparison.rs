@@ -810,7 +810,7 @@ print(json.dumps(info))
     fn generate_testdata(&self, size: usize) -> StatsResult<TestData> {
         use rand_distr::{Distribution, Normal};
 
-        let mut rng = rand::rng();
+        let mut rng = rand::thread_rng();
         let normal = Normal::new(0.0, 1.0).map_err(|e| {
             StatsError::ComputationError(format!("Failed to create normal distribution: {}", e))
         })?;
@@ -1453,7 +1453,6 @@ mod tests {
     use super::*;
 
     #[test]
-    #[ignore = "timeout"]
     fn test_scipy_comparison_config() {
         let config = ScipyComparisonConfig::default();
         assert!(!config.functions_to_test.is_empty());

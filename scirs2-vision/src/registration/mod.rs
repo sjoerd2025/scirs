@@ -27,7 +27,7 @@ use crate::error::{Result, VisionError};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 // use scirs2_linalg::{lstsq, solve};
 use rand::seq::SliceRandom;
-use scirs2_core::rng;
+use scirs2_core::random;
 use std::fmt::Debug;
 
 /// Simple least squares solver result
@@ -356,10 +356,8 @@ pub fn ransac_estimate_transform(
     let mut best_inliers = Vec::new();
     let mut best_cost = f64::INFINITY;
 
-    use rand::prelude::*;
-    use rand::rngs::StdRng;
-    let mut base_rng = rng();
-    let mut rng = StdRng::from_rng(&mut base_rng);
+    use scirs2_core::random::prelude::*;
+    let mut rng = thread_rng();
 
     for _iteration in 0..params.ransac_iterations {
         // Sample minimum required points

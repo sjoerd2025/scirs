@@ -19,7 +19,7 @@
 //!
 //! ```
 //! use scirs2_spatial::KDTree;
-//! use ndarray::array;
+//! use scirs2_core::ndarray::array;
 //!
 //! // Create a KD-Tree with points in 2D space
 //! let points = array![[1.0, 2.0], [3.0, 4.0], [5.0, 6.0], [7.0, 8.0]];
@@ -40,7 +40,7 @@
 //! ```
 //! use scirs2_spatial::KDTree;
 //! use scirs2_spatial::distance::ManhattanDistance;
-//! use ndarray::array;
+//! use scirs2_core::ndarray::array;
 //!
 //! // Create a KD-Tree with Manhattan distance metric
 //! let points = array![[1.0, 2.0], [3.0, 4.0], [5.0, 6.0], [7.0, 8.0]];
@@ -55,7 +55,7 @@
 //!
 //! ```
 //! use scirs2_spatial::KDTree;
-//! use ndarray::array;
+//! use scirs2_core::ndarray::array;
 //!
 //! // Create a KD-Tree with custom leaf size
 //! let points = array![[1.0, 2.0], [3.0, 4.0], [5.0, 6.0], [7.0, 8.0],
@@ -67,8 +67,8 @@
 use crate::distance::{Distance, EuclideanDistance};
 use crate::error::{SpatialError, SpatialResult};
 use crate::safe_conversions::*;
-use ndarray::Array2;
 use num_traits::Float;
+use scirs2_core::ndarray::Array2;
 use std::cmp::Ordering;
 
 // Rayon parallel processing currently not used in this module
@@ -468,7 +468,7 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + 'static> KDTree<T, D> {
     ///
     /// ```
     /// use scirs2_spatial::KDTree;
-    /// use ndarray::array;
+    /// use scirs2_core::ndarray::array;
     ///
     /// // Create points for the KDTree - use the exact same points from test_kdtree_with_custom_leaf_size
     /// let points = array![[2.0, 3.0], [5.0, 4.0], [9.0, 6.0], [4.0, 7.0], [8.0, 1.0], [7.0, 2.0]];
@@ -628,7 +628,7 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + 'static> KDTree<T, D> {
     ///
     /// ```
     /// use scirs2_spatial::KDTree;
-    /// use ndarray::array;
+    /// use scirs2_core::ndarray::array;
     ///
     /// # fn example() -> Result<(), Box<dyn std::error::Error>> {
     /// let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]];
@@ -746,7 +746,7 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + 'static> KDTree<T, D> {
     ///
     /// ```
     /// use scirs2_spatial::KDTree;
-    /// use ndarray::array;
+    /// use scirs2_core::ndarray::array;
     ///
     /// # fn example() -> Result<(), Box<dyn std::error::Error>> {
     /// let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]];
@@ -885,7 +885,7 @@ mod tests {
         ChebyshevDistance, Distance, EuclideanDistance, ManhattanDistance, MinkowskiDistance,
     };
     use approx::assert_relative_eq;
-    use ndarray::arr2;
+    use scirs2_core::ndarray::arr2;
 
     #[test]
     fn test_rectangle() {

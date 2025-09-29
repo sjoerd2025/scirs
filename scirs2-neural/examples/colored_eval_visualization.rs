@@ -1,6 +1,6 @@
-use ndarray::{Array, Array1, Array2};
-use rand::rngs::SmallRng;
-use rand::{Rng, SeedableRng};
+use scirs2_core::ndarray::{Array, Array1, Array2};
+use scirs2_core::random::prelude::*;
+use scirs2_core::random::rngs::SmallRng;
 use scirs2_neural::error::Result;
 use scirs2_neural::utils::{
     colorize, stylize, Color, ColorOptions, ConfusionMatrix, FeatureImportance, LearningCurve,

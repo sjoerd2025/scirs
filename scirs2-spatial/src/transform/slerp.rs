@@ -5,7 +5,7 @@
 
 use crate::error::{SpatialError, SpatialResult};
 use crate::transform::Rotation;
-use ndarray::{array, Array1};
+use scirs2_core::ndarray::{array, Array1};
 
 // Helper function to create an array from values
 #[allow(dead_code)]
@@ -29,7 +29,7 @@ fn rotation_from_euler(x: f64, y: f64, z: f64, convention: &str) -> SpatialResul
 ///
 /// ```
 /// use scirs2_spatial::transform::{Rotation, Slerp};
-/// use ndarray::array;
+/// use scirs2_core::ndarray::array;
 /// use std::f64::consts::PI;
 ///
 /// // Create two rotations to interpolate between
@@ -77,7 +77,7 @@ impl Slerp {
     ///
     /// ```
     /// use scirs2_spatial::transform::{Rotation, Slerp};
-    /// use ndarray::array;
+    /// use scirs2_core::ndarray::array;
     /// use std::f64::consts::PI;
     ///
     /// let rot1 = Rotation::identity();
@@ -135,7 +135,7 @@ impl Slerp {
     ///
     /// ```
     /// use scirs2_spatial::transform::{Rotation, Slerp};
-    /// use ndarray::array;
+    /// use scirs2_core::ndarray::array;
     /// use std::f64::consts::PI;
     ///
     /// let rot1 = Rotation::identity();
@@ -198,7 +198,7 @@ impl Slerp {
     ///
     /// ```
     /// use scirs2_spatial::transform::{Rotation, Slerp};
-    /// use ndarray::array;
+    /// use scirs2_core::ndarray::array;
     /// use std::f64::consts::PI;
     ///
     /// let rot1 = Rotation::identity();

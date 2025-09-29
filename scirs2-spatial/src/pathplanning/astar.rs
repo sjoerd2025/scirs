@@ -15,7 +15,7 @@ use std::collections::{BinaryHeap, HashMap};
 use std::hash::{Hash, Hasher};
 use std::rc::Rc;
 
-use ndarray::ArrayView1;
+use scirs2_core::ndarray::ArrayView1;
 
 use crate::error::{SpatialError, SpatialResult};
 

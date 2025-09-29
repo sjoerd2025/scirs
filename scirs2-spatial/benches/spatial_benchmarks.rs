@@ -7,8 +7,8 @@
 use criterion::{
     criterion_group, criterion_main, BenchmarkId, Criterion, PlotConfiguration, Throughput,
 };
-use ndarray::Array2;
-use rand::{rngs::StdRng, Rng, SeedableRng};
+use scirs2_core::ndarray::Array2;
+use scirs2_core::random::{rngs::StdRng, Rng, SeedableRng};
 use scirs2_spatial::{
     distance::{euclidean, pdist},
     simd_distance::{
@@ -184,7 +184,7 @@ fn bench_memory_efficiency(c: &mut Criterion) {
                 b.iter(|| {
                     // Only compute a subset to avoid memory explosion
                     let subset_size = (size / 10).max(100);
-                    let subset = points.slice(ndarray::s![..subset_size, ..]);
+                    let subset = points.slice(scirs2_core::ndarray::s![..subset_size, ..]);
                     black_box(parallel_pdist(&subset, "euclidean").unwrap())
                 })
             },
@@ -200,7 +200,8 @@ fn bench_memory_efficiency(c: &mut Criterion) {
                     let mut total_distance = 0.0;
                     for chunk_start in (0..size).step_by(chunk_size) {
                         let chunk_end = (chunk_start + chunk_size).min(size);
-                        let chunk = points.slice(ndarray::s![chunk_start..chunk_end, ..]);
+                        let chunk =
+                            points.slice(scirs2_core::ndarray::s![chunk_start..chunk_end, ..]);
                         if chunk.nrows() > 1 {
                             let distances = parallel_pdist(&chunk, "euclidean").unwrap();
                             total_distance += distances.sum();
@@ -428,7 +429,7 @@ fn bench_scaling_analysis(c: &mut Criterion) {
             b_.iter(|| {
                 // Limit computation to avoid excessive runtime
                 let subset_size = if size > 2000 { 1000 } else { size };
-                let subset = points.slice(ndarray::s![..subset_size, ..]);
+                let subset = points.slice(scirs2_core::ndarray::s![..subset_size, ..]);
                 black_box(parallel_pdist(&subset, "euclidean").unwrap())
             })
         });
@@ -504,7 +505,7 @@ fn bench_memory_allocation_patterns(c: &mut Criterion) {
     group.bench_function("strided_access", |b| {
         b.iter(|| {
             let mut sum = 0.0;
-            for col in points.axis_iter(ndarray::Axis(1)) {
+            for col in points.axis_iter(scirs2_core::ndarray::Axis(1)) {
                 sum += col.sum();
             }
             black_box(sum)

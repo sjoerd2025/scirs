@@ -5,8 +5,8 @@
 //! for spatial data clustering and pattern discovery.
 
 use crate::error::{SpatialError, SpatialResult};
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
-use rand::Rng;
+use scirs2_core::ndarray::{Array1, Array2, ArrayView1, ArrayView2};
+use scirs2_core::random::Rng;
 use std::collections::VecDeque;
 
 /// Bio-inspired competitive learning for spatial clustering
@@ -24,7 +24,7 @@ use std::collections::VecDeque;
 ///
 /// # Example
 /// ```rust
-/// use ndarray::Array2;
+/// use scirs2_core::ndarray::Array2;
 /// use scirs2_spatial::neuromorphic::algorithms::CompetitiveNeuralClusterer;
 ///
 /// let points = Array2::from_shape_vec((4, 2), vec![
@@ -300,7 +300,7 @@ impl CompetitiveNeuralClusterer {
 ///
 /// # Example
 /// ```rust
-/// use ndarray::Array2;
+/// use scirs2_core::ndarray::Array2;
 /// use scirs2_spatial::neuromorphic::algorithms::HomeostaticNeuralClusterer;
 ///
 /// let points = Array2::from_shape_vec((4, 2), vec![
@@ -930,7 +930,7 @@ impl AdaptationScale {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::Array2;
+    use scirs2_core::ndarray::Array2;
 
     #[test]
     fn test_competitive_clusterer_creation() {

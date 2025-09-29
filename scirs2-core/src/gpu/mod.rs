@@ -883,6 +883,14 @@ pub(crate) trait GpuContextImpl: Send + Sync {
 
     /// Create a compiler
     fn create_compiler(&self) -> Arc<dyn GpuCompilerImpl>;
+
+    /// Support dynamic downcasting of concrete context implementations
+    fn as_any(&self) -> &dyn std::any::Any
+    where
+        Self: 'static + Sized,
+    {
+        self
+    }
 }
 
 // CPU fallback implementation

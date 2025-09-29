@@ -3,7 +3,7 @@
 //! This module provides utility functions for spatial algorithms.
 
 use crate::error::{SpatialError, SpatialResult};
-use ndarray::Array2;
+use scirs2_core::ndarray::Array2;
 
 /// Type alias for the result of scaling points: (scaled points, scaling factors)
 type ScaledPointsResult = SpatialResult<(Array2<f64>, Vec<(f64, f64)>)>;
@@ -144,7 +144,7 @@ pub fn unscale_points(points: &Array2<f64>, ranges: &[(f64, f64)]) -> SpatialRes
 mod tests {
     use super::*;
     use approx::assert_relative_eq;
-    use ndarray::arr2;
+    use scirs2_core::ndarray::arr2;
 
     #[test]
     fn test_points_equal() {

@@ -285,7 +285,9 @@ impl InterpolationFloat for f64 {
     }
 }
 
-impl<T: InterpolationFloat + scirs2_core::simd_ops::SimdUnifiedOps> SimdPerformanceValidator<T> {
+impl<T: InterpolationFloat + scirs2_core::simd_ops::SimdUnifiedOps + ordered_float::FloatCore>
+    SimdPerformanceValidator<T>
+{
     /// Create a new SIMD performance validator
     pub fn new(config: SimdValidationConfig) -> Self {
         let platform_caps = PlatformCapabilities::detect();
@@ -810,10 +812,10 @@ impl<T: InterpolationFloat + scirs2_core::simd_ops::SimdUnifiedOps> SimdPerforma
         if scalar_result.len() != simd_result.len() {
             return Ok(CorrectnessResult {
                 is_correct: false,
-                max_absolute_error: T::infinity(),
-                max_relative_error: T::infinity(),
-                mean_absolute_error: T::infinity(),
-                error_std_dev: T::infinity(),
+                max_absolute_error: <T as num_traits::Float>::infinity(),
+                max_relative_error: <T as num_traits::Float>::infinity(),
+                mean_absolute_error: <T as num_traits::Float>::infinity(),
+                error_std_dev: <T as num_traits::Float>::infinity(),
                 num_values_compared: 0,
             });
         }
@@ -824,15 +826,21 @@ impl<T: InterpolationFloat + scirs2_core::simd_ops::SimdUnifiedOps> SimdPerforma
         let mut errors = Vec::new();
 
         for (scalar_val, simd_val) in scalar_result.iter().zip(simd_result.iter()) {
-            let abs_error = (*scalar_val - *simd_val).abs();
-            let rel_error = if scalar_val.abs() > T::zero() {
-                abs_error / scalar_val.abs()
+            let diff_val = *scalar_val - *simd_val;
+            let abs_error = num_traits::Float::abs(diff_val);
+            let scalar_abs = num_traits::Float::abs(*scalar_val);
+            let rel_error = if scalar_abs > T::zero() {
+                abs_error / scalar_abs
             } else {
                 abs_error
             };
 
-            max_abs_error = max_abs_error.max(abs_error);
-            max_rel_error = max_rel_error.max(rel_error);
+            if abs_error > max_abs_error {
+                max_abs_error = abs_error;
+            }
+            if rel_error > max_rel_error {
+                max_rel_error = rel_error;
+            }
             sum_abs_error = sum_abs_error + abs_error;
             errors.push(abs_error);
         }
@@ -844,7 +852,8 @@ impl<T: InterpolationFloat + scirs2_core::simd_ops::SimdUnifiedOps> SimdPerforma
         let variance = errors
             .iter()
             .map(|e| {
-                let diff = e.to_f64().unwrap_or(0.0) - mean_error_f64;
+                let e_f64 = e.to_f64().unwrap_or(0.0);
+                let diff = e_f64 - mean_error_f64;
                 diff * diff
             })
             .sum::<f64>()
@@ -1053,7 +1062,9 @@ pub struct ValidationSummary<T: InterpolationFloat> {
     pub validation_duration: Duration,
 }
 
-impl<T: InterpolationFloat + scirs2_core::simd_ops::SimdUnifiedOps> ValidationSummary<T> {
+impl<T: InterpolationFloat + scirs2_core::simd_ops::SimdUnifiedOps + ordered_float::FloatCore>
+    ValidationSummary<T>
+{
     /// Print a comprehensive validation report
     pub fn print_report(&self) {
         println!("\n{}", "=".repeat(80));
@@ -1162,8 +1173,9 @@ impl<T: InterpolationFloat + scirs2_core::simd_ops::SimdUnifiedOps> ValidationSu
 
 /// Convenience function to run SIMD validation with default configuration
 #[allow(dead_code)]
-pub fn run_simd_validation<T: InterpolationFloat + scirs2_core::simd_ops::SimdUnifiedOps>(
-) -> InterpolateResult<ValidationSummary<T>> {
+pub fn run_simd_validation<
+    T: InterpolationFloat + scirs2_core::simd_ops::SimdUnifiedOps + ordered_float::FloatCore,
+>() -> InterpolateResult<ValidationSummary<T>> {
     let mut validator = SimdPerformanceValidator::new(SimdValidationConfig::default());
     validator.run_comprehensive_validation()
 }
@@ -1171,7 +1183,7 @@ pub fn run_simd_validation<T: InterpolationFloat + scirs2_core::simd_ops::SimdUn
 /// Convenience function to run SIMD validation with custom configuration
 #[allow(dead_code)]
 pub fn run_simd_validation_with_config<
-    T: InterpolationFloat + scirs2_core::simd_ops::SimdUnifiedOps,
+    T: InterpolationFloat + scirs2_core::simd_ops::SimdUnifiedOps + ordered_float::FloatCore,
 >(
     config: SimdValidationConfig,
 ) -> InterpolateResult<ValidationSummary<T>> {

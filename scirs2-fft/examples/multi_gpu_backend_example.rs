@@ -3,7 +3,7 @@
 //! This example demonstrates the unified GPU backend system supporting both
 //! NVIDIA CUDA and AMD ROCm/HIP backends for sparse FFT acceleration.
 
-use num_complex::Complex64;
+use scirs2_core::Complex64;
 use scirs2_fft::{
     sparse_fft_gpu::GPUBackend,
     sparse_fft_gpu_memory::{

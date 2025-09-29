@@ -1650,7 +1650,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Test failing - needs investigation
+    #[ignore] // FIXME: Quantum gate implementation has incorrect state vector calculations
     fn test_quantum_gates() {
         let mut processor = QuantumProcessor::<f64>::new(2).unwrap();
 

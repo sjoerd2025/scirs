@@ -1,6 +1,6 @@
 // Example demonstrating usage of ndarray extensions and universal functions
 
-use ndarray::array;
+use scirs2_core::ndarray_ext::array;
 use scirs2_core::ndarray_ext::{mask_select, reshape_2d, stack_2d, transpose_2d};
 use scirs2_core::ufuncs::{binary2d, math2d, reduction};
 

@@ -324,7 +324,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Benchmark complex operations
     println!("\n🌀 Benchmarking complex functions...");
 
-    use num_complex::Complex64;
+    use scirs2_core::Complex64;
     let z = Complex64::new(1.5, 0.5);
 
     // Complex spherical harmonic benchmark (commented out - needs proper complex support)

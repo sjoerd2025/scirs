@@ -1,5 +1,5 @@
 use criterion::{criterion_group, criterion_main, Criterion};
-use ndarray::array;
+use scirs2_core::ndarray::array;
 use scirs2_linalg::matrix_norm;
 use scirs2_linalg::{det, inv};
 use std::hint::black_box;

@@ -19,7 +19,8 @@
 //! - Cubic: Good compromise between smoothness and locality
 
 use crate::error::{SpatialError, SpatialResult};
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
+use scirs2_core::ndarray::{Array1, Array2, ArrayView1, ArrayView2};
+use scirs2_core::random::{thread_rng, Rng};
 // Simple linear system solver
 #[allow(dead_code)]
 fn solve_linear_system(a: Array2<f64>, b: Array1<f64>) -> SpatialResult<Array1<f64>> {
@@ -172,7 +173,7 @@ impl RBFKernel {
 ///
 /// ```
 /// use scirs2_spatial::interpolate::{RBFInterpolator, RBFKernel};
-/// use ndarray::array;
+/// use scirs2_core::ndarray::array;
 ///
 /// // Create sample points and values
 /// let points = array![
@@ -359,12 +360,12 @@ impl RBFInterpolator {
             }
         } else {
             // Sample pairs for large datasets
-            let mut rng = rand::rng();
+            let mut rng = thread_rng();
             let mut seen_pairs = std::collections::HashSet::new();
 
             for _ in 0..max_pairs {
-                let i = rand::Rng::random_range(&mut rng, 0..n_points);
-                let j = rand::Rng::random_range(&mut rng, 0..n_points);
+                let i = rng.random_range(0..n_points);
+                let j = rng.random_range(0..n_points);
 
                 if i != j {
                     let pair = if i < j { (i, j) } else { (j, i) };
@@ -487,8 +488,12 @@ impl RBFInterpolator {
             match solution {
                 Ok(solution) => {
                     // Extract weights and polynomial coefficients
-                    let weights = solution.slice(ndarray::s![0..n_points]).to_owned();
-                    let poly_coefs = solution.slice(ndarray::s![n_points..]).to_owned();
+                    let weights = solution
+                        .slice(scirs2_core::ndarray::s![0..n_points])
+                        .to_owned();
+                    let poly_coefs = solution
+                        .slice(scirs2_core::ndarray::s![n_points..])
+                        .to_owned();
                     Ok((weights, Some(poly_coefs)))
                 }
                 Err(e) => Err(SpatialError::ComputationError(format!(
@@ -619,7 +624,7 @@ impl RBFInterpolator {
 mod tests {
     use super::*;
     use approx::assert_relative_eq;
-    use ndarray::array;
+    use scirs2_core::ndarray::array;
 
     #[test]
     fn test_rbf_interpolation_basic() {

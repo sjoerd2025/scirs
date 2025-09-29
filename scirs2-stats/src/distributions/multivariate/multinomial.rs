@@ -7,7 +7,7 @@ use crate::sampling::SampleableDistribution;
 use ndarray::{Array1, ArrayBase, Data, Ix1};
 // NOTE: rand, distr: weighted may not be available in current version
 // use rand_distr::weighted::WeightedAliasIndex;
-use scirs2_core::rng;
+use scirs2_core::random::prelude::*;
 use scirs2_core::validation::{check_probabilities, check_probabilities_sum_to_one};
 use scirs2_core::Rng;
 use std::fmt::Debug;
@@ -275,7 +275,7 @@ impl Multinomial {
     /// assert_eq!(samples[0].len(), 3);
     /// ```
     pub fn rvs(&self, size: usize) -> StatsResult<Vec<Array1<f64>>> {
-        let mut rng = rng();
+        let mut rng = thread_rng();
         let mut samples = Vec::with_capacity(size);
         let k = self.p.len();
 
@@ -442,7 +442,6 @@ mod tests {
     use ndarray::array;
 
     #[test]
-    #[ignore = "timeout"]
     fn test_multinomial_creation() {
         // Valid multinomial
         let n = 10;

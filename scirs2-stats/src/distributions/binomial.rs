@@ -300,7 +300,7 @@ impl<F: Float + NumCast + std::fmt::Display> Binomial<F> {
     /// assert_eq!(samples.len(), 5);
     /// ```
     pub fn rvs(&self, size: usize) -> StatsResult<Vec<F>> {
-        let mut rng = rand::rng();
+        let mut rng = rand::thread_rng();
         let mut samples = Vec::with_capacity(size);
 
         for _ in 0..size {
@@ -601,7 +601,6 @@ mod tests {
     use approx::assert_relative_eq;
 
     #[test]
-    #[ignore = "timeout"]
     fn test_binomial_creation() {
         // Valid parameters
         let binom1 = Binomial::new(10, 0.3).unwrap();

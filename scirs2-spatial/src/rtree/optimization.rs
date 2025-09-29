@@ -1,7 +1,7 @@
 use crate::error::SpatialResult;
 use crate::rtree::node::{Entry, Node, RTree};
 use crate::rtree::Rectangle;
-use ndarray::Array1;
+use scirs2_core::ndarray::Array1;
 
 impl<T: Clone> RTree<T> {
     /// Optimize the R-tree by rebuilding it with the current data
@@ -126,6 +126,9 @@ impl<T: Clone> RTree<T> {
             })
             .collect();
 
+        // Store the number of points for size tracking
+        let num_points = entries.len();
+
         // Build the tree recursively
         rtree.root = rtree.str_build_node(&mut entries, 0)?;
         rtree.root._isleaf =
@@ -135,6 +138,11 @@ impl<T: Clone> RTree<T> {
         let height = rtree.calculate_height(&rtree.root);
         for _ in 1..height {
             rtree.increment_height();
+        }
+
+        // Update the tree size to reflect the number of data points loaded
+        for _ in 0..num_points {
+            rtree.increment_size();
         }
 
         Ok(rtree)
@@ -296,7 +304,7 @@ impl<T: Clone> RTree<T> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::array;
+    use scirs2_core::ndarray::array;
 
     #[test]
     fn test_rtree_optimize() {
@@ -337,7 +345,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn test_rtree_bulk_load() {
         // Create points
         let points = vec![

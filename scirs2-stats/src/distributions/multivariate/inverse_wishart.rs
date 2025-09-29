@@ -406,7 +406,6 @@ mod tests {
     use ndarray::array;
 
     #[test]
-    #[ignore = "timeout"]
     fn test_inverse_wishart_creation() {
         // 2x2 Inverse Wishart with identity scale
         let scale = array![[1.0, 0.0], [0.0, 1.0]];

@@ -5,8 +5,8 @@
 //! 2. Read from and write to memory-mapped arrays
 //! 3. Process large datasets efficiently using memory mapping
 
-use ndarray::{Array1, Array2, Array3, Ix2, Ix3};
 use scirs2_core::memory_efficient::{create_mmap, create_temp_mmap, AccessMode};
+use scirs2_core::ndarray_ext::{Array1, Array2, Array3, Ix2, Ix3};
 use std::path::Path;
 use std::time::Instant;
 use tempfile::tempdir;

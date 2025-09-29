@@ -1,5 +1,5 @@
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
-use ndarray::ArrayView1;
+use scirs2_core::ndarray::ArrayView1;
 use scirs2_integrate::{
     gaussian::gauss_legendre,
     monte_carlo::{monte_carlo, MonteCarloOptions},

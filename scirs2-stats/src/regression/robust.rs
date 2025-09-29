@@ -526,7 +526,7 @@ where
     } else {
         // Use a random _seed
         use rand::Rng;
-        let mut temp_rng = rand::rng();
+        let mut temp_rng = rand::thread_rng();
         Random::seed(temp_rng.random())
     };
 

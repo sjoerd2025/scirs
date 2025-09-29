@@ -540,3 +540,277 @@ mod tests {
         assert_eq!(threads, 1);
     }
 }
+
+/// Parallel scan (prefix sum) operation
+///
+/// Computes cumulative operation (like cumulative sum) in parallel.
+/// Returns a vector where each element is the result of applying the operation
+/// to all preceding elements including itself.
+#[cfg(feature = "parallel")]
+pub fn parallel_scan<T, F>(items: &[T], init: T, op: F) -> Vec<T>
+where
+    T: Clone + Send + Sync,
+    F: Fn(&T, &T) -> T + Sync,
+{
+    use rayon::prelude::*;
+
+    if items.is_empty() {
+        return Vec::new();
+    }
+
+    let mut result = vec![init.clone(); items.len()];
+
+    // Simple sequential approach for now - can be optimized with proper parallel scan
+    result[0] = op(&init, &items[0]);
+    for i in 1..items.len() {
+        result[i] = op(&result[i - 1], &items[i]);
+    }
+
+    result
+}
+
+/// Sequential fallback for parallel_scan
+#[cfg(not(feature = "parallel"))]
+pub fn parallel_scan<T, F>(items: &[T], init: T, op: F) -> Vec<T>
+where
+    T: Clone,
+    F: Fn(&T, &T) -> T,
+{
+    if items.is_empty() {
+        return Vec::new();
+    }
+
+    let mut result = vec![init.clone(); items.len()];
+    result[0] = op(&init, &items[0]);
+    for i in 1..items.len() {
+        result[i] = op(&result[i - 1], &items[i]);
+    }
+
+    result
+}
+
+/// Parallel matrix row operations
+///
+/// Applies an operation to each row of a matrix represented as a slice of slices.
+/// Useful for BLAS-like operations on matrices.
+#[cfg(feature = "parallel")]
+pub fn parallel_matrix_rows<T, U, F>(matrix: &[&[T]], op: F) -> Vec<U>
+where
+    T: Sync,
+    U: Send,
+    F: Fn(&[T]) -> U + Sync,
+{
+    use rayon::prelude::*;
+    matrix.par_iter().map(|row| op(row)).collect()
+}
+
+/// Sequential fallback for parallel_matrix_rows
+#[cfg(not(feature = "parallel"))]
+pub fn parallel_matrix_rows<T, U, F>(matrix: &[&[T]], op: F) -> Vec<U>
+where
+    F: Fn(&[T]) -> U,
+{
+    matrix.iter().map(|row| op(row)).collect()
+}
+
+/// Parallel zip operation for multiple arrays
+///
+/// Processes multiple arrays element-wise in parallel, similar to zip but
+/// optimized for scientific computing workloads.
+#[cfg(feature = "parallel")]
+pub fn parallel_zip<T, U, V, F>(a: &[T], b: &[U], op: F) -> Vec<V>
+where
+    T: Sync,
+    U: Sync,
+    V: Send,
+    F: Fn(&T, &U) -> V + Sync,
+{
+    use rayon::prelude::*;
+    a.par_iter()
+        .zip(b.par_iter())
+        .map(|(x, y)| op(x, y))
+        .collect()
+}
+
+/// Sequential fallback for parallel_zip
+#[cfg(not(feature = "parallel"))]
+pub fn parallel_zip<T, U, V, F>(a: &[T], b: &[U], op: F) -> Vec<V>
+where
+    F: Fn(&T, &U) -> V,
+{
+    a.iter().zip(b.iter()).map(|(x, y)| op(x, y)).collect()
+}
+
+/// Parallel sorting with custom comparison
+///
+/// Sorts a vector in parallel using a custom comparison function.
+/// More efficient than sequential sort for large datasets.
+#[cfg(feature = "parallel")]
+pub fn parallel_sort<T, F>(items: &mut [T], compare: F)
+where
+    T: Send,
+    F: Fn(&T, &T) -> std::cmp::Ordering + Sync,
+{
+    use rayon::slice::ParallelSliceMut;
+    items.par_sort_by(compare);
+}
+
+/// Sequential fallback for parallel_sort
+#[cfg(not(feature = "parallel"))]
+pub fn parallel_sort<T, F>(items: &mut [T], compare: F)
+where
+    F: Fn(&T, &T) -> std::cmp::Ordering,
+{
+    items.sort_by(compare);
+}
+
+/// Work-stealing parallel map for unbalanced workloads
+///
+/// Uses work-stealing to balance load when work per item varies significantly.
+/// Automatically adjusts chunk sizes based on work completion rates.
+#[cfg(feature = "parallel")]
+pub fn parallel_map_work_stealing<T, U, F>(items: &[T], op: F) -> Vec<U>
+where
+    T: Sync,
+    U: Send,
+    F: Fn(&T) -> U + Sync,
+{
+    use rayon::prelude::*;
+
+    // Start with smaller chunks to enable better work stealing
+    let chunk_size = std::cmp::max(1, items.len() / (num_threads() * 4));
+
+    items
+        .par_chunks(chunk_size)
+        .flat_map(|chunk| chunk.par_iter().map(&op))
+        .collect()
+}
+
+/// Sequential fallback for parallel_map_work_stealing
+#[cfg(not(feature = "parallel"))]
+pub fn parallel_map_work_stealing<T, U, F>(items: &[T], op: F) -> Vec<U>
+where
+    F: Fn(&T) -> U,
+{
+    items.iter().map(op).collect()
+}
+
+/// NUMA-aware parallel processing
+///
+/// Attempts to optimize parallel operations for NUMA (Non-Uniform Memory Access) systems
+/// by keeping work close to where data resides in memory.
+#[cfg(feature = "parallel")]
+pub fn parallel_map_numa_aware<T, U, F>(items: &[T], op: F) -> Vec<U>
+where
+    T: Sync,
+    U: Send,
+    F: Fn(&T) -> U + Sync,
+{
+    use rayon::prelude::*;
+
+    let num_cpus = num_threads();
+    let chunk_size = std::cmp::max(1, items.len() / num_cpus);
+
+    // Try to keep chunks aligned to cache lines and NUMA boundaries
+    let aligned_chunk_size = ((chunk_size + 63) / 64) * 64; // Align to 64-element boundaries
+
+    items
+        .par_chunks(aligned_chunk_size)
+        .flat_map(|chunk| chunk.par_iter().map(&op))
+        .collect()
+}
+
+/// Sequential fallback for parallel_map_numa_aware
+#[cfg(not(feature = "parallel"))]
+pub fn parallel_map_numa_aware<T, U, F>(items: &[T], op: F) -> Vec<U>
+where
+    F: Fn(&T) -> U,
+{
+    items.iter().map(op).collect()
+}
+
+/// Parallel reduction with tree-based approach
+///
+/// Uses a binary tree reduction pattern for optimal performance on large datasets.
+/// More efficient than linear reduction for associative operations.
+#[cfg(feature = "parallel")]
+pub fn parallel_tree_reduce<T, F>(items: &[T], op: F) -> Option<T>
+where
+    T: Clone + Send + Sync,
+    F: Fn(T, T) -> T + Sync,
+{
+    use rayon::prelude::*;
+
+    if items.is_empty() {
+        return None;
+    }
+
+    // Use Rayon's reduce which implements tree reduction internally
+    Some(items.par_iter().cloned().reduce(|| items[0].clone(), &op))
+}
+
+/// Sequential fallback for parallel_tree_reduce
+#[cfg(not(feature = "parallel"))]
+pub fn parallel_tree_reduce<T, F>(items: &[T], op: F) -> Option<T>
+where
+    T: Clone,
+    F: Fn(T, T) -> T,
+{
+    items.iter().cloned().reduce(op)
+}
+
+/// Parallel batch processing with progress tracking
+///
+/// Processes items in batches and provides progress information.
+/// Useful for long-running operations where progress feedback is needed.
+#[cfg(feature = "parallel")]
+pub fn parallel_batch_process<T, U, F, P>(
+    items: &[T],
+    batch_size: usize,
+    processor: F,
+    progress_callback: P,
+) -> Vec<U>
+where
+    T: Sync,
+    U: Send,
+    F: Fn(&[T]) -> Vec<U> + Sync,
+    P: Fn(usize, usize) + Sync,
+{
+    use rayon::prelude::*;
+
+    let total_batches = (items.len() + batch_size - 1) / batch_size;
+    let results: Vec<Vec<U>> = items
+        .par_chunks(batch_size)
+        .enumerate()
+        .map(|(batch_idx, chunk)| {
+            let result = processor(chunk);
+            progress_callback(batch_idx + 1, total_batches);
+            result
+        })
+        .collect();
+
+    results.into_iter().flatten().collect()
+}
+
+/// Sequential fallback for parallel_batch_process
+#[cfg(not(feature = "parallel"))]
+pub fn parallel_batch_process<T, U, F, P>(
+    items: &[T],
+    batch_size: usize,
+    processor: F,
+    progress_callback: P,
+) -> Vec<U>
+where
+    F: Fn(&[T]) -> Vec<U>,
+    P: Fn(usize, usize),
+{
+    let total_batches = (items.len() + batch_size - 1) / batch_size;
+    let mut results = Vec::new();
+
+    for (batch_idx, chunk) in items.chunks(batch_size).enumerate() {
+        results.extend(processor(chunk));
+        progress_callback(batch_idx + 1, total_batches);
+    }
+
+    results
+}

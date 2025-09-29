@@ -77,7 +77,14 @@ use crate::spatial::kdtree::KdTree;
 #[derive(Debug, Clone)]
 pub struct ParallelLocalPolynomialRegression<F>
 where
-    F: Float + FromPrimitive + Debug + Send + Sync + 'static + std::cmp::PartialOrd,
+    F: Float
+        + FromPrimitive
+        + Debug
+        + Send
+        + Sync
+        + 'static
+        + std::cmp::PartialOrd
+        + ordered_float::FloatCore,
 {
     /// The standard local polynomial regression model
     loess: LocalPolynomialRegression<F>,
@@ -91,7 +98,14 @@ where
 
 impl<F> ParallelLocalPolynomialRegression<F>
 where
-    F: Float + FromPrimitive + Debug + Send + Sync + 'static + std::cmp::PartialOrd,
+    F: Float
+        + FromPrimitive
+        + Debug
+        + Send
+        + Sync
+        + 'static
+        + std::cmp::PartialOrd
+        + ordered_float::FloatCore,
 {
     /// Create a new parallel local polynomial regression model
     ///
@@ -324,7 +338,14 @@ where
 
 impl<F> ParallelEvaluate<F, Array1<F>> for ParallelLocalPolynomialRegression<F>
 where
-    F: Float + FromPrimitive + Debug + Send + Sync + 'static + std::cmp::PartialOrd,
+    F: Float
+        + FromPrimitive
+        + Debug
+        + Send
+        + Sync
+        + 'static
+        + std::cmp::PartialOrd
+        + ordered_float::FloatCore,
 {
     fn evaluate_parallel(
         &self,
@@ -499,7 +520,14 @@ pub fn make_parallel_loess<F>(
     bandwidth: F,
 ) -> InterpolateResult<ParallelLocalPolynomialRegression<F>>
 where
-    F: Float + FromPrimitive + Debug + Send + Sync + 'static + std::cmp::Ord,
+    F: Float
+        + FromPrimitive
+        + Debug
+        + Send
+        + Sync
+        + 'static
+        + std::cmp::Ord
+        + ordered_float::FloatCore,
 {
     ParallelLocalPolynomialRegression::new(points, values, bandwidth)
 }
@@ -526,7 +554,14 @@ pub fn make_parallel_robust_loess<F>(
     confidence_level: F,
 ) -> InterpolateResult<ParallelLocalPolynomialRegression<F>>
 where
-    F: Float + FromPrimitive + Debug + Send + Sync + 'static + std::cmp::Ord,
+    F: Float
+        + FromPrimitive
+        + Debug
+        + Send
+        + Sync
+        + 'static
+        + std::cmp::Ord
+        + ordered_float::FloatCore,
 {
     let config = LocalPolynomialConfig {
         bandwidth,

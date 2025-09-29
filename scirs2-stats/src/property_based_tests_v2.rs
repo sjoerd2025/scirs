@@ -145,7 +145,7 @@ where
     pub fn new(config: PropertyTestConfig) -> Self {
         let rng = match config.seed {
             Some(seed) => StdRng::seed_from_u64(seed),
-            None => StdRng::from_rng(rand::rng()),
+            None => StdRng::from_rng(rand::thread_rng()),
         };
 
         Self {

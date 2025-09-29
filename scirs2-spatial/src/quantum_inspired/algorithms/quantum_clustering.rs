@@ -6,8 +6,8 @@
 //! convergence and solution quality.
 
 use crate::error::{SpatialError, SpatialResult};
-use ndarray::{Array1, Array2, ArrayView2};
-use rand::Rng;
+use scirs2_core::ndarray::{Array1, Array2, ArrayView2};
+use scirs2_core::random::Rng;
 
 // Import quantum concepts
 use super::super::concepts::QuantumState;
@@ -28,7 +28,7 @@ use std::f64::consts::PI;
 ///
 /// # Example
 /// ```rust
-/// use ndarray::Array2;
+/// use scirs2_core::ndarray::Array2;
 /// use scirs2_spatial::quantum_inspired::algorithms::QuantumClusterer;
 ///
 /// let points = Array2::from_shape_vec((6, 2), vec![
@@ -490,7 +490,7 @@ impl QuantumClusterer {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::Array2;
+    use scirs2_core::ndarray::Array2;
 
     #[test]
     fn test_quantum_clusterer_creation() {

@@ -19,7 +19,7 @@
 //! ## Basic Usage
 //! ```rust
 //! use scirs2_spatial::convex_hull::{ConvexHull, convex_hull};
-//! use ndarray::array;
+//! use scirs2_core::ndarray::array;
 //!
 //! // Create points for the convex hull
 //! let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [0.5, 0.5]];
@@ -43,7 +43,7 @@
 //! ## Algorithm Selection
 //! ```rust
 //! use scirs2_spatial::convex_hull::{ConvexHull, ConvexHullAlgorithm, convex_hull_with_algorithm};
-//! use ndarray::array;
+//! use scirs2_core::ndarray::array;
 //!
 //! let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [0.5, 0.5]];
 //!
@@ -57,7 +57,7 @@
 //! ## Comprehensive Analysis
 //! ```rust
 //! use scirs2_spatial::convex_hull::{ConvexHull, analyze_hull};
-//! use ndarray::array;
+//! use scirs2_core::ndarray::array;
 //!
 //! let points = array![[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]];
 //! let hull = ConvexHull::new(&points.view()).unwrap();
@@ -155,7 +155,7 @@ pub use properties::{
 ///
 /// ```rust
 /// use scirs2_spatial::convex_hull::convex_hull;
-/// use ndarray::array;
+/// use scirs2_core::ndarray::array;
 ///
 /// let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [0.5, 0.5]];
 /// let hull_vertices = convex_hull(&points.view()).unwrap();
@@ -165,8 +165,8 @@ pub use properties::{
 /// ```
 #[allow(dead_code)]
 pub fn convex_hull(
-    points: &ndarray::ArrayView2<'_, f64>,
-) -> crate::error::SpatialResult<ndarray::Array2<f64>> {
+    points: &scirs2_core::ndarray::ArrayView2<'_, f64>,
+) -> crate::error::SpatialResult<scirs2_core::ndarray::Array2<f64>> {
     let hull = ConvexHull::new(points)?;
     Ok(hull.vertices_array())
 }
@@ -190,7 +190,7 @@ pub fn convex_hull(
 ///
 /// ```rust
 /// use scirs2_spatial::convex_hull::{convex_hull_with_algorithm, ConvexHullAlgorithm};
-/// use ndarray::array;
+/// use scirs2_core::ndarray::array;
 ///
 /// let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [0.5, 0.5]];
 /// let hull_vertices = convex_hull_with_algorithm(&points.view(), ConvexHullAlgorithm::GrahamScan).unwrap();
@@ -198,9 +198,9 @@ pub fn convex_hull(
 /// ```
 #[allow(dead_code)]
 pub fn convex_hull_with_algorithm(
-    points: &ndarray::ArrayView2<'_, f64>,
+    points: &scirs2_core::ndarray::ArrayView2<'_, f64>,
     algorithm: ConvexHullAlgorithm,
-) -> crate::error::SpatialResult<ndarray::Array2<f64>> {
+) -> crate::error::SpatialResult<scirs2_core::ndarray::Array2<f64>> {
     let hull = ConvexHull::new_with_algorithm(points, algorithm)?;
     Ok(hull.vertices_array())
 }
@@ -243,7 +243,7 @@ pub mod advanced {
     ///
     /// * Results from different algorithms with comparison metrics
     pub fn compare_algorithms(
-        points: &ndarray::ArrayView2<'_, f64>,
+        points: &scirs2_core::ndarray::ArrayView2<'_, f64>,
     ) -> crate::error::SpatialResult<
         Vec<(ConvexHullAlgorithm, crate::error::SpatialResult<ConvexHull>)>,
     > {
@@ -286,7 +286,7 @@ pub mod advanced {
     /// * Validation results and any issues found
     pub fn validate_hull(
         hull: &ConvexHull,
-        original_points: &ndarray::ArrayView2<'_, f64>,
+        original_points: &scirs2_core::ndarray::ArrayView2<'_, f64>,
     ) -> crate::error::SpatialResult<Vec<String>> {
         let mut issues = Vec::new();
 
@@ -348,7 +348,7 @@ pub mod advanced {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::arr2;
+    use scirs2_core::ndarray::arr2;
 
     #[test]
     fn test_convex_hull_function() {

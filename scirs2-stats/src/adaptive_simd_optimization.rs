@@ -1039,7 +1039,6 @@ mod tests {
     use ndarray::array;
 
     #[test]
-    #[ignore = "timeout"]
     fn test_adaptive_simd_config() {
         let config = AdaptiveSimdConfig::default();
         assert!(config.auto_detect_hardware);

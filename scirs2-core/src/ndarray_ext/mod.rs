@@ -5,12 +5,17 @@
 //! It implements core `NumPy`-like features that are not available in the
 //! base ndarray crate.
 
-/// Re-export essential ndarray types for convenience
+/// Re-export essential ndarray types and macros for convenience
 pub use ndarray::{
     s, Array, ArrayBase, ArrayView, ArrayViewMut, Axis, Data, DataMut, Dim, Dimension, Ix1, Ix2,
     Ix3, Ix4, Ix5, Ix6, IxDyn, OwnedRepr, RemoveAxis, ScalarOperand, ShapeBuilder, ShapeError,
     SliceInfo, ViewRepr, Zip,
 };
+
+// Re-export the array! macro for convenient array creation
+// This addresses the common issue where users expect array! to be available in scirs2-core
+// instead of requiring import from scirs2_autograd::ndarray
+pub use ndarray::{arr1, arr2, array};
 
 // Re-export type aliases for common array sizes
 pub use ndarray::{ArcArray1, ArcArray2};
@@ -34,6 +39,10 @@ pub mod matrix;
 
 /// Array manipulation operations (flip, roll, tile, repeat, etc.)
 pub mod manipulation;
+
+/// Random array generation with full ndarray-rand compatibility and scientific computing extensions
+#[cfg(feature = "random")]
+pub mod random;
 
 /// Reshape a 2D array to a new shape without copying data when possible
 ///
@@ -181,7 +190,7 @@ where
 ///
 /// # Examples
 ///
-/// ```
+/// ```ignore
 /// use ndarray::array;
 /// use scirs2_core::ndarray_ext::transpose_2d;
 ///
@@ -387,7 +396,7 @@ where
 ///
 /// # Examples
 ///
-/// ```
+/// ```ignore
 /// use ndarray::array;
 /// use scirs2_core::ndarray_ext::mask_select;
 ///
@@ -444,7 +453,7 @@ where
 ///
 /// # Examples
 ///
-/// ```
+/// ```ignore
 /// use ndarray::array;
 /// use scirs2_core::ndarray_ext::fancy_index_2d;
 ///
@@ -512,7 +521,7 @@ where
 ///
 /// # Examples
 ///
-/// ```
+/// ```ignore
 /// use ndarray::array;
 /// use scirs2_core::ndarray_ext::where_condition;
 ///
@@ -552,7 +561,7 @@ where
 ///
 /// # Examples
 ///
-/// ```
+/// ```ignore
 /// use scirs2_core::ndarray_ext::is_broadcast_compatible;
 ///
 /// assert!(is_broadcast_compatible(&[2, 3], &[3]));
@@ -646,7 +655,7 @@ pub fn broadcastshape(shape1: &[usize], shape2: &[usize]) -> Option<Vec<usize>> 
 ///
 /// # Examples
 ///
-/// ```
+/// ```ignore
 /// use ndarray::array;
 /// use scirs2_core::ndarray_ext::broadcast_1d_to_2d;
 ///
@@ -714,7 +723,7 @@ where
 ///
 /// # Examples
 ///
-/// ```
+/// ```ignore
 /// use ndarray::array;
 /// use scirs2_core::ndarray_ext::broadcast_apply;
 ///

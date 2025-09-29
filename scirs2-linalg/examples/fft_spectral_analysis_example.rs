@@ -17,7 +17,7 @@
 
 use ndarray::{Array1, Array2, Array3};
 // Commented out as it's not used in this example
-// use num_complex::Complex;
+// use scirs2_core::Complex;
 use scirs2_linalg::fft::{
     apply_window, dct_1d, dst_1d, fft_1d, fft_2d, fft_3d, fft_convolve, fft_frequencies, idct_1d,
     irfft_1d, periodogram_psd, rfft_1d, welch_psd, Complex64, FFTAlgorithm, FFTPlan,

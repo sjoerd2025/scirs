@@ -1,4 +1,4 @@
-use ndarray::array;
+use scirs2_core::ndarray::array;
 use scirs2_spatial::spherical_voronoi::SphericalVoronoi;
 use std::f64::consts::PI;
 
@@ -146,8 +146,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 /// Generate vertices of a dodecahedron as generator points on a unit sphere
 #[allow(dead_code)]
-fn generate_dodecahedron_points() -> ndarray::Array2<f64> {
-    use ndarray::Array2;
+fn generate_dodecahedron_points() -> scirs2_core::ndarray::Array2<f64> {
+    use scirs2_core::ndarray::Array2;
 
     // The golden ratio, used in dodecahedron construction
     let phi = (1.0 + 5.0_f64.sqrt()) / 2.0;
@@ -200,10 +200,10 @@ fn generate_dodecahedron_points() -> ndarray::Array2<f64> {
 fn generate_random_points_on_sphere(
     n: usize,
     radius: f64,
-    center: &ndarray::Array1<f64>,
-) -> ndarray::Array2<f64> {
-    use ndarray::Array2;
-    use rand::Rng;
+    center: &scirs2_core::ndarray::Array1<f64>,
+) -> scirs2_core::ndarray::Array2<f64> {
+    use scirs2_core::ndarray::Array2;
+    use scirs2_core::random::Rng;
 
     let mut rng = rand::rng();
     let mut points = Array2::zeros((n, 3));

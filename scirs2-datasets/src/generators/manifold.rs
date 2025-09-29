@@ -4,10 +4,8 @@ use super::config::{ManifoldConfig, ManifoldType};
 use crate::error::{DatasetsError, Result};
 use crate::utils::Dataset;
 use ndarray::{Array1, Array2};
-use rand::prelude::*;
-use rand::rngs::StdRng;
-use rand_distr::{Distribution, Uniform};
-use scirs2_core::rng;
+use scirs2_core::random::prelude::*;
+use scirs2_core::random::rand_distributions::{Distribution, Uniform};
 use std::f64::consts::PI;
 
 /// Generate a Swiss roll dataset for dimensionality reduction
@@ -29,7 +27,7 @@ pub fn make_swiss_roll(n_samples: usize, noise: f64, randomseed: Option<u64>) ->
     let mut rng = match randomseed {
         Some(_seed) => StdRng::seed_from_u64(_seed),
         None => {
-            let mut r = rng();
+            let mut r = thread_rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -96,7 +94,7 @@ pub fn make_s_curve(n_samples: usize, noise: f64, randomseed: Option<u64>) -> Re
     let mut rng = match randomseed {
         Some(_seed) => StdRng::seed_from_u64(_seed),
         None => {
-            let mut r = rng();
+            let mut r = thread_rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -150,7 +148,7 @@ pub fn make_swiss_roll_advanced(
     let mut rng = match randomseed {
         Some(_seed) => StdRng::seed_from_u64(_seed),
         None => {
-            let mut r = rng();
+            let mut r = thread_rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -220,7 +218,7 @@ pub fn make_severed_sphere(
     let mut rng = match randomseed {
         Some(_seed) => StdRng::seed_from_u64(_seed),
         None => {
-            let mut r = rng();
+            let mut r = thread_rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -279,7 +277,7 @@ pub fn make_twin_peaks(n_samples: usize, noise: f64, randomseed: Option<u64>) ->
     let mut rng = match randomseed {
         Some(_seed) => StdRng::seed_from_u64(_seed),
         None => {
-            let mut r = rng();
+            let mut r = thread_rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -351,7 +349,7 @@ pub fn make_helix(
     let mut rng = match randomseed {
         Some(_seed) => StdRng::seed_from_u64(_seed),
         None => {
-            let mut r = rng();
+            let mut r = thread_rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -404,7 +402,7 @@ pub fn make_intersecting_manifolds(
     let mut rng = match randomseed {
         Some(_seed) => StdRng::seed_from_u64(_seed),
         None => {
-            let mut r = rng();
+            let mut r = thread_rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -491,7 +489,7 @@ pub fn make_torus(
     let mut rng = match randomseed {
         Some(_seed) => StdRng::seed_from_u64(_seed),
         None => {
-            let mut r = rng();
+            let mut r = thread_rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };

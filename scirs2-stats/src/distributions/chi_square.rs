@@ -8,7 +8,7 @@ use crate::traits::{ContinuousCDF, ContinuousDistribution, Distribution as Scirs
 use ndarray::Array1;
 use num_traits::{Float, NumCast};
 use rand_distr::{ChiSquared as RandChiSquared, Distribution};
-use scirs2_core::rng;
+use scirs2_core::random::prelude::*;
 use std::f64::consts::PI;
 
 /// Chi-square distribution structure
@@ -244,7 +244,7 @@ impl<F: Float + NumCast + Send + Sync + 'static + std::fmt::Display> ChiSquare<F
     pub fn rvs_vec(&self, size: usize) -> StatsResult<Vec<F>> {
         // For small sample sizes, use the serial implementation
         if size < 1000 {
-            let mut rng = rng();
+            let mut rng = thread_rng();
             let mut samples = Vec::with_capacity(size);
 
             for _ in 0..size {
@@ -272,7 +272,7 @@ impl<F: Float + NumCast + Send + Sync + 'static + std::fmt::Display> ChiSquare<F
 
         // Generate samples in parallel
         let samples = parallel_map(&indices, move |_| {
-            let mut rng = rng();
+            let mut rng = thread_rng();
             let rand_distr = RandChiSquared::new(df_f64).unwrap();
             let sample = rand_distr.sample(&mut rng);
             F::from(sample).unwrap() * scale + loc
@@ -602,7 +602,6 @@ mod tests {
     use approx::assert_relative_eq;
 
     #[test]
-    #[ignore = "timeout"]
     fn test_chi_square_creation() {
         // Chi-square with 2 degrees of freedom
         let chi2 = ChiSquare::new(2.0, 0.0, 1.0).unwrap();

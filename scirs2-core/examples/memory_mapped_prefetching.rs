@@ -8,10 +8,10 @@
 //! cargo run --example memory_mapped_prefetching
 //! ```
 
-use ndarray::Array2;
 use scirs2_core::memory_efficient::{
     CompressedMemMapBuilder, CompressionAlgorithm, PrefetchConfigBuilder, Prefetching,
 };
+use scirs2_core::ndarray_ext::Array2;
 use std::time::{Duration, Instant};
 use tempfile::tempdir;
 

@@ -1,4 +1,3 @@
-use num_complex::Complex64;
 use plotly::{
     common::{Mode, Title},
     Layout, Plot, Scatter,
@@ -6,6 +5,7 @@ use plotly::{
 use rand::prelude::*;
 use rand::rngs::StdRng;
 use rand_distr::{Distribution, Normal};
+use scirs2_core::Complex64;
 use scirs2_fft::{
     sparse_fft::{reconstruct_time_domain, SparseFFTAlgorithm, SparseFFTResult},
     sparse_fft_cuda_kernels::execute_cuda_sublinear_sparse_fft,

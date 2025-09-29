@@ -89,6 +89,7 @@ pub mod array_protocol;
 pub mod batch_conversions;
 #[cfg(feature = "cache")]
 pub mod cache;
+pub mod chunking;
 #[cfg(feature = "cloud")]
 pub mod cloud;
 pub mod config;
@@ -112,6 +113,7 @@ pub mod memory_efficient;
 pub mod metrics;
 #[cfg(feature = "ml_pipeline")]
 pub mod ml_pipeline;
+pub mod ndarray;
 pub mod ndarray_ext;
 pub mod numeric;
 #[cfg(feature = "parallel")]
@@ -127,6 +129,7 @@ pub mod random;
 pub mod resource;
 #[cfg(feature = "simd")]
 pub mod simd;
+pub mod simd_aligned;
 pub mod simd_ops;
 #[cfg(feature = "testing")]
 pub mod testing;
@@ -187,7 +190,21 @@ pub use crate::config::{
     get_config, get_config_value, set_config_value, set_global_config, Config, ConfigValue,
 };
 pub use crate::constants::{math, physical, prefixes};
+#[allow(ambiguous_glob_reexports)]
 pub use crate::error::*;
+
+// Re-export the array! macro for convenient array creation
+// This addresses the common pain point where users expect array! to be available
+// directly from scirs2_core instead of requiring import from scirs2_autograd
+//
+// # Example
+//
+// ```rust
+// use scirs2_core::array;
+//
+// let matrix = array![[1, 2, 3], [4, 5, 6]];
+// assert_eq!(matrix.shape(), &[2, 3]);
+// ```
 #[cfg(feature = "gpu")]
 pub use crate::gpu::*;
 pub use crate::io::*;
@@ -206,6 +223,30 @@ pub use crate::memory::{
     track_deallocation, track_resize, BufferPool, ChunkProcessor, ChunkProcessor2D,
     GlobalBufferPool, ZeroCopyView,
 };
+// Legacy re-export from ndarray_ext (kept for backward compatibility)
+pub use crate::ndarray_ext::array as array_legacy;
+
+// Complete ndarray functionality through the unified module
+pub use crate::ndarray::{
+    arr1,
+    arr2,
+    // Essential macros - now available at crate root
+    array,
+    s,
+    // Common types for convenience
+    Array,
+    Array1,
+    Array2,
+    ArrayD,
+    ArrayView,
+    ArrayView1,
+    ArrayView2,
+    ArrayViewMut,
+    Axis,
+    Ix1,
+    Ix2,
+    IxDyn,
+};
 
 #[cfg(feature = "leak_detection")]
 pub use crate::memory::{
@@ -218,9 +259,9 @@ pub use crate::memory_efficient::{
     chunk_wise_binary_op, chunk_wise_op, chunk_wise_reduce, create_disk_array, create_mmap,
     create_temp_mmap, diagonal_view, evaluate, load_chunks, open_mmap, register_fusion,
     transpose_view, view_as, view_mut_as, AccessMode, AdaptiveChunking, AdaptiveChunkingBuilder,
-    AdaptiveChunkingParams, AdaptiveChunkingResult, ArithmeticOps, ArrayView, BroadcastOps,
-    ChunkIter, ChunkedArray, ChunkingStrategy, DiskBackedArray, FusedOp, LazyArray, LazyOp,
-    LazyOpKind, MemoryMappedArray, MemoryMappedChunkIter, MemoryMappedChunks, MemoryMappedSlice,
+    AdaptiveChunkingParams, AdaptiveChunkingResult, ArithmeticOps, BroadcastOps, ChunkIter,
+    ChunkedArray, ChunkingStrategy, DiskBackedArray, FusedOp, LazyArray, LazyOp, LazyOpKind,
+    MemoryMappedArray, MemoryMappedChunkIter, MemoryMappedChunks, MemoryMappedSlice,
     MemoryMappedSlicing, OpFusion, OutOfCoreArray, ViewMut, ZeroCopyOps,
 };
 
@@ -295,6 +336,7 @@ pub use crate::parallel_ops::*;
 #[cfg(feature = "profiling")]
 pub use crate::profiling::{profiling_memory_tracker, Profiler};
 #[cfg(feature = "random")]
+#[allow(ambiguous_glob_reexports)]
 pub use crate::random::*;
 pub use crate::resource::{
     get_available_memory, get_performance_tier, get_recommended_chunk_size,
@@ -307,6 +349,11 @@ pub use crate::simd::*;
 pub use crate::testing::{TestConfig, TestResult, TestRunner, TestSuite};
 #[cfg(feature = "types")]
 pub use crate::types::{convert, ComplexConversionError, ComplexExt, ComplexOps};
+
+// Re-export complex number types for SCIRS2 POLICY compliance
+pub use num_complex::{Complex, Complex32, Complex64};
+
+// Re-export RNG types for SCIRS2 POLICY compliance
 pub use crate::units::{
     convert, global_unit_registry, unit_value, Dimension, UnitDefinition, UnitRegistry, UnitSystem,
     UnitValue,
@@ -316,6 +363,7 @@ pub use crate::validation::production as validation_production;
 pub use crate::validation::{
     check_finite, check_in_bounds, check_positive, checkarray_finite, checkshape,
 };
+pub use rand_chacha::{ChaCha12Rng, ChaCha20Rng, ChaCha8Rng};
 
 #[cfg(feature = "data_validation")]
 pub use crate::validation::data::DataType as ValidationDataType;

@@ -13,7 +13,7 @@
 //! - Dynamic insertion and removal of points
 
 use crate::error::{SpatialError, SpatialResult};
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
+use scirs2_core::ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use std::cmp::Ordering;
 use std::collections::{BinaryHeap, VecDeque};
 
@@ -897,7 +897,7 @@ fn squared_distance(p1: &ArrayView1<f64>, p2: &ArrayView1<f64>) -> f64 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::array;
+    use scirs2_core::ndarray::array;
 
     #[test]
     fn test_bounding_box_creation() {

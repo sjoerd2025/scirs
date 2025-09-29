@@ -51,8 +51,7 @@
 use crate::error::{StatsError, StatsResult};
 use ndarray::Array1;
 use num_traits::{cast::NumCast, Float, FloatConst};
-use scirs2_core::rng;
-use scirs2_core::Rng;
+use scirs2_core::random::prelude::*;
 use std::cmp;
 
 /// Hypergeometric distribution
@@ -216,7 +215,7 @@ impl<F: Float + NumCast + FloatConst + std::fmt::Display> Hypergeometric<F> {
     ///
     /// An array of random samples
     pub fn rvs(&self, size: usize) -> StatsResult<Array1<F>> {
-        let mut rng = rng();
+        let mut rng = thread_rng();
         let mut samples = Array1::zeros(size);
 
         for i in 0..size {
@@ -230,8 +229,9 @@ impl<F: Float + NumCast + FloatConst + std::fmt::Display> Hypergeometric<F> {
                     break;
                 }
 
-                let p_success = success_remaining as f64 / population_remaining as f64;
-                if rng.gen_range(0.0..1.0) < p_success {
+                let p_success =
+                    F::from(success_remaining).unwrap() / F::from(population_remaining).unwrap();
+                if rng.gen_range(0.0..1.0) < p_success.to_f64().unwrap() {
                     successes += 1;
                     success_remaining -= 1;
                 } else {
@@ -358,7 +358,6 @@ mod tests {
     use approx::assert_relative_eq;
 
     #[test]
-    #[ignore = "timeout"]
     fn test_hypergeometric_creation() {
         // Valid parameters
         let hyper = Hypergeometric::new(20, 7, 12, 0.0).unwrap();

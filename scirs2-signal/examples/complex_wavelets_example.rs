@@ -1,4 +1,4 @@
-use num_complex::Complex64;
+use scirs2_core::Complex64;
 use scirs2_signal::{
     waveforms::chirp,
     wavelets::{complex_gaussian, complex_morlet, cwt, fbsp, shannon},

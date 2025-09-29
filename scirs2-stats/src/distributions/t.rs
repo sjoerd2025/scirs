@@ -248,7 +248,7 @@ impl<F: Float + NumCast + Debug + std::fmt::Display> StudentT<F> {
     /// assert_eq!(samples.len(), 1000);
     /// ```
     pub fn rvs(&self, size: usize) -> StatsResult<Vec<F>> {
-        let mut rng = rng();
+        let mut rng = thread_rng();
         let mut samples = Vec::with_capacity(size);
         
         for _ in 0..size {
@@ -385,7 +385,6 @@ mod tests {
     use approx::assert_relative_eq;
     
     #[test]
-    #[ignore = "timeout"]
     fn test_student_t_creation() {
         // Standard t-distribution
         let t = StudentT::new(10.0, 0.0, 1.0).unwrap();

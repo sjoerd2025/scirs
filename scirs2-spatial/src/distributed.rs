@@ -28,7 +28,7 @@
 //!
 //! ```
 //! use scirs2_spatial::distributed::{DistributedSpatialCluster, NodeConfig};
-//! use ndarray::array;
+//! use scirs2_core::ndarray::array;
 //!
 //! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
 //! // Create distributed spatial cluster
@@ -57,7 +57,8 @@
 //! ```
 
 use crate::error::{SpatialError, SpatialResult};
-use ndarray::{s, Array1, Array2, ArrayView1, ArrayView2};
+use scirs2_core::ndarray::{s, Array1, Array2, ArrayView1, ArrayView2};
+use scirs2_core::random::quick::random_f64;
 use std::collections::{BTreeMap, HashMap, VecDeque};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
@@ -1021,7 +1022,7 @@ impl DistributedSpatialCluster {
             let node = node_arc.read().await;
             if let Some(ref local_data) = node.local_data {
                 if local_data.nrows() > 0 {
-                    let idx = (rand::random::<f64>() * local_data.nrows() as f64) as usize;
+                    let idx = (random_f64() * local_data.nrows() as f64) as usize;
                     return Ok(local_data.row(idx).to_owned());
                 }
             }
@@ -1070,7 +1071,7 @@ impl DistributedSpatialCluster {
         _distances: &[f64],
     ) -> SpatialResult<Array1<f64>> {
         let total_distance: f64 = _distances.iter().sum();
-        let target = rand::random::<f64>() * total_distance;
+        let target = random_f64() * total_distance;
 
         let mut cumulative = 0.0;
         let mut point_index = 0;
@@ -1336,7 +1337,7 @@ pub struct ClusterStatistics {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::array;
+    use scirs2_core::ndarray::array;
 
     #[test]
     fn test_nodeconfig() {

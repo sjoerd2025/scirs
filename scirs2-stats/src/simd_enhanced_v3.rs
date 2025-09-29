@@ -482,7 +482,6 @@ mod tests {
     use ndarray::array;
 
     #[test]
-    #[ignore = "timeout"]
     fn test_euclidean_distance_simd() {
         let x = array![1.0, 2.0, 3.0];
         let y = array![4.0, 5.0, 6.0];

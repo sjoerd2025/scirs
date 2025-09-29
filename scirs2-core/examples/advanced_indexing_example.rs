@@ -1,6 +1,6 @@
 // Example demonstrating advanced indexing and statistical functions
 
-use ndarray::{array, Array2, Axis};
+use scirs2_core::ndarray_ext::{array, Array2, Axis};
 use scirs2_core::ndarray_ext::{indexing, stats};
 
 #[allow(dead_code)]

@@ -1,5 +1,58 @@
 # Release Notes - SciRS2
 
+## 🚀 v0.1.0-beta.3 (2025-09-29) - SciRS2 POLICY & Major Modernization
+
+### 🎯 SciRS2 Ecosystem Architecture Implementation
+
+This release establishes the foundational architecture for the SciRS2 ecosystem with comprehensive policy framework and major dependency modernization.
+
+#### 🏗️ SciRS2 POLICY Framework:
+- **Layered Abstraction Architecture**: Established core-only external dependency policy
+- **Ecosystem Consistency**: All non-core crates must use scirs2-core abstractions
+- **Policy Documentation**: Complete [SciRS2 Ecosystem Policy](SCIRS2_POLICY.md) with guidelines and enforcement strategies
+- **Migration Strategy**: Phased approach for systematic refactoring to scirs2-core abstractions
+
+#### 🔧 Major Dependency Updates:
+- **Comprehensive Modernization**: Updated all dependencies to latest available versions
+- **156 Files Changed**: Extensive updates across the entire workspace
+- **Enhanced Performance**: Improved SIMD operations, numerical algorithms, and spatial computations
+- **Advanced Random Generation**: Enhanced ecosystem integration with cutting-edge MCMC and neural sampling
+
+#### 🖥️ GPU and Platform Enhancements:
+- **CUDA/Linux Optimization**: Significant improvements to CUDA backend for Linux platforms
+- **WebGPU Backend**: Major enhancements (333+ lines) for better cross-platform GPU support
+- **Memory-Mapped Operations**: Advanced chunking, zero-copy serialization, and large dataset handling
+- **Sparse Matrix GPU**: Enhanced GPU operation support for sparse matrix computations
+
+#### 📊 Advanced Feature Stabilization:
+- **Real-time Processing**: Improved streaming capabilities in scirs2-io with better error handling
+- **Distributed Computing**: Enhanced distributed processing in scirs2-transform with fault tolerance
+- **Performance Validation**: Comprehensive SIMD performance validation with automated benchmarking
+- **High-Dimensional Interpolation**: Enhanced parallel algorithms for advanced interpolation
+
+#### 📋 Technical Details:
+- **Policy Effective Date**: v0.1.0-beta.3
+- **Benefits**: Consistent APIs, centralized version control, type safety, maintainability
+- **Migration Plan**: Automated tooling for transitioning to scirs2-core abstractions
+- **Documentation**: Complete usage guidelines and implementation examples
+
+#### 🎯 Impact:
+- **Ecosystem Consistency**: Foundation for unified SciRS2 development patterns
+- **Performance**: Better optimization opportunities through centralized abstractions
+- **Maintainability**: Simplified dependency management and version control
+- **Future-Proofing**: Scalable architecture for continued ecosystem growth
+
+#### 📦 Installation:
+```toml
+[dependencies]
+scirs2-core = "0.1.0-beta.3"
+scirs2 = "0.1.0-beta.3"
+```
+
+**Migration**: Update `Cargo.toml` from `0.1.0-beta.2` to `0.1.0-beta.3`. SciRS2 POLICY migration is in progress and will be completed in subsequent releases.
+
+---
+
 ## 🔧 v0.1.0-beta.2 (2025-09-16) - Critical Compilation Fixes
 
 ### 🚨 Emergency Release - Fixes crates.io Compilation Errors
@@ -20,23 +73,9 @@ This is a critical hotfix release that resolves all compilation errors present i
 - **Lint Check**: ✅ `cargo clippy` with zero warnings
 - **Publication Ready**: ✅ `cargo publish --dry-run` successful
 
-#### 🎯 Impact:
-- **Before**: scirs2-core v0.1.0-beta.2 failed to compile from crates.io
-- **After**: scirs2-core v0.1.0-beta.2 compiles successfully with zero errors
-- **Downstream Compatibility**: All dependent crates can now build successfully
-
-#### 📦 Installation:
-```toml
-[dependencies]
-scirs2-core = "0.1.0-beta.2"  # Fixed version
-scirs2 = "0.1.0-beta.2"
-```
-
-**Important**: v0.1.0-beta.2 has been yanked from crates.io due to compilation failures. Please upgrade to v0.1.0-beta.2 immediately.
-
 ---
 
-## 🎉 v0.1.0-beta.2 (Previous Release) - First Beta Release!
+## 🎉 v0.1.0-beta.1 - First Beta Release!
 
 We are excited to announce the first beta release of SciRS2, a comprehensive scientific computing and AI/ML infrastructure in Rust. After months of development, we've reached a significant milestone with over 2 million lines of code and 9,000+ tests.
 
@@ -68,7 +107,7 @@ We are excited to announce the first beta release of SciRS2, a comprehensive sci
 
 - **Total Lines of Code**: 2,000,000+
 - **Number of Modules**: 24 specialized crates
-- **Test Coverage**: 6,500+ tests
+- **Test Coverage**: 9,300+ tests
 - **Passing Tests**: All regular tests passing ✅
 - **Ignored Tests**: ~600 (benchmarks and hardware-specific)
 
@@ -109,12 +148,12 @@ Add to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-scirs2 = "0.1.0-beta.2"  # Use latest fixed version
+scirs2 = "0.1.0-beta.3"  # Use latest fixed version
 
 # Or select specific modules:
-scirs2-linalg = "0.1.0-beta.2"
-scirs2-stats = "0.1.0-beta.2"
-scirs2-autograd = "0.1.0-beta.2"
+scirs2-linalg = "0.1.0-beta.3"
+scirs2-stats = "0.1.0-beta.3"
+scirs2-autograd = "0.1.0-beta.3"
 ```
 
 ## 🚀 Quick Start
@@ -181,4 +220,4 @@ Dual-licensed under MIT and Apache 2.0.
 
 **Note**: This is a beta release. While core functionality is stable and well-tested, some features are still under development. Production use should be carefully evaluated based on your specific requirements.
 
-For detailed documentation, visit: https://docs.rs/scirs2/0.1.0-beta.2/
+For detailed documentation, visit: https://docs.rs/scirs2/0.1.0-beta.3/

@@ -3,7 +3,7 @@
 //! This example showcases the complex number support for Bessel functions
 //! in scirs2-special, including J₀, J₁, Jₙ, Jᵥ, I₀, and K₀ functions.
 
-use num_complex::Complex64;
+use scirs2_core::Complex64;
 use scirs2_special::{i0_complex, j0_complex, j1_complex, jn_complex, jv_complex, k0_complex};
 
 #[allow(dead_code)]

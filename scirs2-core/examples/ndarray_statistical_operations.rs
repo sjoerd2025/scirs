@@ -1,8 +1,8 @@
-use ndarray::{array, Array2, Axis};
 use scirs2_core::ndarray_ext::stats::{
     histogram, histogram2d, max_2d, mean_2d, median_2d, min_2d, percentile_2d, quantile,
     std_dev_2d, sum_2d, variance_2d,
 };
+use scirs2_core::ndarray_ext::{array, Array2, Axis};
 
 #[allow(dead_code)]
 fn main() {

@@ -2337,7 +2337,6 @@ mod tests {
     use ndarray::array;
 
     #[test]
-    #[ignore = "timeout"]
     fn test_topological_analyzer_creation() {
         let config = TopologicalConfig::default();
         let analyzer = AdvancedTopologicalAnalyzer::<f64>::new(config);

@@ -6,7 +6,7 @@ use crate::error::{StatsError, StatsResult};
 use crate::sampling::SampleableDistribution;
 use num_traits::{Float, NumCast};
 use rand_distr::{Distribution, FisherF as RandFisherF};
-use scirs2_core::rng;
+use scirs2_core::random::prelude::*;
 use std::f64::consts::PI;
 
 /// F distribution structure
@@ -233,7 +233,7 @@ impl<T: Float + NumCast> F<T> {
     /// assert_eq!(samples.len(), 1000);
     /// ```
     pub fn rvs(&self, size: usize) -> StatsResult<Vec<T>> {
-        let mut rng = rng();
+        let mut rng = thread_rng();
         let mut samples = Vec::with_capacity(size);
 
         for _ in 0..size {
@@ -383,7 +383,6 @@ mod tests {
     use approx::assert_relative_eq;
 
     #[test]
-    #[ignore = "timeout"]
     fn test_f_creation() {
         // F with 2,10 degrees of freedom
         let f_dist = F::new(2.0, 10.0, 0.0, 1.0).unwrap();

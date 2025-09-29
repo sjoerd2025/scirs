@@ -113,7 +113,8 @@ where
         + ScalarOperand
         + 'static
         + Send
-        + Sync,
+        + Sync
+        + ordered_float::FloatCore,
 {
     /// Training data points
     #[allow(dead_code)]
@@ -148,7 +149,7 @@ struct DimensionReduction<F: Float> {
 #[derive(Debug)]
 enum SpatialIndex<F>
 where
-    F: Float + FromPrimitive + Debug + std::cmp::PartialOrd + Copy,
+    F: Float + FromPrimitive + Debug + std::cmp::PartialOrd + Copy + ordered_float::FloatCore,
 {
     KdTree(KdTree<F>),
     BallTree(BallTree<F>),
@@ -181,7 +182,8 @@ where
         + ScalarOperand
         + 'static
         + Send
-        + Sync,
+        + Sync
+        + ordered_float::FloatCore,
 {
     dimension_reduction: DimensionReductionMethod,
     local_method: LocalMethod,
@@ -215,7 +217,8 @@ where
         + ScalarOperand
         + 'static
         + Send
-        + Sync,
+        + Sync
+        + ordered_float::FloatCore,
 {
     fn default() -> Self {
         Self {
@@ -243,7 +246,8 @@ where
         + ScalarOperand
         + 'static
         + Send
-        + Sync,
+        + Sync
+        + ordered_float::FloatCore,
 {
     /// Create a new builder with default settings
     ///
@@ -559,7 +563,8 @@ where
         + ScalarOperand
         + 'static
         + std::marker::Send
-        + std::marker::Sync,
+        + std::marker::Sync
+        + ordered_float::FloatCore,
 {
     /// Create a new builder for high-dimensional interpolation
     ///
@@ -997,7 +1002,8 @@ where
         + ScalarOperand
         + 'static
         + Send
-        + Sync,
+        + Sync
+        + ordered_float::FloatCore,
 {
     HighDimensionalInterpolator::builder()
         .with_local_method(LocalMethod::KNearestNeighbors {
@@ -1063,7 +1069,8 @@ where
         + ScalarOperand
         + 'static
         + Send
-        + Sync,
+        + Sync
+        + ordered_float::FloatCore,
 {
     HighDimensionalInterpolator::builder()
         .with_dimension_reduction(DimensionReductionMethod::PCA { target_dims })
@@ -1128,7 +1135,8 @@ where
         + ScalarOperand
         + 'static
         + Send
-        + Sync,
+        + Sync
+        + ordered_float::FloatCore,
 {
     HighDimensionalInterpolator::builder()
         .with_local_method(LocalMethod::LocalRBF {

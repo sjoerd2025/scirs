@@ -10,7 +10,7 @@
 //! Run with: cargo run --example mathematical_derivation_studio
 
 use ndarray::Array1;
-use num_complex::Complex64;
+use scirs2_core::Complex64;
 use scirs2_special::*;
 use std::f64::consts::{E, PI};
 use std::io::{self, Write};

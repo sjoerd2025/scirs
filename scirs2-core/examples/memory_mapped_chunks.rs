@@ -9,11 +9,11 @@
 //! Run with: `cargo run --example memory_mapped_chunks --features memory_efficient`
 
 #[cfg(feature = "memory_efficient")]
-use ndarray::Array1;
-#[cfg(feature = "memory_efficient")]
 use scirs2_core::memory_efficient::{
     create_mmap, AccessMode, ChunkingStrategy, MemoryMappedChunkIter, MemoryMappedChunks,
 };
+#[cfg(feature = "memory_efficient")]
+use scirs2_core::ndarray_ext::Array1;
 #[cfg(feature = "memory_efficient")]
 use std::path::Path;
 #[cfg(feature = "memory_efficient")]

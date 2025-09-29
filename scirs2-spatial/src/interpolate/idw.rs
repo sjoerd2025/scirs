@@ -13,7 +13,7 @@
 use crate::distance::EuclideanDistance;
 use crate::error::{SpatialError, SpatialResult};
 use crate::kdtree::KDTree;
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
+use scirs2_core::ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 
 /// Inverse Distance Weighting interpolator for scattered data
 ///
@@ -21,7 +21,7 @@ use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 ///
 /// ```
 /// use scirs2_spatial::interpolate::IDWInterpolator;
-/// use ndarray::array;
+/// use scirs2_core::ndarray::array;
 ///
 /// // Create sample points and values
 /// let points = array![
@@ -343,7 +343,7 @@ impl IDWInterpolator {
 mod tests {
     use super::*;
     use approx::assert_relative_eq;
-    use ndarray::array;
+    use scirs2_core::ndarray::array;
 
     #[test]
     fn test_idw_interpolation_basic() {

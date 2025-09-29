@@ -29,7 +29,7 @@
 //!
 //! - [`concepts`] - Core quantum computing concepts and state management
 //! - [`algorithms`] - Quantum-inspired spatial algorithms
-//! - [`classical_adaptation`] - Classical adaptations of quantum algorithms (TODO)
+//! - Classical adaptations of quantum algorithms (TODO)
 //!
 //! # Examples
 //!
@@ -37,7 +37,7 @@
 //!
 //! ```rust
 //! use scirs2_spatial::quantum_inspired::{QuantumClusterer, QuantumConfig};
-//! use ndarray::array;
+//! use scirs2_core::ndarray::array;
 //!
 //! # fn example() -> Result<(), Box<dyn std::error::Error>> {
 //! // Create sample data with two clusters
@@ -61,7 +61,7 @@
 //!
 //! ```rust
 //! use scirs2_spatial::quantum_inspired::QuantumNearestNeighbor;
-//! use ndarray::array;
+//! use scirs2_core::ndarray::array;
 //!
 //! # fn example() -> Result<(), Box<dyn std::error::Error>> {
 //! // Reference points
@@ -251,7 +251,7 @@ impl Default for OptimizationConfig {
 /// # Example
 /// ```rust
 /// use scirs2_spatial::quantum_inspired::{QuantumSpatialFramework, QuantumConfig};
-/// use ndarray::Array2;
+/// use scirs2_core::ndarray::Array2;
 ///
 /// let config = QuantumConfig::default();
 /// let framework = QuantumSpatialFramework::new(config);
@@ -361,7 +361,7 @@ impl QuantumSpatialFramework {
     /// Create quantum nearest neighbor searcher with framework configuration
     pub fn create_quantum_nn(
         &self,
-        points: &ndarray::ArrayView2<'_, f64>,
+        points: &scirs2_core::ndarray::ArrayView2<'_, f64>,
     ) -> SpatialResult<QuantumNearestNeighbor> {
         QuantumNearestNeighbor::new(points).map(|nn| {
             nn.with_quantum_encoding(true)
@@ -413,7 +413,7 @@ impl Default for QuantumSpatialFramework {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::Array2;
+    use scirs2_core::ndarray::Array2;
 
     #[test]
     fn test_quantum_config_default() {

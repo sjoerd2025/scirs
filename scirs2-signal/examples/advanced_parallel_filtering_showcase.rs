@@ -4,7 +4,7 @@
 // including real-time streaming, multi-rate systems, sparse filtering, and
 // high-performance spectral processing.
 
-use num_complex::Complex64;
+use scirs2_core::Complex64;
 use scirs2_signal::filter::{
     benchmark_parallel_filtering_operations, AdvancedParallelConfig, LockFreeStreamingFilter,
     ParallelMultiRateFilterBank, ParallelSpectralFilter, SparseParallelFilter,

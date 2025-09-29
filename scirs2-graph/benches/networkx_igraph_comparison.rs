@@ -10,9 +10,9 @@
 #![allow(dead_code)]
 
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
-use rand::prelude::*;
-use rand::rngs::StdRng;
-use rand::SeedableRng;
+use scirs2_core::random::prelude::*;
+use scirs2_core::random::rngs::StdRng;
+use scirs2_core::random::SeedableRng;
 use scirs2_graph::{
     algorithms::shortest_path::k_shortest_paths as shortest_path,
     // Core algorithms for comparison
@@ -304,15 +304,11 @@ fn bench_creation_comparison(c: &mut Criterion) {
                         let mut processor =
                             scirs2_graph::advanced::create_performance_advanced_processor();
                         let graph: Graph<usize, f64> = Graph::new();
-                        let result = scirs2_graph::advanced::execute_with_enhanced_advanced(
-                            &mut processor,
-                            &graph,
-                            "creation_test",
-                            |_| {
+                        let result =
+                            scirs2_graph::advanced::execute_with_enhanced_advanced(&graph, |_| {
                                 let mut rng = StdRng::seed_from_u64(42);
-                                erdos_renyi_graph(size, 0.01, &mut rng)
-                            },
-                        );
+                                Ok(erdos_renyi_graph(size, 0.01, &mut rng))
+                            });
                         black_box(result)
                     });
                 },
@@ -633,42 +629,38 @@ where
     let start = Instant::now();
 
     let _ = match algorithm {
-        "bfs" => execute_with_enhanced_advanced(&mut processor, graph, "bfs", |g| {
+        "bfs" => execute_with_enhanced_advanced(graph, |g| {
             if let Some(node) = g.nodes().first() {
                 breadth_first_search(g, node)
             } else {
                 Ok(Vec::new())
             }
         }),
-        "dfs" => execute_with_enhanced_advanced(&mut processor, graph, "dfs", |g| {
+        "dfs" => execute_with_enhanced_advanced(graph, |g| {
             if let Some(node) = g.nodes().first() {
                 depth_first_search(g, node)
             } else {
                 Ok(Vec::new())
             }
         }),
-        "pagerank" => execute_with_enhanced_advanced(&mut processor, graph, "pagerank", |g| {
+        "pagerank" => execute_with_enhanced_advanced(graph, |g| {
             pagerank_centrality(g, 0.85, 1e-6).map(|_| Vec::new())
         }),
-        "betweenness_centrality" => {
-            execute_with_enhanced_advanced(&mut processor, graph, "betweenness", |g| {
-                Ok(betweenness_centrality(g, false)).map(|_| Vec::new())
-            })
-        }
+        "betweenness_centrality" => execute_with_enhanced_advanced(graph, |g| {
+            Ok(betweenness_centrality(g, false)).map(|_| Vec::new())
+        }),
         "shortest_path" => {
-            execute_with_enhanced_advanced(&mut processor, graph, "shortest_path", |_g| {
+            execute_with_enhanced_advanced(graph, |_g| {
                 // Skip shortest_path due to complex trait bounds (N: Ord, E: Zero)
                 Ok(Vec::new())
             })
         }
-        "connected_components" => {
-            execute_with_enhanced_advanced(&mut processor, graph, "connected_components", |g| {
-                let _ = connected_components(g);
-                Ok(Vec::new())
-            })
-        }
+        "connected_components" => execute_with_enhanced_advanced(graph, |g| {
+            let _ = connected_components(g);
+            Ok(Vec::new())
+        }),
         "louvain_communities" => {
-            execute_with_enhanced_advanced(&mut processor, graph, "louvain", |g| {
+            execute_with_enhanced_advanced(graph, |g| {
                 // Skip louvain due to complex trait bounds (E: Zero)
                 Ok(Vec::new())
             })
@@ -903,12 +895,10 @@ fn bench_memory_efficiency_comparison(c: &mut Criterion) {
                     let mut rng = StdRng::seed_from_u64(42);
                     let graph = barabasi_albert_graph(size, 3, &mut rng).unwrap();
 
-                    let result = scirs2_graph::advanced::execute_with_enhanced_advanced(
-                        &mut processor,
-                        &graph,
-                        "memory_pagerank",
-                        |g| Ok(pagerank_centrality(g, 0.85, 1e-6)),
-                    );
+                    let result =
+                        scirs2_graph::advanced::execute_with_enhanced_advanced(&graph, |g| {
+                            Ok(pagerank_centrality(g, 0.85, 1e-6))
+                        });
                     black_box(result)
                 });
             },

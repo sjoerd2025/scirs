@@ -6,9 +6,11 @@
 [![Build Status](https://img.shields.io/badge/tests-404%20passing-brightgreen)](https://github.com/cool-japan/scirs)
 [![Production Ready](https://img.shields.io/badge/status-production%20ready-green)](https://github.com/cool-japan/scirs)
 
-**Production-Ready Automatic Differentiation for Rust**
+**Production-Ready Automatic Differentiation for Rust (v0.1.0-beta.3)**
 
 A high-performance automatic differentiation library for SciRS2, providing functionality comparable to PyTorch/TensorFlow's autograd systems with native Rust performance and safety guarantees.
+
+⚠️ **SciRS2 POLICY Migration**: This module is currently being updated to follow the [SciRS2 POLICY](../SCIRS2_POLICY.md) - migration from direct `rand::` and `ndarray::` usage to scirs2-core abstractions is in progress.
 
 ## ✨ Features
 
@@ -42,7 +44,7 @@ Add to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-scirs2-autograd = "0.1.0-beta.2"
+scirs2-autograd = "0.1.0-beta.3"
 ```
 
 ### Optional Features
@@ -51,7 +53,7 @@ Enable performance optimizations and additional backends:
 
 ```toml
 [dependencies]
-scirs2-autograd = { version = "0.1.0-beta.2", features = ["blas", "simd"] }
+scirs2-autograd = { version = "0.1.0-beta.3", features = ["blas", "simd"] }
 ```
 
 **Available Features:**

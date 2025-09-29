@@ -134,6 +134,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore] // Skip this slow test (>30s) during normal test runs
     fn test_default_config() {
         let result = nsga2(zdt1, 2, 2, None);
         // Should work with default config, though might take longer

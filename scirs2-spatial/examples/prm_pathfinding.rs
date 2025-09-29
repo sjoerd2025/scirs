@@ -1,4 +1,4 @@
-use ndarray::Array1;
+use scirs2_core::ndarray::Array1;
 use scirs2_spatial::pathplanning::{PRM2DPlanner, PRMConfig, PRMPlanner};
 use std::time::Instant;
 

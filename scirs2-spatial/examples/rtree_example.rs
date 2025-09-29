@@ -1,4 +1,4 @@
-use ndarray::array;
+use scirs2_core::ndarray::array;
 use scirs2_spatial::rtree::RTree;
 
 #[allow(dead_code)]

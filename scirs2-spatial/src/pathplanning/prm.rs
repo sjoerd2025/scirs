@@ -9,7 +9,7 @@
 //! # Examples
 //!
 //! ```
-//! use ndarray::Array1;
+//! use scirs2_core::ndarray::Array1;
 //! use scirs2_spatial::pathplanning::{PRMPlanner, PRMConfig};
 //!
 //! # fn example() -> Result<(), Box<dyn std::error::Error>> {
@@ -63,10 +63,10 @@ use std::collections::{BinaryHeap, HashMap, HashSet};
 use std::f64;
 use std::fmt::Debug;
 
-use ndarray::{Array1, Array2};
-use rand::rngs::StdRng;
-use rand::Rng;
-use rand::SeedableRng;
+use scirs2_core::ndarray::{Array1, Array2};
+use scirs2_core::random::rngs::StdRng;
+use scirs2_core::random::Rng;
+use scirs2_core::random::SeedableRng;
 
 use crate::distance::EuclideanDistance;
 use crate::error::{SpatialError, SpatialResult};
@@ -774,7 +774,7 @@ fn point_in_polygon(point: &[f64; 2], polygon: &[[f64; 2]]) -> bool {
 mod tests {
     use super::*;
     use approx::assert_relative_eq;
-    use ndarray::array;
+    use scirs2_core::ndarray::array;
 
     #[test]
     fn test_point_in_polygon() {

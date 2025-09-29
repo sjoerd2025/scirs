@@ -534,7 +534,7 @@ where
             } else {
                 let j = {
                     use rand::Rng;
-                    let mut rng = rand::rng();
+                    let mut rng = rand::thread_rng();
                     rng.gen_range(0..total_count)
                 };
                 if j < values.len() {
@@ -1314,7 +1314,6 @@ mod tests {
     use ndarray::array;
 
     #[test]
-    #[ignore = "timeout"]
     fn test_adaptive_memory_manager() {
         let constraints = MemoryConstraints::default();
         let manager = AdaptiveMemoryManager::new(constraints);

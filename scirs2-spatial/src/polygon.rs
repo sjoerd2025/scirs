@@ -8,7 +8,7 @@
 //! # Examples
 //!
 //! ```
-//! use ndarray::array;
+//! use scirs2_core::ndarray::array;
 //! use scirs2_spatial::polygon::point_in_polygon;
 //!
 //! // Create a square polygon
@@ -28,8 +28,8 @@
 //! assert!(!outside);
 //! ```
 
-use ndarray::{Array2, ArrayView2};
 use num_traits::Float;
+use scirs2_core::ndarray::{Array2, ArrayView2};
 
 /// Tests if a point is inside a polygon using the ray casting algorithm.
 ///
@@ -49,7 +49,7 @@ use num_traits::Float;
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use scirs2_core::ndarray::array;
 /// use scirs2_spatial::polygon::point_in_polygon;
 ///
 /// // Create a square polygon
@@ -130,7 +130,7 @@ pub fn point_in_polygon<T: Float>(point: &[T], polygon: &ArrayView2<T>) -> bool 
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use scirs2_core::ndarray::array;
 /// use scirs2_spatial::polygon::point_on_boundary;
 ///
 /// // Create a square polygon
@@ -224,7 +224,7 @@ pub fn point_on_boundary<T: Float>(point: &[T], polygon: &ArrayView2<T>, epsilon
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use scirs2_core::ndarray::array;
 /// use scirs2_spatial::polygon::polygon_area;
 ///
 /// // Create a 1x1 square
@@ -275,7 +275,7 @@ pub fn polygon_area<T: Float>(polygon: &ArrayView2<T>) -> T {
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use scirs2_core::ndarray::array;
 /// use scirs2_spatial::polygon::polygon_centroid;
 ///
 /// // Create a 1x1 square
@@ -368,7 +368,7 @@ pub fn polygon_centroid<T: Float>(polygon: &ArrayView2<T>) -> Vec<T> {
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use scirs2_core::ndarray::array;
 /// use scirs2_spatial::polygon::polygon_contains_polygon;
 ///
 /// // Create an outer polygon (large square)
@@ -563,7 +563,7 @@ fn segments_overlap<T: Float>(a1: &[T], a2: &[T], b1: &[T], b2: &[T], epsilon: T
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use scirs2_core::ndarray::array;
 /// use scirs2_spatial::polygon::is_simple_polygon;
 ///
 /// // A simple square
@@ -634,7 +634,7 @@ pub fn is_simple_polygon<T: Float>(polygon: &ArrayView2<T>) -> bool {
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use scirs2_core::ndarray::array;
 /// use scirs2_spatial::polygon::convex_hull_graham;
 ///
 /// // A set of points
@@ -776,7 +776,7 @@ pub fn convex_hull_graham<T: Float + std::fmt::Debug>(points: &ArrayView2<T>) ->
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use scirs2_core::ndarray::array;
 /// use scirs2_spatial::polygon::douglas_peucker_simplify;
 ///
 /// // A polygon with many points
@@ -909,7 +909,7 @@ fn perpendicular_distance<T: Float>(point: &[T; 2], line_start: &[T; 2], lineend
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use scirs2_core::ndarray::array;
 /// use scirs2_spatial::polygon::visvalingam_whyatt_simplify;
 ///
 /// // A polygon with some redundant vertices
@@ -1076,7 +1076,7 @@ fn update_vertex_area<T: Float + std::fmt::Debug>(
 mod tests {
     use super::*;
     use approx::assert_relative_eq;
-    use ndarray::array;
+    use scirs2_core::ndarray::array;
 
     #[test]
     fn testpoint_in_polygon() {

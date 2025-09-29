@@ -8,7 +8,7 @@
 //! minimizing the sum of squared differences between the corresponding points.
 
 use crate::error::{SpatialError, SpatialResult};
-use ndarray::{Array1, Array2, ArrayView2, Axis};
+use scirs2_core::ndarray::{Array1, Array2, ArrayView2, Axis};
 
 /// Check if all values in an array are finite
 #[allow(dead_code)]

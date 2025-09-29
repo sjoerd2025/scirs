@@ -1,5 +1,5 @@
-use num_complex::Complex64;
 use scirs2_core::types::{ComplexExt, ComplexOps, NumericConversion};
+use scirs2_core::Complex64;
 
 #[allow(dead_code)]
 fn main() {
@@ -217,7 +217,7 @@ fn batch_conversion_example() {
     }
 
     // Convenience functions for common conversions
-    let z32 = num_complex::Complex32::new(1.0, 2.0);
+    let z32 = scirs2_core::Complex32::new(1.0, 2.0);
     let z64 = convert::complex32_to_complex64(z32);
     println!("Quick conversion from Complex32 to Complex64: {}", z64);
 

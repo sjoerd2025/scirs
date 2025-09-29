@@ -5,9 +5,9 @@
 //! state representations, quantum gates, and basic quantum operations.
 
 use crate::error::{SpatialError, SpatialResult};
-use ndarray::Array1;
 use num_complex::Complex64;
-use rand::Rng;
+use scirs2_core::ndarray::Array1;
+use scirs2_core::random::Rng;
 use std::f64::consts::SQRT_2;
 
 /// Complex number type for quantum states
@@ -27,7 +27,7 @@ pub type QuantumAmplitude = Complex64;
 /// # Example
 /// ```rust
 /// use scirs2_spatial::quantum_inspired::concepts::QuantumState;
-/// use ndarray::Array1;
+/// use scirs2_core::ndarray::Array1;
 /// use num_complex::Complex64;
 ///
 /// // Create a 2-qubit zero state |00⟩

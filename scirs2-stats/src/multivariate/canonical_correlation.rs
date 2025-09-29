@@ -827,7 +827,6 @@ mod tests {
     use ndarray::array;
 
     #[test]
-    #[ignore = "timeout"]
     fn test_cca_basic() {
         let x = array![
             [1.0, 2.0, 3.0],

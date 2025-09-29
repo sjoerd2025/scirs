@@ -149,7 +149,10 @@ where
         if cache_path.exists() {
             // Try to load from cache
             if let Ok(cached_data) = std::fs::read(&cache_path) {
-                if let Ok(result) = bincode::deserialize::<O>(&cached_data) {
+                if let Ok((result, _len)) = bincode::serde::decode_from_slice::<O, _>(
+                    &cached_data,
+                    bincode::config::standard(),
+                ) {
                     return Ok(result);
                 }
             }
@@ -159,7 +162,8 @@ where
         let result = pipeline.execute(input)?;
 
         // Save to cache
-        if let Ok(serialized) = bincode::serialize(&result) {
+        if let Ok(serialized) = bincode::serde::encode_to_vec(&result, bincode::config::standard())
+        {
             let _ = std::fs::create_dir_all(&self.cache_dir);
             let _ = std::fs::write(&cache_path, serialized);
         }
@@ -243,8 +247,8 @@ where
 
         // Save final checkpoint
         let checkpoint_path = self.checkpoint_dir.join("final.checkpoint");
-        let serialized =
-            bincode::serialize(&result).map_err(|e| IoError::SerializationError(e.to_string()))?;
+        let serialized = bincode::serde::encode_to_vec(&result, bincode::config::standard())
+            .map_err(|e| IoError::SerializationError(e.to_string()))?;
         std::fs::write(&checkpoint_path, serialized).map_err(IoError::Io)?;
 
         Ok(result)

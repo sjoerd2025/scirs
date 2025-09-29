@@ -5,7 +5,7 @@
 
 use crate::error::{SpatialError, SpatialResult};
 use crate::transform::Rotation;
-use ndarray::{array, Array1, Array2, ArrayView1, ArrayView2};
+use scirs2_core::ndarray::{array, Array1, Array2, ArrayView1, ArrayView2};
 
 // Helper function to create an array from values
 #[allow(dead_code)]
@@ -30,7 +30,7 @@ fn rotation_from_euler(x: f64, y: f64, z: f64, convention: &str) -> SpatialResul
 ///
 /// ```
 /// use scirs2_spatial::transform::{Rotation, RigidTransform};
-/// use ndarray::array;
+/// use scirs2_core::ndarray::array;
 /// use std::f64::consts::PI;
 ///
 /// # fn example() -> Result<(), Box<dyn std::error::Error>> {
@@ -77,7 +77,7 @@ impl RigidTransform {
     ///
     /// ```
     /// use scirs2_spatial::transform::{Rotation, RigidTransform};
-    /// use ndarray::array;
+    /// use scirs2_core::ndarray::array;
     ///
     /// let rotation = Rotation::identity();
     /// let translation = array![1.0, 2.0, 3.0];
@@ -114,7 +114,7 @@ impl RigidTransform {
     ///
     /// ```
     /// use scirs2_spatial::transform::RigidTransform;
-    /// use ndarray::array;
+    /// use scirs2_core::ndarray::array;
     ///
     /// // Create a transformation matrix for translation by [1, 2, 3]
     /// let matrix = array![
@@ -180,7 +180,7 @@ impl RigidTransform {
     ///
     /// ```
     /// use scirs2_spatial::transform::{Rotation, RigidTransform};
-    /// use ndarray::array;
+    /// use scirs2_core::ndarray::array;
     ///
     /// let rotation = Rotation::identity();
     /// let translation = array![1.0, 2.0, 3.0];
@@ -220,7 +220,7 @@ impl RigidTransform {
     ///
     /// ```
     /// use scirs2_spatial::transform::{Rotation, RigidTransform};
-    /// use ndarray::array;
+    /// use scirs2_core::ndarray::array;
     ///
     /// let rotation = Rotation::identity();
     /// let translation = array![1.0, 2.0, 3.0];
@@ -241,7 +241,7 @@ impl RigidTransform {
     ///
     /// ```
     /// use scirs2_spatial::transform::{Rotation, RigidTransform};
-    /// use ndarray::array;
+    /// use scirs2_core::ndarray::array;
     ///
     /// let rotation = Rotation::identity();
     /// let translation = array![1.0, 2.0, 3.0];
@@ -266,7 +266,7 @@ impl RigidTransform {
     ///
     /// ```
     /// use scirs2_spatial::transform::{Rotation, RigidTransform};
-    /// use ndarray::array;
+    /// use scirs2_core::ndarray::array;
     /// use std::f64::consts::PI;
     ///
     /// # fn example() -> Result<(), Box<dyn std::error::Error>> {
@@ -305,7 +305,7 @@ impl RigidTransform {
     ///
     /// ```
     /// use scirs2_spatial::transform::{Rotation, RigidTransform};
-    /// use ndarray::array;
+    /// use scirs2_core::ndarray::array;
     ///
     /// let rotation = Rotation::identity();
     /// let translation = array![1.0, 2.0, 3.0];
@@ -344,7 +344,7 @@ impl RigidTransform {
     ///
     /// ```
     /// use scirs2_spatial::transform::{Rotation, RigidTransform};
-    /// use ndarray::array;
+    /// use scirs2_core::ndarray::array;
     ///
     /// let rotation = Rotation::identity();
     /// let translation = array![1.0, 2.0, 3.0];
@@ -376,7 +376,7 @@ impl RigidTransform {
     ///
     /// ```
     /// use scirs2_spatial::transform::{Rotation, RigidTransform};
-    /// use ndarray::array;
+    /// use scirs2_core::ndarray::array;
     ///
     /// let t1 = RigidTransform::from_rotation_and_translation(
     ///     Rotation::identity(),
@@ -413,7 +413,7 @@ impl RigidTransform {
     ///
     /// ```
     /// use scirs2_spatial::transform::RigidTransform;
-    /// use ndarray::array;
+    /// use scirs2_core::ndarray::array;
     ///
     /// let identity = RigidTransform::identity();
     /// let point = array![1.0, 2.0, 3.0];
@@ -441,7 +441,7 @@ impl RigidTransform {
     ///
     /// ```
     /// use scirs2_spatial::transform::RigidTransform;
-    /// use ndarray::array;
+    /// use scirs2_core::ndarray::array;
     ///
     /// let transform = RigidTransform::from_translation(&array![1.0, 2.0, 3.0].view()).unwrap();
     /// let point = array![0.0, 0.0, 0.0];
@@ -476,7 +476,7 @@ impl RigidTransform {
     ///
     /// ```
     /// use scirs2_spatial::transform::{Rotation, RigidTransform};
-    /// use ndarray::array;
+    /// use scirs2_core::ndarray::array;
     /// use std::f64::consts::PI;
     ///
     /// # fn example() -> Result<(), Box<dyn std::error::Error>> {

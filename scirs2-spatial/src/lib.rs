@@ -56,7 +56,7 @@
 //
 // ```
 // use scirs2_spatial::KDTree;
-// use ndarray::array;
+// use scirs2_core::ndarray::array;
 //
 // // Create points
 // let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]];
@@ -78,7 +78,7 @@
 //
 // ```
 // use scirs2_spatial::distance::{pdist, euclidean};
-// use ndarray::array;
+// use scirs2_core::ndarray::array;
 //
 // // Create points
 // let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]];
@@ -92,7 +92,7 @@
 //
 // ```
 // use scirs2_spatial::convex_hull::ConvexHull;
-// use ndarray::array;
+// use scirs2_core::ndarray::array;
 //
 // // Create points
 // let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [0.5, 0.5]];
@@ -113,7 +113,7 @@
 //
 // ```
 // use scirs2_spatial::delaunay::Delaunay;
-// use ndarray::array;
+// use scirs2_core::ndarray::array;
 //
 // // Create points
 // let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]];
@@ -135,7 +135,7 @@
 //
 // ```
 // use scirs2_spatial::AlphaShape;
-// use ndarray::array;
+// use scirs2_core::ndarray::array;
 //
 // // Create a point set with some outliers
 // let points = array![
@@ -165,7 +165,7 @@
 //
 // ```
 // use scirs2_spatial::halfspace::{HalfspaceIntersection, Halfspace};
-// use ndarray::array;
+// use scirs2_core::ndarray::array;
 //
 // // Define halfspaces for a unit square: x ≥ 0, y ≥ 0, x ≤ 1, y ≤ 1
 // let halfspaces = vec![
@@ -190,7 +190,7 @@
 //
 // ```
 // use scirs2_spatial::boolean_ops::{polygon_union, polygon_intersection, polygon_difference};
-// use ndarray::array;
+// use scirs2_core::ndarray::array;
 //
 // // Define two overlapping squares
 // let poly1 = array![
@@ -224,7 +224,7 @@
 //
 // ```
 // use scirs2_spatial::set_distance::hausdorff_distance;
-// use ndarray::array;
+// use scirs2_core::ndarray::array;
 //
 // // Create two point sets
 // let set1 = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]];
@@ -239,7 +239,7 @@
 //
 // ```
 // use scirs2_spatial::polygon::{point_in_polygon, polygon_area, polygon_centroid};
-// use ndarray::array;
+// use scirs2_core::ndarray::array;
 //
 // // Create a polygon (square)
 // let polygon = array![[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]];
@@ -261,7 +261,7 @@
 //
 // ```
 // use scirs2_spatial::BallTree;
-// use ndarray::array;
+// use scirs2_core::ndarray::array;
 //
 // // Create points
 // let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]];
@@ -312,7 +312,7 @@
 //
 // ```
 // use scirs2_spatial::simd_distance::{simd_euclidean_distance_batch, parallel_pdist};
-// use ndarray::array;
+// use scirs2_core::ndarray::array;
 //
 // // SIMD batch distance calculation between corresponding points
 // let points1 = array![[0.0, 0.0], [1.0, 1.0], [2.0, 2.0]];
@@ -336,7 +336,7 @@
 //
 // ```
 // use scirs2_spatial::{AdvancedSimdKMeans, AdvancedSimdNearestNeighbors};
-// use ndarray::array;
+// use scirs2_core::ndarray::array;
 //
 // // Optimized SIMD K-means clustering
 // let points = array![
@@ -395,7 +395,7 @@
 //
 // ```
 // use scirs2_spatial::{GpuDistanceMatrix, GpuKMeans, report_gpu_status};
-// use ndarray::array;
+// use scirs2_core::ndarray::array;
 //
 // // Check GPU acceleration availability
 // report_gpu_status();
@@ -429,7 +429,7 @@
 //
 // ```
 // use scirs2_spatial::{AdvancedKDTree, KDTreeConfig};
-// use ndarray::array;
+// use scirs2_core::ndarray::array;
 //
 // // Create points dataset
 // let points = array![
@@ -527,7 +527,7 @@
 // ```text
 // // Temporarily disabled for optimization
 // // use scirs2_spatial::quantum_classical_hybrid::{HybridSpatialOptimizer, HybridClusterer};
-// // use ndarray::array;
+// // use scirs2_core::ndarray::array;
 // //
 // // // Quantum-classical hybrid spatial optimization
 // // let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]];
@@ -545,7 +545,7 @@
 // ```text
 // // Temporarily disabled for optimization
 // // use scirs2_spatial::neuromorphic_quantum_fusion::{QuantumSpikingClusterer, NeuralQuantumOptimizer};
-// // use ndarray::array;
+// // use scirs2_core::ndarray::array;
 // //
 // // // Quantum-enhanced spiking neural clustering
 // // let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]];
@@ -564,7 +564,7 @@
 // ```text
 // // Temporarily disabled for optimization
 // // use scirs2_spatial::next_gen_gpu_architecture::{QuantumGpuProcessor, PhotonicAccelerator};
-// // use ndarray::array;
+// // use scirs2_core::ndarray::array;
 // //
 // // // Quantum-GPU hybrid processing with tensor core enhancement
 // // let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]];
@@ -582,7 +582,7 @@
 // ```text
 // // Temporarily disabled for optimization
 // // use scirs2_spatial::ai_driven_optimization::{AIAlgorithmSelector, MetaLearningOptimizer};
-// // use ndarray::array;
+// // use scirs2_core::ndarray::array;
 // //
 // // // AI automatically selects optimal algorithms and parameters
 // // let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]];
@@ -606,7 +606,7 @@
 // // use scirs2_spatial::extreme_performance_optimization::{
 // //     ExtremeOptimizer, AdvancedfastDistanceMatrix, SelfOptimizingAlgorithm, create_ultimate_optimizer
 // // };
-// // use ndarray::array;
+// // use scirs2_core::ndarray::array;
 // //
 // // // Achieve 50-100x performance improvements with all optimizations
 // // let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]];

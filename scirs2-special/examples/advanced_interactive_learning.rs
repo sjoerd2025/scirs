@@ -12,7 +12,7 @@
 //! Run with: cargo run --example advanced_interactive_learning
 
 use ndarray::Array1;
-use num_complex::Complex64;
+use scirs2_core::Complex64;
 use scirs2_special::*;
 use std::collections::{HashMap, VecDeque};
 use std::f64::consts::PI;

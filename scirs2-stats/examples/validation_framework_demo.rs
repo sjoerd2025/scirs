@@ -288,7 +288,6 @@ mod tests {
     */
 
     #[test]
-    #[ignore = "timeout"]
     fn test_mean_basic_validation() {
         let testdata = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
         let result = mean(&testdata.view()).unwrap();

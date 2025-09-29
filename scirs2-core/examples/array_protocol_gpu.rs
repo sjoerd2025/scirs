@@ -15,10 +15,10 @@
 //! This example shows how to use the array protocol with different GPU backends
 //! and how to perform GPU-accelerated operations on arrays.
 
-use ndarray::{Array2, Ix2};
 use scirs2_core::array_protocol::{self, add, matmul, NdarrayWrapper};
 #[cfg(feature = "gpu")]
 use scirs2_core::array_protocol::{GPUBackend, GPUConfig, GPUNdarray};
+use scirs2_core::ndarray_ext::{Array2, Ix2};
 
 #[allow(dead_code)]
 fn main() {

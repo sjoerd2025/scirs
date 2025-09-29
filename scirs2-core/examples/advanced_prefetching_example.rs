@@ -12,11 +12,11 @@
 //! cargo run --example advanced_prefetching_example
 //! ```
 
-use ndarray::{Array2, Array3};
 use scirs2_core::memory_efficient::{
     CompressedMemMapBuilder, CompressionAlgorithm, CrossFilePrefetchConfigBuilder,
     CrossFilePrefetchManager, PrefetchConfigBuilder, Prefetching,
 };
+use scirs2_core::ndarray_ext::{Array2, Array3};
 use std::time::{Duration, Instant};
 use tempfile::tempdir;
 

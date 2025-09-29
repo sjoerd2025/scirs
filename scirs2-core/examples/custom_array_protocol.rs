@@ -16,10 +16,10 @@ use std::any::{Any, TypeId};
 use std::collections::HashMap;
 use std::fmt;
 
-use ndarray::Array2;
 use scirs2_core::array_protocol::{
     self, matmul, sum, transpose, ArrayFunction, ArrayProtocol, NdarrayWrapper, NotImplemented,
 };
+use scirs2_core::ndarray_ext::Array2;
 
 /// A custom sparse array implementation.
 struct SparseArray {

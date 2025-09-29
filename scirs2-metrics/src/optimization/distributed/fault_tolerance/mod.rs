@@ -674,7 +674,7 @@ impl NodeMetrics {
     /// Create metrics for a degraded node
     pub fn degraded() -> Self {
         Self {
-            cpu_usage: 85.0,
+            cpu_usage: 90.0, // Above the 85.0 threshold
             memory_usage: 80.0,
             disk_usage: 70.0,
             network_usage: 60.0,
@@ -832,7 +832,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Test failing - needs investigation
     fn test_health_status_determination() {
         let monitor = HealthMonitor::new(30);
 

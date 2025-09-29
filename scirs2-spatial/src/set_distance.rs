@@ -11,7 +11,7 @@
 //! # Examples
 //!
 //! ```
-//! use ndarray::array;
+//! use scirs2_core::ndarray::array;
 //! use scirs2_spatial::set_distance::hausdorff_distance;
 //!
 //! // Create two point sets
@@ -25,10 +25,10 @@
 
 use crate::distance::euclidean;
 use crate::error::SpatialResult;
-use ndarray::{Array2, ArrayView2};
 use num_traits::Float;
-use rand::seq::SliceRandom;
-use rand::{rngs::StdRng, SeedableRng};
+use scirs2_core::ndarray::{Array2, ArrayView2};
+use scirs2_core::random::{rngs::StdRng, SeedableRng};
+use scirs2_core::SliceRandomExt;
 
 /// Compute the directed Hausdorff distance from set1 to set2.
 ///
@@ -51,7 +51,7 @@ use rand::{rngs::StdRng, SeedableRng};
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use scirs2_core::ndarray::array;
 /// use scirs2_spatial::set_distance::directed_hausdorff;
 ///
 /// // Create two point sets
@@ -172,7 +172,7 @@ pub fn directed_hausdorff<T: Float + Send + Sync>(
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use scirs2_core::ndarray::array;
 /// use scirs2_spatial::set_distance::hausdorff_distance;
 ///
 /// // Create two point sets
@@ -218,7 +218,7 @@ pub fn hausdorff_distance<T: Float + Send + Sync>(
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use scirs2_core::ndarray::array;
 /// use scirs2_spatial::set_distance::wasserstein_distance;
 ///
 /// // Create two point distributions
@@ -371,7 +371,7 @@ mod tests {
         directed_hausdorff, gromov_hausdorff_distance, hausdorff_distance, wasserstein_distance,
     };
     use approx::assert_relative_eq;
-    use ndarray::{array, Array2};
+    use scirs2_core::ndarray::{array, Array2};
 
     #[test]
     fn test_directed_hausdorff() {

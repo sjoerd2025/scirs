@@ -1,4 +1,4 @@
-use num_complex::Complex64;
+use scirs2_core::Complex64;
 use scirs2_special::{lambert_w, lambert_w_real};
 
 #[allow(dead_code)]

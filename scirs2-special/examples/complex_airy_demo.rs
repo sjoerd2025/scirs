@@ -3,7 +3,7 @@
 //! This example showcases the complex number support for Airy functions
 //! in scirs2-special, including Ai, Ai', Bi, and Bi' functions.
 
-use num_complex::Complex64;
+use scirs2_core::Complex64;
 use scirs2_special::{ai_complex, aip_complex, bi_complex, bip_complex};
 
 #[allow(dead_code)]

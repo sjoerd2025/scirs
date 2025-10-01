@@ -1,20 +1,53 @@
 #![allow(deprecated)]
 #![allow(dead_code)]
-//! # Text Processing Module for SciRS2
+//! # SciRS2 Text - Natural Language Processing
 //!
-//! This module provides comprehensive text processing functionality for scientific computing
-//! applications, offering SciPy-compatible APIs while leveraging Rust's performance and safety.
+//! **scirs2-text** provides comprehensive text processing and NLP capabilities,
+//! offering tokenization, TF-IDF vectorization, word embeddings, sentiment analysis,
+//! topic modeling, and text classification with SIMD acceleration and parallel processing.
 //!
-//! ## Features
+//! ## 🎯 Key Features
 //!
-//! - **Tokenization**: Character, word, sentence, N-gram, regex, and BPE tokenizers
-//! - **Text Preprocessing**: Unicode normalization, HTML/XML stripping, contraction expansion
-//! - **Stemming & Lemmatization**: Porter, Snowball, Lancaster stemmers with rule-based lemmatization
-//! - **Vectorization**: TF-IDF, count vectorizers with N-gram support
-//! - **Word Embeddings**: Word2Vec implementation with Skip-gram and CBOW
-//! - **Similarity Metrics**: Cosine, Jaccard, Levenshtein distance, phonetic algorithms
-//! - **Advanced NLP**: Sentiment analysis, topic modeling, text summarization
-//! - **Performance**: SIMD-accelerated operations, parallel processing, memory efficiency
+//! - **Tokenization**: Word, sentence, N-gram, BPE, regex tokenizers
+//! - **Vectorization**: TF-IDF, count vectorizers, word embeddings
+//! - **Text Processing**: Stemming, lemmatization, normalization, stopword removal
+//! - **Embeddings**: Word2Vec (Skip-gram, CBOW), GloVe loading
+//! - **Similarity**: Cosine, Jaccard, Levenshtein, phonetic algorithms
+//! - **NLP**: Sentiment analysis, topic modeling (LDA), text classification
+//! - **Performance**: SIMD operations, parallel processing, sparse matrices
+//!
+//! ## 📦 Module Overview
+//!
+//! | SciRS2 Module | Python Equivalent | Description |
+//! |---------------|-------------------|-------------|
+//! | `tokenize` | `nltk.tokenize` | Text tokenization utilities |
+//! | `vectorize` | `sklearn.feature_extraction.text.TfidfVectorizer` | TF-IDF and count vectorization |
+//! | `embeddings` | `gensim.models.Word2Vec` | Word embeddings (Word2Vec) |
+//! | `sentiment` | `nltk.sentiment` | Sentiment analysis |
+//! | `topic_modeling` | `sklearn.decomposition.LatentDirichletAllocation` | Topic modeling (LDA) |
+//! | `stemming` | `nltk.stem` | Stemming and lemmatization |
+//!
+//! ## 🚀 Quick Start
+//!
+//! ```toml
+//! [dependencies]
+//! scirs2-text = "0.1.0-beta.4"
+//! ```
+//!
+//! ```rust,no_run
+//! use scirs2_text::{tokenize::WordTokenizer, vectorize::TfidfVectorizer, Tokenizer, Vectorizer};
+//!
+//! // Tokenization
+//! let tokenizer = WordTokenizer::default();
+//! let tokens = tokenizer.tokenize("Hello, world!").unwrap();
+//!
+//! // TF-IDF vectorization
+//! let docs = vec!["Hello world", "Good morning world"];
+//! let mut vectorizer = TfidfVectorizer::new(false, true, Some("l2".to_string()));
+//! let matrix = vectorizer.fit_transform(&docs).unwrap();
+//! ```
+//!
+//! ## 🔒 Version: 0.1.0-beta.4 (October 01, 2025)
 //!
 //! ## Quick Start
 //!

@@ -49,6 +49,10 @@ harness = false
 name = "scipy_comparison"
 harness = false
 
+[[bench]]
+name = "finance_pricing_bench"
+harness = false
+
 [features]
 default = []
 simd = ["scirs2-core/simd"]

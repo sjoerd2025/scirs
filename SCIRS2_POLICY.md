@@ -126,7 +126,7 @@ let mut rng = thread_rng();
 let arr = array![[1, 2], [3, 4]];
 let slice = arr.slice(s![.., 0]);
 
-// ✅ Correct - SciRS2-Core unified abstractions (v0.1.0-beta.3+)
+// ✅ Correct - SciRS2-Core unified abstractions (v0.1.0-beta.4+)
 use scirs2_core::random::*;
 use scirs2_core::ndarray::*;
 
@@ -571,20 +571,22 @@ By following these policies, we achieve:
 7. **Version Control**: Simplified dependency management
 8. **Type Safety**: Consistent types across the ecosystem
 
-## Recent Enhancements (v0.1.0-beta.3)
+## Recent Enhancements (v0.1.0-beta.4)
 
-### Complete Random Distribution Support
-As of beta.3, `scirs2_core::random` provides:
+### Stable Core Abstractions
+As of beta.4, `scirs2_core::random` provides:
 - ✅ All `rand_distr` distributions (Beta, Cauchy, ChiSquared, FisherF, LogNormal, StudentT, Weibull, etc.)
 - ✅ Unified distribution interface with enhanced sampling
 - ✅ Full compatibility with ToRSh and other ecosystem projects
+- ✅ Production-ready stability and performance
 
 ### Unified NDArray Module
-As of beta.3, `scirs2_core::ndarray` provides:
+As of beta.4, `scirs2_core::ndarray` provides:
 - ✅ Complete ndarray functionality including all macros (`array!`, `s!`, `azip!`)
 - ✅ All array types, views, and operations
 - ✅ Single unified import point for all array operations
 - ✅ Backward compatibility with existing `ndarray_ext`
+- ✅ Enhanced documentation and examples
 
 ## Inspiration
 
@@ -605,10 +607,10 @@ If you have questions about these policies or need clarification on specific use
 Remember: When in doubt, use the core abstractions!
 
 ## Policy Version
-- **Version**: 2.0.0 (Merged and Comprehensive)
-- **Effective Date**: SciRS2 v0.1.0-beta.3
-- **Last Updated**: 2025-09-29
-- **Status**: Active
+- **Version**: 2.0.1 (Stable)
+- **Effective Date**: SciRS2 v0.1.0-beta.4
+- **Last Updated**: 2025-10-01
+- **Status**: Active and Stable
 
 ---
 

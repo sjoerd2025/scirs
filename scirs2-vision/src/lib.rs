@@ -1,22 +1,269 @@
 #![allow(deprecated)]
-//! Computer vision module for SciRS2
+//! # SciRS2 Computer Vision
 //!
-//! This module provides computer vision functionality that builds on top of the
-//! scirs2-ndimage module, including image processing, feature detection, and segmentation.
+//! **scirs2-vision** provides comprehensive computer vision and image processing capabilities
+//! built on SciRS2's scientific computing infrastructure, offering torchvision/OpenCV-compatible
+//! APIs with Rust's performance and safety.
 //!
-//! # Thread Safety
+//! ## 🎯 Key Features
 //!
-//! All functions in this module are thread-safe and can be called concurrently on different images.
-//! When the `parallel` feature is enabled (via scirs2-core), many algorithms will automatically
-//! utilize multiple CPU cores for improved performance on large images. Key parallel optimizations include:
+//! - **Feature Detection**: SIFT, ORB, Harris corners, LoG blob detection
+//! - **Image Segmentation**: Watershed, region growing, graph cuts, semantic segmentation
+//! - **Edge Detection**: Sobel, Canny, Prewitt, Laplacian
+//! - **Image Registration**: Homography, affine, perspective transformations
+//! - **Color Processing**: Color space conversions, histogram operations
+//! - **Advanced Processing**: Super-resolution, HDR, denoising
+//! - **Object Tracking**: DeepSORT, Kalman filtering
+//! - **Performance**: SIMD acceleration, parallel processing, GPU support
 //!
-//! - Gradient computations in edge detection algorithms
-//! - Pixel-wise operations in preprocessing functions
-//! - Feature detection algorithms that process image regions independently
-//! - Segmentation algorithms with parallelizable clustering steps
+//! ## 📦 Module Overview
 //!
-//! Note that while functions are thread-safe, mutable image data should not be shared between threads
-//! without proper synchronization.
+//! | Module | Description | Python Equivalent |
+//! |--------|-------------|-------------------|
+//! | [`feature`] | Feature detection and matching (SIFT, ORB, Harris) | OpenCV features2d |
+//! | [`segmentation`] | Image segmentation algorithms | scikit-image.segmentation |
+//! | [`preprocessing`] | Image filtering and enhancement | torchvision.transforms |
+//! | [`color`] | Color space conversions | OpenCV color |
+//! | [`transform`] | Geometric transformations | torchvision.transforms |
+//! | [`registration`] | Image registration and alignment | scikit-image.registration |
+//! | [`streaming`] | Real-time video processing | OpenCV VideoCapture |
+//!
+//! ## 🚀 Quick Start
+//!
+//! ### Installation
+//!
+//! Add to your `Cargo.toml`:
+//!
+//! ```toml
+//! [dependencies]
+//! scirs2-vision = "0.1.0-beta.4"
+//! ```
+//!
+//! ### Feature Detection (Harris Corners)
+//!
+//! ```rust,no_run
+//! use scirs2_vision::harris_corners;
+//! use image::open;
+//!
+//! fn main() -> Result<(), Box<dyn std::error::Error>> {
+//!     // Load image
+//!     let img = open("image.jpg")?;
+//!
+//!     // Detect Harris corners
+//!     let corners = harris_corners(&img, 3, 0.04, 100.0)?;
+//!     println!("Detected Harris corners");
+//!
+//!     Ok(())
+//! }
+//! ```
+//!
+//! ### SIFT Feature Detection
+//!
+//! ```rust,no_run
+//! use scirs2_vision::detect_and_compute;
+//! use image::open;
+//!
+//! fn main() -> Result<(), Box<dyn std::error::Error>> {
+//!     let img = open("image.jpg")?;
+//!
+//!     // Detect SIFT keypoints and compute descriptors
+//!     let descriptors = detect_and_compute(&img, 500, 0.03)?;
+//!     println!("Detected {} SIFT features", descriptors.len());
+//!
+//!     Ok(())
+//! }
+//! ```
+//!
+//! ### Edge Detection (Sobel)
+//!
+//! ```rust,no_run
+//! use scirs2_vision::sobel_edges;
+//! use image::open;
+//!
+//! fn main() -> Result<(), Box<dyn std::error::Error>> {
+//!     let img = open("image.jpg")?;
+//!
+//!     // Detect edges using Sobel operator
+//!     let edges = sobel_edges(&img, 0.1)?;
+//!     println!("Edge map computed");
+//!
+//!     Ok(())
+//! }
+//! ```
+//!
+//! ### Image Segmentation (Watershed)
+//!
+//! ```rust,no_run
+//! use scirs2_vision::watershed;
+//! use image::open;
+//!
+//! fn main() -> Result<(), Box<dyn std::error::Error>> {
+//!     let img = open("image.jpg")?;
+//!
+//!     // Perform watershed segmentation
+//!     let segments = watershed(&img, None, 8)?;
+//!     println!("Segmented into regions");
+//!
+//!     Ok(())
+//! }
+//! ```
+//!
+//! ### Color Space Conversion
+//!
+//! ```rust,no_run
+//! use scirs2_vision::{rgb_to_grayscale, rgb_to_hsv};
+//! use image::open;
+//!
+//! fn main() -> Result<(), Box<dyn std::error::Error>> {
+//!     let img = open("image.jpg")?;
+//!
+//!     // Convert to grayscale
+//!     let gray = rgb_to_grayscale(&img, None)?;
+//!
+//!     // Convert to HSV
+//!     let hsv = rgb_to_hsv(&img)?;
+//!
+//!     Ok(())
+//! }
+//! ```
+//!
+//! ### Image Registration (Homography)
+//!
+//! ```rust,no_run
+//! use scirs2_vision::find_homography;
+//!
+//! fn main() -> Result<(), Box<dyn std::error::Error>> {
+//!     // Source and destination points
+//!     let src_points = vec![(0.0, 0.0), (100.0, 0.0), (100.0, 100.0), (0.0, 100.0)];
+//!     let dst_points = vec![(10.0, 10.0), (110.0, 5.0), (105.0, 105.0), (5.0, 110.0)];
+//!
+//!     // Find homography matrix
+//!     let (_h, _inliers) = find_homography(&src_points, &dst_points, 3.0, 0.99)?;
+//!
+//!     // Warp image using homography
+//!     // let warped = warp_perspective(&img, &h, (width, height))?;
+//!
+//!     Ok(())
+//! }
+//! ```
+//!
+//! ### Super-Resolution
+//!
+//! ```rust,no_run
+//! use scirs2_vision::{SuperResolutionProcessor, SuperResolutionMethod};
+//!
+//! fn main() -> Result<(), Box<dyn std::error::Error>> {
+//!     let processor = SuperResolutionProcessor::new(
+//!         2, // scale factor
+//!         SuperResolutionMethod::ESRCNN
+//!     )?;
+//!
+//!     // Upscale image
+//!     // let upscaled = processor.process(&low_res_image)?;
+//!
+//!     Ok(())
+//! }
+//! ```
+//!
+//! ### Object Tracking (DeepSORT)
+//!
+//! ```rust,no_run
+//! use scirs2_vision::{DeepSORT, Detection, TrackingBoundingBox};
+//!
+//! fn main() -> Result<(), Box<dyn std::error::Error>> {
+//!     let mut tracker = DeepSORT::new();
+//!
+//!     // For each frame
+//!     let bbox = TrackingBoundingBox::new(10.0, 10.0, 50.0, 50.0, 0.9, 0);
+//!     let detections = vec![Detection::new(bbox)];
+//!
+//!     let tracks = tracker.update(detections)?;
+//!     for track in tracks {
+//!         println!("Track ID: {}, Position: {:?}", track.id, track.get_bbox());
+//!     }
+//!
+//!     Ok(())
+//! }
+//! ```
+//!
+//! ## 🧠 Feature Detection Methods
+//!
+//! ### Classical Features
+//!
+//! - **Harris Corners**: Fast corner detection algorithm
+//! - **SIFT**: Scale-Invariant Feature Transform (rotation and scale invariant)
+//! - **ORB**: Oriented FAST and Rotated BRIEF (efficient alternative to SIFT)
+//! - **LoG Blobs**: Laplacian of Gaussian blob detection
+//!
+//! ### Neural Features
+//!
+//! - **SuperPoint**: Learned keypoint detector and descriptor
+//! - **Learned SIFT**: Neural network-enhanced SIFT
+//!
+//! ### Feature Matching
+//!
+//! - **Brute-force matching**: Exhaustive descriptor comparison
+//! - **Neural matching**: Attention-based feature matching
+//!
+//! ## 🎨 Segmentation Methods
+//!
+//! ### Classical Segmentation
+//!
+//! - **Watershed**: Marker-based segmentation
+//! - **Region Growing**: Similarity-based region merging
+//! - **Graph Cuts**: Energy minimization segmentation
+//! - **Threshold**: Otsu, adaptive thresholding
+//!
+//! ### Advanced Segmentation
+//!
+//! - **Semantic Segmentation**: Deep learning-based pixel classification
+//! - **Instance Segmentation**: Object detection + segmentation
+//!
+//! ## 🚄 Performance
+//!
+//! scirs2-vision leverages multiple optimization strategies:
+//!
+//! - **SIMD**: Vectorized operations for pixel processing
+//! - **Parallel**: Multi-threaded execution for large images
+//! - **GPU**: CUDA/OpenCL support for accelerated operations
+//! - **Memory Efficient**: Zero-copy views, chunked processing
+//!
+//! ### Thread Safety
+//!
+//! All functions are thread-safe and can be called concurrently on different images.
+//! When the `parallel` feature is enabled, many algorithms automatically utilize
+//! multiple CPU cores:
+//!
+//! - Gradient computations in edge detection
+//! - Pixel-wise operations in preprocessing
+//! - Feature detection across image regions
+//! - Segmentation clustering steps
+//!
+//! Note: Mutable image data should not be shared between threads without proper synchronization.
+//!
+//! ## 📊 Comparison with Other Libraries
+//!
+//! | Feature | OpenCV | torchvision | scirs2-vision |
+//! |---------|--------|-------------|---------------|
+//! | Feature Detection | ✅ | ❌ | ✅ |
+//! | Segmentation | ✅ | ⚠️ (limited) | ✅ |
+//! | Geometric Transforms | ✅ | ✅ | ✅ |
+//! | GPU Support | ✅ | ✅ | ✅ (limited) |
+//! | Type Safety | ❌ | ❌ | ✅ |
+//! | Memory Safety | ❌ | ⚠️ | ✅ |
+//! | Pure Rust | ❌ | ❌ | ✅ |
+//!
+//! ## 🔗 Integration with SciRS2 Ecosystem
+//!
+//! - **scirs2-ndimage**: Low-level image operations
+//! - **scirs2-linalg**: Matrix operations for geometric transforms
+//! - **scirs2-neural**: Deep learning models for advanced tasks
+//! - **scirs2-stats**: Statistical analysis of image features
+//! - **scirs2-cluster**: Clustering for segmentation
+//!
+//! ## 🔒 Version
+//!
+//! Current version: **0.1.0-beta.4** (Released October 01, 2025)
 
 #![warn(missing_docs)]
 
@@ -102,6 +349,7 @@ pub use error::{Result, VisionError};
 pub use feature::{
     array_to_image,
     descriptor::{detect_and_compute, match_descriptors, Descriptor, KeyPoint},
+    find_homography,
     harris_corners,
     image_to_array,
     laplacian::{laplacian_edges, laplacian_of_gaussian},

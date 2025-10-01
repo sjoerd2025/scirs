@@ -185,7 +185,7 @@ mod tests {
         let matches = hdc_pattern_matching(image.view(), &patterns, &config).unwrap();
 
         // Should complete without error
-        assert!(matches.len() >= 0);
+        let _ = matches.len(); // Always >= 0 for Vec
     }
 
     #[test]

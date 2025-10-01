@@ -132,7 +132,7 @@ fn bench_linear_1d_comparison(c: &mut Criterion) {
                     let interpolator = interp1d.call1((x_py, y_py)).unwrap();
 
                     b.iter(|| {
-                        black_box(interpolator.call1((queries_py,)).unwrap());
+                        black_box(interpolator.call1((queries_py.clone(),)).unwrap());
                     });
                 });
             });
@@ -192,7 +192,7 @@ fn bench_cubic_spline_comparison(c: &mut Criterion) {
                     |b, _| {
                         b.iter(|| {
                             let cubic_spline = scipy_interp.getattr("CubicSpline").unwrap();
-                            black_box(cubic_spline.call1((x_py, y_py)).unwrap());
+                            black_box(cubic_spline.call1((x_py.clone(), y_py.clone())).unwrap());
                         });
                     },
                 );
@@ -206,7 +206,7 @@ fn bench_cubic_spline_comparison(c: &mut Criterion) {
                     &n_points,
                     |b, _| {
                         b.iter(|| {
-                            black_box(spline_scipy.call1((queries_py,)).unwrap());
+                            black_box(spline_scipy.call1((queries_py.clone(),)).unwrap());
                         });
                     },
                 );
@@ -281,9 +281,9 @@ fn bench_rbf_2d_comparison(c: &mut Criterion) {
                             b.iter(|| {
                                 let rbf = scipy_interp.getattr("RBFInterpolator").unwrap();
                                 let interpolator = rbf
-                                    .call1((points_py, values_py))
+                                    .call1((points_py.clone(), values_py.clone()))
                                     .unwrap()
-                                    .call_method1("__call__", (queries_py,))
+                                    .call_method1("__call__", (queries_py.clone(),))
                                     .unwrap();
                                 black_box(interpolator);
                             });

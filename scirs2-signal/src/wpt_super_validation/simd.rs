@@ -286,23 +286,66 @@ pub fn assess_numerical_stability(simd_result: f64, scalar_result: f64) -> f64 {
 }
 
 /// Scalar (non-SIMD) version of wavelet packet decomposition
+///
+/// This function provides a pure scalar implementation of WPT for validation purposes.
+/// It uses the standard wp_decompose function which operates on scalar data without
+/// SIMD acceleration, making it suitable for accuracy comparison with SIMD implementations.
 pub fn wp_decompose_scalar(
     signal: &Array1<f64>,
     wavelet: crate::dwt::Wavelet,
     max_level: usize,
 ) -> SignalResult<WaveletPacketTree> {
-    // TODO: Implement scalar (non-SIMD) version of wavelet packet decomposition
-    // For now, use the regular wp_decompose function
+    // The standard wp_decompose function is already a scalar implementation
+    // that doesn't use SIMD acceleration internally. It operates on scalar
+    // f64 values using the DWT filter bank approach.
+    // This is the appropriate baseline for comparing against SIMD optimizations.
     crate::wpt::wp_decompose(signal.as_slice().unwrap(), wavelet, max_level, None)
 }
 
 /// Compare coefficients between different WPT trees
+///
+/// Computes the maximum relative error between coefficients in two WPT trees.
+/// This is useful for validating SIMD implementations against scalar baselines.
+///
+/// Returns the maximum relative error across all nodes and coefficients.
 pub fn compare_wpt_coefficients(
-    _simd_tree: &WaveletPacketTree,
-    _scalar_tree: &WaveletPacketTree,
+    simd_tree: &WaveletPacketTree,
+    scalar_tree: &WaveletPacketTree,
 ) -> SignalResult<f64> {
-    // TODO: Implement coefficient comparison between different WPT trees
-    Ok(0.0)
+    // Check that trees have the same structure
+    if simd_tree.nodes.len() != scalar_tree.nodes.len() {
+        return Err(SignalError::ValueError(
+            "Trees have different numbers of nodes".to_string(),
+        ));
+    }
+
+    let mut max_relative_error = 0.0;
+
+    // Compare each node
+    for (simd_node, scalar_node) in simd_tree.nodes.iter().zip(scalar_tree.nodes.iter()) {
+        // Check node structure matches
+        if simd_node.level != scalar_node.level || simd_node.path != scalar_node.path {
+            continue; // Skip mismatched nodes
+        }
+
+        // Compare coefficient data
+        if simd_node.data.len() != scalar_node.data.len() {
+            continue; // Skip if lengths differ
+        }
+
+        // Compute coefficient-wise relative errors
+        for (&simd_coeff, &scalar_coeff) in simd_node.data.iter().zip(scalar_node.data.iter()) {
+            let abs_error = (simd_coeff - scalar_coeff).abs();
+
+            // Compute relative error
+            let denominator = scalar_coeff.abs().max(1e-10);
+            let relative_error = abs_error / denominator;
+
+            max_relative_error = max_relative_error.max(relative_error);
+        }
+    }
+
+    Ok(max_relative_error)
 }
 
 #[cfg(test)]

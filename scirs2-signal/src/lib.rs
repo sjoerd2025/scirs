@@ -4,24 +4,52 @@
 #![allow(unused_assignments)]
 #![allow(unused_variables)]
 #![allow(private_interfaces)]
-//! Signal Processing Module - Phase 3 Complete: Comprehensive Signal Processing
+//! # SciRS2 Signal - Digital Signal Processing
 //!
-//! This version provides comprehensive signal processing capabilities including time-domain,
-//! frequency-domain, and time-frequency domain analysis.
+//! **scirs2-signal** provides comprehensive signal processing capabilities modeled after SciPy's
+//! `signal` module, offering filtering, spectral analysis, wavelet transforms, system identification,
+//! and time-frequency analysis with SIMD acceleration and parallel processing.
 //!
-//! ## Core Functionality
+//! ## 🎯 Key Features
 //!
-//! * Error handling
-//! * Basic convolution operations
-//! * Signal measurements (RMS, SNR, etc.)
-//! * Core utilities
-//! * Window functions
-//! * LTI (Linear Time-Invariant) systems
-//! * Digital filters (FIR/IIR)
-//! * Spectral analysis (FFT, PSD, spectrograms)
-//! * Discrete Wavelet Transform (DWT) - NEW
-//! * Continuous Wavelet Transform (CWT) - NEW
-//! * Advanced wavelet analysis - NEW
+//! - **SciPy Compatibility**: Drop-in replacement for `scipy.signal` functions
+//! - **Digital Filters**: FIR, IIR, Butterworth, Chebyshev, elliptic, Bessel
+//! - **Spectral Analysis**: FFT-based PSD, spectrograms, Lomb-Scargle periodograms
+//! - **Wavelet Transforms**: DWT, CWT, dual-tree complex wavelets, 2D transforms
+//! - **Convolution**: Fast 1D/2D convolution with SIMD and parallel support
+//! - **LTI Systems**: Transfer functions, state-space, frequency response
+//! - **Advanced Methods**: EMD, Hilbert transform, system identification
+//!
+//! ## 📦 Module Overview
+//!
+//! | SciRS2 Module | SciPy Equivalent | Description |
+//! |---------------|------------------|-------------|
+//! | `filter` | `scipy.signal.butter`, `cheby1` | Digital filter design (FIR/IIR) |
+//! | `convolve` | `scipy.signal.convolve` | 1D/2D convolution and correlation |
+//! | `spectral` | `scipy.signal.periodogram` | Power spectral density, spectrograms |
+//! | `dwt` | `pywt.dwt` | Discrete wavelet transform |
+//! | `wavelets` | `pywt.cwt` | Continuous wavelet transform |
+//! | `window` | `scipy.signal.get_window` | Window functions (Hann, Hamming, etc.) |
+//! | `lti` | `scipy.signal.TransferFunction` | LTI system representation |
+//! | `lombscargle` | `scipy.signal.lombscargle` | Lomb-Scargle periodogram |
+//!
+//! ## 🚀 Quick Start
+//!
+//! ```toml
+//! [dependencies]
+//! scirs2-signal = "0.1.0-beta.4"
+//! ```
+//!
+//! ```rust
+//! use scirs2_signal::{convolve, filter, spectral};
+//!
+//! // Convolution
+//! let signal = vec![1.0, 2.0, 3.0];
+//! let kernel = vec![0.25, 0.5, 0.25];
+//! let filtered = convolve(&signal, &kernel, "same").unwrap();
+//! ```
+//!
+//! ## 🔒 Version: 0.1.0-beta.4 (October 01, 2025)
 
 // Core error handling - ESSENTIAL
 pub mod error;

@@ -27,7 +27,7 @@ const MEMORY_PRESSURE_THRESHOLD: usize = 8 * 1024 * 1024 * 1024; // 8GB threshol
 #[allow(dead_code)]
 fn generate_large_random_graph(num_nodes: usize, edge_probability: f64) -> Graph<usize, f64> {
     let mut graph = Graph::new();
-    let mut rng = rng();
+    let mut rng = thread_rng();
 
     println!("  🏗️  Generating random graph with {} nodes...", num_nodes);
 
@@ -75,7 +75,7 @@ fn generate_large_random_graph(num_nodes: usize, edge_probability: f64) -> Graph
 #[allow(dead_code)]
 fn generate_scale_free_graph(num_nodes: usize, initial_edges: usize) -> Graph<usize, f64> {
     let mut graph = Graph::new();
-    let mut rng = rng();
+    let mut rng = thread_rng();
     let mut degree_sum = 0;
     let mut node_degrees: HashMap<usize, usize> = HashMap::new();
 
@@ -138,7 +138,7 @@ fn generate_scale_free_graph(num_nodes: usize, initial_edges: usize) -> Graph<us
 #[allow(dead_code)]
 fn generate_memory_efficient_graph(num_nodes: usize) -> Graph<usize, f64> {
     let mut graph = Graph::new();
-    let mut rng = rng();
+    let mut rng = thread_rng();
 
     println!(
         "  🧠 Generating memory-efficient graph with {} nodes...",
@@ -204,7 +204,7 @@ fn generate_memory_efficient_graph(num_nodes: usize) -> Graph<usize, f64> {
 #[allow(dead_code)]
 fn generate_biological_network(num_nodes: usize) -> Graph<usize, f64> {
     let mut graph = Graph::new();
-    let mut rng = rng();
+    let mut rng = thread_rng();
     let mut degrees = vec![0; num_nodes];
 
     println!(
@@ -246,7 +246,7 @@ fn generate_biological_network(num_nodes: usize) -> Graph<usize, f64> {
 #[allow(dead_code)]
 fn generate_social_network(num_nodes: usize) -> Graph<usize, f64> {
     let mut graph = Graph::new();
-    let mut rng = rng();
+    let mut rng = thread_rng();
 
     println!("  👥 Generating social network with {} nodes...", num_nodes);
 
@@ -702,28 +702,18 @@ fn concurrent_processor_stress_test(
             let thread_start = Instant::now();
 
             // Run multiple algorithms concurrently
-            let cc_result = execute_with_enhanced_advanced(
-                &mut processor,
-                &graph,
-                &format!("concurrent_cc_{}", thread_id),
-                |g| {
-                    use scirs2_graph::algorithms::connectivity::connected_components;
-                    let components = connected_components(g);
-                    Ok(format!("Found {} components", components.len()))
-                },
-            );
+            let cc_result = execute_with_enhanced_advanced(&graph, |g| {
+                use scirs2_graph::algorithms::connectivity::connected_components;
+                let components = connected_components(g);
+                Ok(format!("Found {} components", components.len()))
+            });
 
             let pr_result = if graph.node_count() <= 500_000 {
-                execute_with_enhanced_advanced(
-                    &mut processor,
-                    &graph,
-                    &format!("concurrent_pr_{}", thread_id),
-                    |g| {
-                        use scirs2_graph::algorithms::pagerank;
-                        // Skip pagerank for regular graphs as it requires DiGraph
-                        return Ok(format!("Skipped PageRank (requires DiGraph)"));
-                    },
-                )
+                execute_with_enhanced_advanced(&graph, |g| {
+                    use scirs2_graph::algorithms::pagerank;
+                    // Skip pagerank for regular graphs as it requires DiGraph
+                    return Ok(format!("Skipped PageRank (requires DiGraph)"));
+                })
             } else {
                 Ok("Skipped PageRank for very large graphs".to_string()) // Skip PageRank for very large graphs
             };
@@ -738,7 +728,7 @@ fn concurrent_processor_stress_test(
                 cc_result.is_ok(),
                 pr_result.is_ok(),
                 stats.total_operations,
-                stats.average_speedup,
+                stats.memory_efficiency,
             ));
         });
 
@@ -759,9 +749,9 @@ fn concurrent_processor_stress_test(
         .filter(|(_, _, cc_ok, pr_ok, _, _)| *cc_ok && *pr_ok)
         .count();
     let total_operations: usize = results_guard.iter().map(|(_, _, _, _, opt, _)| opt).sum();
-    let avg_speedup: f64 = results_guard
+    let avg_efficiency: f64 = results_guard
         .iter()
-        .map(|(_, _, _, _, _, speedup)| speedup)
+        .map(|(_, _, _, _, _, efficiency)| efficiency)
         .sum::<f64>()
         / results_guard.len() as f64;
 
@@ -770,11 +760,11 @@ fn concurrent_processor_stress_test(
         (
             total_elapsed,
             format!(
-                "✅ {}/{} threads successful, {} total optimizations, {:.2}x avg speedup",
+                "✅ {}/{} threads successful, {} total optimizations, {:.2} avg efficiency",
                 successful_threads,
                 results_guard.len(),
                 total_operations,
-                avg_speedup
+                avg_efficiency
             ),
         ),
     );
@@ -898,12 +888,9 @@ fn bench_adaptive_performance(c: &mut Criterion) {
             // Run multiple iterations to test adaptation
             for i in 0..10 {
                 let start = Instant::now();
-                let _result = execute_with_enhanced_advanced(
-                    &mut processor,
-                    &test_graph,
-                    &format!("adaptive_iteration_{}", i),
-                    |g| Ok(g.node_count() * g.edge_count()),
-                );
+                let _result = execute_with_enhanced_advanced(&test_graph, |g| {
+                    Ok(g.node_count() * g.edge_count())
+                });
                 total_time += start.elapsed();
             }
 
@@ -936,12 +923,7 @@ fn bench_concurrent_processing(c: &mut Criterion) {
                 .zip(processors.iter_mut())
                 .enumerate()
                 .map(|(i, (graph, processor))| {
-                    execute_with_enhanced_advanced(
-                        processor,
-                        graph,
-                        &format!("concurrent_{}", i),
-                        |g| Ok(g.node_count() + g.edge_count()),
-                    )
+                    execute_with_enhanced_advanced(graph, |g| Ok(g.node_count() + g.edge_count()))
                 })
                 .collect();
 
@@ -1003,15 +985,10 @@ fn bench_configuration_comparison(c: &mut Criterion) {
         group.bench_function(name, |b| {
             b.iter(|| {
                 let mut processor = AdvancedProcessor::new(config.clone());
-                let _result = execute_with_enhanced_advanced(
-                    &mut processor,
-                    &test_graph,
-                    "config_test",
-                    |g| {
-                        let nodes: Vec<_> = g.nodes().into_iter().collect();
-                        Ok(nodes.len())
-                    },
-                );
+                let _result = execute_with_enhanced_advanced(&test_graph, |g| {
+                    let nodes: Vec<_> = g.nodes().into_iter().collect();
+                    Ok(nodes.len())
+                });
                 black_box(processor.get_optimization_stats())
             })
         });
@@ -1094,7 +1071,7 @@ fn bench_memory_usage_analysis(c: &mut Criterion) {
                         }
 
                         // Random access simulation
-                        let mut rng = rng();
+                        let mut rng = thread_rng();
                         for _ in 0..1000 {
                             let idx = rng.gen_range(0..memory_data.len());
                             memory_data[idx] *= 1.1;

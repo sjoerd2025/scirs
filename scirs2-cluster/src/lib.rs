@@ -7,15 +7,53 @@
 #![allow(unexpected_cfgs)]
 #![allow(unused_attributes)]
 #![allow(dead_code)]
-//! Clustering algorithms module for SciRS2
+//! # SciRS2 Cluster - Clustering Algorithms
 //!
-//! This module provides implementations of various clustering algorithms such as:
-//! - Vector quantization (k-means, etc.)
-//! - Hierarchical clustering
-//! - Density-based clustering (DBSCAN, OPTICS, etc.)
-//! - Mean Shift clustering
-//! - Spectral clustering
-//! - Affinity Propagation
+//! **scirs2-cluster** provides comprehensive clustering algorithms for unsupervised learning,
+//! offering k-means, hierarchical clustering, DBSCAN, spectral clustering, and advanced methods
+//! with parallel processing, SIMD acceleration, and evaluation metrics.
+//!
+//! ## 🎯 Key Features
+//!
+//! - **SciPy/scikit-learn Compatibility**: Similar APIs to `scipy.cluster` and `sklearn.cluster`
+//! - **Partitional Clustering**: K-means, K-means++, mini-batch K-means
+//! - **Hierarchical Clustering**: Agglomerative with various linkage methods
+//! - **Density-based**: DBSCAN, OPTICS, HDBSCAN for arbitrary-shaped clusters
+//! - **Graph-based**: Spectral clustering, affinity propagation
+//! - **Evaluation Metrics**: Silhouette, Davies-Bouldin, Calinski-Harabasz
+//! - **Performance**: Parallel execution, SIMD distance computation
+//!
+//! ## 📦 Module Overview
+//!
+//! | SciRS2 Module | Python Equivalent | Description |
+//! |---------------|-------------------|-------------|
+//! | `vq` | `scipy.cluster.vq` | K-means and vector quantization |
+//! | `hierarchy` | `scipy.cluster.hierarchy` | Hierarchical/agglomerative clustering |
+//! | `dbscan` | `sklearn.cluster.DBSCAN` | Density-based spatial clustering |
+//! | `spectral` | `sklearn.cluster.SpectralClustering` | Graph-based spectral clustering |
+//! | `metrics` | `sklearn.metrics` | Clustering evaluation metrics |
+//!
+//! ## 🚀 Quick Start
+//!
+//! ```toml
+//! [dependencies]
+//! scirs2-cluster = "0.1.0-beta.4"
+//! ```
+//!
+//! ```rust
+//! use scirs2_cluster::vq::kmeans;
+//! use scirs2_core::ndarray::Array2;
+//!
+//! // K-means clustering
+//! let data = Array2::from_shape_vec((6, 2), vec![
+//!     1.0, 2.0, 1.2, 1.8, 0.8, 1.9,
+//!     3.7, 4.2, 3.9, 3.9, 4.2, 4.1,
+//! ]).unwrap();
+//!
+//! let (centroids, labels) = kmeans(data.view(), 2, None, None, None, None).unwrap();
+//! ```
+//!
+//! ## 🔒 Version: 0.1.0-beta.4 (October 01, 2025)
 //!
 //! ## Features
 //!

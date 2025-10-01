@@ -1,18 +1,48 @@
 #![allow(deprecated)]
-//! Datasets module for SciRS2
+//! # SciRS2 Datasets - Dataset Loading and Generation
 //!
-//! This module provides dataset loading utilities similar to scikit-learn's datasets module.
-//! It includes toy datasets, sample datasets, time series datasets, data generators,
-//! and utilities for loading and processing datasets.
+//! **scirs2-datasets** provides dataset utilities modeled after scikit-learn's `datasets` module,
+//! offering toy datasets (Iris, Boston, MNIST), synthetic data generators, cross-validation splitters,
+//! and data preprocessing utilities for machine learning workflows.
 //!
-//! # Features
+//! ## 🎯 Key Features
 //!
-//! - **Toy datasets**: Classic datasets like Iris, Boston Housing, Breast Cancer, and Digits
-//! - **Data generators**: Create synthetic datasets for classification, regression, clustering, and time series
-//! - **Cross-validation utilities**: K-fold, stratified, and time series cross-validation
-//! - **Dataset utilities**: Train/test splitting, normalization, and metadata handling
-//! - **Caching**: Efficient caching system for downloaded datasets
-//! - **Registry**: Centralized registry for dataset metadata and locations
+//! - **Toy Datasets**: Classic datasets (Iris, Boston Housing, Breast Cancer, Digits)
+//! - **Data Generators**: Synthetic data for classification, regression, clustering
+//! - **Cross-Validation**: K-fold, stratified, time series CV splitters
+//! - **Preprocessing**: Train/test split, normalization, feature scaling
+//! - **Caching**: Efficient disk caching for downloaded datasets
+//!
+//! ## 📦 Module Overview
+//!
+//! | SciRS2 Function | scikit-learn Equivalent | Description |
+//! |-----------------|-------------------------|-------------|
+//! | `load_iris` | `sklearn.datasets.load_iris` | Classic Iris classification dataset |
+//! | `load_boston` | `sklearn.datasets.load_boston` | Boston housing regression dataset |
+//! | `make_classification` | `sklearn.datasets.make_classification` | Synthetic classification data |
+//! | `make_regression` | `sklearn.datasets.make_regression` | Synthetic regression data |
+//! | `make_blobs` | `sklearn.datasets.make_blobs` | Synthetic clustering data |
+//! | `k_fold_split` | `sklearn.model_selection.KFold` | K-fold cross-validation |
+//!
+//! ## 🚀 Quick Start
+//!
+//! ```toml
+//! [dependencies]
+//! scirs2-datasets = "0.1.0-beta.4"
+//! ```
+//!
+//! ```rust
+//! use scirs2_datasets::{load_iris, make_classification};
+//!
+//! // Load classic Iris dataset
+//! let iris = load_iris().unwrap();
+//! println!("{} samples, {} features", iris.n_samples(), iris.n_features());
+//!
+//! // Generate synthetic classification data
+//! let data = make_classification(100, 5, 3, 2, 4, Some(42)).unwrap();
+//! ```
+//!
+//! ## 🔒 Version: 0.1.0-beta.4 (October 01, 2025)
 //!
 //! # Examples
 //!

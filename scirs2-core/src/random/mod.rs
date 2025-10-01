@@ -161,8 +161,36 @@ pub use ecosystem_integration::{
 pub use ndarray::Dimension;
 pub use rand::prelude as rand_prelude;
 pub use rand::rngs;
+pub use rand::seq::SliceRandom;
 pub use rand::{Rng, RngCore, SeedableRng};
 pub use rand_distr as rand_distributions;
+
+/// Convenience function to generate a random value of the inferred type
+///
+/// This function generates a random value using the thread-local RNG.
+/// The type is inferred from context, or can be specified explicitly.
+///
+/// # Examples
+///
+/// ```
+/// use scirs2_core::random::random;
+///
+/// // Generate random f64
+/// let x: f64 = random();
+/// assert!(x >= 0.0 && x < 1.0);
+///
+/// // Generate random bool
+/// let b: bool = random();
+///
+/// // Explicit type annotation
+/// let y = random::<f32>();
+/// ```
+pub fn random<T>() -> T
+where
+    rand::distr::StandardUniform: rand::distr::Distribution<T>,
+{
+    rand::random()
+}
 
 // Comprehensive re-export of ALL rand_distr distributions for SciRS2 ecosystem compatibility
 // This ensures other projects can access any distribution through scirs2-core
@@ -205,6 +233,14 @@ pub use rand_distr::{
     Zeta,
     Zipf,
 };
+
+// Clean, unprefixed type aliases for common distributions (for easier use)
+// These allow `use scirs2_core::random::Normal;` instead of `use scirs2_core::random::RandNormal;`
+pub use rand_distr::Bernoulli;
+pub use rand_distr::Exp as Exponential; // Exponential is just Exp in rand_distr
+pub use rand_distr::Gamma;
+pub use rand_distr::Normal;
+pub use rand_distr::Uniform;
 
 // Re-export ndarray-rand RandomExt trait if available
 #[cfg(feature = "random")]

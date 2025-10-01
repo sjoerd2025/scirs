@@ -46,7 +46,7 @@ Add the following to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-scirs2-ndimage = "0.1.0-beta.3"
+scirs2-ndimage = "0.1.0-beta.4"
 ndarray = "0.16"
 ```
 

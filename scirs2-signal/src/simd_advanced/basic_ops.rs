@@ -108,8 +108,21 @@ pub fn simd_fir_filter(
     // Check for SIMD capabilities
     let caps = PlatformCapabilities::detect();
 
-    // TODO: Re-implement platform-specific SIMD optimizations
-    // For now, use scalar fallback for all cases
+    // Use best available SIMD on x86_64
+    #[cfg(target_arch = "x86_64")]
+    {
+        if caps.simd_available && is_x86_feature_detected!("avx512f") {
+            return unsafe { avx512_fir_filter(input, coeffs, output) };
+        }
+        if caps.simd_available && is_x86_feature_detected!("avx2") {
+            return unsafe { avx2_fir_filter(input, coeffs, output) };
+        }
+        if caps.simd_available && is_x86_feature_detected!("sse4.1") {
+            return unsafe { sse_fir_filter(input, coeffs, output) };
+        }
+    }
+
+    // Fallback to scalar implementation
     scalar_fir_filter(input, coeffs, output)
 }
 
@@ -163,8 +176,23 @@ pub fn simd_autocorrelation(
         return Ok(autocorr);
     }
 
-    // TODO: Re-implement platform-specific SIMD optimizations
-    // For now, use scalar fallback
+    // Check for SIMD capabilities
+    let caps = PlatformCapabilities::detect();
+
+    // Use AVX2 if available on x86_64
+    #[cfg(target_arch = "x86_64")]
+    {
+        if caps.simd_available && is_x86_feature_detected!("avx2") {
+            unsafe { avx2_autocorrelation(signal, &mut autocorr, max_lag)? };
+            return Ok(autocorr);
+        }
+        if caps.simd_available && is_x86_feature_detected!("sse4.1") {
+            unsafe { sse_autocorrelation(signal, &mut autocorr, max_lag)? };
+            return Ok(autocorr);
+        }
+    }
+
+    // Fallback to scalar implementation
     scalar_autocorrelation(signal, &mut autocorr, max_lag)?;
 
     Ok(autocorr)
@@ -250,14 +278,21 @@ pub fn simd_cross_correlation(
 
     let caps = PlatformCapabilities::detect();
 
-    if caps.avx2_available && config.use_advanced {
-        scalar_cross_correlation(signal1, signal2, &mut result, mode)?;
-    } else if caps.simd_available {
-        scalar_cross_correlation(signal1, signal2, &mut result, mode)?;
-    } else {
-        scalar_cross_correlation(signal1, signal2, &mut result, mode)?;
-        return Ok(result);
+    // Use AVX2 if available on x86_64
+    #[cfg(target_arch = "x86_64")]
+    {
+        if caps.simd_available && is_x86_feature_detected!("avx2") {
+            unsafe { avx2_cross_correlation(signal1, signal2, &mut result, mode)? };
+            return Ok(result);
+        }
+        if caps.simd_available && is_x86_feature_detected!("sse4.1") {
+            unsafe { sse_cross_correlation(signal1, signal2, &mut result, mode)? };
+            return Ok(result);
+        }
     }
+
+    // Fallback to scalar implementation
+    scalar_cross_correlation(signal1, signal2, &mut result, mode)?;
 
     Ok(result)
 }
@@ -697,135 +732,724 @@ fn scalar_zero_crossing_rate(signal: &[f64]) -> SignalResult<f64> {
 
 #[cfg(target_arch = "x86_64")]
 #[target_feature(enable = "avx512f")]
-unsafe fn avx512_fir_filter(
-    _input: &[f64],
-    _coeffs: &[f64],
-    _output: &mut [f64],
-) -> SignalResult<()> {
-    // TODO: Implement AVX512 FIR filter
+unsafe fn avx512_fir_filter(input: &[f64], coeffs: &[f64], output: &mut [f64]) -> SignalResult<()> {
+    let n = input.len();
+    let m = coeffs.len();
+
+    // Process each output sample
+    for i in 0..n {
+        let mut sum_vec = _mm512_setzero_pd();
+        let mut sum = 0.0;
+
+        // Vectorized part: process 8 coefficients at a time
+        let m_vec = (m / 8) * 8;
+        let mut j = 0;
+
+        while j < m_vec && i >= j + 7 {
+            // Load 8 coefficients
+            let coeff_vec = _mm512_loadu_pd(coeffs.as_ptr().add(j));
+
+            // Load 8 input values in reverse order (for convolution)
+            let idx0 = i - j;
+            let idx1 = i - j - 1;
+            let idx2 = i - j - 2;
+            let idx3 = i - j - 3;
+            let idx4 = i - j - 4;
+            let idx5 = i - j - 5;
+            let idx6 = i - j - 6;
+            let idx7 = i - j - 7;
+
+            let input_vec = _mm512_set_pd(
+                *input.get_unchecked(idx7),
+                *input.get_unchecked(idx6),
+                *input.get_unchecked(idx5),
+                *input.get_unchecked(idx4),
+                *input.get_unchecked(idx3),
+                *input.get_unchecked(idx2),
+                *input.get_unchecked(idx1),
+                *input.get_unchecked(idx0),
+            );
+
+            // Multiply and accumulate
+            sum_vec = _mm512_fmadd_pd(coeff_vec, input_vec, sum_vec);
+
+            j += 8;
+        }
+
+        // Horizontal sum of the vector accumulator
+        sum = _mm512_reduce_add_pd(sum_vec);
+
+        // Process remaining coefficients with scalar code
+        while j < m {
+            if i >= j {
+                sum += input[i - j] * coeffs[j];
+            }
+            j += 1;
+        }
+
+        output[i] = sum;
+    }
+
     Ok(())
 }
 
 #[cfg(target_arch = "x86_64")]
 #[target_feature(enable = "avx2")]
-unsafe fn avx2_fir_filter(
-    _input: &[f64],
-    _coeffs: &[f64],
-    _output: &mut [f64],
-) -> SignalResult<()> {
-    // TODO: Implement AVX2 FIR filter
+unsafe fn avx2_fir_filter(input: &[f64], coeffs: &[f64], output: &mut [f64]) -> SignalResult<()> {
+    let n = input.len();
+    let m = coeffs.len();
+
+    // Process each output sample
+    for i in 0..n {
+        let mut sum_vec = _mm256_setzero_pd();
+        let mut sum = 0.0;
+
+        // Vectorized part: process 4 coefficients at a time
+        let m_vec = (m / 4) * 4;
+        let mut j = 0;
+
+        while j < m_vec && i >= j + 3 {
+            // Load 4 coefficients
+            let coeff_vec = _mm256_loadu_pd(coeffs.as_ptr().add(j));
+
+            // Load 4 input values in reverse order (for convolution)
+            let idx0 = i - j;
+            let idx1 = i - j - 1;
+            let idx2 = i - j - 2;
+            let idx3 = i - j - 3;
+
+            let input_vec = _mm256_set_pd(
+                *input.get_unchecked(idx3),
+                *input.get_unchecked(idx2),
+                *input.get_unchecked(idx1),
+                *input.get_unchecked(idx0),
+            );
+
+            // Multiply and accumulate
+            sum_vec = _mm256_fmadd_pd(coeff_vec, input_vec, sum_vec);
+
+            j += 4;
+        }
+
+        // Horizontal sum of the vector accumulator
+        let mut sum_array = [0.0; 4];
+        _mm256_storeu_pd(sum_array.as_mut_ptr(), sum_vec);
+        sum = sum_array.iter().sum();
+
+        // Process remaining coefficients with scalar code
+        while j < m {
+            if i >= j {
+                sum += input[i - j] * coeffs[j];
+            }
+            j += 1;
+        }
+
+        output[i] = sum;
+    }
+
     Ok(())
 }
 
 #[cfg(target_arch = "x86_64")]
 #[target_feature(enable = "sse4.1")]
-unsafe fn sse_fir_filter(_input: &[f64], _coeffs: &[f64], _output: &mut [f64]) -> SignalResult<()> {
-    // TODO: Implement SSE FIR filter
+unsafe fn sse_fir_filter(input: &[f64], coeffs: &[f64], output: &mut [f64]) -> SignalResult<()> {
+    let n = input.len();
+    let m = coeffs.len();
+
+    // Process each output sample
+    for i in 0..n {
+        let mut sum_vec = _mm_setzero_pd();
+        let mut sum = 0.0;
+
+        // Vectorized part: process 2 coefficients at a time
+        let m_vec = (m / 2) * 2;
+        let mut j = 0;
+
+        while j < m_vec && i >= j + 1 {
+            // Load 2 coefficients
+            let coeff_vec = _mm_loadu_pd(coeffs.as_ptr().add(j));
+
+            // Load 2 input values in reverse order (for convolution)
+            let idx0 = i - j;
+            let idx1 = i - j - 1;
+
+            let input_vec = _mm_set_pd(*input.get_unchecked(idx1), *input.get_unchecked(idx0));
+
+            // Multiply and accumulate
+            sum_vec = _mm_add_pd(sum_vec, _mm_mul_pd(coeff_vec, input_vec));
+
+            j += 2;
+        }
+
+        // Horizontal sum of the vector accumulator
+        let mut sum_array = [0.0; 2];
+        _mm_storeu_pd(sum_array.as_mut_ptr(), sum_vec);
+        sum = sum_array.iter().sum();
+
+        // Process remaining coefficients with scalar code
+        while j < m {
+            if i >= j {
+                sum += input[i - j] * coeffs[j];
+            }
+            j += 1;
+        }
+
+        output[i] = sum;
+    }
+
     Ok(())
 }
 
 #[cfg(target_arch = "x86_64")]
 #[target_feature(enable = "avx2")]
 unsafe fn avx2_autocorrelation(
-    _signal: &[f64],
-    _autocorr: &mut [f64],
-    _max_lag: usize,
+    signal: &[f64],
+    autocorr: &mut [f64],
+    max_lag: usize,
 ) -> SignalResult<()> {
-    // TODO: Implement AVX2 autocorrelation
+    let n = signal.len();
+
+    // Compute autocorrelation for each lag
+    for lag in 0..=max_lag {
+        let valid_length = n - lag;
+        let mut sum_vec = _mm256_setzero_pd();
+        let mut sum = 0.0;
+
+        // Vectorized part: process 4 elements at a time
+        let vec_len = (valid_length / 4) * 4;
+        let mut i = 0;
+
+        while i < vec_len {
+            // Load 4 values from signal at position i
+            let sig1 = _mm256_loadu_pd(signal.as_ptr().add(i));
+
+            // Load 4 values from signal at position i + lag
+            let sig2 = _mm256_loadu_pd(signal.as_ptr().add(i + lag));
+
+            // Multiply and accumulate
+            sum_vec = _mm256_fmadd_pd(sig1, sig2, sum_vec);
+
+            i += 4;
+        }
+
+        // Horizontal sum of the vector accumulator
+        let mut sum_array = [0.0; 4];
+        _mm256_storeu_pd(sum_array.as_mut_ptr(), sum_vec);
+        sum = sum_array.iter().sum();
+
+        // Process remaining elements with scalar code
+        for i in vec_len..valid_length {
+            sum += signal[i] * signal[i + lag];
+        }
+
+        autocorr[lag] = sum;
+    }
+
     Ok(())
 }
 
 #[cfg(target_arch = "x86_64")]
 #[target_feature(enable = "sse4.1")]
 unsafe fn sse_autocorrelation(
-    _signal: &[f64],
-    _autocorr: &mut [f64],
-    _max_lag: usize,
+    signal: &[f64],
+    autocorr: &mut [f64],
+    max_lag: usize,
 ) -> SignalResult<()> {
-    // TODO: Implement SSE autocorrelation
+    let n = signal.len();
+
+    // Compute autocorrelation for each lag
+    for lag in 0..=max_lag {
+        let valid_length = n - lag;
+        let mut sum_vec = _mm_setzero_pd();
+        let mut sum = 0.0;
+
+        // Vectorized part: process 2 elements at a time
+        let vec_len = (valid_length / 2) * 2;
+        let mut i = 0;
+
+        while i < vec_len {
+            // Load 2 values from signal at position i
+            let sig1 = _mm_loadu_pd(signal.as_ptr().add(i));
+
+            // Load 2 values from signal at position i + lag
+            let sig2 = _mm_loadu_pd(signal.as_ptr().add(i + lag));
+
+            // Multiply and accumulate
+            sum_vec = _mm_add_pd(sum_vec, _mm_mul_pd(sig1, sig2));
+
+            i += 2;
+        }
+
+        // Horizontal sum of the vector accumulator
+        let mut sum_array = [0.0; 2];
+        _mm_storeu_pd(sum_array.as_mut_ptr(), sum_vec);
+        sum = sum_array.iter().sum();
+
+        // Process remaining elements with scalar code
+        for i in vec_len..valid_length {
+            sum += signal[i] * signal[i + lag];
+        }
+
+        autocorr[lag] = sum;
+    }
+
     Ok(())
 }
 
 #[cfg(target_arch = "x86_64")]
 #[target_feature(enable = "avx2")]
 unsafe fn avx2_cross_correlation(
-    _signal1: &[f64],
-    _signal2: &[f64],
-    _result: &mut [f64],
-    _mode: &str,
+    signal1: &[f64],
+    signal2: &[f64],
+    result: &mut [f64],
+    mode: &str,
 ) -> SignalResult<()> {
-    // TODO: Implement AVX2 cross-correlation
+    let n1 = signal1.len();
+    let n2 = signal2.len();
+
+    let (output_len, start_offset) = match mode {
+        "full" => (n1 + n2 - 1, 0),
+        "same" => (n1, (n2 - 1) / 2),
+        "valid" => (if n1 >= n2 { n1 - n2 + 1 } else { 0 }, n2 - 1),
+        _ => return Err(SignalError::ValueError("Invalid mode".to_string())),
+    };
+
+    if output_len == 0 {
+        return Ok(());
+    }
+
+    // Compute cross-correlation for each lag
+    for i in 0..output_len {
+        let lag = i + start_offset;
+        let mut sum_vec = _mm256_setzero_pd();
+        let mut sum = 0.0;
+
+        // Vectorized part: process 4 elements at a time
+        let vec_len = (n2 / 4) * 4;
+        let mut j = 0;
+
+        while j < vec_len {
+            // Check bounds for all 4 elements
+            let idx1_0 = lag.wrapping_sub(j);
+            let idx1_1 = lag.wrapping_sub(j + 1);
+            let idx1_2 = lag.wrapping_sub(j + 2);
+            let idx1_3 = lag.wrapping_sub(j + 3);
+
+            if idx1_0 < n1 && idx1_1 < n1 && idx1_2 < n1 && idx1_3 < n1 {
+                // Load 4 values from signal1
+                let sig1_vec = _mm256_set_pd(
+                    *signal1.get_unchecked(idx1_3),
+                    *signal1.get_unchecked(idx1_2),
+                    *signal1.get_unchecked(idx1_1),
+                    *signal1.get_unchecked(idx1_0),
+                );
+
+                // Load 4 values from signal2
+                let sig2_vec = _mm256_loadu_pd(signal2.as_ptr().add(j));
+
+                // Multiply and accumulate
+                sum_vec = _mm256_fmadd_pd(sig1_vec, sig2_vec, sum_vec);
+
+                j += 4;
+            } else {
+                break; // Fall back to scalar for boundary cases
+            }
+        }
+
+        // Horizontal sum of the vector accumulator
+        let mut sum_array = [0.0; 4];
+        _mm256_storeu_pd(sum_array.as_mut_ptr(), sum_vec);
+        sum = sum_array.iter().sum();
+
+        // Process remaining elements with scalar code
+        for j in j..n2 {
+            let idx1 = lag.wrapping_sub(j);
+            if idx1 < n1 {
+                sum += signal1[idx1] * signal2[j];
+            }
+        }
+
+        result[i] = sum;
+    }
+
     Ok(())
 }
 
 #[cfg(target_arch = "x86_64")]
 #[target_feature(enable = "sse4.1")]
 unsafe fn sse_cross_correlation(
-    _signal1: &[f64],
-    _signal2: &[f64],
-    _result: &mut [f64],
-    _mode: &str,
+    signal1: &[f64],
+    signal2: &[f64],
+    result: &mut [f64],
+    mode: &str,
 ) -> SignalResult<()> {
-    // TODO: Implement SSE cross-correlation
+    let n1 = signal1.len();
+    let n2 = signal2.len();
+
+    let (output_len, start_offset) = match mode {
+        "full" => (n1 + n2 - 1, 0),
+        "same" => (n1, (n2 - 1) / 2),
+        "valid" => (if n1 >= n2 { n1 - n2 + 1 } else { 0 }, n2 - 1),
+        _ => return Err(SignalError::ValueError("Invalid mode".to_string())),
+    };
+
+    if output_len == 0 {
+        return Ok(());
+    }
+
+    // Compute cross-correlation for each lag
+    for i in 0..output_len {
+        let lag = i + start_offset;
+        let mut sum_vec = _mm_setzero_pd();
+        let mut sum = 0.0;
+
+        // Vectorized part: process 2 elements at a time
+        let vec_len = (n2 / 2) * 2;
+        let mut j = 0;
+
+        while j < vec_len {
+            // Check bounds for both elements
+            let idx1_0 = lag.wrapping_sub(j);
+            let idx1_1 = lag.wrapping_sub(j + 1);
+
+            if idx1_0 < n1 && idx1_1 < n1 {
+                // Load 2 values from signal1
+                let sig1_vec = _mm_set_pd(
+                    *signal1.get_unchecked(idx1_1),
+                    *signal1.get_unchecked(idx1_0),
+                );
+
+                // Load 2 values from signal2
+                let sig2_vec = _mm_loadu_pd(signal2.as_ptr().add(j));
+
+                // Multiply and accumulate
+                sum_vec = _mm_add_pd(sum_vec, _mm_mul_pd(sig1_vec, sig2_vec));
+
+                j += 2;
+            } else {
+                break; // Fall back to scalar for boundary cases
+            }
+        }
+
+        // Horizontal sum of the vector accumulator
+        let mut sum_array = [0.0; 2];
+        _mm_storeu_pd(sum_array.as_mut_ptr(), sum_vec);
+        sum = sum_array.iter().sum();
+
+        // Process remaining elements with scalar code
+        for j in j..n2 {
+            let idx1 = lag.wrapping_sub(j);
+            if idx1 < n1 {
+                sum += signal1[idx1] * signal2[j];
+            }
+        }
+
+        result[i] = sum;
+    }
+
     Ok(())
 }
 
 #[cfg(target_arch = "x86_64")]
 #[target_feature(enable = "avx2")]
 unsafe fn avx2_complex_butterfly(
-    _data: &mut [Complex64],
-    _twiddles: &[Complex64],
+    data: &mut [Complex64],
+    twiddles: &[Complex64],
 ) -> SignalResult<()> {
-    // TODO: Implement AVX2 complex butterfly
+    let n = data.len();
+    let half_n = n / 2;
+
+    // Process pairs of complex numbers (2 at a time = 4 f64 values)
+    let mut i = 0;
+    while i + 1 < half_n {
+        // Load two complex numbers from upper half: data[i + half_n] and data[i + half_n + 1]
+        let upper_re_im = _mm256_set_pd(
+            data[i + half_n + 1].im,
+            data[i + half_n + 1].re,
+            data[i + half_n].im,
+            data[i + half_n].re,
+        );
+
+        // Load two twiddle factors
+        let twiddle_re_im = _mm256_set_pd(
+            twiddles[i + 1].im,
+            twiddles[i + 1].re,
+            twiddles[i].im,
+            twiddles[i].re,
+        );
+
+        // Complex multiplication: (a + bi)(c + di) = (ac - bd) + (ad + bc)i
+        // Duplicate real and imaginary parts for multiplication
+        let twiddle_re = _mm256_set_pd(
+            twiddles[i + 1].re,
+            twiddles[i + 1].re,
+            twiddles[i].re,
+            twiddles[i].re,
+        );
+        let twiddle_im = _mm256_set_pd(
+            twiddles[i + 1].im,
+            twiddles[i + 1].im,
+            twiddles[i].im,
+            twiddles[i].im,
+        );
+
+        // t_real = upper_re * twiddle_re - upper_im * twiddle_im
+        // t_imag = upper_re * twiddle_im + upper_im * twiddle_re
+        let upper_re = _mm256_set_pd(
+            data[i + half_n + 1].re,
+            data[i + half_n + 1].re,
+            data[i + half_n].re,
+            data[i + half_n].re,
+        );
+        let upper_im = _mm256_set_pd(
+            data[i + half_n + 1].im,
+            data[i + half_n + 1].im,
+            data[i + half_n].im,
+            data[i + half_n].im,
+        );
+
+        let t_re_part1 = _mm256_mul_pd(upper_re, twiddle_re);
+        let t_re_part2 = _mm256_mul_pd(upper_im, twiddle_im);
+        let t_im_part1 = _mm256_mul_pd(upper_re, twiddle_im);
+        let t_im_part2 = _mm256_mul_pd(upper_im, twiddle_re);
+
+        // Extract scalars for butterfly operation
+        let mut t_re_arr = [0.0; 4];
+        let mut t_im_arr = [0.0; 4];
+        _mm256_storeu_pd(t_re_arr.as_mut_ptr(), _mm256_sub_pd(t_re_part1, t_re_part2));
+        _mm256_storeu_pd(t_im_arr.as_mut_ptr(), _mm256_add_pd(t_im_part1, t_im_part2));
+
+        let t0 = Complex64::new(t_re_arr[0], t_im_arr[0]);
+        let t1 = Complex64::new(t_re_arr[2], t_im_arr[2]);
+
+        // Butterfly: u = data[i], data[i] = u + t, data[i + half_n] = u - t
+        let u0 = data[i];
+        let u1 = data[i + 1];
+
+        data[i] = u0 + t0;
+        data[i + half_n] = u0 - t0;
+        data[i + 1] = u1 + t1;
+        data[i + half_n + 1] = u1 - t1;
+
+        i += 2;
+    }
+
+    // Handle remaining element if odd
+    while i < half_n {
+        let t = data[i + half_n] * twiddles[i];
+        let u = data[i];
+        data[i] = u + t;
+        data[i + half_n] = u - t;
+        i += 1;
+    }
+
     Ok(())
 }
 
 #[cfg(target_arch = "x86_64")]
 #[target_feature(enable = "sse4.1")]
 unsafe fn sse_complex_butterfly(
-    _data: &mut [Complex64],
-    _twiddles: &[Complex64],
+    data: &mut [Complex64],
+    twiddles: &[Complex64],
 ) -> SignalResult<()> {
-    // TODO: Implement SSE complex butterfly
+    let n = data.len();
+    let half_n = n / 2;
+
+    // Process one complex number at a time (2 f64 values)
+    for i in 0..half_n {
+        // Load complex number from upper half: data[i + half_n]
+        let upper = _mm_set_pd(data[i + half_n].im, data[i + half_n].re);
+
+        // Load twiddle factor
+        let twiddle = _mm_set_pd(twiddles[i].im, twiddles[i].re);
+
+        // Complex multiplication: (a + bi)(c + di) = (ac - bd) + (ad + bc)i
+        let upper_re = _mm_set1_pd(data[i + half_n].re);
+        let upper_im = _mm_set1_pd(data[i + half_n].im);
+        let twiddle_re = _mm_set1_pd(twiddles[i].re);
+        let twiddle_im = _mm_set1_pd(twiddles[i].im);
+
+        // t_real = upper_re * twiddle_re - upper_im * twiddle_im
+        let t_re = _mm_sub_sd(
+            _mm_mul_sd(upper_re, twiddle_re),
+            _mm_mul_sd(upper_im, twiddle_im),
+        );
+
+        // t_imag = upper_re * twiddle_im + upper_im * twiddle_re
+        let t_im = _mm_add_sd(
+            _mm_mul_sd(upper_re, twiddle_im),
+            _mm_mul_sd(upper_im, twiddle_re),
+        );
+
+        // Extract results
+        let mut t_arr = [0.0; 2];
+        _mm_storeu_pd(
+            t_arr.as_mut_ptr(),
+            _mm_set_pd(_mm_cvtsd_f64(t_im), _mm_cvtsd_f64(t_re)),
+        );
+
+        let t = Complex64::new(t_arr[0], t_arr[1]);
+
+        // Butterfly: u = data[i], data[i] = u + t, data[i + half_n] = u - t
+        let u = data[i];
+        data[i] = u + t;
+        data[i + half_n] = u - t;
+    }
+
     Ok(())
 }
 
 #[cfg(target_arch = "x86_64")]
 #[target_feature(enable = "avx512f")]
 unsafe fn avx512_apply_window(
-    _signal: &[f64],
-    _window: &[f64],
-    _output: &mut [f64],
+    signal: &[f64],
+    window: &[f64],
+    output: &mut [f64],
 ) -> SignalResult<()> {
-    // TODO: Implement AVX512 window application
+    let n = signal.len();
+
+    // Process 8 elements at a time with AVX-512
+    let vec_len = (n / 8) * 8;
+    let mut i = 0;
+
+    while i < vec_len {
+        // Load 8 signal values
+        let sig = _mm512_loadu_pd(signal.as_ptr().add(i));
+
+        // Load 8 window values
+        let win = _mm512_loadu_pd(window.as_ptr().add(i));
+
+        // Multiply
+        let result = _mm512_mul_pd(sig, win);
+
+        // Store
+        _mm512_storeu_pd(output.as_mut_ptr().add(i), result);
+
+        i += 8;
+    }
+
+    // Process remaining elements with scalar code
+    for i in vec_len..n {
+        output[i] = signal[i] * window[i];
+    }
+
     Ok(())
 }
 
 #[cfg(target_arch = "x86_64")]
 #[target_feature(enable = "avx2")]
 unsafe fn avx2_apply_window(
-    _signal: &[f64],
-    _window: &[f64],
-    _output: &mut [f64],
+    signal: &[f64],
+    window: &[f64],
+    output: &mut [f64],
 ) -> SignalResult<()> {
-    // TODO: Implement AVX2 window application
+    let n = signal.len();
+
+    // Process 4 elements at a time with AVX2
+    let vec_len = (n / 4) * 4;
+    let mut i = 0;
+
+    while i < vec_len {
+        // Load 4 signal values
+        let sig = _mm256_loadu_pd(signal.as_ptr().add(i));
+
+        // Load 4 window values
+        let win = _mm256_loadu_pd(window.as_ptr().add(i));
+
+        // Multiply
+        let result = _mm256_mul_pd(sig, win);
+
+        // Store
+        _mm256_storeu_pd(output.as_mut_ptr().add(i), result);
+
+        i += 4;
+    }
+
+    // Process remaining elements with scalar code
+    for i in vec_len..n {
+        output[i] = signal[i] * window[i];
+    }
+
     Ok(())
 }
 
 #[cfg(target_arch = "x86_64")]
 #[target_feature(enable = "sse4.1")]
-unsafe fn sse_apply_window(
-    _signal: &[f64],
-    _window: &[f64],
-    _output: &mut [f64],
-) -> SignalResult<()> {
-    // TODO: Implement SSE window application
+unsafe fn sse_apply_window(signal: &[f64], window: &[f64], output: &mut [f64]) -> SignalResult<()> {
+    let n = signal.len();
+
+    // Process 2 elements at a time with SSE
+    let vec_len = (n / 2) * 2;
+    let mut i = 0;
+
+    while i < vec_len {
+        // Load 2 signal values
+        let sig = _mm_loadu_pd(signal.as_ptr().add(i));
+
+        // Load 2 window values
+        let win = _mm_loadu_pd(window.as_ptr().add(i));
+
+        // Multiply
+        let result = _mm_mul_pd(sig, win);
+
+        // Store
+        _mm_storeu_pd(output.as_mut_ptr().add(i), result);
+
+        i += 2;
+    }
+
+    // Process remaining element with scalar code
+    for i in vec_len..n {
+        output[i] = signal[i] * window[i];
+    }
+
     Ok(())
 }
 
 #[cfg(target_arch = "x86_64")]
 #[target_feature(enable = "avx2")]
-unsafe fn scalar_zero_crossings(_signal: &[f64]) -> SignalResult<usize> {
-    // TODO: Implement AVX2 zero crossing detection
-    Ok(0)
+unsafe fn avx2_zero_crossings(signal: &[f64]) -> SignalResult<usize> {
+    let n = signal.len();
+    if n < 2 {
+        return Ok(0);
+    }
+
+    let mut crossings = 0usize;
+    let zero_vec = _mm256_setzero_pd();
+
+    // Process 4 pairs at a time (need consecutive elements)
+    let vec_len = if n >= 5 { n - 4 } else { 0 };
+    let mut i = 0;
+
+    while i < vec_len {
+        // Load 4 consecutive values: signal[i], signal[i+1], signal[i+2], signal[i+3]
+        let curr = _mm256_loadu_pd(signal.as_ptr().add(i));
+
+        // Load next 4 values: signal[i+1], signal[i+2], signal[i+3], signal[i+4]
+        let next = _mm256_loadu_pd(signal.as_ptr().add(i + 1));
+
+        // Compare with zero to get signs (result is all 1s if true, all 0s if false)
+        let curr_sign = _mm256_cmp_pd(curr, zero_vec, _CMP_GE_OQ); // >= 0
+        let next_sign = _mm256_cmp_pd(next, zero_vec, _CMP_GE_OQ); // >= 0
+
+        // XOR to find sign changes (zero crossing occurs when signs differ)
+        let sign_change = _mm256_xor_pd(curr_sign, next_sign);
+
+        // Extract bits and count crossings
+        let mask = _mm256_movemask_pd(sign_change);
+
+        // Count set bits (each bit represents a potential zero crossing)
+        crossings += mask.count_ones() as usize;
+
+        i += 4;
+    }
+
+    // Process remaining elements with scalar code
+    for i in i..(n - 1) {
+        if (signal[i] >= 0.0 && signal[i + 1] < 0.0) || (signal[i] < 0.0 && signal[i + 1] >= 0.0) {
+            crossings += 1;
+        }
+    }
+
+    Ok(crossings)
 }

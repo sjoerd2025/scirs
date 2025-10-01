@@ -1,16 +1,51 @@
 #![allow(deprecated)]
-//! Input/Output utilities module for SciRS2
+//! # SciRS2 IO - Scientific Data Input/Output
 //!
-//! This module provides functionality for reading and writing various file formats
-//! commonly used in scientific computing, including MATLAB, WAV, ARFF, and CSV files.
+//! **scirs2-io** provides comprehensive file I/O capabilities for scientific computing,
+//! supporting MATLAB, NetCDF, HDF5, CSV, WAV, image formats, and more, with streaming,
+//! compression, async support, and database connectivity.
 //!
-//! ## Features
+//! ## 🎯 Key Features
 //!
-//! - **MATLAB Support**: Read and write MATLAB `.mat` files
-//! - **WAV File Support**: Read and write WAV audio files
-//! - **ARFF Support**: Read and write Weka ARFF files
-//! - **CSV Support**: Read and write CSV files with flexible configuration options
-//! - **Error Handling**: Robust error handling with detailed error information
+//! - **SciPy Compatibility**: Similar to `scipy.io` for MATLAB, WAV, ARFF files
+//! - **Multiple Formats**: MATLAB (.mat), NetCDF, HDF5, CSV, WAV, images (PNG, JPEG, TIFF)
+//! - **Matrix Market**: Sparse matrix exchange format
+//! - **Streaming I/O**: Memory-efficient reading/writing of large datasets
+//! - **Compression**: GZIP, ZSTD, LZ4, BZIP2 for data compression
+//! - **Async I/O**: Non-blocking operations with tokio
+//! - **Database**: SQL/NoSQL connectivity (PostgreSQL, MongoDB, InfluxDB)
+//!
+//! ## 📦 Module Overview
+//!
+//! | SciRS2 Module | SciPy Equivalent | Description |
+//! |---------------|------------------|-------------|
+//! | `matlab` | `scipy.io.loadmat`, `savemat` | MATLAB .mat file I/O |
+//! | `wavfile` | `scipy.io.wavfile` | WAV audio file I/O |
+//! | `netcdf` | `scipy.io.netcdf` | NetCDF scientific data format |
+//! | `matrix_market` | `scipy.io.mmread`, `mmwrite` | Matrix Market sparse format |
+//! | `csv` | - | CSV with type conversion |
+//! | `image` | - | PNG, JPEG, BMP, TIFF image I/O |
+//!
+//! ## 🚀 Quick Start
+//!
+//! ```toml
+//! [dependencies]
+//! scirs2-io = "0.1.0-beta.4"
+//! ```
+//!
+//! ```rust,no_run
+//! use scirs2_io::csv::{read_csv, CsvReaderConfig};
+//!
+//! // Read CSV file
+//! let config = CsvReaderConfig {
+//!     has_header: true,
+//!     delimiter: ',',
+//!     ..Default::default()
+//! };
+//! let (headers, data) = read_csv("data.csv", Some(config)).unwrap();
+//! ```
+//!
+//! ## 🔒 Version: 0.1.0-beta.4 (October 01, 2025)
 //!
 //! ## Modules
 //!
@@ -285,6 +320,34 @@ pub mod neural_adaptive_io;
 /// - Virtual arrays combining multiple data sources
 /// - Sliding window iterators for streaming operations
 pub mod out_of_core;
+/// Apache Parquet columnar file format module
+///
+/// Provides functionality for reading and writing Apache Parquet files:
+/// - Efficient columnar storage for large datasets
+/// - Multiple compression codecs (Snappy, Gzip, LZ4, ZSTD, Brotli)
+/// - Schema inference and validation
+/// - Column projection for selective reading
+/// - Memory-efficient chunked reading for large files
+/// - Integration with Apache Arrow for high-performance I/O
+/// - Python interoperability (Pandas, Polars, PyArrow compatible)
+///
+/// # Examples
+///
+/// ```rust,no_run
+/// use scirs2_io::parquet::{read_parquet, write_parquet, ParquetWriteOptions};
+/// use ndarray::Array1;
+///
+/// // Write data to Parquet
+/// let data = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0]);
+/// write_parquet("data.parquet", &data, Default::default())?;
+///
+/// // Read data from Parquet
+/// let loaded = read_parquet("data.parquet")?;
+/// println!("Loaded {} rows", loaded.num_rows());
+/// # Ok::<(), scirs2_io::error::IoError>(())
+/// ```
+#[cfg(feature = "parquet")]
+pub mod parquet;
 /// Data pipeline APIs
 ///
 /// Provides a flexible framework for building data processing pipelines:

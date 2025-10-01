@@ -105,7 +105,7 @@ fn bench_simd_normalization(c: &mut Criterion) {
                 |b, data| {
                     b.iter(|| {
                         let _result =
-                            simd_normalize_array(black_box(data), NormalizationMethod::MinMax, 0);
+                            simd_normalizearray(black_box(data), NormalizationMethod::MinMax, 0);
                     });
                 },
             );
@@ -117,7 +117,7 @@ fn bench_simd_normalization(c: &mut Criterion) {
                 |b, data| {
                     b.iter(|| {
                         let _result =
-                            simd_normalize_array(black_box(data), NormalizationMethod::ZScore, 0);
+                            simd_normalizearray(black_box(data), NormalizationMethod::ZScore, 0);
                     });
                 },
             );

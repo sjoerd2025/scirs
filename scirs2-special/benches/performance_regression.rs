@@ -343,12 +343,11 @@ fn acceleration_benchmarks(c: &mut Criterion) {
     group.measurement_time(Duration::from_secs(10));
 
     // Test data for SIMD benchmarks
-    let f32_data: Vec<f32> = (0..LARGE_ARRAY_SIZE)
-        .map(|i| 1.0 + i as f32 * 0.01)
-        .collect();
-    let f64_data: Vec<f64> = (0..LARGE_ARRAY_SIZE)
-        .map(|i| 1.0 + i as f64 * 0.01)
-        .collect();
+    use scirs2_core::ndarray::Array1;
+    let f32_data: Array1<f32> =
+        Array1::from_iter((0..LARGE_ARRAY_SIZE).map(|i| 1.0 + i as f32 * 0.01));
+    let f64_data: Array1<f64> =
+        Array1::from_iter((0..LARGE_ARRAY_SIZE).map(|i| 1.0 + i as f64 * 0.01));
 
     #[cfg(feature = "simd")]
     {
@@ -356,21 +355,21 @@ fn acceleration_benchmarks(c: &mut Criterion) {
 
         // SIMD gamma benchmarks
         group.bench_function("gamma_f32_simd", |b| {
-            b.iter(|| gamma_f32_simd(black_box(&f32_data)))
+            b.iter(|| gamma_f32_simd(black_box(&f32_data.view())))
         });
 
         group.bench_function("gamma_f64_simd", |b| {
-            b.iter(|| gamma_f64_simd(black_box(&f64_data)))
+            b.iter(|| gamma_f64_simd(black_box(&f64_data.view())))
         });
 
         // SIMD error function benchmarks
         group.bench_function("erf_f32_simd", |b| {
-            b.iter(|| erf_f32_simd(black_box(&f32_data)))
+            b.iter(|| erf_f32_simd(black_box(&f32_data.view())))
         });
 
         // SIMD Bessel function benchmarks
         group.bench_function("j0_f32_simd", |b| {
-            b.iter(|| j0_f32_simd(black_box(&f32_data)))
+            b.iter(|| j0_f32_simd(black_box(&f32_data.view())))
         });
     }
 
@@ -380,12 +379,12 @@ fn acceleration_benchmarks(c: &mut Criterion) {
 
         // Parallel gamma benchmarks
         group.bench_function("gamma_f64_parallel", |b| {
-            b.iter(|| gamma_f64_parallel(black_box(&f64_data)))
+            b.iter(|| gamma_f64_parallel(black_box(&f64_data.view())))
         });
 
         // Parallel Bessel function benchmarks
         group.bench_function("j0_f64_parallel", |b| {
-            b.iter(|| j0_f64_parallel(black_box(&f64_data)))
+            b.iter(|| j0_f64_parallel(black_box(&f64_data.view())))
         });
     }
 
@@ -393,12 +392,12 @@ fn acceleration_benchmarks(c: &mut Criterion) {
     {
         // Combined SIMD+Parallel benchmarks
         group.bench_function("gamma_f32_simd_parallel", |b| {
-            b.iter(|| gamma_f32_simd_parallel(black_box(&f32_data)))
+            b.iter(|| gamma_f32_simd_parallel(black_box(&f32_data.view())))
         });
 
         // Adaptive processing benchmark
         group.bench_function("adaptive_gamma_processing", |b| {
-            b.iter(|| adaptive_gamma_processing(black_box(&f64_data)))
+            b.iter(|| adaptive_gamma_processing(black_box(&f64_data.view())))
         });
     }
 

@@ -95,23 +95,12 @@ pub use self::vector::{get_quantized_vector_1d_i8, QuantizedData1D, QuantizedVec
 
 // Conversion functions
 pub use self::conversions::{
-    dequantize_matrix,
-    // TODO: Add these when implemented:
-    // quantize_vector,
-    // dequantize_vector,
-    // fake_quantize,
-    // fake_quantize_vector,
-    quantize_matrix,
-    quantize_matrix_per_channel,
+    dequantize_matrix, dequantize_vector_public as dequantize_vector, fake_quantize,
+    fake_quantize_vector, quantize_matrix, quantize_matrix_per_channel, quantize_vector,
 };
 
 // Operation functions
-pub use self::operations::{
-    quantized_matmul,
-    // TODO: Add these when implemented:
-    // quantized_matvec,
-    // quantized_dot,
-};
+pub use self::operations::{quantized_dot, quantized_matmul, quantized_matvec};
 
 // Re-export submodule public APIs
 pub use calibration::*;

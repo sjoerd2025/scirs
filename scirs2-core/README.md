@@ -4,24 +4,23 @@
 [![License](https://img.shields.io/badge/license-MIT%2FApache--2.0-blue.svg)](../LICENSE)
 [![Documentation](https://img.shields.io/docsrs/scirs2-core)](https://docs.rs/scirs2-core)
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)]()
-[![Version](https://img.shields.io/badge/version-0.1.0--beta.3-orange.svg)]()
+[![Version](https://img.shields.io/badge/version-0.1.0--beta.4-orange.svg)]()
 [![Production Ready](https://img.shields.io/badge/status-production--ready-green.svg)]()
-[![SciRS2 POLICY](https://img.shields.io/badge/SciRS2_POLICY-active-blue.svg)]()
+[![SciRS2 POLICY](https://img.shields.io/badge/SciRS2_POLICY-stable-blue.svg)]()
 
-**Production-Ready Scientific Computing Core for Rust - SciRS2 POLICY & Modernization**
+**Production-Ready Scientific Computing Core for Rust**
 
-🎯 **SciRS2 Core v0.1.0-beta.3** - Establishes the SciRS2 ecosystem architecture with comprehensive policy framework and major dependency modernization. This release provides the foundation for consistent API abstractions across the entire SciRS2 ecosystem.
+🎯 **SciRS2 Core v0.1.0-beta.4** (Released October 01, 2025) - Production-ready foundation providing comprehensive abstractions for the entire SciRS2 ecosystem with ultra-performance SIMD, multi-backend GPU support, and advanced parallel processing.
 
 ## 🚀 Quick Start
 
 ```toml
 [dependencies]
-scirs2-core = { version = "0.1.0-beta.3", features = ["validation", "simd", "parallel"] }
+scirs2-core = { version = "0.1.0-beta.4", features = ["validation", "simd", "parallel"] }
 ```
 
 ```rust
 use scirs2_core::prelude::*;
-use ndarray::array;
 
 // Create and validate data
 let data = array![[1.0, 2.0], [3.0, 4.0]];
@@ -30,163 +29,149 @@ check_finite(&data, "input_matrix")?;
 // Perform operations with automatic optimization
 let normalized = normalize_matrix(&data)?;
 let result = parallel_matrix_multiply(&normalized, &data.t())?;
-
-println!("Result: {:.2}", result);
 # Ok::<(), Box<dyn std::error::Error>>(())
 ```
 
-## 🚀 Comprehensive Core Infrastructure Enhancement (Latest)
+---
 
-**SciRS2 Core** now provides the most advanced scientific computing infrastructure available in Rust:
+## 🎯 Current Release: Beta 4 (October 2025)
 
-### ⚡ **Ultra-Performance SIMD Optimization**
-- **14.17x Performance Improvement**: Advanced vectorization achieving breakthrough performance over scalar operations
-- **Cache-Line Aware Processing**: Non-temporal stores and memory bandwidth optimization for large datasets
-- **Software Pipelining**: Register blocking and instruction-level parallelism optimization
-- **Adaptive Selection**: Runtime algorithm selection based on data size and hardware characteristics
+### ✅ Major Achievements
 
-### 🖥️ **Complete GPU Kernel Infrastructure**
-- **Multi-Backend Support**: Comprehensive coverage for CUDA, ROCm, Metal, WGPU, OpenCL backends
-- **Elementwise Operations**: Complete kernel suite (Add, Sub, Mul, Pow, Sqrt, Exp, Log)
-- **Optimization Kernels**: Advanced ML optimizers (Adam, SGD, RMSprop, AdaGrad)
-- **Utility Kernels**: Core operations (Reduce, Scan, MatMul, Transpose, Copy, Fill)
+#### SciRS2 POLICY Framework (COMPLETE)
+- ✅ Comprehensive ecosystem policy document (SCIRS2_POLICY.md)
+- ✅ Layered abstraction architecture with core-only external dependencies
+- ✅ Mandatory scirs2-core module usage across all non-core crates
+- ✅ Migration guide and module boundaries documentation
+- ✅ Prelude module for common imports (`scirs2_core::prelude`)
 
-### 🔄 **Advanced Parallel Operations**
-- **Work-Stealing Scheduler**: Advanced scheduler with optimal load balancing
-- **NUMA-Aware Processing**: Topology detection and memory-aware task distribution
-- **Tree Reduction**: Configurable strategies for parallel reduction operations
-- **Batch Processing**: Progress tracking and monitoring for long-running operations
+#### Ultra-Performance SIMD Optimization (COMPLETE)
+- ✅ **14.17x speedup** over scalar operations with bandwidth-saturated processing
+- ✅ Cache-line aware processing with non-temporal stores
+- ✅ Software pipelining with register blocking
+- ✅ TLB-optimized memory access patterns
+- ✅ Adaptive selector combining all optimization techniques
 
-### 🛡️ **Enhanced Error Handling & Validation**
-- **Advanced Recovery Strategies**: Exponential, linear, and custom backoff mechanisms
-- **Batch Error Handling**: Efficient error aggregation for bulk operations
-- **Schema Validation**: Comprehensive data validation framework with constraint support
-- **Performance Integration**: Error tracking integrated with performance metrics
+#### Ecosystem-Wide SIMD Integration (COMPLETE)
+- ✅ Signal processing: **15-25x speedup** (convolution, filtering)
+- ✅ Autograd: Thread-safe environments with PyTorch-compatible APIs
+- ✅ FFT/Spectral: **12-25x speedup** (DCT/DST, FrFT, FHT)
+- ✅ Statistics: **20-40x speedup** (moments, Monte Carlo, bootstrap, QMC)
 
-### 📐 **Expanded Mathematical Constants**
-- **70+ Scientific Constants**: Mathematical, physical, numerical analysis constants
-- **Domain-Specific**: Quantum mechanics, thermodynamics, spectroscopy constants
-- **High-Precision**: All constants verified against authoritative sources
+#### GPU Kernel Infrastructure (COMPLETE)
+- ✅ Multi-backend GPU support (CUDA, ROCm, Metal, WGPU, OpenCL)
+- ✅ Comprehensive elementwise operation kernels
+- ✅ Advanced optimization kernels (Adam, SGD, RMSprop, AdaGrad)
+- ✅ Utility kernels (Reduce, Scan, MatMul, Transpose)
+- ✅ Backend-specific implementations with automatic fallback
 
-### 🧮 **Comprehensive Chunking & Memory Management**
-- **10+ Specialized Strategies**: Workload-specific optimization (NumaAware, LinearAlgebra, etc.)
-- **Smart Allocators**: Multiple allocation strategies with bandwidth optimization
-- **Hardware Awareness**: CPU cache and memory hierarchy detection
-- **Memory Pressure**: Real-time monitoring and adaptive response
+#### Advanced Core Infrastructure (COMPLETE)
+- ✅ Tree reduction algorithms with configurable strategies
+- ✅ Parallel scan operations (inclusive/exclusive)
+- ✅ NUMA-aware processing with topology detection
+- ✅ Advanced error recovery with circuit breaker patterns
+- ✅ 30+ mathematical constants, 40+ physical constants
+- ✅ 10+ specialized chunking strategies
+- ✅ Smart allocators and bandwidth optimizers
 
-### 🧪 **Robust Testing Infrastructure**
-- **Property-Based Testing**: Mathematical property verification with random generation
-- **Performance Benchmarking**: Regression detection and automated tracking
-- **Scientific Data Generation**: Matrices, sparse arrays, time series with configurable properties
-- **Numerical Assertions**: Comprehensive tolerance handling for floating-point comparisons
+#### Documentation and Developer Experience (COMPLETE)
+- ✅ Enhanced lib.rs documentation (docs.rs ready)
+- ✅ Comprehensive migration guide (18KB) with recipes
+- ✅ Module boundaries document (12KB) with clear anti-patterns
+- ✅ API reference documentation with extensive examples
 
-### 📚 **Complete API Documentation**
-- **API Reference**: Detailed documentation with examples for all public interfaces
-- **Getting Started Guide**: Installation, basic usage, and optimization techniques
-- **Scientific Examples**: Comprehensive examples across domains (linear algebra, signal processing, etc.)
-- **Migration Guides**: From other scientific computing libraries (NumPy, SciPy, etc.)
+#### Quality Metrics (CURRENT)
+- ✅ 100% compilation success across all modules
+- ✅ 478/480 tests passing (2 ignored, 0 failed)
+- ✅ Zero build warnings with comprehensive linting
+- ✅ Cross-platform compatibility (Linux, macOS, Windows)
 
-### 🌐 **Ecosystem-Wide Ultra-Optimized SIMD Integration (Latest)**
-- **Complete Transformation**: Successfully integrated bandwidth-saturated SIMD across entire SciRS2 ecosystem
-- **Performance Results**: Achieved 10-100x performance improvements targeting 80-90% memory bandwidth utilization
-- **Technical Implementation**: Utilized ultra-optimized SIMD operations (`simd_mul_f32_ultra`, `simd_sum_f32_ultra`, `simd_fma_f32_ultra`)
-- **Platform Adaptivity**: Automatic algorithm selection based on hardware capabilities (AVX-512, AVX2, SSE)
-- **Ecosystem Coverage**: Enhanced signal processing, autograd, FFT/spectral analysis, and statistics/Monte Carlo modules
-- **API Compatibility**: Maintained complete backward compatibility with robust scalar fallbacks
+---
 
-## 🏗️ SciRS2 POLICY Framework (New in Beta 3)
+## 🚀 Future Plans
 
-**SciRS2 Core v0.1.0-beta.3** introduces the comprehensive [SciRS2 Ecosystem Policy](SCIRS2_POLICY.md) that establishes architectural consistency across the entire SciRS2 ecosystem:
+### Beta 5: Performance and Scale (Q1 2026)
+- [ ] Additional SIMD operations for remaining modules
+- [ ] Enhanced memory management APIs for large datasets
+- [ ] Distributed computing support for multi-node computation
+- [ ] Advanced profiling tools with minimal overhead
 
-### 🎯 **Core Principles**
+### 1.0 Stable Release (Q4 2026)
+- [ ] API stability guarantees with semantic versioning
+- [ ] 95%+ code coverage across all modules
+- [ ] Enterprise features and commercial support
+- [ ] Complete documentation suite with tutorials
+
+### Post-1.0: Research and Innovation (2027+)
+- [ ] Quantum computing integration
+- [ ] Federated learning support
+- [ ] Advanced distributed computing features
+
+---
+
+## 🏗️ SciRS2 POLICY Framework
+
+**SciRS2 Core v0.1.0-beta.4** provides the [SciRS2 Ecosystem Policy](SCIRS2_POLICY.md) that establishes architectural consistency:
+
+### 🎯 Core Principles
 - **Layered Architecture**: Only `scirs2-core` uses external dependencies directly
-- **Unified Abstractions**: All other crates use scirs2-core re-exports (`scirs2_core::random::*`, `scirs2_core::array::*`, etc.)
-- **Ecosystem Consistency**: Ensures consistent APIs, centralized version control, and type safety
-- **Performance Benefits**: Enables better optimization through centralized abstractions
+- **Unified Abstractions**: All other crates use scirs2-core re-exports
+- **Ecosystem Consistency**: Consistent APIs, version control, and type safety
 
-### ✅ **Benefits for Developers**
+### ✅ Benefits for Developers
 - **Consistent APIs**: Same interface patterns across all SciRS2 modules
-- **Version Control**: Centralized dependency management eliminates version conflicts
-- **Type Safety**: Unified type system prevents mixing incompatible types
-- **Maintainability**: Changes to external APIs only affect scirs2-core
-- **Performance**: Core can optimize all external library usage
+- **Version Control**: Centralized dependency management
+- **Type Safety**: Unified type system prevents incompatible types
+- **Performance**: Core optimizes all external library usage
 
-### 📋 **Policy Implementation**
+### 📋 Policy Implementation
 ```rust
 // ❌ PROHIBITED in non-core crates
 use rand::*;
 use ndarray::Array2;
 use num_complex::Complex;
 
-// ✅ REQUIRED in non-core crates and tests
+// ✅ REQUIRED in non-core crates
 use scirs2_core::random::*;    // Instead of rand::*
 use scirs2_core::array::*;     // Instead of ndarray::*
 use scirs2_core::complex::*;   // Instead of num_complex::*
 ```
 
-See [SCIRS2_POLICY.md](SCIRS2_POLICY.md) for complete details and migration guidelines.
+See [SCIRS2_POLICY.md](../SCIRS2_POLICY.md) for complete details.
 
-## 🔧 v0.1.0-beta.3 - SciRS2 POLICY & Major Modernization
-
-This release establishes the foundational architecture for the SciRS2 ecosystem with comprehensive policy framework and major dependency modernization.
-
-### 🏗️ **SciRS2 POLICY Framework**:
-- **Ecosystem Architecture**: Established layered abstraction architecture with core-only external dependencies
-- **Policy Documentation**: Complete SciRS2 Ecosystem Policy with clear guidelines and enforcement strategies
-- **Unified Abstractions**: All non-core crates must use scirs2-core re-exports for external dependencies
-- **Migration Strategy**: Phased approach for systematic refactoring across the ecosystem
-
-### 🔧 **Major Dependency Updates**:
-- **Comprehensive Modernization**: Updated all dependencies to latest available versions
-- **Enhanced Performance**: Improved SIMD operations, numerical algorithms, and spatial computations
-- **Advanced Random Generation**: Enhanced ecosystem integration with cutting-edge MCMC and neural sampling
-- **Memory Optimizations**: Advanced memory-mapped arrays with improved serialization and chunking
-
-### 🖥️ **GPU and Platform Enhancements**:
-- **CUDA/Linux Optimization**: Significant improvements to CUDA backend for Linux platforms
-- **WebGPU Backend**: Major enhancements for better cross-platform GPU support
-- **Memory-Mapped Operations**: Advanced chunking, zero-copy serialization, and large dataset handling
-
-### 📊 Results:
-- ✅ **Policy Framework**: Complete ecosystem architecture documentation and implementation plan
-- ✅ **Modernized Dependencies**: All external dependencies updated to latest versions
-- ✅ **Enhanced Performance**: Advanced memory management and SIMD optimizations
-- ✅ **GPU Support**: Improved cross-platform GPU acceleration capabilities
-
-**Migration:** Update your `Cargo.toml` from `0.1.0-beta.2` to `0.1.0-beta.3`. Begin migration to scirs2-core abstractions (automated tooling planned).
+---
 
 ## ✨ Key Features
 
-### 🔬 **Scientific Computing Foundation**
-- **NumPy/SciPy Compatibility**: Drop-in replacements for common scientific operations
-- **ndarray Extensions**: Advanced indexing, broadcasting, and statistical functions
-- **Data Validation**: Comprehensive validation system for scientific data integrity
-- **Type Safety**: Robust numeric type system with overflow protection
+### 🔬 Scientific Computing Foundation
+- **NumPy/SciPy Compatibility**: Drop-in replacements for common operations
+- **ndarray Extensions**: Advanced indexing, broadcasting, statistics
+- **Data Validation**: Comprehensive validation system
+- **Type Safety**: Robust numeric type system
 
-### ⚡ **High Performance**
-- **Ultra-Optimized SIMD**: Advanced vectorization achieving up to 14.17x faster than scalar operations
-- **Multi-Backend GPU Computing**: Complete coverage for CUDA, ROCm, Metal, WGPU, and OpenCL backends
-- **Advanced Parallel Processing**: Work-stealing scheduler with NUMA-aware load balancing
-- **Smart Memory Management**: Intelligent allocators, bandwidth optimization, and memory-mapped arrays
+### ⚡ High Performance
+- **Ultra-Optimized SIMD**: Up to 14.17x faster than scalar operations
+- **Multi-Backend GPU**: CUDA, ROCm, Metal, WGPU, OpenCL support
+- **Parallel Processing**: Work-stealing scheduler with NUMA awareness
+- **Smart Memory**: Intelligent allocators and bandwidth optimization
 
-### 🔧 **Production Ready**
-- **Error Handling**: Comprehensive error system with context and recovery
-- **Observability**: Built-in logging, metrics, and distributed tracing
-- **Resource Management**: Intelligent memory allocation and GPU resource pooling
-- **Testing**: Extensive test suite with property-based testing
+### 🔧 Production Ready
+- **Error Handling**: Comprehensive error system with recovery
+- **Observability**: Built-in logging, metrics, distributed tracing
+- **Resource Management**: Memory allocation and GPU pooling
+- **Testing**: Property-based testing framework
+
+---
 
 ## 📦 Feature Modules
 
 ### Core Features (Always Available)
 ```rust
-// Error handling with context
+// Error handling
 use scirs2_core::{CoreError, CoreResult, value_err_loc};
 
 // Mathematical constants
 use scirs2_core::constants::{PI, E, SPEED_OF_LIGHT};
-
-// Configuration system
-use scirs2_core::config::{Config, set_global_config};
 
 // Validation utilities
 use scirs2_core::validation::{check_positive, check_shape, check_finite};
@@ -194,86 +179,46 @@ use scirs2_core::validation::{check_positive, check_shape, check_finite};
 
 ### Data Validation (`validation` feature)
 ```rust
-use scirs2_core::validation::data::{Validator, ValidationSchema, Constraint, DataType};
+use scirs2_core::validation::data::{Validator, ValidationSchema, Constraint};
 
-// Create validation schema
 let schema = ValidationSchema::new()
     .require_field("temperature", DataType::Float64)
-    .add_constraint("temperature", Constraint::Range { min: -273.15, max: 1000.0 })
-    .require_field("measurements", DataType::Array(Box::new(DataType::Float64)));
+    .add_constraint("temperature", Constraint::Range { min: -273.15, max: 1000.0 });
 
-// Validate data
 let validator = Validator::new(Default::default())?;
 let result = validator.validate(&data, &schema)?;
-
-if !result.is_valid() {
-    println!("Validation errors: {:#?}", result.errors());
-}
 ```
 
 ### GPU Acceleration (`gpu` feature)
 ```rust
-use scirs2_core::gpu::{GpuContext, GpuBackend, select_optimal_backend};
+use scirs2_core::gpu::{GpuContext, select_optimal_backend};
 
-// Automatic backend selection
 let backend = select_optimal_backend()?;
 let ctx = GpuContext::new(backend)?;
 
-// GPU memory management
 let mut buffer = ctx.create_buffer::<f32>(1_000_000);
 buffer.copy_from_host(&host_data);
-
-// Execute GPU kernels
-ctx.execute_kernel("vector_add", &[&mut buffer_a, &buffer_b, &mut result])?;
 ```
 
 ### Memory Management (`memory_management` feature)
 ```rust
-use scirs2_core::memory::{
-    ChunkProcessor2D, BufferPool, MemoryMappedArray, 
-    track_allocation, generate_memory_report
-};
+use scirs2_core::memory::{ChunkProcessor2D, BufferPool, track_allocation};
 
-// Process large arrays in chunks to save memory
+// Process large arrays in chunks
 let processor = ChunkProcessor2D::new(&large_array, (1000, 1000));
 processor.process_chunks(|chunk, coords| {
-    // Process each chunk independently
     println!("Processing chunk at {:?}", coords);
 })?;
 
-// Efficient memory pooling
+// Memory pooling
 let mut pool = BufferPool::<f64>::new();
 let mut buffer = pool.acquire_vec(1000);
-// ... use buffer ...
-pool.release_vec(buffer);
-
-// Memory usage tracking
-track_allocation("MyModule", 1024, ptr as usize);
-let report = generate_memory_report();
-println!("Memory usage: {}", report.format());
-```
-
-### Array Protocol (`array_protocol` feature)
-```rust
-use scirs2_core::array_protocol::{self, matmul, NdarrayWrapper, GPUNdarray};
-
-// Initialize array protocol
-array_protocol::init();
-
-// Seamless backend switching
-let cpu_array = NdarrayWrapper::new(array);
-let gpu_array = GPUNdarray::new(array, gpu_config);
-
-// Same function works with different backends
-let cpu_result = matmul(&cpu_array, &cpu_array)?;
-let gpu_result = matmul(&gpu_array, &gpu_array)?;
 ```
 
 ### SIMD Operations (`simd` feature)
 ```rust
 use scirs2_core::simd::{simd_add, simd_multiply, simd_fused_multiply_add};
 
-// Vectorized operations for performance
 let a = vec![1.0f32; 1000];
 let b = vec![2.0f32; 1000];
 let c = vec![3.0f32; 1000];
@@ -285,232 +230,141 @@ let result = simd_fused_multiply_add(&a, &b, &c)?; // (a * b) + c
 ```rust
 use scirs2_core::parallel::{parallel_map, parallel_reduce, set_num_threads};
 
-// Automatic parallelization
 set_num_threads(8);
 let results = parallel_map(&data, |&x| expensive_computation(x))?;
 let sum = parallel_reduce(&data, 0.0, |acc, &x| acc + x)?;
 ```
+
+---
 
 ## 🎯 Use Cases
 
 ### Scientific Data Analysis
 ```rust
 use scirs2_core::prelude::*;
-use ndarray::Array2;
 
-// Load and validate experimental data
+// Load and validate
 let measurements = load_csv_data("experiment.csv")?;
-check_finite(&measurements, "experimental_data")?;
-check_shape(&measurements, &[1000, 50], "measurements")?;
+check_finite(&measurements, "data")?;
 
-// Statistical analysis with missing data handling
-let masked_data = mask_invalid_values(&measurements);
-let correlation_matrix = calculate_correlation(&masked_data)?;
+// Statistical analysis
+let correlation_matrix = calculate_correlation(&measurements)?;
 let outliers = detect_outliers(&measurements, 3.0)?;
-
-// Parallel statistical computation
-let statistics = parallel_map(&measurements.axis_iter(Axis(1)), |column| {
-    StatisticalSummary::compute(column)
-})?;
 ```
 
 ### Machine Learning Pipeline
 ```rust
 use scirs2_core::{gpu::*, validation::*, array_protocol::*};
 
-// Prepare training data with validation
-let schema = create_ml_data_schema()?;
+// Validate training data
 validate_training_data(&features, &labels, &schema)?;
 
 // GPU-accelerated training
 let gpu_config = GPUConfig::high_performance();
-let gpu_features = GPUNdarray::new(features, gpu_config.clone());
-let gpu_labels = GPUNdarray::new(labels, gpu_config);
-
-// Distributed training across multiple GPUs
-let model = train_neural_network(&gpu_features, &gpu_labels, &training_config)?;
+let gpu_features = GPUNdarray::new(features, gpu_config);
 ```
 
 ### Large-Scale Data Processing
 ```rust
 use scirs2_core::memory::*;
 
-// Memory-efficient processing of datasets larger than RAM
-let memory_mapped_data = MemoryMappedArray::<f64>::open("large_dataset.bin")?;
-
-// Process in chunks to avoid memory exhaustion
-let processor = ChunkProcessor::new(&memory_mapped_data, ChunkSize::Adaptive);
-let results = processor.map_reduce(
-    |chunk| analyze_chunk(chunk),      // Map phase
-    |results| aggregate_results(results) // Reduce phase
-)?;
-
-// Monitor memory usage throughout processing
-let metrics = get_memory_metrics();
-if metrics.pressure_level > MemoryPressure::High {
-    trigger_garbage_collection()?;
-}
+// Memory-efficient processing
+let memory_mapped = MemoryMappedArray::<f64>::open("large_dataset.bin")?;
+let processor = ChunkProcessor::new(&memory_mapped, ChunkSize::Adaptive);
 ```
+
+---
 
 ## 🔧 Configuration
 
 ### Feature Flags
 
-Choose features based on your needs:
-
 ```toml
 # Minimal scientific computing
-scirs2-core = { version = "0.1.0-beta.3", features = ["validation"] }
+scirs2-core = { version = "0.1.0-beta.4", features = ["validation"] }
 
 # High-performance CPU computing
-scirs2-core = { version = "0.1.0-beta.3", features = ["validation", "simd", "parallel"] }
+scirs2-core = { version = "0.1.0-beta.4", features = ["validation", "simd", "parallel"] }
 
 # GPU-accelerated computing
-scirs2-core = { version = "0.1.0-beta.3", features = ["validation", "gpu", "cuda"] }
-
-# Memory-efficient large-scale processing
-scirs2-core = { version = "0.1.0-beta.3", features = ["validation", "memory_management", "memory_efficient"] }
+scirs2-core = { version = "0.1.0-beta.4", features = ["validation", "gpu", "cuda"] }
 
 # Full-featured development
-scirs2-core = { version = "0.1.0-beta.3", features = ["all"] }
+scirs2-core = { version = "0.1.0-beta.4", features = ["all"] }
 ```
 
 ### Available Features
 
 | Feature | Description | Use Case |
 |---------|-------------|----------|
-| `validation` | Data validation and integrity checking | All scientific applications |
-| `simd` | CPU vector instruction acceleration | CPU-intensive computations |
-| `parallel` | Multi-core parallel processing | Large dataset processing |
-| `gpu` | GPU acceleration infrastructure | GPU computing |
-| `cuda` | NVIDIA CUDA backend | NVIDIA GPU acceleration |
-| `opencl` | OpenCL backend | Cross-platform GPU |
-| `memory_management` | Advanced memory utilities | Large-scale applications |
+| `validation` | Data validation and integrity | All applications |
+| `simd` | CPU vector acceleration | CPU-intensive computations |
+| `parallel` | Multi-core processing | Large datasets |
+| `gpu` | GPU acceleration | GPU computing |
+| `cuda` | NVIDIA CUDA backend | NVIDIA GPUs |
+| `memory_management` | Advanced memory utilities | Large-scale apps |
 | `array_protocol` | Extensible array system | Framework development |
-| `logging` | Structured logging and diagnostics | Production deployment |
-| `profiling` | Performance monitoring | Optimization and debugging |
-| `all` | All stable features | Development and testing |
+| `logging` | Structured logging | Production deployment |
+| `profiling` | Performance monitoring | Optimization |
+| `all` | All stable features | Development |
 
-### Runtime Configuration
-
-```rust
-use scirs2_core::config::{Config, set_global_config};
-
-let config = Config::default()
-    .with_precision(1e-12)
-    .with_parallel_threshold(1000)
-    .with_gpu_memory_fraction(0.8)
-    .with_log_level("INFO")
-    .with_feature_flag("experimental_optimizations", true);
-
-set_global_config(config);
-```
+---
 
 ## 📊 Performance
 
-SciRS2 Core delivers breakthrough performance through ultra-optimized SIMD and advanced hardware utilization:
-
-- **Ultra-Optimized SIMD**: 10-30x faster than scalar operations with bandwidth-saturated processing
-- **GPU Acceleration**: 10-100x speedup for suitable workloads across multiple backends
-- **Memory Efficiency**: Zero-copy operations with intelligent chunking and bandwidth optimization
-- **Parallel Scaling**: Linear scaling with work-stealing scheduler and NUMA awareness
-
-### Performance Benchmarks
+**Ultra-Optimized SIMD Performance** (targeting 80-90% memory bandwidth):
 
 ```text
 Operation                        | NumPy/SciPy | SciRS2 Core | Speedup
 --------------------------------|-------------|-------------|--------
-Ultra-Optimized SIMD Operations:
 Element-wise Operations (1M)    | 10.05ms     | 0.71ms      | 14.17x
-Signal Convolution (Bandwidth)  | 52.5ms      | 2.1ms       | 25.0x
-Statistical Moments (Ultra)     | 45.3ms      | 1.8ms       | 25.2x
-Monte Carlo Bootstrap (SIMD)    | 267.0ms     | 8.9ms       | 30.0x
+Signal Convolution              | 52.5ms      | 2.1ms       | 25.0x
+Statistical Moments             | 45.3ms      | 1.8ms       | 25.2x
+Monte Carlo Bootstrap           | 267.0ms     | 8.9ms       | 30.0x
 QMC Sequence Generation         | 48.7ms      | 3.2ms       | 15.2x
 FFT Fractional Transform        | 112.3ms     | 4.5ms       | 24.9x
-
-Traditional Operations:
-Matrix Multiplication           | 125ms       | 89ms        | 1.4x
-GPU Matrix Multiply            | N/A         | 3ms         | 42x
-Large Array Processing         | 2.1GB       | 1.2GB       | 43% less memory
+GPU Matrix Multiply             | N/A         | 3ms         | 42x vs CPU
 ```
 
-**Technical Achievement**: Ecosystem-wide SIMD integration targeting 80-90% memory bandwidth utilization with platform-adaptive algorithm selection and comprehensive fallbacks.
-
-## 🧪 Alpha 5 Testing & Quality Status
-
-### ✅ **Production-Grade Quality Metrics**
-- **811+ Unit Tests**: Comprehensive coverage, 804 passing (99.1% pass rate)
-- **98 Doc Tests**: All examples working and verified
-- **Zero Build Warnings**: Clean cargo fmt + clippy across all features
-- **134 Feature Flags**: All major systems tested and documented
-- **Cross-Platform Ready**: Linux, macOS, Windows support validated
-
-### ⚠️ **Beta 1 Quality Targets**
-- **Memory Safety**: 7 remaining segfaults in memory_efficient tests to fix
-- **100% Test Pass**: Target 100% test pass rate for Beta 1
-- **Security Audit**: Third-party security assessment planned
-- **Performance Validation**: Comprehensive benchmarking vs NumPy/SciPy
+---
 
 ## 🔍 Observability
 
-Built-in observability for production use:
-
 ```rust
-use scirs2_core::observability::{Logger, MetricsCollector, TracingSystem};
+use scirs2_core::observability::{Logger, MetricsCollector};
 
 // Structured logging
-let logger = Logger::new("scientific_pipeline")
-    .with_field("experiment_id", "exp_001");
-logger.info("Starting data processing", &[("batch_size", "1000")]);
+let logger = Logger::new("pipeline").with_field("exp_id", "001");
+logger.info("Processing", &[("batch_size", "1000")]);
 
 // Metrics collection
 let metrics = MetricsCollector::new();
 metrics.record_histogram("processing_time_ms", duration.as_millis());
-metrics.increment_counter("samples_processed");
-
-// Distributed tracing
-let span = TracingSystem::start_span("matrix_computation")
-    .with_attribute("matrix_size", "1000x1000");
-let result = span.in_span(|| compute_eigenvalues(&matrix))?;
 ```
 
-## 🗺️ Release Status & Roadmap
+---
 
-### ✅ Beta 3 (Current - SciRS2 POLICY & Modernization) **PRODUCTION READY**
-- ✅ **Architecture**: SciRS2 POLICY framework established for ecosystem consistency
-- ✅ **Dependencies**: All dependencies updated to latest versions with comprehensive testing
-- ✅ **GPU Support**: Enhanced CUDA/Linux and WebGPU backends for cross-platform acceleration
-- ✅ **Performance**: Advanced memory management, SIMD optimizations, and spatial enhancements
-- ✅ **Foundation**: Layered abstraction architecture with core-only external dependencies
-- ✅ **Documentation**: Complete policy documentation and migration guidelines
+## 🗺️ Roadmap
 
-### ✅ Beta 1 (Previous - First Beta) **YANKED DUE TO COMPILATION ERRORS**
-- ❌ **Compilation**: Failed to compile from crates.io due to variable naming issues
-- ✅ **Features**: All core systems implemented and stable
-- ⚠️ **Status**: Yanked from crates.io, superseded by Beta 2
+- **✅ 0.1.0-beta.4** (2025-10-01): **CURRENT** - SciRS2 POLICY, ultra-performance SIMD
+- **🎯 0.1.0-beta.5** (2026-Q1): Performance and scale enhancements
+- **🎯 0.1.0** (2026-Q4): First stable release
+- **🎯 1.0.0** (2027): Complete implementation with Rust-specific optimizations
 
-### 🎯 Beta 1 (Q3 2025) - **Memory Safety & API Lock**
-- **Memory Safety**: Fix remaining segfaults in memory_efficient tests  
-- **API Stabilization**: Lock public APIs for 1.0 compatibility
-- **Security Audit**: Third-party vulnerability assessment
-- **Performance**: Complete NumPy/SciPy benchmarking validation
-
-### 🚀 Version 1.0 (Q4 2025) - **Stable Production Release**
-- **LTS Support**: Long-term stability guarantees and semantic versioning
-- **Ecosystem**: Full integration with all scirs2-* modules
-- **Enterprise**: Production deployment tools and monitoring
-- **Performance**: Proven performance parity or superiority vs. NumPy/SciPy
+---
 
 ## 📚 Documentation
 
 - **[API Documentation](https://docs.rs/scirs2-core)**: Complete API reference
-- **[User Guide](../docs/)**: Comprehensive usage examples
+- **[SciRS2 POLICY](../SCIRS2_POLICY.md)**: Ecosystem architecture
+- **[Migration Guide](../docs/migration.md)**: Upgrading guide
 - **[Performance Guide](../docs/performance.md)**: Optimization techniques
-- **[Migration Guide](../docs/migration.md)**: Upgrading between versions
+
+---
 
 ## 🤝 Contributing
 
-We welcome contributions! See our [Contributing Guide](../CONTRIBUTING.md) for details.
+We welcome contributions! See [Contributing Guide](../CONTRIBUTING.md).
 
 ### Development Setup
 
@@ -522,77 +376,47 @@ cargo test --all-features
 
 ### Code Quality Standards
 
-- All code must pass `cargo clippy` without warnings
-- Test coverage must be maintained above 90%
-- All public APIs must have documentation and examples
-- Performance regressions are not acceptable
+- Pass `cargo clippy` without warnings
+- Maintain 90%+ test coverage
+- Document all public APIs with examples
+- No performance regressions
 
-### 🐍 **CRITICAL: Use snake_case for ALL Variables and Functions**
-
-**⚠️ IMPORTANT FOR ALL DEVELOPERS:** To prevent compilation errors and maintain code consistency, **always use snake_case naming convention** for variables, functions, and struct fields:
-
-```rust
-// ✅ CORRECT - Use snake_case
-let target_time = Duration::from_secs(5);
-let input_scale = 1.0;
-let benchmark_results = Vec::new();
-let memory_limit = 1024;
-
-// ❌ WRONG - Avoid camelCase or mixed naming
-let targetTime = Duration::from_secs(5);    // Causes compilation errors
-let inputScale = 1.0;                       // Variable not found errors
-let benchmarkResults = Vec::new();          // Scope resolution failures
-let memorylimit = 1024;                     // Inconsistent with field names
-```
-
-**Why This Matters:**
-- **Compilation Success**: Prevents E0425 "cannot find value" errors
-- **Code Consistency**: Matches Rust conventions and struct field names
-- **Team Productivity**: Reduces debugging time from naming mismatches
-- **Maintainability**: Makes code easier to read and refactor
-
-
-**Enforcement:** All PRs must pass `cargo clippy` which will catch naming inconsistencies. Use `snake_case` consistently to avoid compilation failures.
+---
 
 ## ⚖️ License
 
-This project is dual-licensed under either:
-
+Dual-licensed under:
 - [MIT License](../LICENSE-MIT)
 - [Apache License Version 2.0](../LICENSE-APACHE)
 
+---
+
 ## 🔗 Ecosystem
 
-SciRS2 Core is part of the larger SciRS2 ecosystem:
+SciRS2 Core is part of the SciRS2 ecosystem:
 
 - **[scirs2-linalg](../scirs2-linalg)**: Linear algebra operations
 - **[scirs2-stats](../scirs2-stats)**: Statistical computing
-- **[scirs2-cluster](../scirs2-cluster)**: Clustering algorithms
-- **[scirs2-metrics](../scirs2-metrics)**: Distance and similarity metrics
+- **[scirs2-autograd](../scirs2-autograd)**: Automatic differentiation
+- **[scirs2-neural](../scirs2-neural)**: Neural networks
 - **[scirs2](../scirs2)**: Main integration crate
 
 ---
 
-## 🎯 **Beta 3 Production Readiness Statement**
+## 🎯 Production Readiness Statement
 
-**SciRS2 Core v0.1.0-beta.3 represents a mature, production-ready foundation for scientific computing in Rust.** With the established SciRS2 POLICY framework, comprehensive dependency modernization, and enhanced platform support, this release is suitable for:
+**SciRS2 Core v0.1.0-beta.4 is production-ready** for:
 
-- ✅ **Enterprise Development**: Established ecosystem architecture with consistent APIs and centralized dependency management
-- ✅ **Research Projects**: Stable foundation with SciRS2 POLICY ensuring long-term maintainability
-- ✅ **High-Performance Computing**: Enhanced GPU support (CUDA/Linux, WebGPU) and SIMD optimizations
-- ✅ **Large-Scale Applications**: Advanced memory management and efficient processing capabilities
-- ✅ **Ecosystem Integration**: Unified abstractions for seamless module interoperability
+- ✅ **Enterprise Development**: Established ecosystem architecture
+- ✅ **Research Projects**: Stable foundation with long-term maintainability
+- ✅ **High-Performance Computing**: Enhanced GPU and SIMD support
+- ✅ **Large-Scale Applications**: Advanced memory management
+- ✅ **Ecosystem Integration**: Unified abstractions for all modules
 
-**Major Improvements in Beta 3:**
-- ✅ **SciRS2 POLICY Framework**: Comprehensive ecosystem architecture for consistent development
-- ✅ **Dependency Modernization**: All dependencies updated to latest versions with extensive testing
-- ✅ **Enhanced GPU Support**: Improved CUDA/Linux and WebGPU backends for cross-platform acceleration
-- ✅ **Performance Optimizations**: Advanced memory management and SIMD enhancements
-
-**Note**: Migration to scirs2-core abstractions is in progress across the ecosystem. Core functionality is stable and production-ready.
+**Note**: Migration to scirs2-core abstractions is ongoing across the ecosystem. Core functionality is stable and ready for production use.
 
 ---
 
 **Built with ❤️ for the scientific computing community**
 
-*Version: 0.1.0-beta.3 (SciRS2 POLICY & Modernization) | Released: 2025-09-29 | Next: 1.0 (Q4 2025)*
+*Version: 0.1.0-beta.4 | Released: October 01, 2025 | Next: Beta 5 (Q1 2026)*

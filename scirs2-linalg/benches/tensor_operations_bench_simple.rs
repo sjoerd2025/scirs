@@ -12,7 +12,7 @@ use std::time::Duration;
 /// Create a test tensor of given dimensions with deterministic values
 #[allow(dead_code)]
 fn create_test_tensor_3d(d1: usize, d2: usize, d3: usize) -> Array3<f64> {
-    Array3::from_shape_fn((_d1, d2, d3), |(i, j, k)| {
+    Array3::from_shape_fn((d1, d2, d3), |(i, j, k)| {
         ((i + j + k + 1) as f64 * 0.1).sin()
     })
 }
@@ -33,7 +33,7 @@ fn create_test_vector(n: usize) -> Array1<f64> {
 #[allow(dead_code)]
 fn bench_tensor_contraction(c: &mut Criterion) {
     let mut group = c.benchmark_group("tensor_contraction");
-    group.samplesize(20);
+    group.sample_size(20);
 
     for &size in &[10, 20, 30] {
         let tensor_3d = create_test_tensor_3d(size, size, size);
@@ -84,7 +84,7 @@ fn bench_tensor_contraction(c: &mut Criterion) {
 #[allow(dead_code)]
 fn bench_einsum_operations(c: &mut Criterion) {
     let mut group = c.benchmark_group("einsum_operations");
-    group.samplesize(20);
+    group.sample_size(20);
 
     for &size in &[10, 20, 30] {
         let matrix_a = create_testmatrix(size, size);
@@ -149,7 +149,7 @@ fn bench_einsum_operations(c: &mut Criterion) {
 #[allow(dead_code)]
 fn bench_hosvd_operations(c: &mut Criterion) {
     let mut group = c.benchmark_group("hosvd_operations");
-    group.samplesize(10);
+    group.sample_size(10);
     group.measurement_time(Duration::from_secs(30));
 
     for &size in &[8, 12, 16] {
@@ -189,7 +189,7 @@ fn bench_hosvd_operations(c: &mut Criterion) {
 #[allow(dead_code)]
 fn bench_batch_operations(c: &mut Criterion) {
     let mut group = c.benchmark_group("batch_operations");
-    group.samplesize(20);
+    group.sample_size(20);
 
     for &batchsize in &[4, 8, 16] {
         for &size in &[8, 12, 16] {

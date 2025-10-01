@@ -479,21 +479,21 @@ fn bench_parallel_algorithms(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("parallel_pagerank", graph_name),
             &graph,
-            |b, g| b.iter(|| parallel_pagerank_centrality(black_box(g), 0.85, Some(1e-6)).unwrap()),
+            |b, g| b.iter(|| parallel_pagerank_centrality(black_box(g), 0.85, 1e-6, None).unwrap()),
         );
 
         // Parallel Louvain
         group.bench_with_input(
             BenchmarkId::new("parallel_louvain", graph_name),
             &graph,
-            |b, g| b.iter(|| parallel_louvain_communities_result(black_box(g)).communities),
+            |b, g| b.iter(|| parallel_louvain_communities_result(black_box(g), 100).communities),
         );
 
         // Compare with sequential versions
         group.bench_with_input(
             BenchmarkId::new("sequential_pagerank", graph_name),
             &graph,
-            |b, g| b.iter(|| pagerank(black_box(g), 0.85, Some(1e-6)).unwrap()),
+            |b, g| b.iter(|| pagerank_centrality(black_box(g), 0.85, 1e-6).unwrap()),
         );
 
         group.bench_with_input(

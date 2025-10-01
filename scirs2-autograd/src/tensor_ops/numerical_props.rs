@@ -234,15 +234,23 @@ impl<F: Float + ndarray::ScalarOperand> Op<F> for CondOp {
         let cond_value = match self.p {
             ConditionType::Two => {
                 // For 2-norm, condition number is ratio of largest to smallest singular value
-                // TODO: Use proper SVD when available
-                let min_dim = min(m, n);
-                let mut singular_values = Vec::with_capacity(min_dim);
-
-                for i in 0..min_dim {
-                    if i < m && i < n {
-                        singular_values.push(matrix[[i, i]].abs());
-                    }
-                }
+                // Use proper SVD singular value computation
+                let matrix_owned = matrix.to_owned();
+                let mut singular_values =
+                    match RankOp::<F>::compute_svd_singular_values(&matrix_owned) {
+                        Ok(sv) => sv,
+                        Err(_) => {
+                            // Fallback to diagonal approximation if SVD fails
+                            let min_dim = min(m, n);
+                            let mut sv = Vec::with_capacity(min_dim);
+                            for i in 0..min_dim {
+                                if i < m && i < n {
+                                    sv.push(matrix[[i, i]].abs());
+                                }
+                            }
+                            sv
+                        }
+                    };
 
                 singular_values
                     .sort_by(|a, b| b.partial_cmp(a).unwrap_or(std::cmp::Ordering::Equal));
@@ -466,11 +474,16 @@ impl<F: Float> Op<F> for LogDetOp {
         match (gy.eval(g), x.eval(g)) {
             (Ok(gy_val), Ok(x_val)) => {
                 let x_2d = x_val.view().into_dimensionality::<Ix2>().unwrap();
-                let n = x_2d.shape()[0];
 
-                // Compute inverse transpose (simplified)
-                let inv_t = Array2::<F>::eye(n);
-                // TODO: Implement proper matrix inverse
+                // Compute inverse transpose using Gauss-Jordan elimination
+                let inv_t = match Self::matrix_inverse_transpose(&x_2d.to_owned()) {
+                    Ok(inv) => inv,
+                    Err(_) => {
+                        // If inversion fails, return None gradient
+                        ctx.append_input_grad(0, None);
+                        return;
+                    }
+                };
 
                 let grad = crate::tensor_ops::scalar_mul(
                     crate::tensor_ops::convert_to_tensor(inv_t, g),
@@ -481,6 +494,77 @@ impl<F: Float> Op<F> for LogDetOp {
             }
             _ => ctx.append_input_grad(0, None),
         }
+    }
+}
+
+impl LogDetOp {
+    /// Compute matrix inverse transpose using Gauss-Jordan elimination
+    /// Returns (X^-1)^T = (X^T)^-1
+    fn matrix_inverse_transpose<F: Float>(matrix: &Array2<F>) -> Result<Array2<F>, OpError> {
+        let n = matrix.nrows();
+        if n != matrix.ncols() {
+            return Err(OpError::IncompatibleShape(
+                "Matrix must be square for inversion".into(),
+            ));
+        }
+
+        // Work with the transpose for efficiency
+        let mut a = matrix.t().to_owned();
+        let mut inv = Array2::<F>::eye(n);
+
+        // Convert to f64 for numerical stability
+        let mut a_f64 = a.mapv(|x| x.to_f64().unwrap_or(0.0));
+        let mut inv_f64 = inv.mapv(|x| x.to_f64().unwrap_or(0.0));
+
+        // Gauss-Jordan elimination with partial pivoting
+        for i in 0..n {
+            // Find pivot
+            let mut max_row = i;
+            let mut max_val = a_f64[[i, i]].abs();
+            for k in (i + 1)..n {
+                let abs_val = a_f64[[k, i]].abs();
+                if abs_val > max_val {
+                    max_val = abs_val;
+                    max_row = k;
+                }
+            }
+
+            // Check for singularity
+            if max_val < 1e-10_f64 {
+                return Err(OpError::RuntimeError(
+                    "Matrix is singular or nearly singular".into(),
+                ));
+            }
+
+            // Swap rows
+            if max_row != i {
+                for j in 0..n {
+                    a_f64.swap([i, j], [max_row, j]);
+                    inv_f64.swap([i, j], [max_row, j]);
+                }
+            }
+
+            // Scale pivot row
+            let pivot = a_f64[[i, i]];
+            for j in 0..n {
+                a_f64[[i, j]] /= pivot;
+                inv_f64[[i, j]] /= pivot;
+            }
+
+            // Eliminate column
+            for k in 0..n {
+                if k != i {
+                    let factor = a_f64[[k, i]];
+                    for j in 0..n {
+                        a_f64[[k, j]] -= factor * a_f64[[i, j]];
+                        inv_f64[[k, j]] -= factor * inv_f64[[i, j]];
+                    }
+                }
+            }
+        }
+
+        // Convert back to F
+        Ok(inv_f64.mapv(|x| F::from(x).unwrap_or(F::zero())))
     }
 }
 

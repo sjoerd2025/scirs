@@ -2,7 +2,7 @@
 
 This module provides special functions similar to SciPy's special module.
 
-## Production Status (v0.1.0-beta.3) - SciRS2 POLICY & Enhanced Performance
+## Production Status (v0.1.0-beta.4) - SciRS2 POLICY & Enhanced Performance
 
 Following the [SciRS2 POLICY](../SCIRS2_POLICY.md), this module provides ecosystem consistency with enhanced performance, accuracy, and reliability through scirs2-core abstractions.
 
@@ -48,7 +48,7 @@ Following the [SciRS2 POLICY](../SCIRS2_POLICY.md), this module provides ecosyst
 - [x] Complex mathematical properties validation in tests
 - [x] Benchmarking infrastructure for performance monitoring
 
-### Performance Optimizations (New in Alpha 5) ✅
+### Performance Optimizations
 - [x] **SIMD-accelerated operations**: Vectorized gamma, exponential, error, and Bessel functions
 - [x] **Parallel processing**: Multi-threaded implementations for large arrays (>1000 elements)
 - [x] **Adaptive processing**: Automatic selection of optimal algorithm based on array size and features
@@ -85,9 +85,9 @@ Following the [SciRS2 POLICY](../SCIRS2_POLICY.md), this module provides ecosyst
 - [x] **Cross-validation against multiple reference implementations** (✅ Implemented validation framework with SciPy, GSL, and MPFR references)
 - [x] **Performance regression testing in CI/CD pipeline** (✅ Comprehensive CI/CD script with baseline comparison, regression detection, and detailed reporting)
 
-## Current Status & Known Issues (v0.1.0-beta.3)
+## Current Status & Known Issues (v0.1.0-beta.4)
 
-### Recently Fixed (Advanced Implementation - v0.1.0-beta.3)
+### Recently Fixed (Advanced Implementation - v0.1.0-beta.4)
 - ✅ **Build System**: All Clippy warnings resolved, zero-warning builds achieved
 - ✅ **Core Library**: Compiles successfully with proper error handling
 - ✅ **Function Mapping**: Fixed function name mismatches (legendre_p → legendre, log_gamma → loggamma, etc.)
@@ -118,7 +118,7 @@ Following the [SciRS2 POLICY](../SCIRS2_POLICY.md), this module provides ecosyst
 
 ## Next Steps (Priority Order)
 
-### High Priority (v0.1.0-beta.3) - COMPLETED ✅
+### High Priority (v0.1.0-beta.4) - COMPLETED ✅
 1. ✅ **Test Stabilization**: Optimized property-based tests for faster compilation with configurable test intensity
 2. ✅ **Example Fixes**: Resolved all remaining example compilation errors
 3. ✅ **Documentation Polish**: Enhanced comprehensive documentation for all public APIs

@@ -24,11 +24,22 @@ pub struct Exponential<F: Float> {
 }
 
 impl<F: Float + NumCast + Debug + std::fmt::Display> Exponential<F> {
-    /// Create a new exponential distribution with given rate and location parameters
+    /// Create a new exponential distribution with given **rate** and location parameters
+    ///
+    /// # Important: Rate vs Scale
+    ///
+    /// This function takes the **rate parameter λ**, NOT the scale parameter.
+    /// The relationship between rate and scale is:
+    /// - rate = λ = 1/scale
+    /// - scale = θ = 1/rate
+    ///
+    /// For an exponential distribution with rate λ:
+    /// - Mean = 1/λ = scale
+    /// - Variance = 1/λ² = scale²
     ///
     /// # Arguments
     ///
-    /// * `rate` - Rate parameter λ > 0 (inverse of scale)
+    /// * `rate` - Rate parameter λ > 0 (where λ = 1/scale)
     /// * `loc` - Location parameter (default: 0)
     ///
     /// # Returns
@@ -39,8 +50,16 @@ impl<F: Float + NumCast + Debug + std::fmt::Display> Exponential<F> {
     ///
     /// ```
     /// use scirs2_stats::distributions::exponential::Exponential;
+    /// use scirs2_stats::traits::Distribution;
     ///
-    /// let exp = Exponential::new(1.0f64, 0.0).unwrap();
+    /// // Create exponential with rate=0.5 (equivalent to scale=2.0)
+    /// let exp = Exponential::new(0.5f64, 0.0).unwrap();
+    /// assert!((exp.rate - 0.5).abs() < 1e-10);
+    /// assert!((exp.scale - 2.0).abs() < 1e-10);
+    /// assert!((exp.mean() - 2.0).abs() < 1e-10);  // mean = 1/rate = 2.0
+    ///
+    /// // If you want to specify scale directly, use from_scale() instead:
+    /// // let exp = Exponential::from_scale(2.0f64, 0.0).unwrap();
     /// ```
     pub fn new(rate: F, loc: F) -> StatsResult<Self> {
         validation::ensure_positive(rate, "Rate parameter")?;
@@ -64,11 +83,23 @@ impl<F: Float + NumCast + Debug + std::fmt::Display> Exponential<F> {
         }
     }
 
-    /// Create a new exponential distribution with given scale and location parameters
+    /// Create a new exponential distribution with given **scale** and location parameters
+    ///
+    /// This is an alternative constructor that takes the **scale parameter θ** instead of rate.
+    /// Many users prefer this interface as scale directly represents the mean of the distribution.
+    ///
+    /// # Scale vs Rate
+    ///
+    /// - scale = θ = 1/λ = mean of the distribution
+    /// - rate = λ = 1/θ
+    ///
+    /// For an exponential distribution with scale θ:
+    /// - Mean = θ = scale
+    /// - Variance = θ² = scale²
     ///
     /// # Arguments
     ///
-    /// * `scale` - Scale parameter θ > 0 (inverse of rate)
+    /// * `scale` - Scale parameter θ > 0 (where θ = 1/rate = mean)
     /// * `loc` - Location parameter (default: 0)
     ///
     /// # Returns
@@ -79,9 +110,16 @@ impl<F: Float + NumCast + Debug + std::fmt::Display> Exponential<F> {
     ///
     /// ```
     /// use scirs2_stats::distributions::exponential::Exponential;
+    /// use scirs2_stats::traits::Distribution;
     ///
+    /// // Create exponential with scale=2.0 (equivalent to rate=0.5)
     /// let exp = Exponential::from_scale(2.0f64, 0.0).unwrap();
-    /// assert_eq!(exp.rate, 0.5);
+    /// assert!((exp.scale - 2.0).abs() < 1e-10);
+    /// assert!((exp.rate - 0.5).abs() < 1e-10);
+    /// assert!((exp.mean() - 2.0).abs() < 1e-10);  // mean = scale = 2.0
+    ///
+    /// // This is equivalent to:
+    /// // let exp = Exponential::new(0.5f64, 0.0).unwrap();
     /// ```
     pub fn from_scale(scale: F, loc: F) -> StatsResult<Self> {
         validation::ensure_positive(scale, "scale")?;

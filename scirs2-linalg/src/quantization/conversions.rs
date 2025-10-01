@@ -580,10 +580,421 @@ pub fn dequantize_matrix(quantized: &QuantizedMatrix, params: &QuantizationParam
     dequantized
 }
 
-// TODO: Add the following functions from the original mod.rs:
-// - quantize_vector (lines ~1089-1347)
-// - dequantize_vector (lines ~1348-1439)
-// - fake_quantize (lines ~1780-1809)
-// - fake_quantize_vector (lines ~1810-1832)
+/// Quantize a floating-point vector to a lower precision representation
+///
+/// # Arguments
+///
+/// * `vector` - The input vector to quantize
+/// * `bits` - The number of bits to use for quantization (typically 8)
+/// * `method` - The quantization method to use
+///
+/// # Returns
+///
+/// A tuple containing the quantized vector and the quantization parameters
+pub fn quantize_vector<F>(
+    vector: &ArrayView1<F>,
+    bits: u8,
+    method: QuantizationMethod,
+) -> (QuantizedVector, QuantizationParams)
+where
+    F: Float + Debug + AsPrimitive<f32> + FromPrimitive,
+    f32: AsPrimitive<F>,
+{
+    let length = vector.len();
 
-// These functions will be added in subsequent iterations to complete the conversions module.
+    // Find min and max values
+    let mut min_val = F::infinity().as_();
+    let mut max_val = F::neg_infinity().as_();
+
+    for &val in vector.iter() {
+        let val_f32: f32 = val.as_();
+        if val_f32.is_finite() {
+            min_val = min_val.min(val_f32);
+            max_val = max_val.max(val_f32);
+        }
+    }
+
+    // Handle case where all values are the same
+    if (max_val - min_val).abs() < f32::EPSILON {
+        max_val = min_val + 1.0;
+    }
+
+    // For Float16 and BFloat16, we just directly convert the values without actual "quantization"
+    if method == QuantizationMethod::Float16 {
+        let mut f16_data = Array1::zeros(length);
+        for (i, &val) in vector.iter().enumerate() {
+            let val_f32: f32 = val.as_();
+            f16_data[i] = f16::from_f32(val_f32);
+        }
+
+        // Create parameters - scale and zero_point aren't really used for float16
+        let params = QuantizationParams {
+            bits: 16,
+            scale: 1.0, // Not used for float16
+            zero_point: 0,
+            min_val,
+            max_val,
+            method,
+            data_type: QuantizedDataType::Float16,
+            channel_scales: None,
+            channel_zero_points: None,
+        };
+
+        return (QuantizedVector::new_f16(f16_data, length), params);
+    }
+
+    if method == QuantizationMethod::BFloat16 {
+        let mut bf16_data = Array1::zeros(length);
+        for (i, &val) in vector.iter().enumerate() {
+            let val_f32: f32 = val.as_();
+            bf16_data[i] = bf16::from_f32(val_f32);
+        }
+
+        // Create parameters - scale and zero_point aren't really used for bfloat16
+        let params = QuantizationParams {
+            bits: 16,
+            scale: 1.0, // Not used for bfloat16
+            zero_point: 0,
+            min_val,
+            max_val,
+            method,
+            data_type: QuantizedDataType::BFloat16,
+            channel_scales: None,
+            channel_zero_points: None,
+        };
+
+        return (QuantizedVector::new_bf16(bf16_data, length), params);
+    }
+
+    // Determine data type based on method and bits
+    let data_type = match method {
+        QuantizationMethod::Int4 => QuantizedDataType::Int4,
+        QuantizationMethod::UInt4 => QuantizedDataType::UInt4,
+        _ => QuantizedDataType::Int8,
+    };
+
+    // For Int4 and UInt4, override bits to 4
+    let effective_bits = match method {
+        QuantizationMethod::Int4 | QuantizationMethod::UInt4 => 4,
+        _ => bits,
+    };
+
+    // Calculate quantization parameters based on the chosen method
+    let (scale, zero_point) = match method {
+        QuantizationMethod::Uniform => {
+            let scale = (max_val - min_val) / ((1 << effective_bits) - 1) as f32;
+            let zero_point = 0;
+            (scale, zero_point)
+        }
+        QuantizationMethod::Symmetric => {
+            // Symmetric around zero, calculate scale to fit
+            let abs_max = max_val.abs().max(min_val.abs());
+            let scale = abs_max / ((1 << (effective_bits - 1)) - 1) as f32;
+            let zero_point = 0;
+            (scale, zero_point)
+        }
+        QuantizationMethod::Affine => {
+            let scale = (max_val - min_val) / ((1 << effective_bits) - 1) as f32;
+            let zero_point = (-min_val / scale).round() as i32;
+            (scale, zero_point)
+        }
+        QuantizationMethod::PowerOfTwo => {
+            // Find the smallest power of 2 greater than or equal to (max_val - min_val) / ((1 << bits) - 1)
+            let range = max_val - min_val;
+            let ideal_scale = range / ((1 << effective_bits) - 1) as f32;
+            let exponent = ideal_scale.log2().ceil();
+            let scale = 2.0_f32.powf(exponent);
+            let zero_point = 0;
+            (scale, zero_point)
+        }
+        QuantizationMethod::Int4 => {
+            // Symmetric around zero, with 4-bit signed integers (-8 to 7)
+            let abs_max = max_val.abs().max(min_val.abs());
+            let scale = abs_max / 7.0; // -8 to 7 range for 4-bit signed integer
+            let zero_point = 0;
+            (scale, zero_point)
+        }
+        QuantizationMethod::UInt4 => {
+            // Unsigned 4-bit quantization (0 to 15)
+            let scale = (max_val - min_val) / 15.0; // 0 to 15 range for 4-bit unsigned integer
+            let zero_point = (-min_val / scale).round() as i32;
+            (scale, zero_point)
+        }
+        _ => unreachable!(), // Float16 and BFloat16 are handled above
+    };
+
+    // Create quantization parameters
+    let params = QuantizationParams {
+        bits: effective_bits,
+        scale,
+        zero_point,
+        min_val,
+        max_val,
+        method,
+        data_type,
+        channel_scales: None,
+        channel_zero_points: None,
+    };
+
+    // Special handling for 4-bit quantization - pack two values into one byte
+    match method {
+        QuantizationMethod::Int4 => {
+            // For 4-bit signed integers, we need to handle the packing
+            let packedsize = length.div_ceil(2); // Round up division
+            let mut packed_data = Array1::zeros(packedsize);
+
+            for i in 0..length {
+                let val_f32: f32 = vector[i].as_();
+                // Clamp to -8 to 7 range for 4-bit signed integer
+                let q_val = ((val_f32 / scale).round() as i8).clamp(-8, 7);
+
+                let byte_idx = i / 2;
+                if i % 2 == 0 {
+                    // Store in upper 4 bits
+                    packed_data[byte_idx] = q_val << 4;
+                } else {
+                    // Store in lower 4 bits, OR with existing upper bits
+                    packed_data[byte_idx] |= q_val & 0x0F;
+                }
+            }
+
+            (
+                QuantizedVector::new_i8(packed_data, length, QuantizedDataType::Int4),
+                params,
+            )
+        }
+        QuantizationMethod::UInt4 => {
+            // For 4-bit unsigned integers, similar packing approach
+            let packedsize = length.div_ceil(2); // Round up division
+            let mut packed_data = Array1::zeros(packedsize);
+
+            for i in 0..length {
+                let val_f32: f32 = vector[i].as_();
+                // Scale to 0-15 range for 4-bit unsigned
+                let ival = ((val_f32 - min_val) / scale).round() as i32;
+                let q_val = (ival.clamp(0, 15) & 0x0F) as i8;
+
+                let byte_idx = i / 2;
+                if i % 2 == 0 {
+                    // Store in upper 4 bits
+                    packed_data[byte_idx] = q_val << 4;
+                } else {
+                    // Store in lower 4 bits, OR with existing upper bits
+                    packed_data[byte_idx] |= q_val & 0x0F;
+                }
+            }
+
+            (
+                QuantizedVector::new_i8(packed_data, length, QuantizedDataType::UInt4),
+                params,
+            )
+        }
+        _ => {
+            // Standard 8-bit quantization for other methods
+            let quantized_data = match method {
+                QuantizationMethod::Uniform => {
+                    let mut quantized = Array1::zeros(length);
+                    for (i, &val) in vector.iter().enumerate() {
+                        let val_f32: f32 = val.as_();
+                        let q_val = ((val_f32 - min_val) / scale).round() as i8;
+                        quantized[i] = q_val;
+                    }
+                    quantized
+                }
+                QuantizationMethod::Symmetric => {
+                    let mut quantized = Array1::zeros(length);
+                    for (i, &val) in vector.iter().enumerate() {
+                        let val_f32: f32 = val.as_();
+                        let q_val = (val_f32 / scale).round() as i8;
+                        quantized[i] = q_val;
+                    }
+                    quantized
+                }
+                QuantizationMethod::Affine => {
+                    let mut quantized = Array1::zeros(length);
+                    for (i, &val) in vector.iter().enumerate() {
+                        let val_f32: f32 = val.as_();
+                        let q_val = ((val_f32 / scale) + zero_point as f32).round() as i8;
+                        quantized[i] = q_val;
+                    }
+                    quantized
+                }
+                QuantizationMethod::PowerOfTwo => {
+                    let mut quantized = Array1::zeros(length);
+                    for (i, &val) in vector.iter().enumerate() {
+                        let val_f32: f32 = val.as_();
+                        let q_val = ((val_f32 - min_val) / scale).round() as i8;
+                        quantized[i] = q_val;
+                    }
+                    quantized
+                }
+                _ => unreachable!(), // Int4, UInt4, Float16, and BFloat16 are handled above
+            };
+
+            (
+                QuantizedVector::new_i8(quantized_data, length, QuantizedDataType::Int8),
+                params,
+            )
+        }
+    }
+}
+
+/// Dequantize a vector back to floating-point (public API version)
+///
+/// # Arguments
+///
+/// * `quantized` - The quantized vector
+/// * `params` - The quantization parameters
+///
+/// # Returns
+///
+/// The dequantized vector
+pub fn dequantize_vector_public(
+    quantized: &QuantizedVector,
+    params: &QuantizationParams,
+) -> Array1<f32> {
+    let length = quantized.len();
+    let mut dequantized = Array1::zeros(length);
+
+    // Handle different quantization data types
+    match &quantized.data {
+        // Direct floating-point formats
+        QuantizedData1D::Float16(data) => {
+            // For Float16, just convert directly to f32
+            for (i, &val) in data.iter().enumerate() {
+                dequantized[i] = val.to_f32();
+            }
+        }
+        QuantizedData1D::BFloat16(data) => {
+            // For BFloat16, just convert directly to f32
+            for (i, &val) in data.iter().enumerate() {
+                dequantized[i] = val.to_f32();
+            }
+        }
+        // Integer-based quantization
+        QuantizedData1D::Int8(data) => {
+            match quantized.data_type {
+                // Special handling for 4-bit quantization types
+                QuantizedDataType::Int4 | QuantizedDataType::UInt4 => {
+                    for i in 0..length {
+                        // Get the 4-bit value using the get method
+                        let q_val = quantized.get_i8(i);
+
+                        // Dequantize based on the method
+                        let val = match params.method {
+                            QuantizationMethod::Int4 => q_val as f32 * params.scale,
+                            QuantizationMethod::UInt4 => {
+                                params.min_val + (q_val as f32 * params.scale)
+                            }
+                            _ => unreachable!(), // Should not happen with Int4/UInt4 data type
+                        };
+
+                        dequantized[i] = val;
+                    }
+                }
+                // Standard 8-bit quantization
+                QuantizedDataType::Int8 => {
+                    // Perform dequantization based on the quantization method for 8-bit types
+                    match params.method {
+                        QuantizationMethod::Uniform => {
+                            for (i, &q_val) in data.iter().enumerate() {
+                                let val = params.min_val + (q_val as f32 * params.scale);
+                                dequantized[i] = val;
+                            }
+                        }
+                        QuantizationMethod::Symmetric => {
+                            for (i, &q_val) in data.iter().enumerate() {
+                                let val = q_val as f32 * params.scale;
+                                dequantized[i] = val;
+                            }
+                        }
+                        QuantizationMethod::Affine => {
+                            for (i, &q_val) in data.iter().enumerate() {
+                                let val = params.scale * (q_val as f32 - params.zero_point as f32);
+                                dequantized[i] = val;
+                            }
+                        }
+                        QuantizationMethod::PowerOfTwo => {
+                            for (i, &q_val) in data.iter().enumerate() {
+                                let val = params.min_val + (q_val as f32 * params.scale);
+                                dequantized[i] = val;
+                            }
+                        }
+                        _ => unreachable!(), // Other methods are handled above
+                    }
+                }
+                _ => unreachable!(), // Should not happen
+            }
+        }
+    }
+
+    dequantized
+}
+
+/// Apply fake quantization to a floating-point matrix
+///
+/// Fake quantization simulates the effect of quantization without actually storing
+/// the data in a lower-precision format. This is useful for quantization-aware training.
+///
+/// # Arguments
+///
+/// * `matrix` - The input matrix to apply fake quantization to
+/// * `bits` - The number of bits to use for quantization (typically 8)
+/// * `method` - The quantization method to use
+///
+/// # Returns
+///
+/// The matrix after applying fake quantization
+pub fn fake_quantize<F>(matrix: &ArrayView2<F>, bits: u8, method: QuantizationMethod) -> Array2<F>
+where
+    F: Float + Debug + AsPrimitive<f32> + FromPrimitive,
+    f32: AsPrimitive<F>,
+{
+    // For Int4 and UInt4, we don't need the bits parameter
+    let (quantized, params) = quantize_matrix(matrix, bits, method);
+    let dequantized = dequantize_matrix(&quantized, &params);
+
+    // Convert back to original type
+    let mut result = Array2::zeros(matrix.dim());
+    for (i, &val) in dequantized.iter().enumerate() {
+        result.as_slice_mut().unwrap()[i] = F::from_f32(val).unwrap();
+    }
+
+    result
+}
+
+/// Apply fake quantization to a floating-point vector
+///
+/// Fake quantization simulates the effect of quantization without actually storing
+/// the data in a lower-precision format. This is useful for quantization-aware training.
+///
+/// # Arguments
+///
+/// * `vector` - The input vector to apply fake quantization to
+/// * `bits` - The number of bits to use for quantization (typically 8)
+/// * `method` - The quantization method to use
+///
+/// # Returns
+///
+/// The vector after applying fake quantization
+pub fn fake_quantize_vector<F>(
+    vector: &ArrayView1<F>,
+    bits: u8,
+    method: QuantizationMethod,
+) -> Array1<F>
+where
+    F: Float + Debug + AsPrimitive<f32> + FromPrimitive,
+    f32: AsPrimitive<F>,
+{
+    // For Int4 and UInt4, we don't need the bits parameter
+    let (quantized, params) = quantize_vector(vector, bits, method);
+    let dequantized = dequantize_vector_public(&quantized, &params);
+
+    // Convert back to original type
+    let mut result = Array1::zeros(vector.dim());
+    for (i, &val) in dequantized.iter().enumerate() {
+        result[i] = F::from_f32(val).unwrap();
+    }
+
+    result
+}

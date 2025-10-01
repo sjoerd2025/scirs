@@ -1,4 +1,4 @@
-# SciRS2 Graph - Production TODO (v0.1.0-beta.3)
+# SciRS2 Graph - Production TODO (v0.1.0-beta.4)
 
 This beta 3 release features SciRS2 POLICY implementation and enhanced graph functionality. Following the [SciRS2 POLICY](../SCIRS2_POLICY.md), the module is production-ready with comprehensive graph functionality and ecosystem consistency.
 

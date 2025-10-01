@@ -4,80 +4,336 @@
 // TODO: Remove dead code or justify why it's kept
 #![allow(dead_code)]
 
-//! # ``SciRS2`` Core (Beta 1)
+//! # SciRS2 Core - Foundation for Scientific Computing in Rust
 //!
-//! Core utilities and common functionality for the ``SciRS2`` library.
+//! **scirs2-core** is the foundational crate for the SciRS2 scientific computing ecosystem,
+//! providing essential utilities, abstractions, and optimizations used by all SciRS2 modules.
 //!
-//! This crate provides shared utilities, error types, and common traits
-//! used across the ``SciRS2`` ecosystem of crates.
+//! ## 🎯 Design Philosophy
 //!
-//! ## Beta 1 Features
+//! - **Zero-Cost Abstractions**: Performance without compromising safety
+//! - **Layered Architecture**: Clear separation between interface and implementation
+//! - **Policy Compliance**: Enforce [SciRS2 POLICY](https://github.com/cool-japan/scirs/blob/master/SCIRS2_POLICY.md) - only scirs2-core uses external dependencies directly
+//! - **Production Ready**: Enterprise-grade error handling, diagnostics, and stability guarantees
 //!
-//! - **Stable APIs**: Core functionality with API stability guarantees for production use
-//! - **Advanced Error Diagnostics**: ML-inspired error pattern recognition and domain-specific recovery strategies
-//! - **Performance Optimizations**: Enhanced SIMD operations, adaptive chunking, and intelligent load balancing
-//! - **GPU Acceleration**: CUDA, Metal MPS, and other backend support for accelerated computing
-//! - **Memory Management**: Efficient memory-mapped arrays and adaptive chunking for large datasets
+//! ## 🚀 Key Features
 //!
-//! ## Overview
+//! ### Performance Acceleration
 //!
-//! * Common error types and traits
-//! * High-performance numerical operations
-//!   * SIMD-accelerated computations
-//!   * Parallel processing for multi-core systems
-//!   * Memory-efficient algorithms
-//!   * GPU acceleration abstractions
-//! * Caching and memoization for optimized performance
-//! * Type definitions and conversions
-//! * Physical and mathematical constants
-//! * Configuration system
-//! * Input/output utilities
-//! * Validation utilities
-//! * Numeric traits and conversions
-//! * Memory management utilities
-//! * Logging and diagnostics
-//! * Profiling tools
-//! * Random number generation
+//! - **SIMD Operations**: CPU vector instructions (SSE, AVX, NEON) for array operations
+//! - **Parallel Processing**: Multi-threaded execution with intelligent load balancing
+//! - **GPU Acceleration**: Unified interface for CUDA, Metal, OpenCL, and WebGPU
+//! - **Memory Efficiency**: Zero-copy views, memory-mapped arrays, adaptive chunking
 //!
-//! ## Performance Optimizations
+//! ### Core Utilities
 //!
-//! The library provides several performance optimization features:
+//! - **Error Handling**: ML-inspired diagnostics with recovery strategies
+//! - **Validation**: Input checking with informative error messages
+//! - **Caching**: Memoization and result caching for expensive computations
+//! - **Profiling**: Performance monitoring and bottleneck detection
 //!
-//! * **SIMD Operations**: Uses CPU vector instructions for faster array operations
-//! * **Parallel Processing**: Leverages multi-core systems for improved performance
-//! * **GPU Acceleration**: Provides abstractions for GPU computation (CUDA, WebGPU, Metal)
-//! * **Memory-Efficient Algorithms**: Optimizes memory usage for large-scale computations
-//! * **Caching and Memoization**: Avoids redundant computations
-//! * **Profiling and Instrumentation**: Identifies performance bottlenecks
-//! * **Memory Management**: Efficient memory utilization and pooling
+//! ### Scientific Infrastructure
 //!
-//! ## Additional Utilities
+//! - **Constants**: Physical and mathematical constants (via [`constants`] module)
+//! - **Random Number Generation**: Consistent RNG interface across the ecosystem
+//! - **Complex Numbers**: Type-safe complex arithmetic
+//! - **Array Protocol**: Unified array interface for interoperability
 //!
-//! * **Logging**: Structured logging for scientific applications
-//! * **Random Number Generation**: Consistent interface for random sampling
-//! * **Type Conversions**: Safe numeric and complex number conversions
+//! ## 📦 Module Overview
 //!
-//! ## Feature Flags
+//! ### Performance & Optimization
 //!
-//! These features can be controlled via feature flags:
+//! | Module | Description |
+//! |--------|-------------|
+//! | [`simd_ops`] | SIMD-accelerated operations with platform detection |
+//! | [`parallel_ops`] | Parallel processing primitives |
+//! | [`gpu`] | GPU acceleration abstractions |
+//! | [`memory`] | Memory management (buffer pools, zero-copy views) |
+//! | [`memory_efficient`] | Memory-mapped arrays and lazy evaluation |
 //!
-//! * `simd`: Enable SIMD acceleration
-//! * `parallel`: Enable parallel processing
-//! * `cache`: Enable caching and memoization functionality
-//! * `validation`: Enable validation utilities
-//! * `logging`: Enable structured logging and diagnostics
-//! * `gpu`: Enable GPU acceleration abstractions
-//! * `memory_management`: Enable advanced memory management
-//! * `memory_efficient`: Enable memory-efficient array operations and views
-//! * `array`: Enable scientific array types (``MaskedArray``, ``RecordArray``)
-//! * `profiling`: Enable performance profiling tools
-//! * `random`: Enable random number generation utilities
-//! * `types`: Enable type conversion utilities
-//! * `linalg`: Enable linear algebra with BLAS/LAPACK bindings
-//! * `cloud`: Enable cloud storage integration (S3, GCS, Azure)
-//! * `jit`: Enable just-in-time compilation with LLVM
-//! * `ml_pipeline`: Enable ML pipeline integration and real-time processing
-//! * `all`: Enable all features except backend-specific ones
+//! ### Error Handling & Diagnostics
+//!
+//! | Module | Description |
+//! |--------|-------------|
+//! | [`error`] | Error types and traits |
+//! | [`validation`] | Input validation utilities |
+//! | [`logging`] | Structured logging for diagnostics |
+//! | [`profiling`] | Performance profiling tools |
+//!
+//! ### Scientific Computing Basics
+//!
+//! | Module | Description |
+//! |--------|-------------|
+//! | [`ndarray`] | Unified ndarray interface (re-exports with SciRS2 extensions) |
+//! | [`numeric`] | Generic numerical operations |
+//! | [`random`] | Random number generation |
+//! | [`constants`] | Mathematical and physical constants |
+//!
+//! ### Infrastructure
+//!
+//! | Module | Description |
+//! |--------|-------------|
+//! | [`config`] | Configuration management |
+//! | [`cache`] | Result caching and memoization |
+//! | [`io`] | I/O utilities |
+//! | [`cloud`] | Cloud storage integration (S3, GCS, Azure) |
+//!
+//! ## 🚀 Quick Start
+//!
+//! ### Installation
+//!
+//! ```toml
+//! [dependencies]
+//! scirs2-core = { version = "0.1.0-beta.4", features = ["simd", "parallel"] }
+//! ```
+//!
+//! ### SIMD Operations
+//!
+//! ```rust
+//! use scirs2_core::simd_ops::SimdUnifiedOps;
+//! use ndarray::array;
+//!
+//! // Automatic SIMD acceleration based on CPU capabilities
+//! let a = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
+//! let b = array![8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0, 1.0];
+//!
+//! // SIMD-accelerated element-wise addition
+//! let result = f64::simd_add(&a.view(), &b.view());
+//! ```
+//!
+//! ### Parallel Processing
+//!
+//! ```rust
+//! # #[cfg(feature = "parallel")]
+//! # {
+//! use scirs2_core::parallel_ops::*;
+//!
+//! // Parallel iteration over chunks
+//! let data = vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+//! par_chunks(&data, 3).for_each(|chunk| {
+//!     // Process each chunk in parallel
+//!     let sum: i32 = chunk.iter().sum();
+//!     println!("Chunk sum: {}", sum);
+//! });
+//! # }
+//! ```
+//!
+//! ### Input Validation
+//!
+//! ```rust
+//! use scirs2_core::validation::*;
+//! use scirs2_core::error::CoreResult;
+//! use ndarray::Array2;
+//!
+//! fn process_matrix(data: &Array2<f64>, k: usize) -> CoreResult<()> {
+//!     // Validate inputs
+//!     check_positive(k, "k")?;
+//!     checkarray_finite(data, "data")?;
+//!     checkshape(data, &[2, 3], "data")?;
+//!
+//!     // Process data...
+//!     Ok(())
+//! }
+//! # let data = Array2::<f64>::zeros((2, 3));
+//! # let _ = process_matrix(&data, 5);
+//! ```
+//!
+//! ### Constants
+//!
+//! ```rust
+//! use scirs2_core::constants::{math, physical};
+//!
+//! // Mathematical constants
+//! let pi = math::PI;
+//! let e = math::E;
+//!
+//! // Physical constants
+//! let c = physical::SPEED_OF_LIGHT;
+//! let h = physical::PLANCK;
+//! ```
+//!
+//! ### Random Number Generation
+//!
+//! ```rust
+//! # #[cfg(feature = "random")]
+//! # {
+//! # fn main() -> Result<(), Box<dyn std::error::Error>> {
+//! use scirs2_core::random::*;
+//! use rand::Rng;
+//!
+//! // Standard distributions
+//! let mut rng = rand::rng();
+//! let normal = Normal::new(0.0, 1.0)?;
+//! let samples: Vec<f64> = (0..1000).map(|_| normal.sample(&mut rng)).collect();
+//!
+//! let uniform = Uniform::new(0.0, 1.0)?;
+//! let samples: Vec<f64> = (0..1000).map(|_| uniform.sample(&mut rng)).collect();
+//! # Ok(())
+//! # }
+//! # }
+//! ```
+//!
+//! ### Memory-Efficient Operations
+//!
+//! ```rust,no_run
+//! # #[cfg(feature = "memory_efficient")]
+//! # {
+//! # fn main() -> Result<(), Box<dyn std::error::Error>> {
+//! use scirs2_core::memory_efficient::*;
+//! use std::path::Path;
+//! use ndarray::Array2;
+//!
+//! // Memory-mapped array for large datasets
+//! let data = Array2::<f64>::zeros((1000, 1000));
+//! let path = Path::new("/path/to/large_file.dat");
+//! let mmap = create_mmap(&data, path, AccessMode::ReadWrite, 0)?;
+//!
+//! // Chunked operations for out-of-core processing
+//! let result = chunk_wise_op(&data, |chunk| {
+//!     chunk.mapv(|x| x * 2.0)
+//! }, ChunkingStrategy::Fixed(10000))?;
+//! # Ok(())
+//! # }
+//! # }
+//! ```
+//!
+//! ## 🏗️ Architecture
+//!
+//! ```text
+//! ┌─────────────────────────────────────────┐
+//! │     SciRS2 Ecosystem Modules            │
+//! │  (linalg, stats, neural, vision, etc.)  │
+//! └─────────────────────────────────────────┘
+//!              ▼
+//! ┌─────────────────────────────────────────┐
+//! │         scirs2-core (This Crate)        │
+//! │  ┌────────────────────────────────────┐ │
+//! │  │  High-Level Abstractions           │ │
+//! │  │  - SIMD Operations                 │ │
+//! │  │  - Parallel Processing             │ │
+//! │  │  - GPU Acceleration                │ │
+//! │  │  - Error Handling                  │ │
+//! │  └────────────────────────────────────┘ │
+//! │  ┌────────────────────────────────────┐ │
+//! │  │  Core Utilities                    │ │
+//! │  │  - Array Protocol                  │ │
+//! │  │  - Validation                      │ │
+//! │  │  - Memory Management               │ │
+//! │  │  - Configuration                   │ │
+//! │  └────────────────────────────────────┘ │
+//! └─────────────────────────────────────────┘
+//!              ▼
+//! ┌─────────────────────────────────────────┐
+//! │     External Dependencies               │
+//! │  (ndarray, rayon, BLAS, etc.)           │
+//! │  ⚠️  Only scirs2-core depends directly  │
+//! └─────────────────────────────────────────┘
+//! ```
+//!
+//! ## 🎨 Feature Flags
+//!
+//! ### Performance Features
+//!
+//! - `simd` - SIMD acceleration (SSE, AVX, NEON)
+//! - `parallel` - Multi-threaded execution via Rayon
+//! - `gpu` - GPU acceleration (CUDA, Metal, OpenCL)
+//!
+//! ### Memory Management
+//!
+//! - `memory_management` - Advanced memory management (buffer pools, tracking)
+//! - `memory_efficient` - Memory-mapped arrays and lazy evaluation
+//! - `memory_metrics` - Memory usage tracking and profiling
+//!
+//! ### Scientific Computing
+//!
+//! - `array` - Scientific array types (MaskedArray, RecordArray)
+//! - `random` - Random number generation
+//! - `linalg` - Linear algebra with BLAS/LAPACK
+//!
+//! ### Development & Debugging
+//!
+//! - `validation` - Input validation (recommended for development)
+//! - `logging` - Structured logging
+//! - `profiling` - Performance profiling
+//! - `testing` - Testing utilities
+//!
+//! ### Advanced Features
+//!
+//! - `cloud` - Cloud storage (S3, GCS, Azure)
+//! - `jit` - Just-in-time compilation with LLVM
+//! - `ml_pipeline` - ML pipeline integration
+//!
+//! ### Convenience
+//!
+//! - `default` - Commonly used features (parallel, validation)
+//! - `all` - All features except backend-specific ones
+//!
+//! ## 🔒 SciRS2 Policy Compliance
+//!
+//! **Important**: scirs2-core is the **only** crate in the SciRS2 ecosystem that directly
+//! depends on external crates like `ndarray`, `rand`, `rayon`, etc.
+//!
+//! All other SciRS2 crates **must** use abstractions provided by scirs2-core:
+//!
+//! ```rust,ignore
+//! // ✅ CORRECT: Use scirs2-core abstractions
+//! use scirs2_core::ndarray::Array2;
+//! use scirs2_core::random::Normal;
+//! use scirs2_core::parallel_ops::*;
+//!
+//! // ❌ WRONG: Don't import external deps directly in other crates
+//! // use ndarray::Array2;       // NO!
+//! // use rand_distr::Normal;    // NO!
+//! // use rayon::prelude::*;     // NO!
+//! ```
+//!
+//! This policy ensures:
+//! - Consistent APIs across the ecosystem
+//! - Centralized version management
+//! - Easy addition of SciRS2-specific extensions
+//! - Better compile times through reduced duplication
+//!
+//! ## 📊 Performance
+//!
+//! scirs2-core provides multiple optimization levels:
+//!
+//! | Feature | Speedup | Use Case |
+//! |---------|---------|----------|
+//! | SIMD | 2-8x | Array operations, numerical computations |
+//! | Parallel | 2-16x | Large datasets, independent operations |
+//! | GPU | 10-100x | Massive parallelism, deep learning |
+//! | Memory-mapped | ∞ | Out-of-core processing, datasets larger than RAM |
+//!
+//! ### Platform Detection
+//!
+//! Automatic CPU feature detection for optimal SIMD usage:
+//!
+//! ```rust
+//! use scirs2_core::simd_ops::PlatformCapabilities;
+//!
+//! let caps = PlatformCapabilities::detect();
+//! println!("SIMD available: {}", caps.simd_available);
+//! println!("AVX2 available: {}", caps.avx2_available);
+//! println!("GPU available: {}", caps.gpu_available);
+//! ```
+//!
+//! ## 🔗 Integration
+//!
+//! scirs2-core integrates seamlessly with the Rust ecosystem:
+//!
+//! - **ndarray**: Core array operations
+//! - **num-traits**: Generic numeric operations
+//! - **rayon**: Parallel processing
+//! - **BLAS/LAPACK**: Optimized linear algebra
+//!
+//! ## 🔒 Version
+//!
+//! Current version: **0.1.0-beta.4** (Released October 01, 2025)
+//!
+//! ## 📚 Examples
+//!
+//! See the [examples directory](https://github.com/cool-japan/scirs/tree/master/scirs2-core/examples)
+//! for more detailed usage examples.
 
 // Re-export modules
 pub mod api_freeze;
@@ -364,6 +620,25 @@ pub use crate::validation::{
     check_finite, check_in_bounds, check_positive, checkarray_finite, checkshape,
 };
 pub use rand_chacha::{ChaCha12Rng, ChaCha20Rng, ChaCha8Rng};
+
+// ================================
+// Prelude Module
+// ================================
+
+/// Convenient re-exports of commonly used items
+///
+/// Import this module to get quick access to the most frequently used
+/// types, traits, and functions in the SciRS2 ecosystem without needing
+/// to remember specific import paths.
+///
+/// # Example
+///
+/// ```rust
+/// use scirs2_core::prelude::*;
+///
+/// let data = array![[1.0, 2.0], [3.0, 4.0]];
+/// ```
+pub mod prelude;
 
 #[cfg(feature = "data_validation")]
 pub use crate::validation::data::DataType as ValidationDataType;

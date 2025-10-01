@@ -134,8 +134,153 @@ pub fn quantized_matmul(
     Ok(result)
 }
 
-// TODO: Add the following functions from the original mod.rs:
-// - quantized_matvec (lines ~1562-1673)
-// - quantized_dot (lines ~1674-1779)
+/// Perform matrix-vector multiplication with quantized matrix and vector
+///
+/// # Arguments
+///
+/// * `a` - The quantized matrix
+/// * `a_params` - Quantization parameters for the matrix
+/// * `b` - The quantized vector
+/// * `b_params` - Quantization parameters for the vector
+///
+/// # Returns
+///
+/// The result of the matrix-vector multiplication in floating-point
+pub fn quantized_matvec(
+    a: &QuantizedMatrix,
+    a_params: &QuantizationParams,
+    b: &QuantizedVector,
+    b_params: &QuantizationParams,
+) -> LinalgResult<Array1<f32>> {
+    // Check dimensions
+    if a.ncols() != b.len() {
+        return Err(LinalgError::DimensionError(format!(
+            "Cannot multiply matrix with shape {:?} and vector with length {}",
+            a.shape(),
+            b.len()
+        )));
+    }
 
-// These functions will be added in subsequent iterations to complete the operations module.
+    let m = a.nrows();
+    let n = a.ncols();
+
+    // Create result vector
+    let mut result = Array1::zeros(m);
+
+    // For floating point quantization types
+    if matches!(
+        a_params.data_type,
+        QuantizedDataType::Float16 | QuantizedDataType::BFloat16
+    ) && matches!(
+        b_params.data_type,
+        QuantizedDataType::Float16 | QuantizedDataType::BFloat16
+    ) {
+        // Dequantize and compute in floating point
+        let a_full = dequantize_matrix(a, a_params);
+        let b_full = dequantize_vector(b, b_params);
+
+        for i in 0..m {
+            let mut sum = 0.0_f32;
+            for j in 0..n {
+                sum += a_full[[i, j]] * b_full[j];
+            }
+            result[i] = sum;
+        }
+
+        return Ok(result);
+    }
+
+    // For integer quantization
+    let a_scale = a_params.scale;
+    let b_scale = b_params.scale;
+
+    for i in 0..m {
+        let mut sum: i32 = 0;
+
+        for j in 0..n {
+            let a_val = a.get_i8(i, j) as i32;
+            let b_val = b.get_i8(j) as i32;
+            sum += a_val * b_val;
+        }
+
+        result[i] = sum as f32 * a_scale * b_scale;
+    }
+
+    Ok(result)
+}
+
+/// Perform dot product with two quantized vectors
+///
+/// # Arguments
+///
+/// * `a` - The first quantized vector
+/// * `a_params` - Quantization parameters for the first vector
+/// * `b` - The second quantized vector
+/// * `b_params` - Quantization parameters for the second vector
+///
+/// # Returns
+///
+/// The dot product result in floating-point
+pub fn quantized_dot(
+    a: &QuantizedVector,
+    a_params: &QuantizationParams,
+    b: &QuantizedVector,
+    b_params: &QuantizationParams,
+) -> LinalgResult<f32> {
+    // Check dimensions
+    if a.len() != b.len() {
+        return Err(LinalgError::DimensionError(format!(
+            "Cannot compute dot product of vectors with lengths {} and {}",
+            a.len(),
+            b.len()
+        )));
+    }
+
+    let n = a.len();
+
+    // For floating point quantization types
+    if matches!(
+        a_params.data_type,
+        QuantizedDataType::Float16 | QuantizedDataType::BFloat16
+    ) && matches!(
+        b_params.data_type,
+        QuantizedDataType::Float16 | QuantizedDataType::BFloat16
+    ) {
+        // Dequantize and compute in floating point
+        let a_full = dequantize_vector(a, a_params);
+        let b_full = dequantize_vector(b, b_params);
+
+        let mut sum = 0.0_f32;
+        for i in 0..n {
+            sum += a_full[i] * b_full[i];
+        }
+
+        return Ok(sum);
+    }
+
+    // For integer quantization
+    let a_scale = a_params.scale;
+    let b_scale = b_params.scale;
+
+    let mut sum: i32 = 0;
+
+    for i in 0..n {
+        let a_val = a.get_i8(i) as i32;
+        let b_val = b.get_i8(i) as i32;
+        sum += a_val * b_val;
+    }
+
+    Ok(sum as f32 * a_scale * b_scale)
+}
+
+// Helper function to dequantize a vector
+fn dequantize_vector(vec: &QuantizedVector, _params: &QuantizationParams) -> Array1<f32> {
+    let n = vec.len();
+    let mut result = Array1::zeros(n);
+
+    for i in 0..n {
+        result[i] = vec.get_f32(i);
+    }
+
+    result
+}

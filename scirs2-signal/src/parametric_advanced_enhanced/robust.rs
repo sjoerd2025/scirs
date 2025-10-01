@@ -426,8 +426,8 @@ mod tests {
         assert!(robust_result.robust_scale > 0.0);
 
         // Check that outliers are detected
-        let outlier_count = robust_result.outliers.iter().filter(|&&x| x).count();
-        assert!(outlier_count >= 0); // Allow 0 or more outliers detected
+        let _outlier_count = robust_result.outliers.iter().filter(|&&x| x).count();
+        // outlier_count is usize and always >= 0, so no assertion needed
     }
 
     #[test]

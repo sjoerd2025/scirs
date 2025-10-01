@@ -140,7 +140,11 @@ unsafe fn cblas_sgemm_large_simd_ultra(
                         #[cfg(not(feature = "simd"))]
                         {
                             // Fallback dot product when SIMD is not available
-                            sum = a_array.iter().zip(b_array.iter()).map(|(&a, &b)| a * b).sum();
+                            sum = a_array
+                                .iter()
+                                .zip(b_array.iter())
+                                .map(|(&a, &b)| a * b)
+                                .sum();
                         }
                     } else {
                         // Fallback for small K

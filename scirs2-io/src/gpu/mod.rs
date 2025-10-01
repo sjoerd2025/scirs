@@ -380,7 +380,7 @@ mod tests {
     #[test]
     fn test_gpu_availability_check() {
         // Should always return true due to CPU fallback
-        assert!(utils::is_gpu_available() || true); // Always pass since CPU is available
+        assert!(true); // Always pass since CPU is available
     }
 
     #[test]

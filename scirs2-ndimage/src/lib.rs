@@ -7,10 +7,51 @@
 #![allow(unexpected_cfgs)]
 #![allow(unused_attributes)]
 #![allow(dead_code)]
-//! N-dimensional image processing module
+//! # SciRS2 NDImage - N-Dimensional Image Processing
 //!
-//! This module provides functions for processing and analyzing n-dimensional arrays as images.
-//! It includes filters, interpolation, measurements, morphology, feature detection, and segmentation functions.
+//! **scirs2-ndimage** provides comprehensive N-dimensional image processing modeled after SciPy's
+//! `ndimage` module, offering filtering, morphology, interpolation, measurements, segmentation,
+//! and feature detection with GPU acceleration and chunked processing for large images.
+//!
+//! ## 🎯 Key Features
+//!
+//! - **SciPy Compatibility**: Drop-in replacement for `scipy.ndimage` functions
+//! - **Comprehensive Filters**: Gaussian, median, Sobel, bilateral, anisotropic diffusion
+//! - **Morphological Operations**: Erosion, dilation, opening, closing, skeletonization
+//! - **Image Measurements**: Center of mass, moments, label statistics
+//! - **Segmentation**: Watershed, region growing, active contours
+//! - **Feature Detection**: Edge detection (Canny, Sobel), corner detection (Harris)
+//! - **GPU Acceleration**: CUDA/ROCm for large-scale image processing
+//! - **Memory Efficient**: Chunked processing for images larger than RAM
+//!
+//! ## 📦 Module Overview
+//!
+//! | SciRS2 Module | SciPy Equivalent | Description |
+//! |---------------|------------------|-------------|
+//! | `filters` | `scipy.ndimage.filters` | Convolution, Gaussian, median filters |
+//! | `morphology` | `scipy.ndimage.morphology` | Erosion, dilation, binary operations |
+//! | `interpolation` | `scipy.ndimage.interpolation` | Rotation, zoom, shift, affine transforms |
+//! | `measurements` | `scipy.ndimage.measurements` | Label, center of mass, histograms |
+//! | `segmentation` | - | Watershed, region growing, active contours |
+//! | `features` | - | Edge detection, corner detection, keypoints |
+//!
+//! ## 🚀 Quick Start
+//!
+//! ```toml
+//! [dependencies]
+//! scirs2-ndimage = "0.1.0-beta.4"
+//! ```
+//!
+//! ```rust,no_run
+//! use scirs2_ndimage::filters;
+//! use scirs2_core::ndarray::Array2;
+//!
+//! // Gaussian filter
+//! let image = Array2::<f64>::zeros((256, 256));
+//! let filtered = filters::gaussian_filter(&image, 2.0, None, None).unwrap();
+//! ```
+//!
+//! ## 🔒 Version: 0.1.0-beta.4 (October 01, 2025)
 
 // Public modules
 pub mod adaptive_image_optimizer;

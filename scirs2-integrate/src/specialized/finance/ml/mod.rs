@@ -13,9 +13,11 @@ pub mod portfolio_optim;
 pub mod volatility_forecast;
 
 // Re-export commonly used items
+pub use volatility_forecast::{EWMAModel, GarchModel, HistoricalVolatility, VolatilityForecaster};
+
+// Stub exports (to be implemented)
 pub use neural_pricing::NeuralPricer;
 pub use portfolio_optim::MLPortfolioOptimizer;
-pub use volatility_forecast::VolatilityForecaster;
 
 // TODO: Implement common ML utilities for finance
 // - Feature engineering for financial time series

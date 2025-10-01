@@ -50,6 +50,69 @@ enum MorphOperation {
     Dilation,
 }
 
+/// Reflect border mode: mirror values at boundaries (duplicates edge)
+/// For position p outside [0, size), reflects it back into the array
+/// Example: [-1, 0, 1, 2, 3, 4] for size=3 → [1, 0, 1, 2, 2, 1]
+#[inline]
+fn reflect_index(pos: isize, size: isize) -> usize {
+    if pos < 0 {
+        // Reflect negative indices
+        (-pos).min(size - 1) as usize
+    } else if pos >= size {
+        // Reflect indices beyond array
+        let overflow = pos - size + 1;
+        (size - 1 - overflow).max(0) as usize
+    } else {
+        pos as usize
+    }
+}
+
+/// Mirror border mode: reflect without duplicating edge
+/// For position p outside [0, size), mirrors it without edge duplication
+/// Example: [-1, 0, 1, 2, 3, 4] for size=3 → [0, 0, 1, 2, 2, 1]
+#[inline]
+fn mirror_index(pos: isize, size: isize) -> usize {
+    if size == 1 {
+        return 0;
+    }
+
+    let period = 2 * (size - 1);
+    let mut adjusted = pos;
+
+    // Bring into range [0, period)
+    if adjusted < 0 {
+        adjusted = period - (-adjusted % period);
+    }
+    adjusted %= period;
+
+    // Mirror around center
+    if adjusted < size {
+        adjusted as usize
+    } else {
+        (period - adjusted) as usize
+    }
+}
+
+/// Wrap border mode: periodic boundary conditions
+/// For position p outside [0, size), wraps around periodically
+/// Example: [-1, 0, 1, 2, 3, 4] for size=3 → [2, 0, 1, 2, 0, 1]
+#[inline]
+fn wrap_index(pos: isize, size: isize) -> usize {
+    let mut adjusted = pos % size;
+    if adjusted < 0 {
+        adjusted += size;
+    }
+    adjusted as usize
+}
+
+/// Nearest border mode: clamp to edge values
+/// For position p outside [0, size), uses the nearest edge value
+/// Example: [-1, 0, 1, 2, 3, 4] for size=3 → [0, 0, 1, 2, 2, 2]
+#[inline]
+fn nearest_index(pos: isize, size: isize) -> usize {
+    pos.max(0).min(size - 1) as usize
+}
+
 /// Erode a grayscale array using a structuring element
 ///
 /// Grayscale erosion replaces each pixel with the minimum value within the neighborhood
@@ -1059,17 +1122,61 @@ where
                     }
                 }
 
-                // Get the value
+                // Get the value with proper border handling
                 let val = if within_bounds {
                     let input_idx: Vec<_> = input_pos.iter().map(|&x| x as usize).collect();
                     temp[ndarray::IxDyn(&input_idx)]
                 } else {
                     match border_mode {
                         MorphBorderMode::Constant => constant_value,
-                        MorphBorderMode::Reflect => constant_value, // TODO: Implement reflection
-                        MorphBorderMode::Mirror => constant_value,  // TODO: Implement mirroring
-                        MorphBorderMode::Wrap => constant_value,    // TODO: Implement wrapping
-                        MorphBorderMode::Nearest => constant_value, // TODO: Implement nearest
+                        MorphBorderMode::Reflect => {
+                            // Reflect: mirror values at boundaries (duplicates edge)
+                            let reflected_idx: Vec<_> = input_pos
+                                .iter()
+                                .enumerate()
+                                .map(|(d, &pos)| {
+                                    let size = input.shape()[d] as isize;
+                                    reflect_index(pos, size)
+                                })
+                                .collect();
+                            temp[ndarray::IxDyn(&reflected_idx)]
+                        }
+                        MorphBorderMode::Mirror => {
+                            // Mirror: reflect without duplicating edge
+                            let mirrored_idx: Vec<_> = input_pos
+                                .iter()
+                                .enumerate()
+                                .map(|(d, &pos)| {
+                                    let size = input.shape()[d] as isize;
+                                    mirror_index(pos, size)
+                                })
+                                .collect();
+                            temp[ndarray::IxDyn(&mirrored_idx)]
+                        }
+                        MorphBorderMode::Wrap => {
+                            // Wrap: periodic boundary conditions
+                            let wrapped_idx: Vec<_> = input_pos
+                                .iter()
+                                .enumerate()
+                                .map(|(d, &pos)| {
+                                    let size = input.shape()[d] as isize;
+                                    wrap_index(pos, size)
+                                })
+                                .collect();
+                            temp[ndarray::IxDyn(&wrapped_idx)]
+                        }
+                        MorphBorderMode::Nearest => {
+                            // Nearest: clamp to edge values
+                            let clamped_idx: Vec<_> = input_pos
+                                .iter()
+                                .enumerate()
+                                .map(|(d, &pos)| {
+                                    let size = input.shape()[d] as isize;
+                                    nearest_index(pos, size)
+                                })
+                                .collect();
+                            temp[ndarray::IxDyn(&clamped_idx)]
+                        }
                     }
                 };
 

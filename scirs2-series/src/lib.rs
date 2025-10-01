@@ -4,17 +4,53 @@
 #![allow(unused_assignments)]
 #![allow(unused_variables)]
 #![allow(private_interfaces)]
-//! Time series analysis module for SciRS2
+//! # SciRS2 Series - Time Series Analysis
 //!
-//! This module provides functionality for time series analysis, including:
-//! - Time series decomposition (trend, seasonality, residual)
-//!   - Classical decomposition (additive and multiplicative)
-//!   - STL decomposition
-//!   - Singular Spectrum Analysis (SSA)
-//!   - Multiple seasonal decomposition (MSTL)
-//!   - TBATS (Trigonometric, Box-Cox, ARMA, Trend, Seasonal)
-//!   - STR (Seasonal-Trend decomposition using Regression)
-//!   - Exponential smoothing decomposition
+//! **scirs2-series** provides comprehensive time series analysis capabilities,
+//! offering decomposition, forecasting (ARIMA, VAR, Prophet-style), anomaly detection,
+//! change point detection, and advanced methods with parallel processing and streaming support.
+//!
+//! ## 🎯 Key Features
+//!
+//! - **Decomposition**: STL, classical, SSA, MSTL, TBATS for trend/seasonality extraction
+//! - **Forecasting**: ARIMA, SARIMA, VAR, VECM, exponential smoothing
+//! - **Anomaly Detection**: Statistical, isolation forest, distance-based methods
+//! - **Change Point Detection**: PELT, binary segmentation, CUSUM, Bayesian online
+//! - **Causality Testing**: Granger causality, transfer entropy, convergent cross mapping
+//! - **Clustering**: Time series k-means, hierarchical, DTW-based clustering
+//! - **State-Space Models**: Kalman filtering, structural models, dynamic linear models
+//! - **Transformations**: Box-Cox, differencing, stationarity tests (ADF, KPSS)
+//!
+//! ## 📦 Module Overview
+//!
+//! | SciRS2 Module | Python Equivalent | Description |
+//! |---------------|-------------------|-------------|
+//! | `decomposition` | `statsmodels.tsa.seasonal.STL` | Time series decomposition |
+//! | `arima` | `statsmodels.tsa.arima.model.ARIMA` | ARIMA forecasting |
+//! | `var` | `statsmodels.tsa.vector_ar.var_model.VAR` | Vector autoregression |
+//! | `anomaly` | - | Anomaly/outlier detection |
+//! | `changepoint` | `ruptures` | Change point detection |
+//! | `causality` | `statsmodels.tsa.stattools.grangercausalitytests` | Granger causality testing |
+//!
+//! ## 🚀 Quick Start
+//!
+//! ```toml
+//! [dependencies]
+//! scirs2-series = "0.1.0-beta.4"
+//! ```
+//!
+//! ```rust,no_run
+//! use scirs2_series::decomposition::stl::{stl_decomposition, STLOptions};
+//! use scirs2_core::ndarray::array;
+//!
+//! // STL decomposition
+//! let data = array![1.0, 2.0, 3.0, 4.0, 5.0, 4.0, 3.0, 2.0]; // Seasonal data
+//! let options = STLOptions::default();
+//! let result = stl_decomposition(&data, 4, &options).unwrap();
+//! // result.trend, result.seasonal, result.residual
+//! ```
+//!
+//! ## 🔒 Version: 0.1.0-beta.4 (October 01, 2025)
 //! - Change point detection
 //!   - PELT (Pruned Exact Linear Time) algorithm
 //!   - Binary segmentation

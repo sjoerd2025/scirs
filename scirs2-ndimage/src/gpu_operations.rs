@@ -18,6 +18,7 @@ use crate::backend::gpu_acceleration_framework::{
 use crate::backend::{Backend, DeviceManager};
 use crate::error::{NdimageError, NdimageResult};
 use crate::interpolation::BoundaryMode;
+use std::f64::consts::PI;
 
 /// High-level GPU operations manager for ndimage
 pub struct GpuOperations {
@@ -703,9 +704,72 @@ impl GpuOperations {
     where
         T: Float + FromPrimitive + Clone + Send + Sync + std::ops::DivAssign + std::ops::AddAssign,
     {
-        // TODO: Implement proper CPU fallback for Gaussian filter
-        // For now, return input unchanged as placeholder
-        Ok(input.to_owned())
+        // Implement simple Gaussian filter as CPU fallback
+        // Use separable convolution: convolve along rows then columns
+
+        let (rows, cols) = (input.nrows(), input.ncols());
+        let (sigma_x, sigma_y) = sigma;
+
+        // Create 1D Gaussian kernels
+        let kernel_size_x = (6.0 * sigma_x).ceil() as usize | 1; // Ensure odd
+        let kernel_size_y = (6.0 * sigma_y).ceil() as usize | 1;
+
+        let kernel_x = gaussian_kernel_1d(sigma_x, kernel_size_x);
+        let kernel_y = gaussian_kernel_1d(sigma_y, kernel_size_y);
+
+        // Convolve along rows first
+        let mut temp = Array::zeros((rows, cols));
+        for i in 0..rows {
+            for j in 0..cols {
+                let mut sum = T::zero();
+                let mut weight_sum = T::zero();
+
+                let half_k = (kernel_size_x / 2) as isize;
+                for k_idx in 0..kernel_size_x {
+                    let j_offset = j as isize + k_idx as isize - half_k;
+                    let weight = safe_f64_to_float::<T>(kernel_x[k_idx])?;
+
+                    if j_offset >= 0 && j_offset < cols as isize {
+                        sum = sum + input[[i, j_offset as usize]] * weight;
+                        weight_sum = weight_sum + weight;
+                    }
+                }
+
+                if weight_sum > T::zero() {
+                    temp[[i, j]] = sum / weight_sum;
+                } else {
+                    temp[[i, j]] = input[[i, j]];
+                }
+            }
+        }
+
+        // Convolve along columns
+        let mut output = Array::zeros((rows, cols));
+        for j in 0..cols {
+            for i in 0..rows {
+                let mut sum = T::zero();
+                let mut weight_sum = T::zero();
+
+                let half_k = (kernel_size_y / 2) as isize;
+                for k_idx in 0..kernel_size_y {
+                    let i_offset = i as isize + k_idx as isize - half_k;
+                    let weight = safe_f64_to_float::<T>(kernel_y[k_idx])?;
+
+                    if i_offset >= 0 && i_offset < rows as isize {
+                        sum = sum + temp[[i_offset as usize, j]] * weight;
+                        weight_sum = weight_sum + weight;
+                    }
+                }
+
+                if weight_sum > T::zero() {
+                    output[[i, j]] = sum / weight_sum;
+                } else {
+                    output[[i, j]] = temp[[i, j]];
+                }
+            }
+        }
+
+        Ok(output)
     }
 
     fn fallback_distance_transform<T>(
@@ -816,6 +880,37 @@ pub fn create_gpu_operations_with_config(
     config: GpuOperationsConfig,
 ) -> NdimageResult<GpuOperations> {
     GpuOperations::new(config)
+}
+
+/// Generate 1D Gaussian kernel
+fn gaussian_kernel_1d(sigma: f64, size: usize) -> Vec<f64> {
+    let center = (size / 2) as f64;
+    let coeff = 1.0 / (sigma * (2.0 * PI).sqrt());
+    let denom = 2.0 * sigma * sigma;
+
+    let mut kernel: Vec<f64> = (0..size)
+        .map(|i| {
+            let x = i as f64 - center;
+            coeff * (-x * x / denom).exp()
+        })
+        .collect();
+
+    // Normalize
+    let sum: f64 = kernel.iter().sum();
+    if sum > 0.0 {
+        for val in &mut kernel {
+            *val /= sum;
+        }
+    }
+
+    kernel
+}
+
+/// Safely convert f64 to generic float type
+fn safe_f64_to_float<T: Float>(value: f64) -> NdimageResult<T> {
+    T::from(value).ok_or_else(|| {
+        NdimageError::InvalidInput(format!("Cannot convert {} to target float type", value))
+    })
 }
 
 #[cfg(test)]

@@ -3,26 +3,59 @@
 #![allow(unused_mut)]
 #![allow(missing_docs)]
 #![allow(clippy::for_loops_over_fallibles)]
-// Spatial algorithms module
 #![allow(unreachable_patterns)]
 #![allow(unused_assignments)]
 #![allow(unused_variables)]
 #![allow(private_interfaces)]
-//
-// This module provides implementations of various spatial algorithms,
-// similar to SciPy's `spatial` module.
-//
-// ## Overview
-//
-// * Distance computations and metrics
-// * KD-trees for efficient nearest neighbor searches
-// * Ball trees for high-dimensional nearest neighbor searches
-// * Voronoi diagrams and Delaunay triangulation
-// * Convex hulls
-// * Set-based distances (Hausdorff, Wasserstein)
-// * Polygon operations
-// * Spatial transformations
-// * Path planning algorithms
+//! # SciRS2 Spatial - Spatial Algorithms and Data Structures
+//!
+//! **scirs2-spatial** provides comprehensive spatial algorithms modeled after SciPy's `spatial` module,
+//! offering distance metrics, KD-trees, ball trees, Delaunay triangulation, convex hulls, Voronoi diagrams,
+//! and path planning with SIMD acceleration and parallel processing.
+//!
+//! ## 🎯 Key Features
+//!
+//! - **SciPy Compatibility**: Drop-in replacement for `scipy.spatial` functions
+//! - **Distance Metrics**: 20+ metrics (Euclidean, Manhattan, Minkowski, cosine, etc.)
+//! - **Spatial Trees**: KD-tree and ball tree for efficient nearest neighbor queries
+//! - **Computational Geometry**: Delaunay triangulation, Voronoi diagrams, convex hulls
+//! - **Set Distances**: Hausdorff, Wasserstein (Earth Mover's Distance)
+//! - **Path Planning**: A*, RRT, visibility graphs for robotics/navigation
+//! - **Performance**: SIMD-accelerated distance computations, parallel queries
+//!
+//! ## 📦 Module Overview
+//!
+//! | SciRS2 Module | SciPy Equivalent | Description |
+//! |---------------|------------------|-------------|
+//! | `distance` | `scipy.spatial.distance` | Distance metrics and matrices |
+//! | `KDTree` | `scipy.spatial.KDTree` | K-dimensional tree for nearest neighbors |
+//! | `cKDTree` | `scipy.spatial.cKDTree` | Optimized KD-tree (C-accelerated) |
+//! | `ConvexHull` | `scipy.spatial.ConvexHull` | Convex hull computation |
+//! | `Delaunay` | `scipy.spatial.Delaunay` | Delaunay triangulation |
+//! | `Voronoi` | `scipy.spatial.Voronoi` | Voronoi diagram |
+//! | `transform` | `scipy.spatial.transform` | Rotation and transformation utilities |
+//!
+//! ## 🚀 Quick Start
+//!
+//! ```toml
+//! [dependencies]
+//! scirs2-spatial = "0.1.0-beta.4"
+//! ```
+//!
+//! ```rust
+//! use scirs2_spatial::{KDTree, distance};
+//! use scirs2_core::ndarray::array;
+//!
+//! // KD-Tree for nearest neighbor search
+//! let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]];
+//! let tree = KDTree::new(&points).unwrap();
+//! let (indices, dists) = tree.query(&[0.5, 0.5], 2).unwrap();
+//!
+//! // Distance computation
+//! let d = distance::euclidean(&[1.0, 2.0], &[4.0, 6.0]);
+//! ```
+//!
+//! ## 🔒 Version: 0.1.0-beta.4 (October 01, 2025)
 //
 // ## Features
 //

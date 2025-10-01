@@ -1,16 +1,48 @@
 #![allow(deprecated)]
-//! Graph processing module for SciRS2
+//! # SciRS2 Graph - Graph Algorithms and Network Analysis
 //!
-//! This module provides graph algorithms and data structures
-//! for scientific computing and machine learning applications.
+//! **scirs2-graph** provides comprehensive graph algorithms and data structures for network analysis,
+//! offering shortest paths, centrality measures, community detection, spectral methods, and graph
+//! embeddings with parallel processing and memory-efficient implementations.
 //!
-//! ## Features
+//! ## 🎯 Key Features
 //!
-//! - Basic graph representations and operations
-//! - Graph algorithms (traversal, shortest paths, etc.)
-//! - Network analysis (centrality measures, community detection)
-//! - Spectral graph theory
-//! - Support for graph neural networks
+//! - **Graph Representations**: Directed, undirected, weighted, multi-graphs
+//! - **Classic Algorithms**: BFS, DFS, Dijkstra, A*, Bellman-Ford, Floyd-Warshall
+//! - **Centrality Measures**: Betweenness, closeness, eigenvector, PageRank
+//! - **Community Detection**: Louvain, label propagation, spectral clustering
+//! - **Spectral Methods**: Graph Laplacian, spectral clustering, graph embeddings
+//! - **Network Metrics**: Clustering coefficient, diameter, average path length
+//! - **Performance**: Parallel algorithms, memory profiling
+//!
+//! ## 📦 Module Overview
+//!
+//! | SciRS2 Module | NetworkX/igraph Equivalent | Description |
+//! |---------------|----------------------------|-------------|
+//! | `algorithms` | `networkx.algorithms` | Core graph algorithms (BFS, DFS, shortest paths) |
+//! | `measures` | `networkx.centrality` | Centrality and network metrics |
+//! | `spectral` | `scipy.sparse.linalg` | Spectral graph theory and embeddings |
+//! | `generators` | `networkx.generators` | Graph generation (random, regular, etc.) |
+//! | `io` | `networkx.readwrite` | Graph I/O (GML, GraphML, edge lists) |
+//!
+//! ## 🚀 Quick Start
+//!
+//! ```toml
+//! [dependencies]
+//! scirs2-graph = "0.1.0-beta.4"
+//! ```
+//!
+//! ```rust,no_run
+//! use scirs2_graph::{Graph, breadth_first_search, betweenness_centrality};
+//!
+//! // Create graph and run BFS
+//! let mut g: Graph<i32, f64> = Graph::new();
+//! let n0 = g.add_node(0);
+//! let n1 = g.add_node(1);
+//! g.add_edge(0, 1, 1.0);
+//! ```
+//!
+//! ## 🔒 Version: 0.1.0-beta.4 (October 01, 2025)
 //!
 //! ## API Stability and Versioning
 //!

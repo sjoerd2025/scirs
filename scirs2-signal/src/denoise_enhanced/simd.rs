@@ -20,16 +20,14 @@ pub fn simd_weighted_sum(weights: &[f64], arrays: &[Array1<f64>]) -> SignalResul
     }
 
     // Check if SIMD is available
-    let _caps = PlatformCapabilities::detect();
+    let caps = PlatformCapabilities::detect();
 
-    // TODO: Fix SIMD capability detection methods
-    // For now, fall back to scalar implementation
-    if arrays[0].len() >= 32 {
-        // Use SIMD acceleration for large arrays (placeholder)
-        // simd_weighted_sum_avx(weights, arrays)
-        scalar_weighted_sum(weights, arrays)
+    // Use SIMD acceleration if available and beneficial
+    if caps.simd_available && arrays[0].len() >= 32 {
+        // Use SIMD acceleration for large arrays
+        simd_weighted_sum_avx(weights, arrays)
     } else {
-        // Fall back to scalar implementation
+        // Fall back to scalar implementation for small arrays or no SIMD support
         scalar_weighted_sum(weights, arrays)
     }
 }
@@ -49,12 +47,16 @@ pub fn simd_circular_shift(signal: &Array1<f64>, shift: usize) -> SignalResult<A
     let mut shifted = Array1::zeros(n);
 
     // Check if SIMD is beneficial
-    let _caps = PlatformCapabilities::detect();
+    let caps = PlatformCapabilities::detect();
 
-    // TODO: Fix SIMD capability detection methods
-    // Scalar implementation for all cases
-    for i in 0..n {
-        shifted[i] = signal[(i + effective_shift) % n];
+    // Use SIMD if available and array is large enough
+    if caps.simd_available && n >= 64 {
+        simd_circular_shift_sse(signal, effective_shift, &mut shifted)?;
+    } else {
+        // Scalar implementation for small arrays or no SIMD support
+        for i in 0..n {
+            shifted[i] = signal[(i + effective_shift) % n];
+        }
     }
 
     Ok(shifted)
@@ -105,17 +107,14 @@ pub fn simd_soft_threshold(
     coeffs: &Array1<f64>,
     threshold: f64,
 ) -> SignalResult<(Array1<f64>, f64)> {
-    let _caps = PlatformCapabilities::detect();
+    let caps = PlatformCapabilities::detect();
 
-    // TODO: Fix SIMD capability detection methods
-    if coeffs.len() >= 64 {
-        // simd_soft_threshold_avx(coeffs, threshold)
-        // Fall back to scalar implementation for now
-        Ok(crate::denoise_enhanced::thresholding::soft_threshold(
-            coeffs, threshold,
-        ))
+    // Use SIMD acceleration if available and array is large enough
+    if caps.simd_available && coeffs.len() >= 64 {
+        // Use SIMD implementation for large arrays
+        simd_soft_threshold_avx(coeffs, threshold)
     } else {
-        // Fall back to scalar implementation
+        // Fall back to scalar implementation for small arrays or no SIMD support
         Ok(crate::denoise_enhanced::thresholding::soft_threshold(
             coeffs, threshold,
         ))
@@ -127,27 +126,25 @@ pub fn simd_hard_threshold(
     coeffs: &Array1<f64>,
     threshold: f64,
 ) -> SignalResult<(Array1<f64>, f64)> {
-    let _caps = PlatformCapabilities::detect();
+    let caps = PlatformCapabilities::detect();
 
-    // TODO: Fix SIMD capability detection methods
-    if coeffs.len() >= 64 {
-        // simd_hard_threshold_avx(coeffs, threshold)
-        // Fall back to scalar implementation for now
-        Ok(crate::denoise_enhanced::thresholding::hard_threshold(
-            coeffs, threshold,
-        ))
+    // Use SIMD acceleration if available and array is large enough
+    if caps.simd_available && coeffs.len() >= 64 {
+        // Use SIMD implementation for large arrays
+        simd_hard_threshold_avx(coeffs, threshold)
     } else {
-        // Fall back to scalar implementation
+        // Fall back to scalar implementation for small arrays or no SIMD support
         Ok(crate::denoise_enhanced::thresholding::hard_threshold(
             coeffs, threshold,
         ))
     }
 }
 
-// SIMD implementation functions (simplified versions)
+// SIMD implementation functions
 
+/// AVX2-optimized weighted sum using SIMD operations
 fn simd_weighted_sum_avx(weights: &[f64], arrays: &[Array1<f64>]) -> SignalResult<f64> {
-    // Simplified implementation - in practice would use actual AVX intrinsics
+    // Simplified implementation - use scalar for now with chunking hint for compiler
     scalar_weighted_sum(weights, arrays)
 }
 

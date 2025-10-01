@@ -4,17 +4,180 @@
 #![allow(unused_assignments)]
 #![allow(unused_variables)]
 #![allow(private_interfaces)]
-//! Optimization module for SciRS
+//! # SciRS2 Optimize - Mathematical Optimization for Rust
 //!
-//! This module provides implementations of various optimization algorithms,
-//! modeled after SciPy's `optimize` module.
+//! **scirs2-optimize** provides comprehensive optimization algorithms modeled after SciPy's
+//! `optimize` module, offering everything from simple function minimization to complex
+//! constrained optimization and global search.
 //!
+//! ## 🎯 Key Features
+//!
+//! - **Unconstrained Optimization**: BFGS, CG, Nelder-Mead, Powell
+//! - **Constrained Optimization**: SLSQP, Trust-region methods
+//! - **Global Optimization**: Differential Evolution, Basin-hopping, Simulated Annealing
+//! - **Least Squares**: Levenberg-Marquardt, robust fitting, bounded problems
+//! - **Root Finding**: Newton, Brent, Bisection methods
+//! - **Scalar Optimization**: Brent, Golden section search
+//! - **Bounds Support**: Box constraints for all major algorithms
 
 #![allow(clippy::field_reassign_with_default)]
 #![recursion_limit = "512"]
 // Allow common mathematical conventions in optimization code
 #![allow(clippy::many_single_char_names)] // x, f, g, h, n, m etc. are standard in optimization
 #![allow(clippy::similar_names)] // x_pp, x_pm, x_mp, x_mm are standard for finite differences
+//!
+//! ## 📦 Module Overview
+//!
+//! | Module | Description | SciPy Equivalent |
+//! |--------|-------------|------------------|
+//! | [`unconstrained`] | Unconstrained minimization (BFGS, CG, Powell) | `scipy.optimize.minimize` |
+//! | [`constrained`] | Constrained optimization (SLSQP, Trust-region) | `scipy.optimize.minimize` with constraints |
+//! | [`global`] | Global optimization (DE, Basin-hopping) | `scipy.optimize.differential_evolution` |
+//! | [`mod@least_squares`] | Nonlinear least squares (LM, robust methods) | `scipy.optimize.least_squares` |
+//! | [`roots`] | Root finding algorithms | `scipy.optimize.root` |
+//! | [`scalar`] | 1-D minimization | `scipy.optimize.minimize_scalar` |
+//!
+//! ## 🚀 Quick Start
+//!
+//! ### Installation
+//!
+//! ```toml
+//! [dependencies]
+//! scirs2-optimize = "0.1.0-beta.4"
+//! ```
+//!
+//! ### Unconstrained Minimization (Rosenbrock Function)
+//!
+//! ```rust
+//! use scirs2_optimize::unconstrained::{minimize, Method};
+//! use ndarray::ArrayView1;
+//!
+//! // Rosenbrock function: (1-x)² + 100(y-x²)²
+//! fn rosenbrock(x: &ArrayView1<f64>) -> f64 {
+//!     let x0 = x[0];
+//!     let x1 = x[1];
+//!     (1.0 - x0).powi(2) + 100.0 * (x1 - x0.powi(2)).powi(2)
+//! }
+//!
+//! # fn main() -> Result<(), Box<dyn std::error::Error>> {
+//! let initial_guess = [0.0, 0.0];
+//! let result = minimize(rosenbrock, &initial_guess, Method::BFGS, None)?;
+//!
+//! println!("Minimum at: {:?}", result.x);
+//! println!("Function value: {}", result.fun);
+//! println!("Converged: {}", result.success);
+//! # Ok(())
+//! # }
+//! ```
+//!
+//! ### Optimization with Bounds
+//!
+//! Constrain variables to specific ranges:
+//!
+//! ```rust
+//! use scirs2_optimize::{Bounds, unconstrained::{minimize, Method, Options}};
+//! use ndarray::ArrayView1;
+//!
+//! fn objective(x: &ArrayView1<f64>) -> f64 {
+//!     (x[0] + 1.0).powi(2) + (x[1] + 1.0).powi(2)
+//! }
+//!
+//! # fn main() -> Result<(), Box<dyn std::error::Error>> {
+//! // Constrain to positive quadrant: x >= 0, y >= 0
+//! let bounds = Bounds::new(&[
+//!     (Some(0.0), None),  // x >= 0
+//!     (Some(0.0), None),  // y >= 0
+//! ]);
+//!
+//! let mut options = Options::default();
+//! options.bounds = Some(bounds);
+//!
+//! let result = minimize(objective, &[0.5, 0.5], Method::Powell, Some(options))?;
+//! println!("Constrained minimum: {:?}", result.x);  // [0.0, 0.0]
+//! # Ok(())
+//! # }
+//! ```
+//!
+//! ### Robust Least Squares
+//!
+//! Fit data with outliers using robust loss functions:
+//!
+//! ```rust
+//! use scirs2_optimize::least_squares::{robust_least_squares, HuberLoss};
+//! use ndarray::{array, Array1};
+//!
+//! // Linear model residual: y - (a + b*x)
+//! fn residual(params: &[f64], data: &[f64]) -> Array1<f64> {
+//!     let n = data.len() / 2;
+//!     let x = &data[0..n];
+//!     let y = &data[n..];
+//!
+//!     let mut res = Array1::zeros(n);
+//!     for i in 0..n {
+//!         res[i] = y[i] - (params[0] + params[1] * x[i]);
+//!     }
+//!     res
+//! }
+//!
+//! # fn main() -> Result<(), Box<dyn std::error::Error>> {
+//! // Data: x = [0,1,2,3,4], y = [0.1,0.9,2.1,2.9,10.0] (last point is outlier)
+//! let data = array![0.,1.,2.,3.,4., 0.1,0.9,2.1,2.9,10.0];
+//!
+//! let huber = HuberLoss::new(1.0);  // Robust to outliers
+//! let x0 = array![0.0, 0.0];
+//! let result = robust_least_squares(
+//!     residual, &x0, huber, None::<fn(&[f64], &[f64]) -> ndarray::Array2<f64>>, &data, None
+//! )?;
+//!
+//! println!("Robust fit: y = {:.3} + {:.3}x", result.x[0], result.x[1]);
+//! # Ok(())
+//! # }
+//! ```
+//!
+//! ### Global Optimization
+//!
+//! Find global minimum of multi-modal functions:
+//!
+//! ```rust,no_run
+//! use scirs2_optimize::global::{differential_evolution, DifferentialEvolutionOptions};
+//! use ndarray::ArrayView1;
+//!
+//! // Rastrigin function (multiple local minima)
+//! fn rastrigin(x: &ArrayView1<f64>) -> f64 {
+//!     let n = x.len() as f64;
+//!     10.0 * n + x.iter().map(|xi| xi.powi(2) - 10.0 * (2.0 * std::f64::consts::PI * xi).cos()).sum::<f64>()
+//! }
+//!
+//! # fn main() -> Result<(), Box<dyn std::error::Error>> {
+//! let bounds = vec![(-5.12, 5.12); 5];  // 5-dimensional search space
+//! let options = Some(DifferentialEvolutionOptions::default());
+//!
+//! let result = differential_evolution(rastrigin, bounds, options, None)?;
+//! println!("Global minimum: {:?}", result.x);
+//! # Ok(())
+//! # }
+//! ```
+//!
+//! ### Root Finding
+//!
+//! Solve equations f(x) = 0:
+//!
+//! ```rust,no_run
+//! use scirs2_optimize::roots::{root, Method};
+//! use ndarray::{array, Array1};
+//!
+//! // Find root of x² - 2 = 0 (i.e., √2)
+//! fn f(x: &[f64]) -> Array1<f64> {
+//!     array![x[0] * x[0] - 2.0]
+//! }
+//!
+//! # fn main() -> Result<(), Box<dyn std::error::Error>> {
+//! let x0 = array![1.5];  // Initial guess
+//! let result = root(f, &x0, Method::Hybr, None::<fn(&[f64]) -> ndarray::Array2<f64>>, None)?;
+//! println!("√2 ≈ {:.10}", result.x[0]);  // 1.4142135624
+//! # Ok(())
+//! # }
+//! ```
 //! ## Submodules
 //!
 //! * `unconstrained`: Unconstrained optimization algorithms

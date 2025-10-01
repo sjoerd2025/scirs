@@ -879,7 +879,7 @@ mod tests {
         // Check metrics
         let metrics = filter.get_metrics().unwrap();
         // Processing time might be 0 on very fast systems, just check it exists
-        assert!(metrics.processing_time.as_nanos() >= 0);
+        let _ = metrics.processing_time.as_nanos(); // Always >= 0 for u128
     }
 
     #[test]

@@ -1,109 +1,312 @@
 #![allow(deprecated)]
-//! Differentiable operations and tensors backed by [ndarray](https://github.com/rust-ndarray/ndarray).
+//! # SciRS2 Autograd - Automatic Differentiation for Rust
 #![recursion_limit = "1024"]
 //!
-//! ## Enabling blas
-//! If you use basic linalg operations, especially matrix multiplications, `blas` feature would be important to speed them up.
+//! **scirs2-autograd** provides PyTorch-style automatic differentiation with lazy tensor evaluation,
+//! enabling efficient gradient computation for scientific computing and deep learning.
+//!
+//! ## 🎯 Key Features
+//!
+//! - **Reverse-mode Autodiff**: Efficient backpropagation for neural networks
+//! - **Lazy Evaluation**: Build computation graphs, evaluate only when needed
+//! - **Higher-order Gradients**: Compute derivatives of derivatives
+//! - **Neural Network Ops**: Optimized operations for deep learning
+//! - **Optimizers**: Adam, SGD, RMSprop with state management
+//! - **Model Persistence**: Save and load trained models
+//! - **Variable Management**: Namespace-based variable organization
+//!
+//! ## 📦 Installation
 //!
 //! ```toml
 //! [dependencies]
-//! scirs2-autograd = {"<version>", features = ["blas", "<blas-implementation-choice>"] }
+//! scirs2-autograd = { version = "0.1.0-beta.4", features = ["blas"] }
 //! ```
-//! `<blas-implementation-choice>` must be one of the following:
-//! - `openblas`
-//! - `netlib`
 //!
-//! ## Features
-//! ### Reverse-mode automatic differentiation using lazy tensors
-//! Here we are just computing partial derivatives of `z = 2x^2 + 3y + 1`.
+//! ### BLAS Acceleration (Recommended)
 //!
+//! For fast matrix operations, enable BLAS:
+//!
+//! ```toml
+//! [dependencies]
+//! scirs2-autograd = { version = "0.1.0-beta.4", features = ["blas", "openblas"] }
 //! ```
+//!
+//! Available BLAS implementations:
+//! - `openblas` - OpenBLAS (recommended for Linux/macOS)
+//! - `netlib` - Reference BLAS implementation
+//!
+//! ## 🚀 Quick Start
+//!
+//! ### Basic Differentiation
+//!
+//! Compute gradients of a simple function:
+//!
+//! ```rust
 //! use scirs2_autograd as ag;
 //! use ag::tensor_ops as T;
 //!
-//! # fn main() {
-//! ag::run(|ctx: &mut ag::Context<_>| {
+//! ag::run(|ctx: &mut ag::Context<f64>| {
+//!     // Define variables
 //!     let x = ctx.placeholder("x", &[]);
 //!     let y = ctx.placeholder("y", &[]);
-//!     let z = 2.*x*x + 3.*y + 1.;
 //!
-//!     // dz/dy
-//!     let gy = &T::grad(&[z], &[y])[0];
-//!     println!("{:?}", gy.eval(ctx));   // => Ok(3.)
+//!     // Build computation graph: z = 2x² + 3y + 1
+//!     let z = 2.0 * x * x + 3.0 * y + 1.0;
 //!
-//!     // dz/dx (requires to fill the placeholder `x`)
-//!     let gx = &T::grad(&[z], &[x])[0];
-//!     let feed = ag::ndarray::arr0(2.);
-//!     println!("{:?}", ctx.evaluator().push(gx).feed(x, feed.view().into_dyn()).run()[0]);  // => Ok(8.)
+//!     // Compute dz/dy
+//!     let dz_dy = &T::grad(&[z], &[y])[0];
+//!     println!("dz/dy = {:?}", dz_dy.eval(ctx));  // => 3.0
 //!
-//!     // ddz/dx (differentiates `z` again)
-//!     let ggx = &T::grad(&[gx], &[x])[0];
-//!     println!("{:?}", ggx.eval(ctx));  // => Ok(4.)
+//!     // Compute dz/dx (feed x=2)
+//!     let dz_dx = &T::grad(&[z], &[x])[0];
+//!     let x_val = ag::ndarray::arr0(2.0);
+//!     let result = ctx.evaluator()
+//!         .push(dz_dx)
+//!         .feed(x, x_val.view().into_dyn())
+//!         .run()[0].clone();
+//!     println!("dz/dx at x=2: {:?}", result);  // => 8.0
+//!
+//!     // Higher-order: d²z/dx²
+//!     let d2z_dx2 = &T::grad(&[dz_dx], &[x])[0];
+//!     println!("d²z/dx² = {:?}", d2z_dx2.eval(ctx));  // => 4.0
 //! });
-//! # }
 //! ```
 //!
-//! ### Neural networks
-//! This crate has various low-level features inspired by tensorflow/theano to train neural networks.
-//! Since computation graphs require only bare minimum of heap allocations, the overhead is small, even for complex networks.
-//! ```
-//! // MNIST digits classification model with multi-layer-perceptron
+//! ### Neural Network Training
+//!
+//! Train a multi-layer perceptron for MNIST:
+//!
+//! ```rust
 //! use scirs2_autograd as ag;
 //! use ag::optimizers::adam::Adam;
 //! use ag::tensor_ops::*;
 //! use ag::prelude::*;
 //!
+//! # fn main() -> Result<(), Box<dyn std::error::Error>> {
+//! // Create variable environment
 //! let mut env = ag::VariableEnvironment::new();
-//!
 //! let mut rng = ag::ndarray_ext::ArrayRng::<f32>::default();
 //!
-//! // Register variables in the default namespace
-//! env.name("w").set(rng.glorot_uniform(&[28 * 28, 10]));
-//! env.name("b").set(ag::ndarray_ext::zeros(&[1, 10]));
+//! // Initialize network weights
+//! env.name("w1").set(rng.glorot_uniform(&[784, 256]));
+//! env.name("b1").set(ag::ndarray_ext::zeros(&[1, 256]));
+//! env.name("w2").set(rng.glorot_uniform(&[256, 10]));
+//! env.name("b2").set(ag::ndarray_ext::zeros(&[1, 10]));
 //!
-//! let adam = Adam::default("my_adam", env.default_namespace().current_var_ids(), &mut env);
+//! // Create Adam optimizer
+//! let var_ids = env.default_namespace().current_var_ids();
+//! let adam = Adam::default("adam", var_ids, &mut env);
 //!
-//! for epoch in 0..3 { // 0.11 sec/epoch on 2.7GHz Intel Core i5
+//! // Training loop
+//! for epoch in 0..10 {
 //!     env.run(|ctx| {
-//!         let x = ctx.placeholder("x", &[-1, 28*28]);
+//!         // Define computation graph
+//!         let x = ctx.placeholder("x", &[-1, 784]);
 //!         let y = ctx.placeholder("y", &[-1]);
-//!         let w = ctx.variable("w");
-//!         let b = ctx.variable("b");
-//!         let z = matmul(x, w) + b;
-//!         let mean_loss = reduce_mean(sparse_softmax_cross_entropy(z, &y), &[0], false);
-//!         let grads = &grad(&[mean_loss], &[w, b]);
 //!
+//!         let w1 = ctx.variable("w1");
+//!         let b1 = ctx.variable("b1");
+//!         let w2 = ctx.variable("w2");
+//!         let b2 = ctx.variable("b2");
+//!
+//!         // Forward pass: x -> hidden -> output
+//!         let hidden = relu(matmul(x, w1) + b1);
+//!         let logits = matmul(hidden, w2) + b2;
+//!
+//!         // Loss: cross-entropy
+//!         let loss = reduce_mean(
+//!             sparse_softmax_cross_entropy(logits, &y),
+//!             &[0],
+//!             false
+//!         );
+//!
+//!         // Backpropagation
+//!         let params = &[w1, b1, w2, b2];
+//!         let grads = &grad(&[loss], params);
+//!
+//!         // Update weights (requires actual data feeding)
 //!         // let mut feeder = ag::Feeder::new();
 //!         // feeder.push(x, x_batch).push(y, y_batch);
-//!         // adam.update(&[w, b], grads, ctx, feeder);
+//!         // adam.update(params, grads, ctx, feeder);
 //!     });
 //! }
+//! # Ok(())
+//! # }
 //! ```
 //!
-//! ### Abstractions
-//! ```
+//! ### Custom Operations
+//!
+//! Define custom differentiable operations:
+//!
+//! ```rust
 //! use scirs2_autograd as ag;
 //! use ag::tensor_ops::*;
-//! use ag::ndarray;
 //!
-//! // Use `Tensor::map()` to create a new ndarray
-//! ag::run(|ctx| {
-//!     let x = ones(&[2, 3], ctx);
-//!     // apply ndarray's methods
-//!     let y = x.map(|x| x.fold_axis(ndarray::Axis(0), 0.0, |acc, x| acc + x));
-//!     let z = x.map(|x| ag::ndarray_ext::zeros(x.shape()));
-//! });
+//! ag::run::<f64, _, _>(|ctx| {
+//!     let x = ones(&[3, 4], ctx);
 //!
-//! // Hooks
-//! ag::run(|ctx| {
-//!     let x: ag::Tensor<f32> = ones(&[2, 3], ctx).showshape();
-//!     let y: ag::Tensor<f32> = ones(&[2, 3], ctx).raw_hook(|x| println!("{}", x));
+//!     // Apply custom transformations using tensor.map()
+//!     let y = x.map(|arr| arr.mapv(|v: f64| v * 2.0 + 1.0));
+//!
+//!     // Hooks for debugging
+//!     let z = x.showshape();  // Print shape
+//!     let w = x.raw_hook(|arr| println!("Tensor value: {}", arr));
 //! });
 //! ```
 //!
-//! ### Other useful features
-//! - [Model persistence](variable#model-persistence)
-//! - [Variable namespace](variable#variable-and-namespace)
+//! ## 🧠 Core Concepts
+//!
+//! ### Tensors
+//!
+//! Lazy-evaluated multi-dimensional arrays with automatic gradient tracking:
+//!
+//! ```rust,no_run
+//! use scirs2_autograd as ag;
+//! use ag::tensor_ops::*;
+//! use ag::prelude::*;
+//!
+//! ag::run::<f64, _, _>(|ctx| {
+//!     // Create tensors
+//!     let a = zeros(&[2, 3], ctx);        // All zeros
+//!     let b = ones(&[2, 3], ctx);         // All ones
+//!     let c = ctx.placeholder("c", &[2, 3]);  // Placeholder (fill later)
+//!     let d = ctx.variable("d");          // Trainable variable
+//! });
+//! ```
+//!
+//! ### Computation Graphs
+//!
+//! Build graphs of operations, evaluate lazily:
+//!
+//! ```rust
+//! use scirs2_autograd as ag;
+//! use ag::tensor_ops as T;
+//!
+//! ag::run::<f64, _, _>(|ctx| {
+//!     let x = ctx.placeholder("x", &[2, 2]);
+//!     let y = ctx.placeholder("y", &[2, 2]);
+//!
+//!     // Build graph (no computation yet)
+//!     let z = T::matmul(x, y);
+//!     let w = T::sigmoid(z);
+//!
+//!     // Evaluate when needed
+//!     // let result = w.eval(ctx);
+//! });
+//! ```
+//!
+//! ### Gradient Computation
+//!
+//! Reverse-mode automatic differentiation:
+//!
+//! ```rust
+//! use scirs2_autograd as ag;
+//! use ag::tensor_ops as T;
+//!
+//! ag::run(|ctx| {
+//!     let x = ctx.placeholder("x", &[]);
+//!     let y = x * x * x;  // y = x³
+//!
+//!     // Compute dy/dx = 3x²
+//!     let dy_dx = &T::grad(&[y], &[x])[0];
+//!
+//!     // Evaluate at x=2: 3(2²) = 12
+//!     let x_val = ag::ndarray::arr0(2.0);
+//!     let grad_val = ctx.evaluator()
+//!         .push(dy_dx)
+//!         .feed(x, x_val.view().into_dyn())
+//!         .run()[0].clone();
+//! });
+//! ```
+//!
+//! ## 🎨 Available Operations
+//!
+//! ### Basic Math
+//!
+//! - Arithmetic: `+`, `-`, `*`, `/`, `pow`
+//! - Comparison: `equal`, `not_equal`, `greater`, `less`
+//! - Reduction: `sum`, `mean`, `max`, `min`
+//!
+//! ### Neural Network Ops
+//!
+//! - Activations: `relu`, `sigmoid`, `tanh`, `softmax`, `gelu`
+//! - Pooling: `max_pool2d`, `avg_pool2d`
+//! - Convolution: `conv2d`, `conv2d_transpose`
+//! - Normalization: `batch_norm`, `layer_norm`
+//! - Dropout: `dropout`
+//!
+//! ### Matrix Operations
+//!
+//! - `matmul` - Matrix multiplication
+//! - `transpose` - Matrix transpose
+//! - `reshape` - Change tensor shape
+//! - `concat` - Concatenate tensors
+//! - `split` - Split tensor
+//!
+//! ### Loss Functions
+//!
+//! - `sparse_softmax_cross_entropy` - Classification loss
+//! - `sigmoid_cross_entropy` - Binary classification
+//! - `softmax_cross_entropy` - Multi-class loss
+//!
+//! ## 🔧 Optimizers
+//!
+//! Built-in optimization algorithms:
+//!
+//! - **Adam**: Adaptive moment estimation (recommended)
+//! - **SGD**: Stochastic gradient descent with momentum
+//! - **RMSprop**: Root mean square propagation
+//! - **Adagrad**: Adaptive learning rates
+//!
+//! ## 💾 Model Persistence
+//!
+//! Save and load trained models:
+//!
+//! ```rust,no_run
+//! use scirs2_autograd as ag;
+//!
+//! let mut env = ag::VariableEnvironment::<f64>::new();
+//!
+//! // After training...
+//! env.save("model.safetensors")?;
+//!
+//! // Later, load the model
+//! let env = ag::VariableEnvironment::<f64>::load("model.safetensors")?;
+//! # Ok::<(), Box<dyn std::error::Error>>(())
+//! ```
+//!
+//! ## 📊 Performance
+//!
+//! scirs2-autograd is designed for efficiency:
+//!
+//! - **Lazy Evaluation**: Build graphs without computation overhead
+//! - **Minimal Allocations**: Reuse memory where possible
+//! - **BLAS Integration**: Fast matrix operations via OpenBLAS/MKL
+//! - **Zero-copy**: Efficient data handling with ndarray views
+//!
+//! Typical training speed: **0.11 sec/epoch** for MNIST MLP (2.7GHz Intel Core i5)
+//!
+//! ## 🔗 Integration
+//!
+//! - **scirs2-neural**: High-level neural network layers
+//! - **scirs2-linalg**: Matrix operations
+//! - **scirs2-optimize**: Optimization algorithms
+//! - **ndarray**: Core array library (re-exported)
+//!
+//! ## 📚 Comparison with PyTorch
+//!
+//! | Feature | PyTorch | scirs2-autograd |
+//! |---------|---------|-----------------|
+//! | Autodiff | ✅ | ✅ |
+//! | Dynamic Graphs | ✅ | ✅ |
+//! | GPU Support | ✅ | ⚠️ (limited) |
+//! | Type Safety | ❌ | ✅ |
+//! | Memory Safety | ⚠️ | ✅ |
+//! | Pure Rust | ❌ | ✅ |
+//!
+//! ## 🔒 Version
+//!
+//! Current version: **0.1.0-beta.4** (Released October 01, 2025)
 
 #[allow(unused_imports)]
 // Expose to prevent version conflict

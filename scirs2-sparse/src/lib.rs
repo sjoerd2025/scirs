@@ -1,18 +1,50 @@
 #![allow(deprecated)]
 #![allow(dead_code)]
-//! Sparse module
+//! # SciRS2 Sparse - Sparse Matrix Operations
 //!
-//! This module provides implementations of various sparse matrix and array formats and operations,
-//! similar to SciPy's `sparse` module.
+//! **scirs2-sparse** provides comprehensive sparse matrix formats and operations modeled after SciPy's
+//! `sparse` module, offering CSR, CSC, COO, DOK, LIL, DIA, BSR formats with efficient algorithms
+//! for large-scale sparse linear algebra, eigenvalue problems, and graph operations.
 //!
-//! ## Overview
+//! ## 🎯 Key Features
 //!
-//! * Sparse formats (CSR, CSC, COO, DOK, LIL, DIA, BSR, etc.)
-//! * Specialized sparse formats (Symmetric CSR, Symmetric COO)
-//! * Basic operations (addition, multiplication, etc.)
-//! * Sparse linear system solvers
-//! * Sparse eigenvalue computation
-//! * Conversion between different formats
+//! - **SciPy Compatibility**: Drop-in replacement for `scipy.sparse` classes
+//! - **Multiple Formats**: CSR, CSC, COO, DOK, LIL, DIA, BSR with easy conversion
+//! - **Efficient Operations**: Sparse matrix-vector/matrix multiplication
+//! - **Linear Solvers**: Direct (LU, Cholesky) and iterative (CG, GMRES) solvers
+//! - **Eigenvalue Solvers**: ARPACK-based sparse eigenvalue computation
+//! - **Array API**: Modern NumPy-compatible array interface (recommended)
+//!
+//! ## 📦 Module Overview
+//!
+//! | SciRS2 Format | SciPy Equivalent | Description |
+//! |---------------|------------------|-------------|
+//! | `CsrArray` | `scipy.sparse.csr_array` | Compressed Sparse Row (efficient row slicing) |
+//! | `CscArray` | `scipy.sparse.csc_array` | Compressed Sparse Column (efficient column slicing) |
+//! | `CooArray` | `scipy.sparse.coo_array` | Coordinate format (efficient construction) |
+//! | `DokArray` | `scipy.sparse.dok_array` | Dictionary of Keys (efficient element access) |
+//! | `LilArray` | `scipy.sparse.lil_array` | List of Lists (efficient incremental construction) |
+//! | `DiaArray` | `scipy.sparse.dia_array` | Diagonal format (efficient banded matrices) |
+//! | `BsrArray` | `scipy.sparse.bsr_array` | Block Sparse Row (efficient block operations) |
+//!
+//! ## 🚀 Quick Start
+//!
+//! ```toml
+//! [dependencies]
+//! scirs2-sparse = "0.1.0-beta.4"
+//! ```
+//!
+//! ```rust
+//! use scirs2_sparse::csr_array::CsrArray;
+//!
+//! // Create sparse matrix from triplets (row, col, value)
+//! let rows = vec![0, 0, 1, 2, 2];
+//! let cols = vec![0, 2, 2, 0, 1];
+//! let data = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+//! let sparse = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).unwrap();
+//! ```
+//!
+//! ## 🔒 Version: 0.1.0-beta.4 (October 01, 2025)
 //!
 //! ## Matrix vs. Array API
 //!

@@ -228,33 +228,10 @@ where
 /// assert!(window[window.len() / 2] > 0.9);
 /// ```
 #[allow(dead_code)]
-pub fn get_window(_window_type: &str, length: usize, periodic: bool) -> SignalResult<Vec<f64>> {
-    // Temporary minimal implementation - TODO: add back full window module later
-    match _window_type {
-        "boxcar" | "rectangular" => Ok(vec![1.0; length]),
-        "hann" | "hanning" => {
-            let mut window = Vec::with_capacity(length);
-            for n in 0..length {
-                let value = 0.5
-                    * (1.0 - (2.0 * std::f64::consts::PI * n as f64 / (length - 1) as f64).cos());
-                window.push(value);
-            }
-            Ok(window)
-        }
-        "hamming" => {
-            let mut window = Vec::with_capacity(length);
-            for n in 0..length {
-                let value = 0.54
-                    - 0.46 * (2.0 * std::f64::consts::PI * n as f64 / (length - 1) as f64).cos();
-                window.push(value);
-            }
-            Ok(window)
-        }
-        _ => {
-            // Default to rectangular window for unknown types
-            Ok(vec![1.0; length])
-        }
-    }
+pub fn get_window(window_type: &str, length: usize, periodic: bool) -> SignalResult<Vec<f64>> {
+    // Delegate to comprehensive window module implementation
+    // This replaces the temporary minimal implementation with full functionality
+    crate::window::get_window(window_type, length, periodic)
 }
 
 /// Normalize a signal to have unit energy or unit peak amplitude.

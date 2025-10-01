@@ -1334,12 +1334,101 @@ pub mod online_algorithms {
 
             // Check for adaptive cluster adjustments
             if self.adaptive_params.auto_k_adjustment {
-                // TODO: Implement maybe_adjust_clusters
-                // self.maybe_adjust_clusters(sample, min_distance)?;
+                self.maybe_adjust_clusters(sample, min_distance)?;
             }
 
             self.iteration += 1;
             Ok(nearest_cluster)
+        }
+
+        /// Adaptively adjust cluster count based on distance thresholds
+        fn maybe_adjust_clusters(&mut self, sample: ArrayView1<F>, min_distance: F) -> Result<()> {
+            // Split: Create new cluster if sample is far from all existing clusters
+            if min_distance > self.adaptive_params.split_threshold {
+                // Add new cluster at sample location
+                let n_clusters = self.centers.nrows();
+                let n_features = self.centers.ncols();
+
+                let mut new_centers = Array2::<F>::zeros((n_clusters + 1, n_features));
+
+                // Copy existing centers
+                for i in 0..n_clusters {
+                    for j in 0..n_features {
+                        new_centers[[i, j]] = self.centers[[i, j]];
+                    }
+                }
+
+                // Add new center at sample location
+                for (j, &val) in sample.iter().enumerate() {
+                    if j < n_features {
+                        new_centers[[n_clusters, j]] = val;
+                    }
+                }
+
+                self.centers = new_centers;
+                self.adaptive_params.stability_scores.push(F::zero());
+            }
+
+            // Merge: Combine clusters that are too close
+            let n_clusters = self.centers.nrows();
+            if n_clusters > 1 {
+                let mut clusters_to_merge: Option<(usize, usize)> = None;
+                let mut min_inter_distance = F::infinity();
+
+                // Find closest pair of clusters
+                for i in 0..n_clusters {
+                    for j in (i + 1)..n_clusters {
+                        let dist = euclidean_distance(self.centers.row(i), self.centers.row(j));
+
+                        if dist < min_inter_distance {
+                            min_inter_distance = dist;
+                            clusters_to_merge = Some((i, j));
+                        }
+                    }
+                }
+
+                // Merge if below threshold
+                if let Some((i, j)) = clusters_to_merge {
+                    if min_inter_distance < self.adaptive_params.merge_threshold {
+                        let n_features = self.centers.ncols();
+                        let mut new_centers = Array2::<F>::zeros((n_clusters - 1, n_features));
+
+                        // Merge clusters i and j by averaging
+                        let mut merged_center = Array1::<F>::zeros(n_features);
+                        for k in 0..n_features {
+                            merged_center[k] = (self.centers[[i, k]] + self.centers[[j, k]])
+                                / (F::one() + F::one());
+                        }
+
+                        // Build new center matrix
+                        let mut new_idx = 0;
+                        for old_idx in 0..n_clusters {
+                            if old_idx == i {
+                                // Add merged center
+                                for k in 0..n_features {
+                                    new_centers[[new_idx, k]] = merged_center[k];
+                                }
+                                new_idx += 1;
+                            } else if old_idx != j {
+                                // Copy unchanged center
+                                for k in 0..n_features {
+                                    new_centers[[new_idx, k]] = self.centers[[old_idx, k]];
+                                }
+                                new_idx += 1;
+                            }
+                        }
+
+                        self.centers = new_centers;
+
+                        // Update stability scores (remove merged cluster)
+                        if j < self.adaptive_params.stability_scores.len() {
+                            self.adaptive_params.stability_scores.remove(j);
+                        }
+                    }
+                }
+            }
+
+            Ok(())
         }
 
         /// Find the nearest cluster to a sample

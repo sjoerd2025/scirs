@@ -42,6 +42,8 @@ pub enum IoError {
     ConfigError(String),
     /// Network error
     NetworkError(String),
+    /// Parquet error
+    ParquetError(String),
     /// Database error
     DatabaseError(String),
     /// Timeout error
@@ -73,6 +75,7 @@ impl fmt::Display for IoError {
             IoError::IntegrityError(msg) => write!(f, "Integrity error: {msg}"),
             IoError::ConfigError(msg) => write!(f, "Configuration error: {msg}"),
             IoError::NetworkError(msg) => write!(f, "Network error: {msg}"),
+            IoError::ParquetError(msg) => write!(f, "Parquet error: {msg}"),
             IoError::DatabaseError(msg) => write!(f, "Database error: {msg}"),
             IoError::TimeoutError(msg) => write!(f, "Timeout error: {msg}"),
             IoError::Other(msg) => write!(f, "Error: {msg}"),
@@ -105,6 +108,7 @@ impl Clone for IoError {
             IoError::IntegrityError(msg) => IoError::IntegrityError(msg.clone()),
             IoError::ConfigError(msg) => IoError::ConfigError(msg.clone()),
             IoError::NetworkError(msg) => IoError::NetworkError(msg.clone()),
+            IoError::ParquetError(msg) => IoError::ParquetError(msg.clone()),
             IoError::DatabaseError(msg) => IoError::DatabaseError(msg.clone()),
             IoError::TimeoutError(msg) => IoError::TimeoutError(msg.clone()),
             IoError::Other(msg) => IoError::Other(msg.clone()),
@@ -144,6 +148,7 @@ impl PartialEq for IoError {
             (IoError::IntegrityError(a), IoError::IntegrityError(b)) => a == b,
             (IoError::ConfigError(a), IoError::ConfigError(b)) => a == b,
             (IoError::NetworkError(a), IoError::NetworkError(b)) => a == b,
+            (IoError::ParquetError(a), IoError::ParquetError(b)) => a == b,
             (IoError::DatabaseError(a), IoError::DatabaseError(b)) => a == b,
             (IoError::TimeoutError(a), IoError::TimeoutError(b)) => a == b,
             (IoError::Other(a), IoError::Other(b)) => a == b,
@@ -194,6 +199,7 @@ impl Ord for IoError {
             (IoError::IntegrityError(a), IoError::IntegrityError(b)) => a.cmp(b),
             (IoError::ConfigError(a), IoError::ConfigError(b)) => a.cmp(b),
             (IoError::NetworkError(a), IoError::NetworkError(b)) => a.cmp(b),
+            (IoError::ParquetError(a), IoError::ParquetError(b)) => a.cmp(b),
             (IoError::DatabaseError(a), IoError::DatabaseError(b)) => a.cmp(b),
             (IoError::TimeoutError(a), IoError::TimeoutError(b)) => a.cmp(b),
             (IoError::Other(a), IoError::Other(b)) => a.cmp(b),
@@ -235,6 +241,8 @@ impl Ord for IoError {
             (_, IoError::ConfigError(_)) => Ordering::Greater,
             (IoError::NetworkError(_), _) => Ordering::Less,
             (_, IoError::NetworkError(_)) => Ordering::Greater,
+            (IoError::ParquetError(_), _) => Ordering::Less,
+            (_, IoError::ParquetError(_)) => Ordering::Greater,
             (IoError::DatabaseError(_), _) => Ordering::Less,
             (_, IoError::DatabaseError(_)) => Ordering::Greater,
             (IoError::TimeoutError(_), _) => Ordering::Less,

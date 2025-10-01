@@ -1,15 +1,57 @@
 #![allow(deprecated)]
-//! Machine Learning evaluation metrics module for SciRS2
-
 #![allow(clippy::uninlined_format_args)]
 #![allow(clippy::new_without_default)]
 #![allow(clippy::useless_vec)]
 #![allow(clippy::too_many_arguments)]
 #![allow(dead_code)]
+//! # SciRS2 Metrics - Machine Learning Evaluation Metrics
 //!
-//! This module provides functions for evaluating machine learning models
-//! including classification, regression, clustering, and ranking metrics, as well as
-//! model evaluation utilities like cross-validation and train-test split.
+//! **scirs2-metrics** provides comprehensive evaluation metrics for machine learning models,
+//! offering classification, regression, clustering, and ranking metrics compatible with
+//! scikit-learn, with parallel processing and optimized implementations.
+//!
+//! ## 🎯 Key Features
+//!
+//! - **Classification Metrics**: Accuracy, precision, recall, F1, ROC-AUC, confusion matrix
+//! - **Regression Metrics**: MSE, RMSE, MAE, R², MAPE, explained variance
+//! - **Clustering Metrics**: Silhouette score, Davies-Bouldin, Calinski-Harabasz, adjusted Rand
+//! - **Ranking Metrics**: NDCG, MAP, MRR, precision@k, recall@k
+//! - **Cross-Validation**: K-fold, stratified, time series CV utilities
+//! - **Multi-label Support**: Hamming loss, Jaccard score, label ranking
+//!
+//! ## 📦 Module Overview
+//!
+//! | SciRS2 Module | scikit-learn Equivalent | Description |
+//! |---------------|-------------------------|-------------|
+//! | `classification` | `sklearn.metrics.accuracy_score` | Classification evaluation metrics |
+//! | `regression` | `sklearn.metrics.mean_squared_error` | Regression evaluation metrics |
+//! | `clustering` | `sklearn.metrics.silhouette_score` | Clustering evaluation metrics |
+//! | `ranking` | - | Ranking and recommendation metrics |
+//!
+//! ## 🚀 Quick Start
+//!
+//! ```toml
+//! [dependencies]
+//! scirs2-metrics = "0.1.0-beta.4"
+//! ```
+//!
+//! ```rust,no_run
+//! use scirs2_core::ndarray::array;
+//! use scirs2_metrics::classification::accuracy_score;
+//! use scirs2_metrics::regression::mean_squared_error;
+//!
+//! // Classification accuracy
+//! let y_true = array![0, 1, 2, 0, 1, 2];
+//! let y_pred = array![0, 2, 1, 0, 0, 2];
+//! let acc = accuracy_score(&y_true, &y_pred).unwrap();
+//!
+//! // Regression MSE
+//! let y_true_reg = array![3.0, -0.5, 2.0, 7.0];
+//! let y_pred_reg = array![2.5, 0.0, 2.0, 8.0];
+//! let mse = mean_squared_error(&y_true_reg, &y_pred_reg).unwrap();
+//! ```
+//!
+//! ## 🔒 Version: 0.1.0-beta.4 (October 01, 2025)
 //!
 //! # Classification Metrics
 //!

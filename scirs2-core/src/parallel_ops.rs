@@ -293,6 +293,23 @@ pub fn num_threads() -> usize {
     1
 }
 
+/// Alias for rayon compatibility - returns the number of threads in the current pool
+///
+/// This is an alias for `num_threads()` that matches rayon's API exactly.
+/// Useful for code migrating from rayon to scirs2_core.
+#[cfg(feature = "parallel")]
+#[allow(dead_code)]
+pub fn current_num_threads() -> usize {
+    rayon::current_num_threads()
+}
+
+/// Sequential fallback for current_num_threads
+#[cfg(not(feature = "parallel"))]
+#[allow(dead_code)]
+pub fn current_num_threads() -> usize {
+    1
+}
+
 /// Alias for num_threads() for compatibility
 #[allow(dead_code)]
 pub fn get_num_threads() -> usize {

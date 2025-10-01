@@ -269,9 +269,58 @@ impl MemoryEfficientStft {
             return self.stft_chunked(signal);
         }
 
-        // TODO: Implement parallel processing using scirs2_core::parallel_ops
-        // For now, fall back to sequential processing
-        self.stft_chunked(signal)
+        // Implement parallel processing using scirs2_core::parallel_ops
+        use scirs2_core::parallel_ops::par_chunks;
+
+        // Calculate chunk boundaries
+        let mut chunk_infos = Vec::with_capacity(actual_chunks);
+        for i in 0..actual_chunks {
+            let start = i * (chunk_size - overlap);
+            let end = (start + chunk_size).min(signal.len());
+            if end > start {
+                let chunk_start = start.saturating_sub(overlap);
+                chunk_infos.push((chunk_start, end, i));
+            }
+        }
+
+        // Process chunks in parallel
+        let chunk_results: Vec<_> = par_chunks(&chunk_infos, |chunk_info| {
+            let (start, end, _idx) = *chunk_info;
+            let chunk_data = &signal[start..end];
+            self.stft.stft(chunk_data)
+        })
+        .collect();
+
+        // Combine results
+        let total_frames = self.stft.p_max(signal.len()) - self.stft.p_min();
+        let mut result = Array2::zeros((self.stft.f_pts(), total_frames as usize));
+
+        let mut frame_offset = 0;
+        for (i, chunk_result) in chunk_results.iter().enumerate() {
+            if let Ok(chunk_stft) = chunk_result {
+                let frames_in_chunk = chunk_stft.shape()[1];
+                let skip_frames = if i == 0 { 0 } else { overlap / self.stft.hop };
+                let copy_frames = frames_in_chunk.saturating_sub(skip_frames);
+                let end_frame = (frame_offset + copy_frames).min(result.shape()[1]);
+
+                if frame_offset < result.shape()[1] && copy_frames > 0 {
+                    let copy_end = (skip_frames + copy_frames).min(chunk_stft.shape()[1]);
+
+                    for f in 0..self.stft.f_pts() {
+                        for t in skip_frames..copy_end {
+                            let result_t = frame_offset + t - skip_frames;
+                            if result_t < result.shape()[1] {
+                                result[[f, result_t]] = chunk_stft[[f, t]];
+                            }
+                        }
+                    }
+
+                    frame_offset = end_frame;
+                }
+            }
+        }
+
+        Ok(result)
     }
 
     /// Get memory usage information

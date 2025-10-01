@@ -1,12 +1,48 @@
 #![allow(deprecated)]
-//! Data transformation module for SciRS2
+//! # SciRS2 Transform - Data Transformation and Preprocessing
 //!
-//! This module provides utilities for transforming data in ways that are useful
-//! for machine learning and data analysis. The main functionalities include:
+//! **scirs2-transform** provides comprehensive data transformation utilities for machine learning,
+//! offering normalization, feature engineering, dimensionality reduction, encoding, imputation,
+//! and pipelines with SIMD acceleration and out-of-core processing for large datasets.
 //!
-//! - Data normalization and standardization
-//! - Feature engineering
-//! - Dimensionality reduction
+//! ## 🎯 Key Features
+//!
+//! - **Normalization**: Min-max, Z-score, robust scaling, quantile normalization
+//! - **Feature Engineering**: Polynomial features, interaction terms, binning
+//! - **Dimensionality Reduction**: PCA, SVD, t-SNE, UMAP, LDA
+//! - **Encoding**: One-hot, label, ordinal, target encoding
+//! - **Imputation**: Mean, median, mode, KNN, iterative imputation
+//! - **Pipelines**: Chained transformations with fit/transform API
+//! - **Performance**: SIMD operations, streaming, out-of-core processing
+//!
+//! ## 📦 Module Overview
+//!
+//! | SciRS2 Module | scikit-learn Equivalent | Description |
+//! |---------------|-------------------------|-------------|
+//! | `normalize` | `sklearn.preprocessing.StandardScaler` | Data normalization/standardization |
+//! | `features` | `sklearn.preprocessing.PolynomialFeatures` | Feature engineering |
+//! | `reduction` | `sklearn.decomposition.PCA` | Dimensionality reduction |
+//! | `encoding` | `sklearn.preprocessing.OneHotEncoder` | Categorical encoding |
+//! | `impute` | `sklearn.impute.SimpleImputer` | Missing value imputation |
+//! | `pipeline` | `sklearn.pipeline.Pipeline` | Transformation pipelines |
+//!
+//! ## 🚀 Quick Start
+//!
+//! ```toml
+//! [dependencies]
+//! scirs2-transform = "0.1.0-beta.4"
+//! ```
+//!
+//! ```rust,no_run
+//! use scirs2_transform::normalize::{normalize_array, NormalizationMethod};
+//! use scirs2_core::ndarray::Array2;
+//!
+//! // Standardize data (Z-score normalization)
+//! let data = Array2::<f64>::zeros((100, 5));
+//! let normalized = normalize_array(&data, NormalizationMethod::ZScore, 0).unwrap();
+//! ```
+//!
+//! ## 🔒 Version: 0.1.0-beta.4 (October 01, 2025)
 
 #![warn(missing_docs)]
 #![allow(clippy::too_many_arguments)]

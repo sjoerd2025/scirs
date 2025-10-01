@@ -59,8 +59,9 @@ impl<F: Float + NumCast + Debug + Send + Sync + 'static + std::fmt::Display> Gam
         let shape_f64 = <f64 as NumCast>::from(shape).unwrap();
         let scale_f64 = <f64 as NumCast>::from(scale).unwrap();
 
-        // rand_distr uses shape and rate (= 1/scale)
-        match RandGamma::new(shape_f64, 1.0 / scale_f64) {
+        // rand_distr uses shape and scale parameters directly
+        // FIXED: Previous bug passed 1.0/scale_f64 (rate), but rand_distr expects scale
+        match RandGamma::new(shape_f64, scale_f64) {
             Ok(rand_distr) => Ok(Gamma {
                 shape,
                 scale,
@@ -327,7 +328,8 @@ impl<F: Float + NumCast + Debug + Send + Sync + 'static + std::fmt::Display> Gam
         // Generate samples in parallel
         let samples = parallel_map(&indices, move |_| {
             let mut rng = rand::thread_rng();
-            let rand_distr = RandGamma::new(shape_f64, 1.0 / scale_f64).unwrap();
+            // FIXED: Pass scale_f64 directly, not 1.0/scale_f64 (rate)
+            let rand_distr = RandGamma::new(shape_f64, scale_f64).unwrap();
             let sample = rand_distr.sample(&mut rng);
             F::from(sample).unwrap() + loc
         });

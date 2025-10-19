@@ -4,7 +4,7 @@
 // which is efficient for matrices with values concentrated on a small number of diagonals.
 
 use scirs2_core::ndarray::{Array1, Array2, ArrayView1};
-use scirs2_core::numeric::Float;
+use scirs2_core::numeric::{Float, SparseElement};
 use std::fmt::{self, Debug};
 use std::ops::{Add, Div, Mul, Sub};
 
@@ -31,15 +31,7 @@ use crate::sparray::{SparseArray, SparseSum};
 #[derive(Clone)]
 pub struct DiaArray<T>
 where
-    T: Float
-        + Add<Output = T>
-        + Sub<Output = T>
-        + Mul<Output = T>
-        + Div<Output = T>
-        + Debug
-        + Copy
-        + 'static
-        + std::ops::AddAssign,
+    T: SparseElement + Div<Output = T> + Float + 'static + std::ops::AddAssign,
 {
     /// Diagonals data (n_diags x max(rows, cols))
     data: Vec<Array1<T>>,
@@ -51,15 +43,7 @@ where
 
 impl<T> DiaArray<T>
 where
-    T: Float
-        + Add<Output = T>
-        + Sub<Output = T>
-        + Mul<Output = T>
-        + Div<Output = T>
-        + Debug
-        + Copy
-        + 'static
-        + std::ops::AddAssign,
+    T: SparseElement + Div<Output = T> + Float + 'static + std::ops::AddAssign,
 {
     /// Create a new DIA array from raw data
     ///
@@ -223,7 +207,7 @@ where
 
                 for i in 0..length {
                     let value = diag[i];
-                    if !value.is_zero() {
+                    if !SparseElement::is_zero(&value) {
                         row_indices.push(i);
                         col_indices.push(i + offset_usize);
                         values.push(value);
@@ -236,7 +220,7 @@ where
 
                 for i in 0..length {
                     let value = diag[i];
-                    if !value.is_zero() {
+                    if !SparseElement::is_zero(&value) {
                         row_indices.push(i + offset_usize);
                         col_indices.push(i);
                         values.push(value);
@@ -251,15 +235,7 @@ where
 
 impl<T> SparseArray<T> for DiaArray<T>
 where
-    T: Float
-        + Add<Output = T>
-        + Sub<Output = T>
-        + Mul<Output = T>
-        + Div<Output = T>
-        + Debug
-        + Copy
-        + 'static
-        + std::ops::AddAssign,
+    T: SparseElement + Div<Output = T> + Float + 'static + std::ops::AddAssign,
 {
     fn shape(&self) -> (usize, usize) {
         self.shape
@@ -282,7 +258,7 @@ where
             // Count non-zeros in the valid range
             let start_idx = 0; // Start at 0 regardless of offset
             for i in start_idx..start_idx + length {
-                if !diag[i].is_zero() {
+                if !SparseElement::is_zero(&diag[i]) {
                     count += 1;
                 }
             }
@@ -431,7 +407,7 @@ where
             let mut values = Vec::new();
 
             for (i, &val) in result.iter().enumerate() {
-                if !val.is_zero() {
+                if !SparseElement::is_zero(&val) {
                     rows.push(i);
                     cols.push(0);
                     values.push(val);
@@ -510,7 +486,7 @@ where
 
     fn get(&self, i: usize, j: usize) -> T {
         if i >= self.shape.0 || j >= self.shape.1 {
-            return T::zero();
+            return T::sparse_zero();
         }
 
         // Calculate the diagonal offset
@@ -530,7 +506,7 @@ where
             }
         }
 
-        T::zero()
+        T::sparse_zero()
     }
 
     fn set(&mut self, i: usize, j: usize, value: T) -> SparseResult<()> {
@@ -596,7 +572,7 @@ where
                     .min(self.shape.0.saturating_sub((-offset) as usize))
             };
 
-            let has_nonzero = (0..length).any(|i| !diag[i].is_zero());
+            let has_nonzero = (0..length).any(|i| !SparseElement::is_zero(&diag[i]));
 
             if has_nonzero {
                 new_offsets.push(offset);
@@ -639,7 +615,7 @@ where
         match axis {
             None => {
                 // Sum all elements
-                let mut total = T::zero();
+                let mut total = T::sparse_zero();
 
                 for (diag_idx, &offset) in self.offsets.iter().enumerate() {
                     let diag = &self.data[diag_idx];
@@ -697,7 +673,7 @@ where
 
                         for j in 0..self.shape.1 {
                             let val: T = result_2d[[0, j]];
-                            if !val.is_zero() {
+                            if !SparseElement::is_zero(&val) {
                                 row_indices.push(0);
                                 col_indices.push(j);
                                 values.push(val);
@@ -757,7 +733,7 @@ where
 
                         for i in 0..self.shape.0 {
                             let val: T = result_2d[[i, 0]];
-                            if !val.is_zero() {
+                            if !SparseElement::is_zero(&val) {
                                 row_indices.push(i);
                                 col_indices.push(0);
                                 values.push(val);
@@ -808,14 +784,14 @@ where
 
         // If no elements or all negative infinity, return zero
         if max_val == T::neg_infinity() {
-            T::zero()
+            T::sparse_zero()
         } else {
             max_val
         }
     }
 
     fn min(&self) -> T {
-        let mut min_val = T::infinity();
+        let mut min_val = T::sparse_zero();
         let mut has_nonzero = false;
 
         for (diag_idx, &offset) in self.offsets.iter().enumerate() {
@@ -832,7 +808,7 @@ where
             };
 
             for i in 0..length {
-                if !diag[i].is_zero() {
+                if !SparseElement::is_zero(&diag[i]) {
                     has_nonzero = true;
                     min_val = min_val.min(diag[i]);
                 }
@@ -841,7 +817,7 @@ where
 
         // If no non-zero elements, return zero
         if !has_nonzero {
-            T::zero()
+            T::sparse_zero()
         } else {
             min_val
         }
@@ -890,15 +866,7 @@ where
 // Implement Display for DiaArray for better debugging
 impl<T> fmt::Display for DiaArray<T>
 where
-    T: Float
-        + Add<Output = T>
-        + Sub<Output = T>
-        + Mul<Output = T>
-        + Div<Output = T>
-        + Debug
-        + Copy
-        + 'static
-        + std::ops::AddAssign,
+    T: SparseElement + Div<Output = T> + Float + 'static + std::ops::AddAssign,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         writeln!(
@@ -1017,7 +985,6 @@ mod tests {
         // Convert to dense and check
         let dense = array.to_array();
 
-        // Debug print the array
         // println!("Dense array: {:?}", dense);
 
         let expected =

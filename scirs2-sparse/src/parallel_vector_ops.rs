@@ -4,7 +4,7 @@
 //! vector operations used in iterative solvers, leveraging scirs2-core infrastructure.
 
 use scirs2_core::ndarray::ArrayView1;
-use scirs2_core::numeric::{Float, NumAssign};
+use scirs2_core::numeric::{Float, NumAssign, SparseElement};
 use std::iter::Sum;
 
 // Import parallel and SIMD operations from scirs2-core
@@ -59,7 +59,7 @@ impl Default for ParallelVectorOptions {
 #[allow(dead_code)]
 pub fn parallel_dot<T>(x: &[T], y: &[T], options: Option<ParallelVectorOptions>) -> T
 where
-    T: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps,
+    T: Float + SparseElement + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps,
 {
     assert_eq!(
         x.len(),
@@ -68,7 +68,7 @@ where
     );
 
     if x.is_empty() {
-        return T::zero();
+        return T::sparse_zero();
     }
 
     let opts = options.unwrap_or_default();
@@ -125,10 +125,10 @@ where
 #[allow(dead_code)]
 pub fn parallel_norm2<T>(x: &[T], options: Option<ParallelVectorOptions>) -> T
 where
-    T: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps,
+    T: Float + SparseElement + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps,
 {
     if x.is_empty() {
-        return T::zero();
+        return T::sparse_zero();
     }
 
     let opts = options.unwrap_or_default();
@@ -177,7 +177,7 @@ where
 #[allow(dead_code)]
 pub fn parallel_vector_add<T>(x: &[T], y: &[T], z: &mut [T], options: Option<ParallelVectorOptions>)
 where
-    T: Float + NumAssign + Send + Sync + Copy + SimdUnifiedOps,
+    T: Float + SparseElement + NumAssign + Send + Sync + Copy + SimdUnifiedOps,
 {
     assert_eq!(x.len(), y.len(), "Input vector lengths must be equal");
     assert_eq!(x.len(), z.len(), "Output vector length must match input");
@@ -244,7 +244,7 @@ where
 #[allow(dead_code)]
 pub fn parallel_vector_sub<T>(x: &[T], y: &[T], z: &mut [T], options: Option<ParallelVectorOptions>)
 where
-    T: Float + NumAssign + Send + Sync + Copy + SimdUnifiedOps,
+    T: Float + SparseElement + NumAssign + Send + Sync + Copy + SimdUnifiedOps,
 {
     assert_eq!(x.len(), y.len(), "Input vector lengths must be equal");
     assert_eq!(x.len(), z.len(), "Output vector length must match input");
@@ -310,7 +310,7 @@ where
 #[allow(dead_code)]
 pub fn parallel_axpy<T>(a: T, x: &[T], y: &mut [T], options: Option<ParallelVectorOptions>)
 where
-    T: Float + NumAssign + Send + Sync + Copy + SimdUnifiedOps,
+    T: Float + SparseElement + NumAssign + Send + Sync + Copy + SimdUnifiedOps,
 {
     assert_eq!(x.len(), y.len(), "Vector lengths must be equal for AXPY");
 
@@ -375,7 +375,7 @@ where
 #[allow(dead_code)]
 pub fn parallel_vector_scale<T>(a: T, x: &[T], y: &mut [T], options: Option<ParallelVectorOptions>)
 where
-    T: Float + NumAssign + Send + Sync + Copy + SimdUnifiedOps,
+    T: Float + SparseElement + NumAssign + Send + Sync + Copy + SimdUnifiedOps,
 {
     assert_eq!(x.len(), y.len(), "Vector lengths must be equal for scaling");
 
@@ -435,7 +435,7 @@ where
 #[allow(dead_code)]
 pub fn parallel_vector_copy<T>(x: &[T], y: &mut [T], options: Option<ParallelVectorOptions>)
 where
-    T: Float + NumAssign + Send + Sync + Copy,
+    T: Float + SparseElement + NumAssign + Send + Sync + Copy,
 {
     assert_eq!(x.len(), y.len(), "Vector lengths must be equal for copy");
 
@@ -488,7 +488,7 @@ pub fn parallel_linear_combination<T>(
     z: &mut [T],
     options: Option<ParallelVectorOptions>,
 ) where
-    T: Float + NumAssign + Send + Sync + Copy + SimdUnifiedOps,
+    T: Float + SparseElement + NumAssign + Send + Sync + Copy + SimdUnifiedOps,
 {
     assert_eq!(x.len(), y.len(), "Input vector lengths must be equal");
     assert_eq!(x.len(), z.len(), "Output vector length must match input");
@@ -569,7 +569,7 @@ pub fn parallel_sparse_matvec_csr<T>(
     x: &[T],
     options: Option<ParallelVectorOptions>,
 ) where
-    T: Float + NumAssign + Send + Sync + Copy + SimdUnifiedOps,
+    T: Float + SparseElement + NumAssign + Send + Sync + Copy + SimdUnifiedOps,
 {
     assert_eq!(
         y.len(),
@@ -608,13 +608,13 @@ pub fn parallel_sparse_matvec_csr<T>(
 
                     if opts.use_simd && (end_idx - start_idx) >= opts.simd_threshold {
                         // Use SIMD for rows with many non-zeros
-                        let mut sum = T::zero();
+                        let mut sum = T::sparse_zero();
                         let simd_len = (end_idx - start_idx) & !7; // Round down to multiple of 8
 
                         // SIMD processing for aligned portion
                         for i in (0..simd_len).step_by(8) {
                             let data_chunk = &row_data[i..i + 8];
-                            let mut x_values = [T::zero(); 8];
+                            let mut x_values = [T::sparse_zero(); 8];
                             for (j, &col_idx) in row_indices[i..i + 8].iter().enumerate() {
                                 x_values[j] = x[col_idx];
                             }
@@ -633,14 +633,14 @@ pub fn parallel_sparse_matvec_csr<T>(
                         y[row] = sum;
                     } else {
                         // Scalar computation for sparse rows
-                        let mut sum = T::zero();
+                        let mut sum = T::sparse_zero();
                         for (&col_idx, &value) in row_indices.iter().zip(row_data.iter()) {
                             sum += value * x[col_idx];
                         }
                         y[row] = sum;
                     }
                 } else {
-                    y[row] = T::zero();
+                    y[row] = T::sparse_zero();
                 }
             }
         }
@@ -650,7 +650,7 @@ pub fn parallel_sparse_matvec_csr<T>(
             let start_idx = indptr[row];
             let end_idx = indptr[row + 1];
 
-            let mut sum = T::zero();
+            let mut sum = T::sparse_zero();
             for idx in start_idx..end_idx {
                 let col = indices[idx];
                 sum += data[idx] * x[col];
@@ -690,7 +690,7 @@ pub fn advanced_sparse_matvec_csr<T>(
     data: &[T],
     x: &[T],
 ) where
-    T: Float + NumAssign + Send + Sync + Copy + SimdUnifiedOps,
+    T: Float + SparseElement + NumAssign + Send + Sync + Copy + SimdUnifiedOps,
 {
     // Analyze matrix characteristics for optimal strategy selection
     let total_nnz = data.len();
@@ -739,7 +739,7 @@ fn advanced_adaptive_load_balanced_spmv<T>(
     x: &[T],
     row_nnz_counts: &[usize],
 ) where
-    T: Float + NumAssign + Send + Sync + Copy,
+    T: Float + SparseElement + NumAssign + Send + Sync + Copy,
 {
     // Create work units with approximately equal computational load
     let total_nnz = data.len();
@@ -765,7 +765,7 @@ fn advanced_adaptive_load_balanced_spmv<T>(
             let start_idx = indptr[row];
             let end_idx = indptr[row + 1];
 
-            let mut sum = T::zero();
+            let mut sum = T::sparse_zero();
             for idx in start_idx..end_idx {
                 sum += data[idx] * x[indices[idx]];
             }
@@ -780,7 +780,7 @@ fn advanced_adaptive_load_balanced_spmv<T>(
         let start_idx = indptr[row];
         let end_idx = indptr[row + 1];
 
-        let mut sum = T::zero();
+        let mut sum = T::sparse_zero();
         for idx in start_idx..end_idx {
             sum += data[idx] * x[indices[idx]];
         }
@@ -798,7 +798,7 @@ fn advanced_vectorized_spmv<T>(
     data: &[T],
     x: &[T],
 ) where
-    T: Float + NumAssign + Send + Sync + Copy + SimdUnifiedOps,
+    T: Float + SparseElement + NumAssign + Send + Sync + Copy + SimdUnifiedOps,
 {
     // Use advanced SIMD operations with prefetching hints
     for row in 0..rows {
@@ -807,7 +807,7 @@ fn advanced_vectorized_spmv<T>(
         let nnz = end_idx - start_idx;
 
         if nnz == 0 {
-            y[row] = T::zero();
+            y[row] = T::sparse_zero();
             continue;
         }
 
@@ -816,14 +816,14 @@ fn advanced_vectorized_spmv<T>(
 
         if nnz >= 8 {
             // Vectorized computation with manual loop unrolling
-            let mut sum = T::zero();
+            let mut sum = T::sparse_zero();
             let simd_iterations = nnz / 8;
             let _remainder = nnz % 8;
 
             // Process 8 elements at a time
             for chunk in 0..simd_iterations {
                 let base_idx = chunk * 8;
-                let mut chunk_sum = T::zero();
+                let mut chunk_sum = T::sparse_zero();
 
                 // Manual unrolling for better instruction-level parallelism
                 chunk_sum += row_data[base_idx] * x[row_indices[base_idx]];
@@ -846,7 +846,7 @@ fn advanced_vectorized_spmv<T>(
             y[row] = sum;
         } else {
             // Fallback for short rows
-            let mut sum = T::zero();
+            let mut sum = T::sparse_zero();
             for (i, &col_idx) in row_indices.iter().enumerate() {
                 sum += row_data[i] * x[col_idx];
             }
@@ -865,7 +865,7 @@ fn advanced_cache_optimized_spmv<T>(
     data: &[T],
     x: &[T],
 ) where
-    T: Float + NumAssign + Send + Sync + Copy,
+    T: Float + SparseElement + NumAssign + Send + Sync + Copy,
 {
     // Use cache-friendly row-wise processing with blocking
     const CACHE_BLOCK_SIZE: usize = 64; // Typical L1 cache line size in elements
@@ -878,7 +878,7 @@ fn advanced_cache_optimized_spmv<T>(
             let start_idx = indptr[row];
             let end_idx = indptr[row + 1];
 
-            let mut sum = T::zero();
+            let mut sum = T::sparse_zero();
 
             // Cache-friendly sequential access
             for idx in start_idx..end_idx {

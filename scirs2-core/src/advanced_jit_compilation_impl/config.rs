@@ -1,9 +1,11 @@
 //! Configuration types for the JIT compilation framework
 
+#[cfg(feature = "serialization")]
 use serde::{Deserialize, Serialize};
 
 /// Configuration for JIT compilation
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone)]
 pub struct JitCompilerConfig {
     /// Enable aggressive optimizations
     pub enable_aggressive_optimization: bool,
@@ -54,7 +56,8 @@ impl Default for JitCompilerConfig {
 }
 
 /// Configuration for neuromorphic compilation
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone)]
 pub struct NeuromorphicConfig {
     /// Enable spike-based optimization
     pub enable_spike_optimization: bool,

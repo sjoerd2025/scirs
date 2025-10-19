@@ -2,7 +2,7 @@
 
 use crate::error::{SparseError, SparseResult};
 use crate::linalg::interface::LinearOperator;
-use scirs2_core::numeric::{Float, NumAssign};
+use scirs2_core::numeric::{Float, NumAssign, SparseElement};
 use std::fmt::Debug;
 use std::iter::Sum;
 
@@ -62,7 +62,7 @@ pub fn lgmres<F>(
     options: LGMRESOptions<F>,
 ) -> SparseResult<LGMRESResult<F>>
 where
-    F: Float + NumAssign + Sum + Debug + 'static,
+    F: Float + SparseElement + NumAssign + Sum + Debug + 'static,
 {
     let (m, n) = a.shape();
     if m != n {
@@ -80,14 +80,17 @@ where
     }
 
     // Initial setup
-    let mut x = options.x0.clone().unwrap_or_else(|| vec![F::zero(); n]);
+    let mut x = options
+        .x0
+        .clone()
+        .unwrap_or_else(|| vec![F::sparse_zero(); n]);
     let b_norm = b.iter().map(|&bi| bi * bi).sum::<F>().sqrt();
 
     if b_norm < options.atol {
         return Ok(LGMRESResult {
             x,
             iterations: 0,
-            residual_norm: F::zero(),
+            residual_norm: F::sparse_zero(),
             converged: true,
         });
     }
@@ -198,25 +201,25 @@ fn inner_gmres<F>(
     preconditioner: Option<&dyn LinearOperator<F>>,
 ) -> SparseResult<(Vec<F>, F, Vec<Vec<F>>)>
 where
-    F: Float + NumAssign + Sum + Debug + 'static,
+    F: Float + SparseElement + NumAssign + Sum + Debug + 'static,
 {
     let n = r0.len();
 
     // Initialize
 
-    let mut v = vec![vec![F::zero(); n]; m + 1];
+    let mut v = vec![vec![F::sparse_zero(); n]; m + 1];
     let r0_norm = r0.iter().map(|&ri| ri * ri).sum::<F>().sqrt();
 
     if r0_norm < F::epsilon() {
-        return Ok((vec![F::zero(); n], F::zero(), vec![]));
+        return Ok((vec![F::sparse_zero(); n], F::sparse_zero(), vec![]));
     }
 
     v[0] = r0.iter().map(|&ri| ri / r0_norm).collect();
 
-    let mut h = vec![vec![F::zero(); m]; m + 1];
-    let mut s = vec![F::zero(); m + 1];
-    let mut c = vec![F::zero(); m + 1];
-    let mut beta = vec![F::zero(); m + 2];
+    let mut h = vec![vec![F::sparse_zero(); m]; m + 1];
+    let mut s = vec![F::sparse_zero(); m + 1];
+    let mut c = vec![F::sparse_zero(); m + 1];
+    let mut beta = vec![F::sparse_zero(); m + 2];
     beta[0] = r0_norm;
 
     // Standard Arnoldi process (augmented _vectors not implemented yet)
@@ -272,7 +275,7 @@ where
             s[j] = h_jp1_j / rho;
 
             h[j][j] = c[j] * h_jj + s[j] * h_jp1_j;
-            h[j + 1][j] = F::zero();
+            h[j + 1][j] = F::sparse_zero();
 
             // Update residual
             beta[j + 1] = -s[j] * beta[j];
@@ -293,11 +296,11 @@ where
 
     // If no iterations were performed, return zero solution
     if k == 0 {
-        return Ok((vec![F::zero(); n], r0_norm, vec![]));
+        return Ok((vec![F::sparse_zero(); n], r0_norm, vec![]));
     }
 
     // Solve the least squares problem
-    let mut y = vec![F::zero(); k];
+    let mut y = vec![F::sparse_zero(); k];
     for i in (0..k).rev() {
         y[i] = beta[i];
         for j in (i + 1)..k {
@@ -306,12 +309,12 @@ where
         if h[i][i].abs() > F::epsilon() {
             y[i] /= h[i][i];
         } else {
-            y[i] = F::zero();
+            y[i] = F::sparse_zero();
         }
     }
 
     // Compute solution in original space
-    let mut x = vec![F::zero(); n];
+    let mut x = vec![F::sparse_zero(); n];
     for i in 0..k {
         for (j, x_val) in x.iter_mut().enumerate().take(n) {
             *x_val += y[i] * v[i][j];

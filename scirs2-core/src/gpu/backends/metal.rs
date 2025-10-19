@@ -99,12 +99,10 @@ impl MetalContext {
             unified_memory: device.has_unified_memory(),
         };
 
-        // Initialize MPS operations if available
-        // MPS operations are available when Metal feature is enabled
-        let mps_operations = Some(Arc::new(MPSOperations::new(
-            device.clone(),
-            command_queue.clone(),
-        )));
+        // MPS operations require objc2_metal types, but this Metal backend uses
+        // the high-level metal crate types which are incompatible.
+        // MPS operations are disabled in this backend.
+        let mps_operations = None;
 
         Ok(Self {
             device,

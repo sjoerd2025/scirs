@@ -7,7 +7,7 @@ use super::{num_vertices, to_adjacency_list, validate_graph};
 use crate::error::{SparseError, SparseResult};
 use crate::sparray::SparseArray;
 use scirs2_core::ndarray::Array1;
-use scirs2_core::numeric::Float;
+use scirs2_core::numeric::{Float, SparseElement};
 use std::fmt::Debug;
 
 /// Find connected components in a graph
@@ -48,7 +48,7 @@ pub fn connected_components<T, S>(
     returnlabels: bool,
 ) -> SparseResult<(usize, Option<Array1<usize>>)>
 where
-    T: Float + Debug + Copy + 'static,
+    T: Float + SparseElement + Debug + Copy + 'static,
     S: SparseArray<T>,
 {
     validate_graph(graph, directed)?;
@@ -90,7 +90,7 @@ pub fn undirected_connected_components<T, S>(
     returnlabels: bool,
 ) -> SparseResult<(usize, Option<Array1<usize>>)>
 where
-    T: Float + Debug + Copy + 'static,
+    T: Float + SparseElement + Debug + Copy + 'static,
     S: SparseArray<T>,
 {
     let n = num_vertices(graph);
@@ -123,7 +123,7 @@ pub fn weakly_connected_components<T, S>(
     returnlabels: bool,
 ) -> SparseResult<(usize, Option<Array1<usize>>)>
 where
-    T: Float + Debug + Copy + 'static,
+    T: Float + SparseElement + Debug + Copy + 'static,
     S: SparseArray<T>,
 {
     // For weak connectivity, we treat the graph as undirected
@@ -137,7 +137,7 @@ pub fn strongly_connected_components<T, S>(
     returnlabels: bool,
 ) -> SparseResult<(usize, Option<Array1<usize>>)>
 where
-    T: Float + Debug + Copy + 'static,
+    T: Float + SparseElement + Debug + Copy + 'static,
     S: SparseArray<T>,
 {
     let n = num_vertices(graph);
@@ -163,7 +163,7 @@ fn dfs_component<T>(
     component_id: usize,
     labels: &mut Option<Array1<usize>>,
 ) where
-    T: Float + Debug + Copy + 'static,
+    T: Float + SparseElement + Debug + Copy + 'static,
 {
     let mut stack = vec![start];
 
@@ -190,7 +190,7 @@ fn dfs_component<T>(
 /// Tarjan's strongly connected components algorithm
 struct TarjanSCC<T>
 where
-    T: Float + Debug + Copy + 'static,
+    T: Float + SparseElement + Debug + Copy + 'static,
 {
     indices: Vec<isize>,
     lowlinks: Vec<isize>,
@@ -204,7 +204,7 @@ where
 
 impl<T> TarjanSCC<T>
 where
-    T: Float + Debug + Copy + 'static,
+    T: Float + SparseElement + Debug + Copy + 'static,
 {
     fn new(n: usize, returnlabels: bool) -> Self {
         Self {
@@ -290,7 +290,7 @@ where
 #[allow(dead_code)]
 pub fn is_connected<T, S>(graph: &S, directed: bool) -> SparseResult<bool>
 where
-    T: Float + Debug + Copy + 'static,
+    T: Float + SparseElement + Debug + Copy + 'static,
     S: SparseArray<T>,
 {
     let (n_components_, _) = connected_components(graph, directed, "strong", false)?;
@@ -332,7 +332,7 @@ pub fn largest_component<T, S>(
     connection: &str,
 ) -> SparseResult<(usize, Vec<usize>)>
 where
-    T: Float + Debug + Copy + 'static,
+    T: Float + SparseElement + Debug + Copy + 'static,
     S: SparseArray<T>,
 {
     let (n_components, labels) = connected_components(graph, directed, connection, true)?;
@@ -391,7 +391,7 @@ pub fn extract_largest_component<T, S>(
     connection: &str,
 ) -> SparseResult<(S, Vec<usize>)>
 where
-    T: Float + Debug + Copy + 'static,
+    T: Float + SparseElement + Debug + Copy + 'static,
     S: SparseArray<T> + Clone,
 {
     let (_, vertex_indices) = largest_component(graph, directed, connection)?;

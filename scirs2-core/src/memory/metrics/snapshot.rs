@@ -13,6 +13,7 @@ use std::path::Path;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 #[cfg(feature = "memory_metrics")]
+#[cfg(feature = "serialization")]
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "memory_metrics")]
 use serde_json::Value as JsonValue;

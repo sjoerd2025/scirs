@@ -9,6 +9,7 @@ use crate::error::{SparseError, SparseResult};
 use crate::sparray::SparseArray;
 use scirs2_core::ndarray::{Array1, ArrayView1};
 use scirs2_core::numeric::Float;
+use scirs2_core::SparseElement;
 use std::collections::HashMap;
 use std::fmt::Debug;
 
@@ -85,7 +86,7 @@ pub enum CycleType {
 #[derive(Debug)]
 pub struct AMGPreconditioner<T>
 where
-    T: Float + Debug + Copy + 'static,
+    T: Float + SparseElement + Debug + Copy + 'static,
 {
     /// Matrices at each level
     operators: Vec<CsrArray<T>>,
@@ -101,7 +102,7 @@ where
 
 impl<T> AMGPreconditioner<T>
 where
-    T: Float + Debug + Copy + 'static,
+    T: Float + SparseElement + Debug + Copy + 'static,
 {
     /// Create a new AMG preconditioner from a sparse matrix
     ///
@@ -243,7 +244,7 @@ where
             let row_end = matrix.get_indptr()[i + 1];
 
             // Find maximum off-diagonal magnitude in this row
-            let mut max_off_diag = T::zero();
+            let mut max_off_diag = T::sparse_zero();
             for j in row_start..row_end {
                 let col = matrix.get_indices()[j];
                 if col != i {
@@ -367,7 +368,7 @@ where
         for i in 0..n {
             if let Some(&coarse_idx) = fine_to_coarse.get(&i) {
                 // Direct injection for _coarse points
-                prolongation_data.push(T::one());
+                prolongation_data.push(T::sparse_one());
                 prolongation_indices.push(coarse_idx);
             } else {
                 // Algebraic interpolation for fine points
@@ -380,7 +381,7 @@ where
 
                 if interp_weights.is_empty() {
                     // Fallback: direct injection to first _coarse point
-                    prolongation_data.push(T::one());
+                    prolongation_data.push(T::sparse_one());
                     prolongation_indices.push(0);
                 } else {
                     // Add interpolation weights
@@ -427,7 +428,7 @@ where
         }
 
         // Get the diagonal entry for fine _point
-        let mut a_ii = T::zero();
+        let mut a_ii = T::sparse_zero();
         let row_start = matrix.get_indptr()[fine_point];
         let row_end = matrix.get_indptr()[fine_point + 1];
 
@@ -439,17 +440,17 @@ where
             }
         }
 
-        if a_ii.is_zero() {
+        if SparseElement::is_zero(&a_ii) {
             return Ok(weights);
         }
 
         // Compute interpolation weights using classical formula
         // w_j = -a_ij / a_ii for _coarse _neighbors j
-        let mut total_weight = T::zero();
+        let mut total_weight = T::sparse_zero();
         let mut temp_weights = Vec::new();
 
         for &coarse_neighbor in &coarse_neighbors {
-            let mut a_ij = T::zero();
+            let mut a_ij = T::sparse_zero();
             for j in row_start..row_end {
                 let col = matrix.get_indices()[j];
                 if col == coarse_neighbor {
@@ -458,20 +459,20 @@ where
                 }
             }
 
-            if !a_ij.is_zero() {
+            if !SparseElement::is_zero(&a_ij) {
                 let weight = -a_ij / a_ii;
                 temp_weights.push(weight);
                 total_weight = total_weight + weight;
             } else {
-                temp_weights.push(T::zero());
+                temp_weights.push(T::sparse_zero());
             }
         }
 
         // Normalize weights to sum to 1
-        if !total_weight.is_zero() {
+        if !SparseElement::is_zero(&total_weight) {
             for (i, &coarse_idx) in coarse_weights.iter().enumerate() {
                 let normalized_weight = temp_weights[i] / total_weight;
-                if !normalized_weight.is_zero() {
+                if !SparseElement::is_zero(&normalized_weight) {
                     weights.push((coarse_idx, normalized_weight));
                 }
             }
@@ -591,8 +592,8 @@ where
             let row_start = matrix.get_indptr()[i];
             let row_end = matrix.get_indptr()[i + 1];
 
-            let mut sum = T::zero();
-            let mut diag_val = T::zero();
+            let mut sum = T::sparse_zero();
+            let mut diag_val = T::sparse_zero();
 
             for j in row_start..row_end {
                 let col = matrix.get_indices()[j];
@@ -605,7 +606,7 @@ where
                 }
             }
 
-            if !diag_val.is_zero() {
+            if !SparseElement::is_zero(&diag_val) {
                 x[i] = (b[i] - sum) / diag_val;
             }
         }
@@ -627,8 +628,8 @@ where
             let row_start = matrix.get_indptr()[i];
             let row_end = matrix.get_indptr()[i + 1];
 
-            let mut sum = T::zero();
-            let mut diag_val = T::zero();
+            let mut sum = T::sparse_zero();
+            let mut diag_val = T::sparse_zero();
 
             for j in row_start..row_end {
                 let col = matrix.get_indices()[j];
@@ -641,7 +642,7 @@ where
                 }
             }
 
-            if !diag_val.is_zero() {
+            if !SparseElement::is_zero(&diag_val) {
                 x_new[i] = (b[i] - sum) / diag_val;
             }
         }
@@ -664,8 +665,8 @@ where
             let row_start = matrix.get_indptr()[i];
             let row_end = matrix.get_indptr()[i + 1];
 
-            let mut sum = T::zero();
-            let mut diag_val = T::zero();
+            let mut sum = T::sparse_zero();
+            let mut diag_val = T::sparse_zero();
 
             for j in row_start..row_end {
                 let col = matrix.get_indices()[j];
@@ -678,9 +679,9 @@ where
                 }
             }
 
-            if !diag_val.is_zero() {
+            if !SparseElement::is_zero(&diag_val) {
                 let x_gs = (b[i] - sum) / diag_val;
-                x[i] = (T::one() - omega) * x[i] + omega * x_gs;
+                x[i] = (T::sparse_one() - omega) * x[i] + omega * x_gs;
             }
         }
 
@@ -718,7 +719,7 @@ where
 #[allow(dead_code)]
 fn matrix_vector_multiply<T>(matrix: &CsrArray<T>, x: &ArrayView1<T>) -> SparseResult<Array1<T>>
 where
-    T: Float + Debug + Copy + 'static,
+    T: Float + SparseElement + Debug + Copy + 'static,
 {
     let (rows, cols) = matrix.shape();
     if x.len() != cols {

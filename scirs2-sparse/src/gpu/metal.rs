@@ -7,7 +7,7 @@ use crate::csr_array::CsrArray;
 use crate::error::{SparseError, SparseResult};
 use crate::sparray::SparseArray;
 use scirs2_core::ndarray::{Array1, ArrayView1};
-use scirs2_core::numeric::Float;
+use scirs2_core::numeric::{Float, SparseElement};
 use std::fmt::Debug;
 
 #[cfg(feature = "gpu")]
@@ -236,7 +236,7 @@ impl MetalSpMatVec {
         _device: &super::GpuDevice,
     ) -> SparseResult<Array1<T>>
     where
-        T: Float + Debug + Copy + scirs2_core::gpu::GpuDataType,
+        T: Float + SparseElement + Debug + Copy + scirs2_core::gpu::GpuDataType,
     {
         let (rows, cols) = matrix.shape();
         if cols != vector.len() {
@@ -296,7 +296,7 @@ impl MetalSpMatVec {
                     })?;
 
                 // Read result back
-                let mut result_vec = vec![T::zero(); rows];
+                let mut result_vec = vec![T::sparse_zero(); rows];
                 result_buffer.copy_to_host(&mut result_vec).map_err(|e| {
                     SparseError::ComputationError(format!(
                         "Failed to copy result from GPU: {:?}",
@@ -325,7 +325,7 @@ impl MetalSpMatVec {
         optimization_level: MetalOptimizationLevel,
     ) -> SparseResult<Array1<T>>
     where
-        T: Float + Debug + Copy + super::GpuDataType,
+        T: Float + SparseElement + Debug + Copy + super::GpuDataType,
     {
         let (rows, cols) = matrix.shape();
         if cols != vector.len() {
@@ -373,7 +373,7 @@ impl MetalSpMatVec {
         optimization_level: MetalOptimizationLevel,
     ) -> SparseResult<Array1<T>>
     where
-        T: Float + Debug + Copy + super::GpuDataType,
+        T: Float + SparseElement + Debug + Copy + super::GpuDataType,
     {
         let (rows, _) = matrix.shape();
 
@@ -429,7 +429,7 @@ impl MetalSpMatVec {
                 })?;
 
             // Download result
-            let mut result_vec = vec![T::zero(); rows];
+            let mut result_vec = vec![T::sparse_zero(); rows];
             result_gpu.copy_to_host(&mut result_vec).map_err(|e| {
                 SparseError::ComputationError(format!("Failed to copy result from GPU: {:?}", e))
             })?;
@@ -448,7 +448,7 @@ impl MetalSpMatVec {
         matrix: &CsrArray<T>,
     ) -> SparseResult<super::GpuKernelHandle>
     where
-        T: Float + Debug + Copy,
+        T: Float + SparseElement + Debug + Copy,
     {
         let avg_nnz_per_row = matrix.get_data().len() as f64 / rows as f64;
 
@@ -497,7 +497,7 @@ impl MetalSpMatVec {
         vector: &ArrayView1<T>,
     ) -> SparseResult<Array1<T>>
     where
-        T: Float + Debug + Copy + std::iter::Sum,
+        T: Float + SparseElement + Debug + Copy + std::iter::Sum,
     {
         matrix.dot_vector(vector)
     }
@@ -609,7 +609,7 @@ impl MetalMemoryManager {
         _device: &super::GpuDevice,
     ) -> Result<MetalMatrixBuffers<T>, super::GpuError>
     where
-        T: super::GpuDataType + Copy + Float + Debug,
+        T: super::GpuDataType + Copy + Float + SparseElement + Debug,
     {
         // This functionality should use GpuContext instead of GpuDevice
         // For now, return an error indicating this needs proper implementation
@@ -642,7 +642,7 @@ impl MetalMemoryManager {
     /// Check if SIMD group operations are beneficial
     pub fn should_use_simdgroups<T>(&self, matrix: &CsrArray<T>) -> bool
     where
-        T: Float + Debug + Copy,
+        T: Float + SparseElement + Debug + Copy,
     {
         if !self.device_info.supports_simdgroups {
             return false;

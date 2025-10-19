@@ -68,6 +68,7 @@ pub mod semantic;
 use crate::error::CoreError;
 use std::collections::{BTreeSet, HashMap};
 
+#[cfg(feature = "serialization")]
 use serde::{Deserialize, Serialize};
 
 // Re-export main types
@@ -78,7 +79,8 @@ pub use negotiation::{ClientCapabilities, NegotiationResult, VersionNegotiator};
 pub use semantic::{Version, VersionBuilder, VersionConstraint, VersionRange};
 
 /// API version information with metadata
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ApiVersion {
     /// The semantic version
     pub version: Version,
@@ -107,7 +109,8 @@ pub struct ApiVersion {
 }
 
 /// API stability levels
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum StabilityLevel {
     /// Experimental - subject to breaking changes
     Experimental,
@@ -139,7 +142,8 @@ impl StabilityLevel {
 }
 
 /// Support status for API versions
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SupportStatus {
     /// Active development and support
     Active,
@@ -481,7 +485,8 @@ impl Default for VersionManager {
 }
 
 /// Version statistics for monitoring and reporting
-#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Default)]
 pub struct VersionStatistics {
     /// Total number of registered versions
     pub totalversions: usize,
@@ -510,7 +515,8 @@ pub struct VersionStatistics {
 }
 
 /// Maintenance report for version management operations
-#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Default)]
 pub struct MaintenanceReport {
     /// Versions marked as end of life
     pub versions_marked_eol: Vec<Version>,

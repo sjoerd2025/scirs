@@ -6,7 +6,7 @@ use crate::csr_array::CsrArray;
 use crate::error::{SparseError, SparseResult};
 use crate::sparray::SparseArray;
 use scirs2_core::ndarray::{Array1, ArrayView1};
-use scirs2_core::numeric::Float;
+use scirs2_core::numeric::{Float, SparseElement};
 use std::fmt::Debug;
 
 #[cfg(feature = "gpu")]
@@ -184,7 +184,7 @@ impl CudaSpMatVec {
         _device: &super::GpuDevice,
     ) -> SparseResult<Array1<T>>
     where
-        T: Float + Debug + Copy + scirs2_core::gpu::GpuDataType,
+        T: Float + SparseElement + Debug + Copy + scirs2_core::gpu::GpuDataType,
     {
         let (rows, cols) = matrix.shape();
         if cols != vector.len() {
@@ -231,7 +231,7 @@ impl CudaSpMatVec {
                     })?;
 
                 // Read result back
-                let mut result_vec = vec![T::zero(); rows];
+                let mut result_vec = vec![T::sparse_zero(); rows];
                 result_buffer.copy_to_host(&mut result_vec).map_err(|e| {
                     SparseError::ComputationError(format!(
                         "Failed to copy result from GPU: {:?}",
@@ -260,7 +260,7 @@ impl CudaSpMatVec {
         optimization_level: CudaOptimizationLevel,
     ) -> SparseResult<Array1<T>>
     where
-        T: Float + Debug + Copy + super::GpuDataType,
+        T: Float + SparseElement + Debug + Copy + super::GpuDataType,
     {
         let (rows, cols) = matrix.shape();
         if cols != vector.len() {
@@ -296,7 +296,7 @@ impl CudaSpMatVec {
         _optimization_level: CudaOptimizationLevel,
     ) -> SparseResult<Array1<T>>
     where
-        T: Float + Debug + Copy + super::GpuDataType,
+        T: Float + SparseElement + Debug + Copy + super::GpuDataType,
     {
         // Placeholder implementation - CUDA optimized execution needs proper API integration
         Err(SparseError::ComputationError(
@@ -345,7 +345,7 @@ impl CudaSpMatVec {
         vector: &ArrayView1<T>,
     ) -> SparseResult<Array1<T>>
     where
-        T: Float + Debug + Copy + std::iter::Sum,
+        T: Float + SparseElement + Debug + Copy + std::iter::Sum,
     {
         matrix.dot_vector(vector)
     }
@@ -401,7 +401,7 @@ impl CudaMemoryManager {
         _device: &super::GpuDevice,
     ) -> Result<CudaMatrixBuffers<T>, super::GpuError>
     where
-        T: super::GpuDataType + Copy + Float + Debug,
+        T: super::GpuDataType + Copy + Float + SparseElement + Debug,
     {
         // Placeholder implementation - requires GpuContext instead of GpuDevice
         Err(super::GpuError::BackendNotImplemented(
@@ -418,7 +418,7 @@ impl CudaMemoryManager {
         _access_pattern: MemoryAccessPattern,
     ) -> Result<super::GpuBuffer<T>, super::GpuError>
     where
-        T: super::GpuDataType + Copy + Float + Debug,
+        T: super::GpuDataType + Copy + Float + SparseElement + Debug,
     {
         // This functionality should use GpuContext instead of GpuDevice
         // For now, return an error indicating this needs proper implementation

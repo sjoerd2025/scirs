@@ -19,6 +19,7 @@ use crate::gpu::{
 };
 
 #[cfg(all(feature = "serde", feature = "gpu"))]
+#[cfg(feature = "serialization")]
 use serde::{Deserialize, Serialize};
 
 /// AI optimization engine for tensor operations

@@ -2,13 +2,15 @@
 
 use crate::distributed::ResourceRequirements;
 use crate::error::{CoreError, CoreResult};
+#[cfg(feature = "serialization")]
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
 
 /// Configuration for advanced ecosystem
 #[allow(dead_code)]
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone)]
 pub struct AdvancedEcosystemConfig {
     /// Enable cross-module optimization
     pub enable_cross_module_optimization: bool,
@@ -42,7 +44,8 @@ impl Default for AdvancedEcosystemConfig {
 
 /// Status of the advanced ecosystem
 #[allow(dead_code)]
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone)]
 pub struct EcosystemStatus {
     /// Overall health status
     pub health: EcosystemHealth,
@@ -61,7 +64,8 @@ pub struct EcosystemStatus {
 
 /// Health status of the ecosystem
 #[allow(dead_code)]
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, PartialEq)]
 pub enum EcosystemHealth {
     Healthy,
     Warning,
@@ -72,7 +76,8 @@ pub enum EcosystemHealth {
 
 /// Resource utilization metrics
 #[allow(dead_code)]
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone)]
 pub struct ResourceUtilization {
     /// CPU utilization (0.0-1.0)
     pub cpu_usage: f64,
@@ -164,7 +169,8 @@ pub struct ProcessingContext {
 
 /// Priority levels for processing
 #[allow(dead_code)]
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Priority {
     Low,
     Normal,
@@ -175,7 +181,8 @@ pub enum Priority {
 
 /// Processing strategy for advanced operations
 #[allow(dead_code)]
-#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum ProcessingStrategy {
     SingleModule,
     Sequential,
@@ -197,7 +204,8 @@ pub struct ProcessingPlan {
 
 /// Cross-module optimization configuration
 #[allow(dead_code)]
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone)]
 pub struct CrossModuleOptimizationConfig {
     pub enable_data_sharing: bool,
     pub enable_compute_sharing: bool,
@@ -208,7 +216,8 @@ pub struct CrossModuleOptimizationConfig {
 
 /// Optimization level for cross-module operations
 #[allow(dead_code)]
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, PartialEq)]
 pub enum OptimizationLevel {
     Conservative,
     Balanced,
@@ -342,7 +351,8 @@ pub enum MessageType {
 
 /// Performance metrics for operations
 #[allow(dead_code)]
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone)]
 pub struct PerformanceMetrics {
     pub throughput: f64,
     pub latency: Duration,
@@ -424,7 +434,8 @@ pub struct WorkflowExecutionPlan {
 
 /// Workflow stage specification
 #[allow(dead_code)]
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone)]
 pub struct WorkflowStage {
     pub name: String,
     pub module: String,

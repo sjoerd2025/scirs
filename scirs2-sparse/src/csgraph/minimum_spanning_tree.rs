@@ -8,7 +8,7 @@ use crate::csr_array::CsrArray;
 use crate::error::{SparseError, SparseResult};
 use crate::sparray::SparseArray;
 use scirs2_core::ndarray::Array1;
-use scirs2_core::numeric::Float;
+use scirs2_core::numeric::{Float, SparseElement};
 use std::cmp::Ordering;
 use std::collections::BinaryHeap;
 use std::fmt::Debug;
@@ -162,7 +162,7 @@ pub fn minimum_spanning_tree<T, S>(
     return_tree: bool,
 ) -> SparseResult<(T, Option<CsrArray<T>>, Array1<isize>)>
 where
-    T: Float + Debug + Copy + 'static,
+    T: Float + SparseElement + Debug + Copy + 'static,
     S: SparseArray<T>,
 {
     validate_graph(graph, false)?; // Must be undirected
@@ -206,7 +206,7 @@ pub fn kruskal_mst<T, S>(
     return_tree: bool,
 ) -> SparseResult<(T, Option<CsrArray<T>>, Array1<isize>)>
 where
-    T: Float + Debug + Copy + 'static,
+    T: Float + SparseElement + Debug + Copy + 'static,
     S: SparseArray<T>,
 {
     let n = num_vertices(graph);
@@ -215,7 +215,7 @@ where
     // Create edges and sort them by weight
     let mut edges = Vec::new();
     for (i, (&u, &v)) in row_indices.iter().zip(col_indices.iter()).enumerate() {
-        if u <= v && !values[i].is_zero() {
+        if u <= v && !SparseElement::is_zero(&values[i]) {
             // Avoid duplicate edges for undirected graph
             edges.push(Edge {
                 weight: values[i],
@@ -229,7 +229,7 @@ where
 
     let mut union_find = UnionFind::new(n);
     let mut mst_edges = Vec::new();
-    let mut total_weight = T::zero();
+    let mut total_weight = T::sparse_zero();
     let mut parent = Array1::from_elem(n, -1isize);
 
     for edge in edges {
@@ -275,7 +275,7 @@ pub fn prim_mst<T, S>(
     return_tree: bool,
 ) -> SparseResult<(T, Option<CsrArray<T>>, Array1<isize>)>
 where
-    T: Float + Debug + Copy + 'static,
+    T: Float + SparseElement + Debug + Copy + 'static,
     S: SparseArray<T>,
 {
     let n = num_vertices(graph);
@@ -290,16 +290,16 @@ where
     let mut in_mst = vec![false; n];
     let mut min_weight = vec![T::infinity(); n];
     let mut parent = Array1::from_elem(n, -1isize);
-    let mut total_weight = T::zero();
+    let mut total_weight = T::sparse_zero();
     let mut mst_edges = Vec::new();
 
     // Priority queue for edges (weight, vertex)
     let mut heap = BinaryHeap::new();
 
     // Start with the given vertex
-    min_weight[start] = T::zero();
+    min_weight[start] = T::sparse_zero();
     heap.push(Edge {
-        weight: T::zero(),
+        weight: T::sparse_zero(),
         u: start,
         v: start,
     });
@@ -312,7 +312,7 @@ where
         in_mst[v] = true;
         total_weight = total_weight + weight;
 
-        if weight > T::zero() {
+        if weight > T::sparse_zero() {
             // Add edge to MST (except for the first vertex)
             mst_edges.push(Edge {
                 weight,
@@ -357,7 +357,7 @@ where
 #[allow(dead_code)]
 fn build_mst_matrix<T>(edges: &[Edge<T>], n: usize) -> SparseResult<CsrArray<T>>
 where
-    T: Float + Debug + Copy + 'static,
+    T: Float + SparseElement + Debug + Copy + 'static,
 {
     let mut rows = Vec::new();
     let mut cols = Vec::new();
@@ -391,7 +391,7 @@ where
 #[allow(dead_code)]
 pub fn is_spanning_tree<T, S1, S2>(graph: &S1, tree: &S2, tol: T) -> SparseResult<bool>
 where
-    T: Float + Debug + Copy + 'static,
+    T: Float + SparseElement + Debug + Copy + 'static,
     S1: SparseArray<T>,
     S2: SparseArray<T>,
 {
@@ -442,11 +442,11 @@ where
 #[allow(dead_code)]
 pub fn spanning_tree_weight<T, S>(tree: &S) -> SparseResult<T>
 where
-    T: Float + Debug + Copy + 'static,
+    T: Float + SparseElement + Debug + Copy + 'static,
     S: SparseArray<T>,
 {
     let (row_indices, col_indices, values) = tree.find();
-    let mut total_weight = T::zero();
+    let mut total_weight = T::sparse_zero();
 
     // Sum weights, counting each undirected edge only once
     for (i, (&u, &v)) in row_indices.iter().zip(col_indices.iter()).enumerate() {
@@ -481,7 +481,7 @@ pub fn all_minimum_spanning_trees<T, S>(
     algorithm: &str,
 ) -> SparseResult<(CsrArray<T>, bool, T)>
 where
-    T: Float + Debug + Copy + 'static,
+    T: Float + SparseElement + Debug + Copy + 'static,
     S: SparseArray<T>,
 {
     let (total_weight, mst_, _) = minimum_spanning_tree(graph, algorithm, true)?;

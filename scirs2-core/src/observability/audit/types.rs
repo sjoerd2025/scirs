@@ -1,13 +1,15 @@
 //! Types and configuration structures for the audit logging system
 
 use chrono::{DateTime, Utc};
+#[cfg(feature = "serialization")]
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
 use uuid::Uuid;
 
 /// Audit logging configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone)]
 #[allow(clippy::struct_excessive_bools)]
 pub struct AuditConfig {
     /// Directory for audit log storage
@@ -68,7 +70,8 @@ impl Default for AuditConfig {
 }
 
 /// Retention policy configuration for audit logs
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone)]
 pub struct RetentionPolicy {
     /// Number of days to retain active logs
     pub active_retention_days: u32,
@@ -98,7 +101,8 @@ impl Default for RetentionPolicy {
 }
 
 /// Storage backend configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone)]
 pub enum StorageBackend {
     /// Local filesystem storage
     FileSystem,
@@ -132,7 +136,8 @@ pub enum StorageBackend {
 }
 
 #[cfg(feature = "s3")]
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone)]
 pub struct S3Credentials {
     /// AWS access key ID
     pub access_key: String,
@@ -143,7 +148,8 @@ pub struct S3Credentials {
 }
 
 /// Compliance modes for different regulatory requirements
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ComplianceMode {
     /// Standard compliance (basic requirements)
     Standard,
@@ -158,7 +164,8 @@ pub enum ComplianceMode {
 }
 
 /// Real-time alerting configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone)]
 pub struct AlertingConfig {
     /// Enable real-time alerts
     pub enabled: bool,
@@ -177,7 +184,8 @@ pub struct AlertingConfig {
 }
 
 /// Event categories for classification
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum EventCategory {
     /// Authentication events (login, logout, authentication failures)
     Authentication,
@@ -218,7 +226,8 @@ impl EventCategory {
 }
 
 /// Event severity levels
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum EventSeverity {
     /// Informational events
     Info,
@@ -244,7 +253,8 @@ impl EventSeverity {
 }
 
 /// System context information
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone)]
 pub struct SystemContext {
     /// Process ID
     pub process_id: u32,
@@ -295,7 +305,8 @@ impl SystemContext {
 }
 
 /// Audit event structure
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone)]
 pub struct AuditEvent {
     /// Unique event identifier
     pub event_id: Uuid,
@@ -338,7 +349,8 @@ pub struct AuditEvent {
 }
 
 /// Event outcome enumeration
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum EventOutcome {
     /// Operation succeeded
     Success,
@@ -367,7 +379,8 @@ impl EventOutcome {
 }
 
 /// Data classification levels
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum DataClassification {
     /// Public data
     Public,
@@ -396,7 +409,8 @@ impl DataClassification {
 }
 
 /// Audit statistics structure
-#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Default)]
 pub struct AuditStatistics {
     /// Total number of events
     pub total_events: usize,
@@ -415,7 +429,8 @@ pub struct AuditStatistics {
 }
 
 /// Compliance report structure for regulatory audits
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone)]
 pub struct ComplianceReport {
     /// Report period start
     pub period_start: DateTime<Utc>,

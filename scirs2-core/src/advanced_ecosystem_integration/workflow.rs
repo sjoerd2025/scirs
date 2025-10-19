@@ -3,6 +3,7 @@
 use super::types::*;
 use crate::distributed::ResourceRequirements;
 use crate::error::{CoreError, CoreResult, ErrorContext};
+#[cfg(feature = "serialization")]
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::time::{Duration, Instant};
@@ -20,7 +21,8 @@ pub struct DistributedWorkflow {
 
 /// Result of workflow execution
 #[allow(dead_code)]
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone)]
 pub struct WorkflowResult {
     pub workflow_name: String,
     pub execution_time: Duration,
@@ -31,7 +33,8 @@ pub struct WorkflowResult {
 
 /// Result of a single workflow stage
 #[allow(dead_code)]
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone)]
 pub struct StageResult {
     pub stage_name: String,
     pub execution_time: Duration,

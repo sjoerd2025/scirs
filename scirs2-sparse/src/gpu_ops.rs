@@ -208,7 +208,7 @@ pub struct OptimizedGpuOps {
 use crate::csr_array::CsrArray;
 use crate::error::SparseResult;
 use scirs2_core::ndarray::{Array1, ArrayView1};
-use scirs2_core::numeric::Float;
+use scirs2_core::numeric::{Float, SparseElement};
 use std::fmt::Debug;
 
 // GpuDataType is already defined above in this module
@@ -224,7 +224,7 @@ pub fn gpu_sparse_matvec<T>(
     backend: Option<GpuBackend>,
 ) -> SparseResult<Array1<T>>
 where
-    T: Float + Debug + Copy + GpuDataType + std::iter::Sum,
+    T: Float + SparseElement + Debug + Copy + GpuDataType + std::iter::Sum,
 {
     let gpu_handler = if let Some(backend) = backend {
         GpuSpMatVec::with_backend(backend)?
@@ -259,7 +259,7 @@ pub fn gpu_sym_sparse_matvec<T>(
     backend: Option<GpuBackend>,
 ) -> SparseResult<Array1<T>>
 where
-    T: Float + Debug + Copy + GpuDataType + std::iter::Sum,
+    T: Float + SparseElement + Debug + Copy + GpuDataType + std::iter::Sum,
 {
     let gpu_handler = if let Some(backend) = backend {
         GpuSpMatVec::with_backend(backend)?
@@ -295,7 +295,7 @@ pub fn gpu_advanced_spmv<T>(
     optimization: OptimizationHint,
 ) -> SparseResult<Array1<T>>
 where
-    T: Float + Debug + Copy + GpuDataType + std::iter::Sum,
+    T: Float + SparseElement + Debug + Copy + GpuDataType + std::iter::Sum,
 {
     let gpu_handler = if let Some(backend) = backend {
         GpuSpMatVec::with_backend(backend)?
@@ -346,7 +346,7 @@ impl SpMVKernel {
         device: &GpuDevice,
     ) -> Result<Array1<T>, GpuError>
     where
-        T: Float + Debug + Copy + GpuDataType + std::iter::Sum,
+        T: Float + SparseElement + Debug + Copy + GpuDataType + std::iter::Sum,
     {
         self.gpu_handler
             .spmv(matrix, vector, Some(device))

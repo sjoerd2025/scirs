@@ -47,7 +47,7 @@
 //! Add to your `Cargo.toml`:
 //! ```toml
 //! [dependencies]
-//! scirs2-stats = "0.1.0-rc.1"
+//! scirs2-stats = "0.1.0-rc.2"
 //! ```
 //!
 //! ```rust
@@ -205,7 +205,7 @@
 //!
 //! ## 🔒 Version Information
 //!
-//! - **Version**: 0.1.0-rc.1
+//! - **Version**: 0.1.0-rc.2
 //! - **Release Date**: October 03, 2025
 //! - **MSRV** (Minimum Supported Rust Version): 1.70.0
 //! - **Documentation**: [docs.rs/scirs2-stats](https://docs.rs/scirs2-stats)
@@ -608,6 +608,7 @@ pub mod advanced_parallel_monte_carlo; // Advanced parallel Monte Carlo integrat
 pub mod bayesian; // Bayesian statistics
 pub mod contingency; // Contingency table functions
 pub mod distributions; // Statistical distributions
+pub mod gaussian_process; // Gaussian Process regression
 pub mod mcmc; // Markov Chain Monte Carlo methods
 pub mod mstats; // Masked array statistics
 pub mod multivariate; // Multivariate analysis (PCA, etc.)

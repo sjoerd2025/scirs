@@ -4,7 +4,7 @@
 //! efficient for column operations, sparse matrix multiplication, and more.
 
 use crate::error::{SparseError, SparseResult};
-use scirs2_core::numeric::Zero;
+use scirs2_core::numeric::{SparseElement, Zero};
 use scirs2_core::GpuDataType;
 use std::cmp::PartialEq;
 
@@ -27,7 +27,7 @@ pub struct CscMatrix<T> {
 
 impl<T> CscMatrix<T>
 where
-    T: Clone + Copy + Zero + PartialEq,
+    T: Clone + Copy + Zero + PartialEq + SparseElement,
 {
     /// Create a new CSC matrix from raw data
     ///
@@ -282,9 +282,9 @@ where
     /// Convert to dense matrix (as Vec<Vec<T>>)
     pub fn to_dense(&self) -> Vec<Vec<T>>
     where
-        T: Zero + Copy,
+        T: Zero + Copy + SparseElement,
     {
-        let mut result = vec![vec![T::zero(); self.cols]; self.rows];
+        let mut result = vec![vec![T::sparse_zero(); self.cols]; self.rows];
 
         for col_idx in 0..self.cols {
             for j in self.indptr[col_idx]..self.indptr[col_idx + 1] {
@@ -313,7 +313,7 @@ where
         // Fill the transposed matrix
         let nnz = self.nnz();
         let mut indices_t = vec![0; nnz];
-        let mut data_t = vec![T::zero(); nnz];
+        let mut data_t = vec![T::sparse_zero(); nnz];
         let mut row_counts = vec![0; self.rows];
 
         for col in 0..self.cols {
@@ -455,7 +455,11 @@ where
         + Sync
         + 'static
         + std::ops::AddAssign
-        + std::iter::Sum,
+        + std::iter::Sum
+        + Zero
+        + PartialEq
+        + SparseElement
+        + Clone,
 {
     /// GPU-accelerated matrix-vector multiplication for generic floating-point types
     ///
@@ -479,7 +483,7 @@ where
     /// * `true` if GPU acceleration is likely to provide benefits
     pub fn should_use_gpu(&self) -> bool {
         // Same logic as CSR - use GPU for matrices with significant computation
-        let nnz_threshold = 10000;
+        let nnz_threshold = 10000usize;
         let density = self.nnz() as f64 / (self.rows * self.cols) as f64;
 
         self.nnz() > nnz_threshold && density < 0.5

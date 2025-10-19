@@ -17,6 +17,7 @@ use crate::memory::metrics::{
 use crate::memory::metrics::MemoryEventType;
 
 #[cfg(feature = "memory_metrics")]
+#[cfg(feature = "serialization")]
 use serde::{Deserialize, Serialize};
 
 /// Memory profiler configuration

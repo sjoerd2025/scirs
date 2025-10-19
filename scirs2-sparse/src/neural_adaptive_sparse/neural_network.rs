@@ -3,7 +3,7 @@
 //! This module contains the neural network architectures used in the adaptive
 //! sparse matrix processing system.
 
-use scirs2_core::numeric::Float;
+use scirs2_core::numeric::{Float, SparseElement};
 use scirs2_core::random::Rng;
 use std::collections::HashMap;
 

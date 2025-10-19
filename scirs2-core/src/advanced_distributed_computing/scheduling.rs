@@ -6,6 +6,7 @@
 use super::cluster::{NodeCapabilities, NodeId};
 use super::types::{DistributedComputingConfig, DistributionStrategy, FaultToleranceLevel};
 use crate::error::{CoreError, CoreResult};
+#[cfg(feature = "serialization")]
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
@@ -58,7 +59,9 @@ pub struct TaskQueue {
 }
 
 /// Task identifier
-#[derive(Debug, Clone, Hash, PartialEq, Eq, Serialize, Deserialize)]
+
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub struct TaskId(pub String);
 
 /// Distributed task representation
@@ -103,7 +106,8 @@ pub struct DistributedTask {
 }
 
 /// Task types
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone)]
 pub enum TaskType {
     MatrixOperation,
     MatrixMultiplication,
@@ -118,7 +122,8 @@ pub enum TaskType {
 }
 
 /// Task data
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone)]
 pub struct TaskData {
     /// Data payload
     pub payload: Vec<u8>,
@@ -133,7 +138,8 @@ pub struct TaskData {
 }
 
 /// Resource requirements
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone)]
 pub struct ResourceRequirements {
     /// Minimum CPU cores
     pub min_cpu_cores: u32,
@@ -152,7 +158,8 @@ pub struct ResourceRequirements {
 }
 
 /// Execution constraints
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone)]
 pub struct ExecutionConstraints {
     /// Maximum execution time
     pub maxexecution_time: Duration,
@@ -167,7 +174,9 @@ pub struct ExecutionConstraints {
 }
 
 /// Task priority levels
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum TaskPriority {
     Critical,
     High,

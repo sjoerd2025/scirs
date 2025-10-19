@@ -5,6 +5,7 @@
 
 use crate::benchmarking::{BenchmarkResult, BenchmarkRunner};
 use crate::error::{CoreError, CoreResult, ErrorContext};
+#[cfg(feature = "serialization")]
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
@@ -12,7 +13,8 @@ use std::path::{Path, PathBuf};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 /// Performance regression detection configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone)]
 pub struct RegressionConfig {
     /// Threshold for considering a regression (e.g., 1.1 = 10% slower)
     pub regression_threshold: f64,
@@ -76,7 +78,8 @@ impl RegressionConfig {
 }
 
 /// Historical benchmark result for regression analysis
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone)]
 pub struct HistoricalResult {
     /// Timestamp when benchmark was run
     pub timestamp: u64,

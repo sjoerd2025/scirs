@@ -8,6 +8,7 @@ use crate::sym_csr::SymCsrMatrix;
 use crate::sym_ops::sym_csr_matvec;
 use scirs2_core::ndarray::{Array1, Array2, ArrayView1};
 use scirs2_core::numeric::Float;
+use scirs2_core::SparseElement;
 use std::fmt::Debug;
 use std::ops::{Add, Div, Mul, Sub};
 
@@ -118,6 +119,7 @@ pub fn lanczos<T>(
 ) -> SparseResult<EigenResult<T>>
 where
     T: Float
+        + SparseElement
         + Debug
         + Copy
         + Add<Output = T>
@@ -157,14 +159,14 @@ where
         None => {
             // Random initialization
             let mut v_arr = Array1::zeros(n);
-            v_arr[0] = T::one(); // Simple initialization with [1, 0, 0, ...]
+            v_arr[0] = T::sparse_one(); // Simple initialization with [1, 0, 0, ...]
             v_arr
         }
     };
 
     // Normalize the initial vector
     let norm = (v.iter().map(|&val| val * val).sum::<T>()).sqrt();
-    if !norm.is_zero() {
+    if !SparseElement::is_zero(&norm) {
         for i in 0..n {
             v[i] = v[i] / norm;
         }
@@ -195,7 +197,7 @@ where
     let mut converged = false;
 
     while iter < options.max_iter && alpha.len() < subspace_size {
-        if beta_j.is_zero() {
+        if SparseElement::is_zero(&beta_j) {
             // Lucky breakdown - exact invariant subspace found
             break;
         }
@@ -272,7 +274,7 @@ where
 
         for k in 0..numeigenvalues {
             for i in 0..n {
-                let mut sum = T::zero();
+                let mut sum = T::sparse_zero();
                 for j in 0..v_vectors.len() {
                     if j < eigvecs.len() && k < eigvecs[j].len() {
                         sum = sum + eigvecs[j][k] * v_vectors[j][i];
@@ -352,7 +354,14 @@ fn solve_tridiagonal_eigenproblem<T>(
     numeigenvalues: usize,
 ) -> SparseResult<(Vec<T>, Vec<Vec<T>>)>
 where
-    T: Float + Debug + Copy + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T>,
+    T: Float
+        + SparseElement
+        + Debug
+        + Copy
+        + Add<Output = T>
+        + Sub<Output = T>
+        + Mul<Output = T>
+        + Div<Output = T>,
 {
     let n = alpha.len();
     if n == 0 {
@@ -379,13 +388,13 @@ where
     // Clone the diagonal and off-diagonal elements
     let mut d = alpha.to_vec();
     let mut e = beta.to_vec();
-    e.push(T::zero()); // Add a zero at the end
+    e.push(T::sparse_zero()); // Add a zero at the end
 
     // Allocate space for eigenvectors
-    let mut z = vec![vec![T::zero(); n]; n];
+    let mut z = vec![vec![T::sparse_zero(); n]; n];
     #[allow(clippy::needless_range_loop)]
     for i in 0..n {
-        z[i][i] = T::one(); // Initialize with identity matrix
+        z[i][i] = T::sparse_one(); // Initialize with identity matrix
     }
 
     // Run the QL algorithm with implicit shifts
@@ -416,12 +425,12 @@ where
             }
 
             let g = (d[l + 1] - d[l]) * T::from(0.5).unwrap() / e[l];
-            let r = (g * g + T::one()).sqrt();
-            let mut g = d[m] - d[l] + e[l] / (g + if g >= T::zero() { r } else { -r });
+            let r = (g * g + T::sparse_one()).sqrt();
+            let mut g = d[m] - d[l] + e[l] / (g + if g >= T::sparse_zero() { r } else { -r });
 
-            let mut s = T::one();
-            let mut c = T::one();
-            let mut p = T::zero();
+            let mut s = T::sparse_one();
+            let mut c = T::sparse_one();
+            let mut p = T::sparse_zero();
 
             let mut i = m - 1;
             while i >= l && i < n {
@@ -433,10 +442,10 @@ where
                 let r = (f * f + g * g).sqrt();
                 e[i + 1] = r;
 
-                if r.is_zero() {
+                if SparseElement::is_zero(&r) {
                     // Avoid division by zero
                     d[i + 1] = d[i + 1] - p;
-                    e[m] = T::zero();
+                    e[m] = T::sparse_zero();
                     break;
                 }
 
@@ -467,14 +476,14 @@ where
                 break;
             }
 
-            if r.is_zero() {
+            if SparseElement::is_zero(&r) {
                 if abs_diff_eq!(m, l + 1) {
                     // Special case for m == l + 1
                     break;
                 }
                 d[l] = d[l] - p;
                 e[l] = g;
-                e[m - 1] = T::zero();
+                e[m - 1] = T::sparse_zero();
             }
 
             iter += 1;
@@ -513,13 +522,20 @@ fn solve_small_tridiagonal<T>(
     numeigenvalues: usize,
 ) -> SparseResult<(Vec<T>, Vec<Vec<T>>)>
 where
-    T: Float + Debug + Copy + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T>,
+    T: Float
+        + SparseElement
+        + Debug
+        + Copy
+        + Add<Output = T>
+        + Sub<Output = T>
+        + Mul<Output = T>
+        + Div<Output = T>,
 {
     let n = alpha.len();
 
     if n == 1 {
         // 1x1 case - just return the single value
-        return Ok((vec![alpha[0]], vec![vec![T::one()]]));
+        return Ok((vec![alpha[0]], vec![vec![T::sparse_one()]]));
     }
 
     if n == 2 {
@@ -544,10 +560,10 @@ where
         };
 
         // Calculate eigenvectors
-        let mut v1 = vec![T::zero(); 2];
-        let mut v2 = vec![T::zero(); 2];
+        let mut v1 = vec![T::sparse_zero(); 2];
+        let mut v2 = vec![T::sparse_zero(); 2];
 
-        if !c.is_zero() {
+        if !SparseElement::is_zero(&c) {
             v1[0] = c;
             v1[1] = lambda1 - a;
 
@@ -558,29 +574,29 @@ where
             let norm1 = (v1[0] * v1[0] + v1[1] * v1[1]).sqrt();
             let norm2 = (v2[0] * v2[0] + v2[1] * v2[1]).sqrt();
 
-            if !norm1.is_zero() {
+            if !SparseElement::is_zero(&norm1) {
                 v1[0] = v1[0] / norm1;
                 v1[1] = v1[1] / norm1;
             }
 
-            if !norm2.is_zero() {
+            if !SparseElement::is_zero(&norm2) {
                 v2[0] = v2[0] / norm2;
                 v2[1] = v2[1] / norm2;
             }
         } else {
             // c is zero - diagonal matrix case
             if a >= b {
-                v1[0] = T::one();
-                v1[1] = T::zero();
+                v1[0] = T::sparse_one();
+                v1[1] = T::sparse_zero();
 
-                v2[0] = T::zero();
-                v2[1] = T::one();
+                v2[0] = T::sparse_zero();
+                v2[1] = T::sparse_one();
             } else {
-                v1[0] = T::zero();
-                v1[1] = T::one();
+                v1[0] = T::sparse_zero();
+                v1[1] = T::sparse_one();
 
-                v2[0] = T::one();
-                v2[1] = T::zero();
+                v2[0] = T::sparse_one();
+                v2[1] = T::sparse_zero();
             }
         }
 
@@ -624,13 +640,13 @@ where
             // Build the matrix (A - lambda*I)
             let mut m00 = a - lambda;
             let mut m01 = d;
-            let m02 = T::zero();
+            let m02 = T::sparse_zero();
 
             let mut m10 = d;
             let mut m11 = b - lambda;
             let mut m12 = e;
 
-            let m20 = T::zero();
+            let m20 = T::sparse_zero();
             let mut m21 = e;
             let mut m22 = c - lambda;
 
@@ -639,11 +655,11 @@ where
             let r1_norm = (m10 * m10 + m11 * m11 + m12 * m12).sqrt();
             let r2_norm = (m20 * m20 + m21 * m21 + m22 * m22).sqrt();
 
-            let mut v = vec![T::zero(); 3];
+            let mut v = vec![T::sparse_zero(); 3];
 
-            if r0_norm >= r1_norm && r0_norm >= r2_norm && !r0_norm.is_zero() {
+            if r0_norm >= r1_norm && r0_norm >= r2_norm && !SparseElement::is_zero(&r0_norm) {
                 // Use first row as pivot
-                let scale = T::one() / r0_norm;
+                let scale = T::sparse_one() / r0_norm;
                 m00 = m00 * scale;
                 m01 = m01 * scale;
 
@@ -658,35 +674,36 @@ where
                 m22 = m22 - factor * m02;
 
                 // Back-substitute
-                v[2] = T::one(); // Set last component to 1
+                v[2] = T::sparse_one(); // Set last component to 1
                 v[1] = -m12 * v[2] / m11;
                 v[0] = -(m01 * v[1] + m02 * v[2]) / m00;
-            } else if r1_norm >= r0_norm && r1_norm >= r2_norm && !r1_norm.is_zero() {
+            } else if r1_norm >= r0_norm && r1_norm >= r2_norm && !SparseElement::is_zero(&r1_norm)
+            {
                 // Use second row as pivot
-                let scale = T::one() / r1_norm;
+                let scale = T::sparse_one() / r1_norm;
                 m10 = m10 * scale;
                 m11 = m11 * scale;
                 m12 = m12 * scale;
 
                 // Back-substitute
-                v[2] = T::one(); // Set last component to 1
+                v[2] = T::sparse_one(); // Set last component to 1
                 v[0] = -m02 * v[2] / m00;
                 v[1] = -(m10 * v[0] + m12 * v[2]) / m11;
-            } else if !r2_norm.is_zero() {
+            } else if !SparseElement::is_zero(&r2_norm) {
                 // Use third row as pivot
-                v[0] = T::one(); // Set first component to 1
-                v[1] = T::zero();
-                v[2] = T::zero();
+                v[0] = T::sparse_one(); // Set first component to 1
+                v[1] = T::sparse_zero();
+                v[2] = T::sparse_zero();
             } else {
                 // Degenerate case - just use unit vector
-                v[0] = T::one();
-                v[1] = T::zero();
-                v[2] = T::zero();
+                v[0] = T::sparse_one();
+                v[1] = T::sparse_zero();
+                v[2] = T::sparse_zero();
             }
 
             // Normalize the eigenvector
             let norm = (v[0] * v[0] + v[1] * v[1] + v[2] * v[2]).sqrt();
-            if !norm.is_zero() {
+            if !SparseElement::is_zero(&norm) {
                 v[0] = v[0] / norm;
                 v[1] = v[1] / norm;
                 v[2] = v[2] / norm;
@@ -712,7 +729,14 @@ where
 /// using Cardano's formula.
 fn solve_cubic<T>(p: T, q: T, r: T) -> SparseResult<Vec<T>>
 where
-    T: Float + Debug + Copy + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T>,
+    T: Float
+        + SparseElement
+        + Debug
+        + Copy
+        + Add<Output = T>
+        + Sub<Output = T>
+        + Mul<Output = T>
+        + Div<Output = T>,
 {
     // The equation is x³ + px² + qx + r = 0
 
@@ -726,7 +750,7 @@ where
     let discriminant =
         -(T::from(4.0).unwrap() * q_new * q_new * q_new + T::from(27.0).unwrap() * r_new * r_new);
 
-    if discriminant > T::zero() {
+    if discriminant > T::sparse_zero() {
         // Three real roots
         let theta = ((T::from(3.0).unwrap() * r_new) / (T::from(2.0).unwrap() * q_new)
             * (-T::from(3.0).unwrap() / q_new).sqrt())
@@ -752,8 +776,8 @@ where
         // One real root
         let u = (-r_new / T::from(2.0).unwrap() + (discriminant / T::from(-108.0).unwrap()).sqrt())
             .cbrt();
-        let v = if u.is_zero() {
-            T::zero()
+        let v = if SparseElement::is_zero(&u) {
+            T::sparse_zero()
         } else {
             -q_new / (T::from(3.0).unwrap() * u)
         };

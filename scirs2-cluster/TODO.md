@@ -1,6 +1,6 @@
 # scirs2-cluster Roadmap
 
-**Version 0.1.0-rc.1 - Release Candidate 1 (Platform Testing & Final Preparation)**
+**Version 0.1.0-rc.2 - Release Candidate 2 (Platform Testing & Final Preparation)**
 
 This release features SciRS2 POLICY implementation for the SciRS2 clustering module. Following the [SciRS2 POLICY](../SCIRS2_POLICY.md), the module provides comprehensive clustering algorithms with production-ready implementations, extensive test coverage (189+ tests), full SciPy API compatibility, and ecosystem consistency.
 
@@ -93,7 +93,7 @@ This release features SciRS2 POLICY implementation for the SciRS2 clustering mod
   - [ ] Debugging tools for clustering quality assessment
   - [ ] Custom distance metric development framework
 
-### Recent Enhancements (v0.1.0-beta.2)
+### Recent Enhancements (v0.1.0-rc.2)
 
 #### Advanced Serialization System
 - **Enhanced Model Metadata**: Comprehensive metadata tracking including performance metrics, data characteristics, and platform information

@@ -7,7 +7,7 @@ use crate::csr_array::CsrArray;
 use crate::error::{SparseError, SparseResult};
 use crate::sparray::SparseArray;
 use scirs2_core::ndarray::{Array1, ArrayView1};
-use scirs2_core::numeric::Float;
+use scirs2_core::numeric::{Float, SparseElement};
 use std::collections::VecDeque;
 use std::fmt::Debug;
 
@@ -91,7 +91,7 @@ pub fn streaming_sparse_matvec<T, S>(
     mut memory_tracker: Option<&mut MemoryTracker>,
 ) -> SparseResult<Array1<T>>
 where
-    T: Float + Debug + Copy + 'static + SimdUnifiedOps + Send + Sync,
+    T: Float + SparseElement + Debug + Copy + 'static + SimdUnifiedOps + Send + Sync,
     S: SparseArray<T>,
 {
     let (rows, cols) = matrix.shape();
@@ -132,7 +132,7 @@ where
 
         // Extract chunk data
         let (row_indices, col_indices, values) = matrix.find();
-        let mut chunk_result = vec![T::zero(); current_chunk_size];
+        let mut chunk_result = vec![T::sparse_zero(); current_chunk_size];
 
         // Find elements in the current row range
         for (k, (&row, &col)) in row_indices.iter().zip(col_indices.iter()).enumerate() {
@@ -162,7 +162,7 @@ where
 /// to fit entirely in memory.
 pub struct OutOfCoreProcessor<T>
 where
-    T: Float + Debug + Copy + 'static,
+    T: Float + SparseElement + Debug + Copy + 'static,
 {
     _memorylimit: usize,
     #[allow(dead_code)]
@@ -172,7 +172,7 @@ where
 
 impl<T> OutOfCoreProcessor<T>
 where
-    T: Float + Debug + Copy + 'static + SimdUnifiedOps + Send + Sync,
+    T: Float + SparseElement + Debug + Copy + 'static + SimdUnifiedOps + Send + Sync,
 {
     /// Create a new out-of-core processor
     pub fn new(_memorylimit: usize) -> Self {
@@ -231,7 +231,7 @@ where
 
             // Add chunk results to final result with row offset
             for (local_row, col, val) in chunk_result {
-                if !val.is_zero() {
+                if !SparseElement::is_zero(&val) {
                     result_rows.push(chunk_start + local_row);
                     result_cols.push(col);
                     result_values.push(val);
@@ -281,7 +281,7 @@ where
 
             // For each column j in B
             for j in 0..b_cols {
-                let mut dot_product = T::zero();
+                let mut dot_product = T::sparse_zero();
 
                 // Compute A[i, :] · B[:, j]
                 for &(a_col, a_val) in &a_row_entries {
@@ -295,7 +295,7 @@ where
                     }
                 }
 
-                if !dot_product.is_zero() {
+                if !SparseElement::is_zero(&dot_product) {
                     result.push((i, j, dot_product));
                 }
             }
@@ -361,7 +361,7 @@ where
 
             // For each column j in B
             for j in 0..b_cols {
-                let mut sum = T::zero();
+                let mut sum = T::sparse_zero();
                 let b_col_start = b_indptr[j];
                 let b_col_end = b_indptr[j + 1];
 
@@ -375,7 +375,7 @@ where
                     }
                 }
 
-                if !sum.is_zero() {
+                if !SparseElement::is_zero(&sum) {
                     row_data.push(sum);
                     row_indices.push(j);
                 }
@@ -428,7 +428,7 @@ impl CacheAwareOps {
         cache_line_size: usize,
     ) -> SparseResult<Array1<T>>
     where
-        T: Float + Debug + Copy + 'static + SimdUnifiedOps + Send + Sync,
+        T: Float + SparseElement + Debug + Copy + 'static + SimdUnifiedOps + Send + Sync,
         S: SparseArray<T>,
     {
         let (rows, cols) = matrix.shape();
@@ -472,7 +472,7 @@ impl CacheAwareOps {
         cache_line_size: usize,
     ) -> SparseResult<CsrArray<T>>
     where
-        T: Float + Debug + Copy + 'static + SimdUnifiedOps + Send + Sync,
+        T: Float + SparseElement + Debug + Copy + 'static + SimdUnifiedOps + Send + Sync,
         S: SparseArray<T>,
     {
         let (rows, cols) = matrix.shape();
@@ -512,7 +512,7 @@ impl CacheAwareOps {
 /// Memory pool for efficient allocation and reuse
 pub struct MemoryPool<T>
 where
-    T: Float + Debug + Copy + 'static,
+    T: Float + SparseElement + Debug + Copy + 'static,
 {
     available_buffers: Vec<Vec<T>>,
     allocated_buffers: Vec<Vec<T>>,
@@ -521,7 +521,7 @@ where
 
 impl<T> MemoryPool<T>
 where
-    T: Float + Debug + Copy + 'static,
+    T: Float + SparseElement + Debug + Copy + 'static,
 {
     /// Create a new memory pool
     pub fn new(_pool_sizelimit: usize) -> Self {
@@ -535,10 +535,10 @@ where
     /// Allocate a buffer from the pool
     pub fn allocate(&mut self, size: usize) -> Vec<T> {
         if let Some(mut buffer) = self.available_buffers.pop() {
-            buffer.resize(size, T::zero());
+            buffer.resize(size, T::sparse_zero());
             buffer
         } else {
-            vec![T::zero(); size]
+            vec![T::sparse_zero(); size]
         }
     }
 
@@ -569,7 +569,15 @@ impl ChunkedOperations {
         mut memory_tracker: Option<&mut MemoryTracker>,
     ) -> SparseResult<CsrArray<T>>
     where
-        T: Float + Debug + Copy + 'static + SimdUnifiedOps + Send + Sync + std::ops::AddAssign,
+        T: Float
+            + SparseElement
+            + Debug
+            + Copy
+            + 'static
+            + SimdUnifiedOps
+            + Send
+            + Sync
+            + std::ops::AddAssign,
         S1: SparseArray<T>,
         S2: SparseArray<T>,
     {
@@ -642,7 +650,7 @@ impl ChunkedOperations {
 
             // Add non-zero results to final triplets
             for ((local_row, col), val) in chunk_result {
-                if !val.is_zero() {
+                if !SparseElement::is_zero(&val) {
                     result_rows.push(chunk_start + local_row);
                     result_cols.push(col);
                     result_values.push(val);
@@ -671,7 +679,7 @@ impl ChunkedOperations {
         mut memory_tracker: Option<&mut MemoryTracker>,
     ) -> SparseResult<CsrArray<T>>
     where
-        T: Float + Debug + Copy + 'static + SimdUnifiedOps + Send + Sync,
+        T: Float + SparseElement + Debug + Copy + 'static + SimdUnifiedOps + Send + Sync,
         S: SparseArray<T>,
     {
         let (rows, cols) = matrix.shape();
@@ -704,7 +712,7 @@ impl ChunkedOperations {
             for (k, (&row, &col)) in row_indices.iter().zip(col_indices.iter()).enumerate() {
                 if row >= chunk_start && row < chunk_end {
                     let scaled_value = values[k] * scalar;
-                    if !scaled_value.is_zero() {
+                    if !SparseElement::is_zero(&scaled_value) {
                         result_rows.push(row);
                         result_cols.push(col);
                         result_values.push(scaled_value);
@@ -733,7 +741,7 @@ impl ChunkedOperations {
         mut memory_tracker: Option<&mut MemoryTracker>,
     ) -> SparseResult<CsrArray<T>>
     where
-        T: Float + Debug + Copy + 'static + SimdUnifiedOps + Send + Sync,
+        T: Float + SparseElement + Debug + Copy + 'static + SimdUnifiedOps + Send + Sync,
         S: SparseArray<T>,
     {
         let (rows, cols) = matrix.shape();
@@ -763,7 +771,7 @@ impl ChunkedOperations {
             let mut chunk_triplets = Vec::new();
 
             for (k, (&row, &col)) in row_indices.iter().zip(col_indices.iter()).enumerate() {
-                if row >= chunk_start && row < chunk_end && !values[k].is_zero() {
+                if row >= chunk_start && row < chunk_end && !SparseElement::is_zero(&values[k]) {
                     chunk_triplets.push((row, col, values[k]));
                 }
             }
@@ -795,7 +803,7 @@ impl ChunkedOperations {
         mut memory_tracker: Option<&mut MemoryTracker>,
     ) -> SparseResult<(Vec<usize>, CsrArray<T>)>
     where
-        T: Float + Debug + Copy + 'static + SimdUnifiedOps + Send + Sync,
+        T: Float + SparseElement + Debug + Copy + 'static + SimdUnifiedOps + Send + Sync,
         S: SparseArray<T>,
     {
         let (rows, cols) = matrix.shape();

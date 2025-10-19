@@ -3,7 +3,7 @@
 //! This module provides the LIL matrix format implementation, which is
 //! efficient for row-based operations and incremental matrix construction.
 
-use scirs2_core::numeric::Zero;
+use scirs2_core::numeric::{SparseElement, Zero};
 
 /// List of Lists (LIL) matrix
 ///
@@ -22,7 +22,7 @@ pub struct LilMatrix<T> {
 
 impl<T> LilMatrix<T>
 where
-    T: Clone + Copy + Zero + std::cmp::PartialEq,
+    T: Clone + Copy + Zero + std::cmp::PartialEq + SparseElement,
 {
     /// Create a new LIL matrix
     ///
@@ -79,7 +79,7 @@ where
         match self.indices[row].binary_search(&col) {
             Ok(idx) => {
                 // Column already exists
-                if value == T::zero() {
+                if value == T::sparse_zero() {
                     // Remove zero entry
                     self.data[row].remove(idx);
                     self.indices[row].remove(idx);
@@ -90,7 +90,7 @@ where
             }
             Err(idx) => {
                 // Column doesn't exist
-                if value != T::zero() {
+                if value != T::sparse_zero() {
                     // Insert non-zero value
                     self.data[row].insert(idx, value);
                     self.indices[row].insert(idx, col);
@@ -111,12 +111,12 @@ where
     /// * Value at the specified position, or zero if not set
     pub fn get(&self, row: usize, col: usize) -> T {
         if row >= self.rows || col >= self.cols {
-            return T::zero();
+            return T::sparse_zero();
         }
 
         match self.indices[row].binary_search(&col) {
             Ok(idx) => self.data[row][idx],
-            Err(_) => T::zero(),
+            Err(_) => T::sparse_zero(),
         }
     }
 
@@ -143,9 +143,9 @@ where
     /// Convert to dense matrix (as Vec<Vec<T>>)
     pub fn to_dense(&self) -> Vec<Vec<T>>
     where
-        T: Zero + Copy,
+        T: Zero + Copy + SparseElement,
     {
-        let mut result = vec![vec![T::zero(); self.cols]; self.rows];
+        let mut result = vec![vec![T::sparse_zero(); self.cols]; self.rows];
 
         for (row, (row_indices, row_data)) in self
             .indices

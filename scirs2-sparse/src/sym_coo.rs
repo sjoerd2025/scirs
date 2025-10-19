@@ -8,7 +8,7 @@ use crate::coo::CooMatrix;
 use crate::coo_array::CooArray;
 use crate::error::{SparseError, SparseResult};
 use crate::sparray::SparseArray;
-use scirs2_core::numeric::Float;
+use scirs2_core::numeric::{Float, SparseElement};
 use std::fmt::Debug;
 use std::ops::{Add, Div, Mul, Sub};
 
@@ -24,7 +24,7 @@ use std::ops::{Add, Div, Mul, Sub};
 #[derive(Debug, Clone)]
 pub struct SymCooMatrix<T>
 where
-    T: Float + Debug + Copy,
+    T: SparseElement + Float + Sub<Output = T> + PartialOrd + Clone,
 {
     /// Non-zero values in the lower triangular part
     pub data: Vec<T>,
@@ -41,7 +41,7 @@ where
 
 impl<T> SymCooMatrix<T>
 where
-    T: Float + Debug + Copy,
+    T: SparseElement + Float + Sub<Output = T> + PartialOrd + Clone,
 {
     /// Create a new symmetric COO matrix from raw data
     ///
@@ -272,7 +272,7 @@ where
     pub fn get(&self, row: usize, col: usize) -> T {
         // Check bounds
         if row >= self.shape.0 || col >= self.shape.1 {
-            return T::zero();
+            return T::sparse_zero();
         }
 
         // For symmetric matrix, if (row,col) is in upper triangular part,
@@ -286,7 +286,7 @@ where
             }
         }
 
-        T::zero()
+        T::sparse_zero()
     }
 
     /// Convert to standard COO matrix (reconstructing full symmetric matrix)
@@ -328,7 +328,7 @@ where
     /// A dense matrix representation as a vector of vectors
     pub fn to_dense(&self) -> Vec<Vec<T>> {
         let n = self.shape.0;
-        let mut dense = vec![vec![T::zero(); n]; n];
+        let mut dense = vec![vec![T::sparse_zero(); n]; n];
 
         // Fill the lower triangular part (directly from stored data)
         for i in 0..self.data.len() {
@@ -347,10 +347,10 @@ where
 }
 
 /// Array-based SymCOO implementation compatible with SparseArray trait
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct SymCooArray<T>
 where
-    T: Float + Debug + Copy,
+    T: SparseElement + Float + Sub<Output = T> + PartialOrd + Clone,
 {
     /// Inner matrix
     inner: SymCooMatrix<T>,
@@ -358,14 +358,7 @@ where
 
 impl<T> SymCooArray<T>
 where
-    T: Float
-        + Debug
-        + Copy
-        + 'static
-        + Add<Output = T>
-        + Sub<Output = T>
-        + Mul<Output = T>
-        + Div<Output = T>,
+    T: SparseElement + Float + Sub<Output = T> + PartialOrd + Clone + Div<Output = T> + 'static,
 {
     /// Create a new SymCOO array from a SymCOO matrix
     ///
@@ -409,7 +402,7 @@ where
         if !enforce_symmetric {
             // Create a temporary dense matrix to check symmetry
             let n = shape.0;
-            let mut dense = vec![vec![T::zero(); n]; n];
+            let mut dense = vec![vec![T::sparse_zero(); n]; n];
             let nnz = data.len().min(rows.len().min(cols.len()));
 
             // Fill the matrix with the provided elements
@@ -446,7 +439,7 @@ where
 
             for (i, row) in dense.iter().enumerate().take(n) {
                 for (j, &val) in row.iter().enumerate().take(i + 1) {
-                    if val != T::zero() {
+                    if val != T::sparse_zero() {
                         sym_data.push(val);
                         sym_rows.push(i);
                         sym_cols.push(j);
@@ -463,7 +456,7 @@ where
         let n = shape.0;
 
         // First, build a dense matrix with all input elements
-        let mut dense = vec![vec![T::zero(); n]; n];
+        let mut dense = vec![vec![T::sparse_zero(); n]; n];
         let nnz = data.len();
 
         // Add all elements to the matrix
@@ -490,7 +483,7 @@ where
         // Make _symmetric by averaging a_ij and a_ji
         for i in 0..n {
             for j in 0..i {
-                let avg = (dense[i][j] + dense[j][i]) / (T::one() + T::one());
+                let avg = (dense[i][j] + dense[j][i]) / (T::sparse_one() + T::sparse_one());
                 dense[i][j] = avg;
                 dense[j][i] = avg;
             }
@@ -503,7 +496,7 @@ where
 
         for (i, row) in dense.iter().enumerate().take(n) {
             for (j, &val) in row.iter().enumerate().take(i + 1) {
-                if val != T::zero() {
+                if val != T::sparse_zero() {
                     sym_data.push(val);
                     sym_rows.push(i);
                     sym_cols.push(j);

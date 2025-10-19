@@ -15,6 +15,7 @@ use std::time::{Duration, Instant};
 use crate::gpu::{tensor_cores::TensorDataType, GpuBackend};
 
 #[cfg(all(feature = "serde", feature = "gpu"))]
+#[cfg(feature = "serialization")]
 use serde::{Deserialize, Serialize};
 
 /// Hardware profiler for device characteristics

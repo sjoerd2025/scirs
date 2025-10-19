@@ -7,7 +7,7 @@ use super::{num_vertices, to_adjacency_list, validate_graph, PriorityQueueNode};
 use crate::error::{SparseError, SparseResult};
 use crate::sparray::SparseArray;
 use scirs2_core::ndarray::{Array1, Array2};
-use scirs2_core::numeric::Float;
+use scirs2_core::numeric::{Float, SparseElement};
 use std::collections::BinaryHeap;
 use std::fmt::Debug;
 
@@ -84,7 +84,7 @@ pub fn shortest_path<T, S>(
     returnpredecessors: bool,
 ) -> SparseResult<(Array2<T>, Option<Array2<isize>>)>
 where
-    T: Float + Debug + Copy + 'static,
+    T: Float + SparseElement + Debug + Copy + 'static,
     S: SparseArray<T>,
 {
     validate_graph(graph, directed)?;
@@ -154,7 +154,7 @@ pub fn single_source_shortest_path<T, S>(
     returnpredecessors: bool,
 ) -> SparseResult<(Array1<T>, Option<Array1<isize>>)>
 where
-    T: Float + Debug + Copy + 'static,
+    T: Float + SparseElement + Debug + Copy + 'static,
     S: SparseArray<T>,
 {
     let n = num_vertices(graph);
@@ -169,7 +169,7 @@ where
         ShortestPathMethod::Auto => {
             // Check if graph has negative weights
             let (_, _, values) = graph.find();
-            if values.iter().any(|&w| w < T::zero()) {
+            if values.iter().any(|&w| w < T::sparse_zero()) {
                 ShortestPathMethod::BellmanFord
             } else {
                 ShortestPathMethod::Dijkstra
@@ -200,7 +200,7 @@ pub fn all_pairs_shortest_path<T, S>(
     returnpredecessors: bool,
 ) -> SparseResult<(Array2<T>, Option<Array2<isize>>)>
 where
-    T: Float + Debug + Copy + 'static,
+    T: Float + SparseElement + Debug + Copy + 'static,
     S: SparseArray<T>,
 {
     let n = num_vertices(graph);
@@ -258,7 +258,7 @@ pub fn dijkstra_single_source<T, S>(
     returnpredecessors: bool,
 ) -> SparseResult<(Array1<T>, Option<Array1<isize>>)>
 where
-    T: Float + Debug + Copy + 'static,
+    T: Float + SparseElement + Debug + Copy + 'static,
     S: SparseArray<T>,
 {
     let n = num_vertices(graph);
@@ -271,11 +271,11 @@ where
         None
     };
 
-    distances[source] = T::zero();
+    distances[source] = T::sparse_zero();
 
     let mut heap = BinaryHeap::new();
     heap.push(PriorityQueueNode {
-        distance: T::zero(),
+        distance: T::sparse_zero(),
         node: source,
     });
 
@@ -327,7 +327,7 @@ pub fn bellman_ford_single_source<T, S>(
     returnpredecessors: bool,
 ) -> SparseResult<(Array1<T>, Option<Array1<isize>>)>
 where
-    T: Float + Debug + Copy + 'static,
+    T: Float + SparseElement + Debug + Copy + 'static,
     S: SparseArray<T>,
 {
     let n = num_vertices(graph);
@@ -340,13 +340,13 @@ where
         None
     };
 
-    distances[source] = T::zero();
+    distances[source] = T::sparse_zero();
 
     // Build edge list
     let mut edges = Vec::new();
     for (i, (&row, &col)) in row_indices.iter().zip(col_indices.iter()).enumerate() {
         let weight = values[i];
-        if !weight.is_zero() {
+        if !SparseElement::is_zero(&weight) {
             edges.push((row, col, weight));
 
             // For undirected graphs, add reverse edge
@@ -402,7 +402,7 @@ pub fn floyd_warshall<T, S>(
     returnpredecessors: bool,
 ) -> SparseResult<(Array2<T>, Option<Array2<isize>>)>
 where
-    T: Float + Debug + Copy + 'static,
+    T: Float + SparseElement + Debug + Copy + 'static,
     S: SparseArray<T>,
 {
     let n = num_vertices(graph);
@@ -417,14 +417,14 @@ where
 
     // Set diagonal to zero
     for i in 0..n {
-        distances[[i, i]] = T::zero();
+        distances[[i, i]] = T::sparse_zero();
     }
 
     // Fill in the initial distances from the graph
     let (row_indices, col_indices, values) = graph.find();
     for (i, (&row, &col)) in row_indices.iter().zip(col_indices.iter()).enumerate() {
         let weight = values[i];
-        if !weight.is_zero() {
+        if !SparseElement::is_zero(&weight) {
             distances[[row, col]] = weight;
 
             if let Some(ref mut preds) = predecessors {

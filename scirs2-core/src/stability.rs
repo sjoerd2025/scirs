@@ -28,6 +28,7 @@ use std::sync::mpsc::{self, Receiver, Sender};
 use std::sync::{Arc, Mutex, RwLock};
 use std::time::{Duration, Instant, SystemTime};
 
+#[cfg(feature = "serialization")]
 use serde::{Deserialize, Serialize};
 
 // Advanced implementations
@@ -350,7 +351,8 @@ pub enum GcBehavior {
 }
 
 /// Formal verification status
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum VerificationStatus {
     /// Not verified
     NotVerified,
@@ -699,7 +701,8 @@ pub struct ImmutableAuditTrail {
 }
 
 /// Audit record
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone)]
 pub struct AuditRecord {
     /// Record timestamp
     timestamp: SystemTime,
@@ -714,7 +717,8 @@ pub struct AuditRecord {
 }
 
 /// Audit data types
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone)]
 pub enum AuditData {
     /// Contract registration
     ContractRegistration(String),

@@ -4,7 +4,7 @@
 
 use crate::csr::CsrMatrix;
 use crate::error::{SparseError, SparseResult};
-use scirs2_core::numeric::Zero;
+use scirs2_core::numeric::{SparseElement, Zero};
 
 /// Create an identity matrix in CSR format
 ///
@@ -216,7 +216,7 @@ pub fn random(shape: (usize, usize), density: f64) -> SparseResult<CsrMatrix<f64
 #[allow(dead_code)]
 pub fn sparsity_pattern<T>(matrix: &CsrMatrix<T>) -> Vec<Vec<usize>>
 where
-    T: Clone + Copy + Zero + PartialEq,
+    T: Clone + Copy + Zero + PartialEq + SparseElement,
 {
     let (rows, cols) = matrix.shape();
     let dense = matrix.to_dense();
@@ -225,7 +225,7 @@ where
 
     for i in 0..rows {
         for j in 0..cols {
-            if dense[i][j] != T::zero() {
+            if dense[i][j] != T::sparse_zero() {
                 pattern[i][j] = 1;
             }
         }

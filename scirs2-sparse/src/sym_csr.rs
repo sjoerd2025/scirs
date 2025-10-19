@@ -7,7 +7,7 @@
 use crate::csr::CsrMatrix;
 use crate::csr_array::CsrArray;
 use crate::error::{SparseError, SparseResult};
-use scirs2_core::numeric::Float;
+use scirs2_core::numeric::{Float, SparseElement};
 use std::fmt::Debug;
 use std::ops::{Add, Div, Mul, Sub};
 
@@ -23,7 +23,7 @@ use std::ops::{Add, Div, Mul, Sub};
 #[derive(Debug, Clone)]
 pub struct SymCsrMatrix<T>
 where
-    T: Float + Debug + Copy,
+    T: SparseElement + Float + Sub<Output = T> + PartialOrd + Clone,
 {
     /// CSR format data for the lower triangular part (including diagonal)
     pub data: Vec<T>,
@@ -40,7 +40,7 @@ where
 
 impl<T> SymCsrMatrix<T>
 where
-    T: Float + Debug + Copy,
+    T: SparseElement + Float + Sub<Output = T> + PartialOrd + Clone,
 {
     /// Create a new symmetric CSR matrix from raw data
     ///
@@ -279,7 +279,7 @@ where
     pub fn get(&self, row: usize, col: usize) -> T {
         // Check bounds
         if row >= self.shape.0 || col >= self.shape.1 {
-            return T::zero();
+            return T::sparse_zero();
         }
 
         // For symmetric matrix, if (row,col) is in upper triangular part,
@@ -293,7 +293,7 @@ where
             }
         }
 
-        T::zero()
+        T::sparse_zero()
     }
 
     /// Convert to standard CSR matrix (reconstructing full symmetric matrix)
@@ -340,7 +340,7 @@ where
     /// A dense matrix representation as a vector of vectors
     pub fn to_dense(&self) -> Vec<Vec<T>> {
         let n = self.shape.0;
-        let mut dense = vec![vec![T::zero(); n]; n];
+        let mut dense = vec![vec![T::sparse_zero(); n]; n];
 
         // Fill the lower triangular part (directly from stored data)
         for (i, row) in dense.iter_mut().enumerate().take(n) {
@@ -362,10 +362,10 @@ where
 }
 
 /// Array-based SymCSR implementation compatible with SparseArray trait
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct SymCsrArray<T>
 where
-    T: Float + Debug + Copy,
+    T: SparseElement + Float + Sub<Output = T> + PartialOrd + Clone,
 {
     /// Inner matrix
     inner: SymCsrMatrix<T>,
@@ -373,14 +373,7 @@ where
 
 impl<T> SymCsrArray<T>
 where
-    T: Float
-        + Debug
-        + Copy
-        + 'static
-        + Add<Output = T>
-        + Sub<Output = T>
-        + Mul<Output = T>
-        + Div<Output = T>,
+    T: SparseElement + Float + Sub<Output = T> + PartialOrd + Clone + Div<Output = T> + 'static,
 {
     /// Create a new SymCSR array from a SymCSR matrix
     ///

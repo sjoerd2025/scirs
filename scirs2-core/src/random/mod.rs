@@ -54,8 +54,7 @@ pub mod slice_ops;
 // Advanced distributions and sampling
 pub mod arrays;
 pub mod distributions;
-// TODO: Fix compilation issues in distributions_unified module
-// pub mod distributions_unified;
+pub mod distributions_unified;
 
 // Monte Carlo and variance reduction
 pub mod qmc;
@@ -100,14 +99,12 @@ pub use distributions::{
     Beta, Categorical, Dirichlet, GammaDist, MultivariateNormal, VonMises, WeightedChoice,
 };
 
-// TODO: Re-enable when distributions_unified module is fixed
 // Re-export unified distribution interface for ecosystem compatibility
-// pub use distributions_unified::{
-//     UnifiedDistribution,
-//     UnifiedNormal, UnifiedBeta, UnifiedCauchy, UnifiedChiSquared,
-//     UnifiedFisherF, UnifiedLogNormal, UnifiedStudentT, UnifiedWeibull,
-//     UnifiedGamma, UnifiedExp, UnifiedBinomial, UnifiedPoisson, UnifiedDirichlet,
-// };
+pub use distributions_unified::{
+    UnifiedBeta, UnifiedBinomial, UnifiedCauchy, UnifiedChiSquared, UnifiedDirichlet,
+    UnifiedDistribution, UnifiedDistributionError, UnifiedExp, UnifiedFisherF, UnifiedGamma,
+    UnifiedLogNormal, UnifiedNormal, UnifiedPoisson, UnifiedStudentT, UnifiedWeibull,
+};
 
 // Re-export optimized array operations
 pub use arrays::{

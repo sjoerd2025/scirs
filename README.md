@@ -6,23 +6,24 @@
 
 SciRS2 is a comprehensive scientific computing and AI/ML infrastructure in Rust, providing SciPy-compatible APIs while leveraging Rust's performance, safety, and concurrency features. The project aims to provide a complete ecosystem for scientific computing, data analysis, and machine learning in Rust.
 
-## 🚀 Release Status: v0.1.0-RC.1
+## 🚀 Release Status: v0.1.0-rc.2
 
-**Release Candidate 1** - Ready for testing!
+**Release Candidate 2** - Performance & Quality Refinements!
 
-- ✅ **POLICY Compliance Complete**: All 23 crates now follow the unified SciRS2 architecture
+- ✅ **POLICY Compliance Complete**: All 23 crates follow the unified SciRS2 architecture
 - ✅ **Centralized Dependencies**: Only `scirs2-core` manages external dependencies
-- ✅ **Full Test Coverage**: 9,800+ tests passing
+- ✅ **Full Test Coverage**: 9,300+ tests passing
 - ✅ **Zero Warnings Build**: Clean compilation across entire workspace
-- 📅 **Release Date**: October 03, 2025
+- 📅 **Release Date**: October 19, 2025
 
-**What's New in RC.1**:
-- Complete migration to SciRS2 POLICY architecture
-- Unified dependency management through scirs2-core
-- Enhanced type safety and API consistency
-- Improved maintainability and version control
+**What's New in rc.2**:
+- SIMD-accelerated ODE solvers (RK4, RK45 with Dormand-Prince)
+- Code quality improvements (clippy compliance)
+- Restored 80+ examples in scirs2-core
+- Fixed examples in scirs2-series and other modules
+- Enhanced documentation and performance notes
 
-See [SCIRS2_POLICY.md](SCIRS2_POLICY.md) for architectural details.
+See [SCIRS2_POLICY.md](SCIRS2_POLICY.md) for architectural details and [CHANGELOG.md](CHANGELOG.md) for complete details.
 
 ## Features
 
@@ -299,7 +300,7 @@ SciRS2 leverages the Rust ecosystem:
 - `image`: Image processing utilities
 - `petgraph`: Graph algorithms and data structures
 
-## What's New in v0.1.0-rc.1 (Released October 03, 2025)
+## What's New in v0.1.0-rc.2 (Released October 19, 2025)
 
 ### Major Enhancements
 
@@ -357,7 +358,7 @@ SciRS2 and all its modules are available on [crates.io](https://crates.io/crates
 ```toml
 # Add the main integration crate for all functionality
 [dependencies]
-scirs2 = "0.1.0-rc.1"
+scirs2 = "0.1.0-rc.2"
 ```
 
 Or include only the specific modules you need:
@@ -365,16 +366,16 @@ Or include only the specific modules you need:
 ```toml
 [dependencies]
 # Core utilities
-scirs2-core = "0.1.0-rc.1"
+scirs2-core = "0.1.0-rc.2"
 
 # Scientific computing modules
-scirs2-linalg = "0.1.0-rc.1"
-scirs2-stats = "0.1.0-rc.1"
-scirs2-optimize = "0.1.0-rc.1"
+scirs2-linalg = "0.1.0-rc.2"
+scirs2-stats = "0.1.0-rc.2"
+scirs2-optimize = "0.1.0-rc.2"
 
 # AI/ML modules
-scirs2-neural = "0.1.0-rc.1"
-scirs2-autograd = "0.1.0-rc.1"
+scirs2-neural = "0.1.0-rc.2"
+scirs2-autograd = "0.1.0-rc.2"
 # Note: For ML optimization algorithms, use the independent OptiRS project
 ```
 
@@ -492,15 +493,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ## Platform Compatibility
 
-SciRS2 v0.1.0-RC.1 has been tested on the following platforms:
+SciRS2 v0.1.0-rc.2 has been tested on the following platforms:
 
 ### ✅ Fully Supported Platforms
 
 | Platform | Architecture | Test Status | Notes |
 |----------|-------------|-------------|-------|
-| **macOS** | Apple M3 (ARM64) | ✅ All tests passing (9,800+ tests) | macOS 15.6.1, 24GB RAM |
-| **Linux** | x86_64 | ✅ All tests passing (9,800+ tests) | With required dependencies |
-| **Linux + CUDA** | x86_64 + NVIDIA GPU | ✅ All tests passing (9,800+ tests) | CUDA support enabled |
+| **macOS** | Apple M3 (ARM64) | ✅ All tests passing (9,300+ tests) | macOS 15.6.1, 24GB RAM |
+| **Linux** | x86_64 | ✅ All tests passing (9,300+ tests) | With required dependencies |
+| **Linux + CUDA** | x86_64 + NVIDIA GPU | ✅ All tests passing (9,300+ tests) | CUDA support enabled |
 
 ### ⚠️ Partially Supported Platforms
 
@@ -515,7 +516,7 @@ To run the full test suite with all features:
 ```bash
 # Install required system libraries (OpenBLAS, LAPACK, etc.)
 # Set necessary environment variables
-cargo nextest run --nff --all-features  # 9,800+ tests
+cargo nextest run --nff --all-features  # 9,300+ tests
 ```
 
 #### Windows
@@ -540,7 +541,7 @@ cargo install cargo-nextest
 cargo nextest run --nff --all-features
 ```
 
-## Current Status (v0.1.0-rc.1 - Released October 03, 2025)
+## Current Status (v0.1.0-rc.2 - Released October 19, 2025)
 
 ### 🎉 Key Features
 
@@ -651,10 +652,10 @@ All SciRS2 modules are available on crates.io. Add the modules you need to your 
 
 ```toml
 [dependencies]
-scirs2 = "0.1.0-rc.1"  # Core library with all modules
+scirs2 = "0.1.0-rc.2"  # Core library with all modules
 # Or individual modules:
-scirs2-linalg = "0.1.0-rc.1"  # Linear algebra
-scirs2-stats = "0.1.0-rc.1"   # Statistics
+scirs2-linalg = "0.1.0-rc.2"  # Linear algebra
+scirs2-stats = "0.1.0-rc.2"   # Statistics
 # ... and more
 ```
 
@@ -717,32 +718,37 @@ This policy ensures ecosystem consistency and enables better optimization across
 
 ## Release Notes
 
-### 🚀 v0.1.0-rc.1 (October 03, 2025) - Release Candidate 1
+### 🚀 v0.1.0-rc.2 (October 19, 2025) - Release Candidate 2
 
-This release is the first Release Candidate, focusing on platform compatibility testing and final preparation for stable release:
+This release focuses on performance optimizations, code quality improvements, and completing deferred features from RC.1:
 
-#### ✅ Improvements:
-- **Documentation Updates**: Comprehensive version updates across all documentation
-- **Release Process**: Streamlined release workflow and version management
-- **Ecosystem Stability**: Continued refinement of SciRS2 POLICY implementation
-- **Testing Coverage**: Enhanced test coverage and CI/CD improvements
+#### ✅ Major Improvements:
+- **SIMD-Accelerated ODE Solvers**: Implemented high-performance SIMD methods (RK4, RK45 with Dormand-Prince)
+- **Code Quality**: Fixed all clippy warnings across the workspace for zero-warning builds
+- **Examples Restoration**: Restored 80+ gutted examples in scirs2-core
+- **API Fixes**: Fixed examples in scirs2-series and other modules
 
-#### 🏗️ Ecosystem Refinements:
-- **Policy Compliance**: Ongoing migration to scirs2-core abstractions
-- **API Consistency**: Maintained SciPy compatibility while improving Rust idioms
-- **Performance Validation**: Verified performance benchmarks across platforms
+#### 🏗️ Technical Enhancements:
+- **Performance**: SIMD-accelerated numerical integration for better performance
+- **Documentation**: Enhanced inline documentation with performance notes
+- **Testing**: All 9,303 tests passing (334 skipped), zero warnings
 
 #### 📊 Status:
 - ✅ **Build System**: All modules compile cleanly with zero warnings
-- ✅ **Test Suite**: 9,800+ tests passing across all modules
-- ✅ **Documentation**: Up-to-date examples and API references
+- ✅ **Test Suite**: 9,300+ tests passing across all modules
+- ✅ **Code Quality**: Full clippy compliance
 - ✅ **Platform Support**: Verified on Linux, macOS, and Windows
 
 **Migration:**
-- No breaking API changes from beta.4
-- See [RELEASE_NOTES.md](RELEASE_NOTES.md) for complete details
+- No breaking API changes from rc.1
+- See [CHANGELOG.md](CHANGELOG.md) and [RELEASE_NOTES.md](RELEASE_NOTES.md) for complete details
 
-### Previous Beta Releases
+### Previous Releases
+
+**v0.1.0-rc.1** (October 03, 2025) - Release Candidate 1:
+- Platform compatibility testing and final preparation for stable release
+- Documentation updates and release workflow improvements
+- 9,800+ tests passing across all modules
 
 **Beta Series (v0.1.0-beta.1 through beta.4)**:
 - Established SciRS2 POLICY framework with layered abstraction architecture
@@ -753,7 +759,7 @@ This release is the first Release Candidate, focusing on platform compatibility 
 
 ## Known Limitations (Release Candidate)
 
-This is the first Release Candidate (0.1.0-rc.1) of SciRS2, released October 03, 2025. While the core functionality is stable and well-tested, there are some known limitations:
+This is the second Release Candidate (0.1.0-rc.2) of SciRS2, released October 19, 2025. While the core functionality is stable and well-tested, there are some known limitations:
 
 ### Platform-Specific Issues
 
@@ -788,7 +794,7 @@ The following features are planned for future releases:
 - Specialized hardware support (FPGA, ASIC) uses mock implementations when hardware is not present
 
 ### Test Coverage
-- Total tests: 9,800+ across all modules
+- Total tests: 9,300+ across all modules
 - Regular CI tests: All passing ✅
 - Performance tests: Included in full test suite (run with `--all-features`)
 

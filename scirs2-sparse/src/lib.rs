@@ -40,7 +40,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! scirs2-sparse = "0.1.0-rc.1"
+//! scirs2-sparse = "0.1.0-rc.2"
 //! ```
 //!
 //! ```rust
@@ -53,7 +53,7 @@
 //! let sparse = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).unwrap();
 //! ```
 //!
-//! ## 🔒 Version: 0.1.0-rc.1 (October 03, 2025)
+//! ## 🔒 Version: 0.1.0-rc.2 (October 03, 2025)
 //!
 //! ## Matrix vs. Array API
 //!
@@ -427,14 +427,7 @@ pub struct SparseWarning;
 #[allow(dead_code)]
 pub fn is_sparse_array<T>(obj: &dyn SparseArray<T>) -> bool
 where
-    T: scirs2_core::numeric::Float
-        + std::fmt::Debug
-        + Copy
-        + std::ops::Add<Output = T>
-        + std::ops::Sub<Output = T>
-        + std::ops::Mul<Output = T>
-        + std::ops::Div<Output = T>
-        + 'static,
+    T: scirs2_core::SparseElement + std::ops::Div<Output = T> + PartialOrd + 'static,
 {
     sparray::is_sparse(obj)
 }
@@ -443,13 +436,10 @@ where
 #[allow(dead_code)]
 pub fn is_sym_sparse_array<T>(obj: &dyn SymSparseArray<T>) -> bool
 where
-    T: scirs2_core::numeric::Float
-        + std::fmt::Debug
-        + Copy
-        + std::ops::Add<Output = T>
-        + std::ops::Sub<Output = T>
-        + std::ops::Mul<Output = T>
+    T: scirs2_core::SparseElement
         + std::ops::Div<Output = T>
+        + scirs2_core::Float
+        + PartialOrd
         + 'static,
 {
     obj.is_symmetric()

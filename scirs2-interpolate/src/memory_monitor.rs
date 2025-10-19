@@ -1380,7 +1380,6 @@ mod tests {
     use super::*;
 
     #[test]
-    #[ignore] // FIXME: Test failing - needs investigation
     fn test_memory_monitor_basic() {
         let mut monitor = MemoryMonitor::new("test");
 
@@ -1391,11 +1390,15 @@ mod tests {
         assert_eq!(monitor.current_memory_bytes, 1536);
         assert_eq!(monitor.peak_memory_bytes, 1536);
 
-        // Track deallocation
+        // Track deallocations - deallocate all to avoid false leak detection
         monitor.track_deallocation(512, "cache");
         assert_eq!(monitor.current_memory_bytes, 1024);
 
+        monitor.track_deallocation(1024, "matrix");
+        assert_eq!(monitor.current_memory_bytes, 0);
+
         let report = monitor.generate_report();
+        // After deallocating all memory, should have no leaks
         assert!(!report.has_potential_leaks());
     }
 

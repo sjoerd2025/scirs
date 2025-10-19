@@ -1,477 +1,222 @@
-//! Comprehensive time series analysis example
+//! Comprehensive Time Series Analysis - Minimal Working Demo
 //!
-//! This example demonstrates the full workflow of time series analysis using scirs2-series,
-//! including data preprocessing, decomposition, forecasting, and anomaly detection.
+//! This example demonstrates the current function-based API for time series analysis.
+//! Note: Full examples will be updated in v0.1.0 after API stabilization.
 
-use scirs2_core::ndarray::{array, Array1};
+use scirs2_core::ndarray::{array, s, Array1};
 use scirs2_series::{
-    // TODO: Fix imports when modules are implemented
-    // anomaly::{AnomalyDetector, IsolationForestDetector, ZScoreDetector},
-    // arima_models::{auto_arima, ArimaSelectionOptions, SelectionCriterion},
-    // change_point::{CusumDetector, PeltDetector},
-    // clustering::{ClusteringConfig, TimeSeriesClusterer},
-    // correlation::{CrossCorrelationAnalyzer, DynamicTimeWarping},
-    // decomposition::{
-    //     stl::{StlDecomposer, StlOptions},
-    //     Decomposer,
-    // },
-    // features::{FeatureConfig, FeatureExtractor},
-    // forecasting::{
-    //     exponential_smoothing::{ExponentialSmoothingConfig, ExponentialSmoothingForecaster},
-    //     neural::{LSTMConfig, LSTMForecaster, NeuralForecaster},
-    // },
-    streaming::{StreamConfig, StreamingAnalyzer},
-    // transformations::{BoxCoxTransformer, DifferencingTransformer, Transformer},
-    // validation::{cross_validate, CrossValidationConfig, ValidationMetric},
+    anomaly::{detect_anomalies, AnomalyMethod, AnomalyOptions},
+    arima_models::ArimaModel,
+    change_point::{detect_change_points, ChangePointMethod, ChangePointOptions, CostFunction},
+    clustering::TimeSeriesClusterer,
+    decomposition::stl::{stl_decomposition, STLOptions},
 };
-use statrs::statistics::Statistics;
 
-#[allow(dead_code)]
-fn main() {
-    println!("Comprehensive analysis demo - TODO: Re-enable when imports are fixed");
-}
-
-// TODO: Re-enable when imports are fixed
-/*
-#[allow(dead_code)]
 fn main() {
     println!("=== Comprehensive Time Series Analysis Demo ===\n");
 
-    // Generate synthetic data with trend, seasonality, and noise
-    let data = generate_synthetic_data();
-    println!("Generated {} data points", data.len());
+    // Generate synthetic time series data
+    let data = generate_test_series(500, 0.01, 12, 1.0);
+    println!("Generated {} observations\n", data.len());
 
-    // Step 1: Data preprocessing and transformations
-    println!("\n1. Data Preprocessing");
-    let (transformed_data, transformer) = preprocess_data(&data);
-    println!("Applied Box-Cox transformation and differencing");
+    // Demo 1: STL Decomposition
+    println!("1. STL Decomposition");
+    stl_demo(&data);
 
-    // Step 2: Time series decomposition
-    println!("\n2. Time Series Decomposition");
-    let decomposition_result = decompose_series(&data);
-    analyze_decomposition(&decomposition_result);
+    // Demo 2: Anomaly Detection
+    println!("\n2. Anomaly Detection");
+    anomaly_demo(&data);
 
-    // Step 3: Feature extraction
-    println!("\n3. Feature Extraction");
-    extract_and_analyze_features(&data);
+    // Demo 3: Change Point Detection
+    println!("\n3. Change Point Detection");
+    change_point_demo();
 
-    // Step 4: Change point and anomaly detection
-    println!("\n4. Change Point and Anomaly Detection");
-    detect_changes_and_anomalies(&data);
+    // Demo 4: ARIMA Modeling
+    println!("\n4. ARIMA Modeling");
+    arima_demo(&data);
 
-    // Step 5: Multiple forecasting methods
-    println!("\n5. Forecasting Comparison");
-    compare_forecasting_methods(&data);
-
-    // Step 6: Advanced analysis
-    println!("\n6. Advanced Analysis");
-    advanced_analysis(&data);
-
-    // Step 7: Streaming analysis demonstration
-    println!("\n7. Streaming Analysis");
-    streaming_analysis_demo(&data);
-
-    // Step 8: Model validation
-    println!("\n8. Model Validation");
-    validate_models(&data);
+    // Demo 5: Time Series Clustering
+    println!("\n5. Time Series Clustering");
+    clustering_demo();
 
     println!("\n=== Analysis Complete ===");
 }
 
-#[allow(dead_code)]
-fn generate_synthetic_data() -> Array1<f64> {
-    let n = 200;
-    let mut data = Array1::zeros(n);
+fn generate_test_series(
+    length: usize,
+    trend: f64,
+    seasonal_period: usize,
+    noise_std: f64,
+) -> Array1<f64> {
+    let mut series = Array1::zeros(length);
+    let mut rng_state = 42u64;
 
-    for i in 0..n {
-        let t = i as f64;
-        // Trend component
-        let trend = 0.1 * t;
-        // Seasonal component (annual cycle)
-        let seasonal = 10.0 * (2.0 * std::f64::consts::PI * t / 12.0).sin();
-        // Weekly cycle
-        let weekly = 3.0 * (2.0 * std::f64::consts::PI * t / 7.0).sin();
-        // Noise
-        let noise = (t * 0.1).sin() * 2.0;
+    for i in 0..length {
+        // Deterministic pseudo-random noise
+        rng_state = rng_state.wrapping_mul(1103515245).wrapping_add(12345);
+        let noise = ((rng_state % 20000) as f64 / 20000.0 - 0.5) * noise_std;
 
-        data[i] = 100.0 + trend + seasonal + weekly + noise;
+        let trend_component = (i as f64) * trend;
+        let seasonal_component = (2.0 * std::f64::consts::PI * (i % seasonal_period) as f64
+            / seasonal_period as f64)
+            .sin()
+            * 5.0;
 
-        // Add some anomalies
-        if i == 50 || i == 150 {
-            data[i] += 20.0;
+        series[i] = 50.0 + trend_component + seasonal_component + noise;
+    }
+
+    series
+}
+
+fn stl_demo(data: &Array1<f64>) {
+    let period = 12;
+    let options = STLOptions::default();
+
+    match stl_decomposition(data, period, &options) {
+        Ok(result) => {
+            println!("  STL decomposition successful");
+            println!(
+                "    Trend range: {:.2} to {:.2}",
+                result.trend.iter().fold(f64::INFINITY, |a, &b| a.min(b)),
+                result
+                    .trend
+                    .iter()
+                    .fold(f64::NEG_INFINITY, |a, &b| a.max(b))
+            );
+            println!(
+                "    Seasonal range: {:.2} to {:.2}",
+                result.seasonal.iter().fold(f64::INFINITY, |a, &b| a.min(b)),
+                result
+                    .seasonal
+                    .iter()
+                    .fold(f64::NEG_INFINITY, |a, &b| a.max(b))
+            );
+
+            let residual_std = (result.residual.iter().map(|&x| x * x).sum::<f64>()
+                / result.residual.len() as f64)
+                .sqrt();
+            println!("    Residual std dev: {:.4}", residual_std);
         }
-    }
-
-    data
-}
-
-#[allow(dead_code)]
-fn preprocess_data(data: &Array1<f64>) -> (Array1<f64>, BoxCoxTransformer<f64>) {
-    // Apply Box-Cox transformation
-    let mut transformer = BoxCoxTransformer::new();
-    let transformed = transformer
-        .fit_transform(_data)
-        .unwrap_or_else(|_| data.clone());
-
-    // Apply differencing if needed
-    let mut diff_transformer = DifferencingTransformer::new(1);
-    let _differenced = diff_transformer
-        .fit_transform(&transformed)
-        .unwrap_or(transformed.clone());
-
-    (transformed, transformer)
-}
-
-#[allow(dead_code)]
-fn decompose_series(data: &Array1<f64>) -> (Array1<f64>, Array1<f64>, Array1<f64>) {
-    let options = StlOptions {
-        seasonal_period: 12,
-        seasonal_smoother: 7,
-        trend_smoother: None,
-        low_pass_smoother: None,
-        seasonal_degree: 1,
-        trend_degree: 1,
-        low_pass_degree: 1,
-        robust: true,
-        seasonal_jump: 1,
-        trend_jump: 1,
-        low_pass_jump: 1,
-    };
-
-    let mut decomposer = StlDecomposer::new(options);
-    decomposer.decompose(_data).unwrap_or_else(|_| {
-        // Fallback to simple decomposition
-        let n = data.len();
-        let trend = Array1::linspace(_data[0], data[n - 1], n);
-        let seasonal = Array1::zeros(n);
-        let residual = _data - &trend;
-        (trend, seasonal, residual)
-    })
-}
-
-#[allow(dead_code)]
-fn analyze_decomposition(result: &(Array1<f64>, Array1<f64>, Array1<f64>)) {
-    let (trend, seasonal, residual) = result;
-
-    println!("  Trend variance: {:.2}", calculate_variance(trend));
-    println!("  Seasonal variance: {:.2}", calculate_variance(seasonal));
-    println!("  Residual variance: {:.2}", calculate_variance(residual));
-
-    let total_var =
-        calculate_variance(trend) + calculate_variance(seasonal) + calculate_variance(residual);
-    println!(
-        "  Trend contribution: {:.1}%",
-        100.0 * calculate_variance(trend) / total_var
-    );
-    println!(
-        "  Seasonal contribution: {:.1}%",
-        100.0 * calculate_variance(seasonal) / total_var
-    );
-    println!(
-        "  Noise contribution: {:.1}%",
-        100.0 * calculate_variance(residual) / total_var
-    );
-}
-
-#[allow(dead_code)]
-fn calculate_variance(data: &Array1<f64>) -> f64 {
-    if data.len() < 2 {
-        return 0.0;
-    }
-    let mean = data.mean().unwrap_or(0.0);
-    data.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / (_data.len() - 1) as f64
-}
-
-#[allow(dead_code)]
-fn extract_and_analyze_features(data: &Array1<f64>) {
-    let config = FeatureConfig::comprehensive();
-    let mut extractor = FeatureExtractor::new(config);
-
-    if let Ok(features) = extractor.extract_features(_data) {
-        println!("  Extracted {} features", features.len());
-
-        // Analyze key features
-        if features.len() >= 10 {
-            println!("  Mean: {:.2}", features[0]);
-            println!("  Standard deviation: {:.2}", features[1]);
-            println!("  Skewness: {:.2}", features[2]);
-            println!("  Kurtosis: {:.2}", features[3]);
-            println!("  Trend strength: {:.2}", features[4]);
-        }
-    } else {
-        println!("  Failed to extract features");
+        Err(e) => println!("  STL decomposition failed: {}", e),
     }
 }
 
-#[allow(dead_code)]
-fn detect_changes_and_anomalies(data: &Array1<f64>) {
-    // Change point detection
-    let mut pelt_detector = PeltDetector::new(2.0, 5);
-    if let Ok(change_points) = pelt_detector.detect(_data) {
-        println!(
-            "  Detected {} change points: {:?}",
-            change_points.len(),
-            change_points
-        );
-    }
-
-    // Anomaly detection with multiple methods
-    let mut z_detector = ZScoreDetector::new(3.0);
-    if let Ok(z_anomalies) = z_detector.detect(_data) {
-        let anomaly_count = z_anomalies.iter().filter(|&&x| x).count();
-        println!("  Z-score anomalies: {}", anomaly_count);
-    }
-
-    let mut isolation_detector = IsolationForestDetector::new(100, 0.1, Some(42));
-    if let Ok(iso_anomalies) = isolation_detector.detect(_data) {
-        let anomaly_count = iso_anomalies.iter().filter(|&&x| x).count();
-        println!("  Isolation forest anomalies: {}", anomaly_count);
-    }
-}
-
-#[allow(dead_code)]
-fn compare_forecasting_methods(data: &Array1<f64>) {
-    let forecast_horizon = 10;
-    let train_size = data.len() - forecast_horizon;
-    let train_data = data.slice(scirs2_core::ndarray::s![..train_size]).to_owned();
-    let test_data = data.slice(scirs2_core::ndarray::s![train_size..]).to_owned();
-
-    println!(
-        "  Training on {} points, testing on {} points",
-        train_size,
-        test_data.len()
-    );
-
-    // Method 1: ARIMA
-    let arima_options = ArimaSelectionOptions {
-        max_p: 3,
-        max_d: 2,
-        max_q: 3,
-        criterion: SelectionCriterion::AIC,
-        stepwise: true,
+fn anomaly_demo(data: &Array1<f64>) {
+    let options = AnomalyOptions {
+        method: AnomalyMethod::ZScore,
+        threshold: Some(3.0),
         ..Default::default()
     };
 
-    if let Ok((mut arima_model, params)) = auto_arima(&train_data, &arima_options) {
-        if let Ok(arima_forecast) = arima_model.forecast(forecast_horizon, &train_data) {
-            let arima_mse = calculate_mse(&test_data, &arima_forecast.point_forecast);
+    match detect_anomalies(data, &options) {
+        Ok(result) => {
+            let n_anomalies = result.is_anomaly.iter().filter(|&&x| x).count();
             println!(
-                "    ARIMA({},{},{}) MSE: {:.2}",
-                params.pdq.0, params.pdq.1, params.pdq.2, arima_mse
+                "  Detected {} anomalies using Z-score method (threshold=3.0)",
+                n_anomalies
             );
-        }
-    } else {
-        println!("    ARIMA: Failed to fit model");
-    }
 
-    // Method 2: Exponential Smoothing
-    let es_config = ExponentialSmoothingConfig {
-        alpha: Some(0.3),
-        beta: Some(0.1),
-        gamma: Some(0.1),
-        seasonal_periods: Some(12),
-        damping_parameter: None,
-        use_boxcox: false,
-        remove_bias: true,
-        use_brute: false,
-    };
-
-    let mut es_forecaster = ExponentialSmoothingForecaster::new(es_config);
-    if let Ok(_) = es_forecaster.fit(&train_data) {
-        if let Ok(es_forecast) = es_forecaster.predict(forecast_horizon) {
-            let es_mse = calculate_mse(&test_data, &es_forecast.point_forecast);
-            println!("    Exponential Smoothing MSE: {:.2}", es_mse);
-        }
-    } else {
-        println!("    Exponential Smoothing: Failed to fit model");
-    }
-
-    // Method 3: LSTM Neural Network
-    let lstm_config = LSTMConfig {
-        base: scirs2,
-        series: forecasting::neural::NeuralConfig {
-            lookback_window: 10,
-            forecast_horizon,
-            epochs: 50,
-            learning_rate: 0.001,
-            batch_size: 16,
-            validation_split: 0.2,
-            early_stopping_patience: Some(5),
-            random_seed: Some(42),
-        },
-        num_layers: 2,
-        hidden_size: 32,
-        dropout: 0.2,
-        bidirectional: false,
-    };
-
-    let mut lstm_forecaster = LSTMForecaster::new(lstm_config);
-    if let Ok(_) = lstm_forecaster.fit(&train_data) {
-        if let Ok(lstm_forecast) = lstm_forecaster.predict(forecast_horizon) {
-            let lstm_mse = calculate_mse(&test_data, &lstm_forecast.point_forecast);
-            println!("    LSTM Neural Network MSE: {:.2}", lstm_mse);
-        }
-    } else {
-        println!("    LSTM: Failed to fit model");
-    }
-}
-
-#[allow(dead_code)]
-fn calculate_mse(actual: &Array1<f64>, predicted: &Array1<f64>) -> f64 {
-    let min_len = actual.len().min(predicted.len());
-    if min_len == 0 {
-        return f64::INFINITY;
-    }
-
-    let mut sum_sq_error = 0.0;
-    for i in 0..min_len {
-        let error = actual[i] - predicted[i];
-        sum_sq_error += error * error;
-    }
-    sum_sq_error / min_len as f64
-}
-
-#[allow(dead_code)]
-fn advanced_analysis(data: &Array1<f64>) {
-    // Correlation analysis
-    let mut corr_analyzer = CrossCorrelationAnalyzer::new();
-    if let Ok(autocorr) = corr_analyzer.autocorrelation(_data, 20) {
-        let max_autocorr = autocorr
-            .iter()
-            .skip(1)
-            .fold(0.0, |max, &x| max.max(x.abs()));
-        println!("  Maximum autocorrelation: {:.3}", max_autocorr);
-    }
-
-    // Dynamic Time Warping self-similarity
-    let dtw = DynamicTimeWarping::new();
-    let half_len = data.len() / 2;
-    let first_half = data.slice(scirs2_core::ndarray::s![..half_len]).to_owned();
-    let second_half = data.slice(scirs2_core::ndarray::s![half_len..half_len * 2]).to_owned();
-
-    if let Ok(dtw_distance) = dtw.distance(&first_half, &second_half) {
-        println!("  DTW distance between halves: {:.2}", dtw_distance);
-    }
-
-    // Clustering analysis
-    let clustering_config = ClusteringConfig {
-        n_clusters: 3,
-        distance_metric: scirs2,
-        _series: clustering::DistanceMetric::Euclidean,
-        max_iterations: 100,
-        tolerance: 1e-4,
-        random_seed: Some(42),
-    };
-
-    // Create multiple subsequences for clustering
-    let window_size = 20;
-    let step_size = 10;
-    let mut subsequences = Vec::new();
-
-    for i in (0.._data.len() - window_size).step_by(step_size) {
-        let subseq = data.slice(scirs2_core::ndarray::s![i..i + window_size]).to_owned();
-        subsequences.push(subseq);
-    }
-
-    if subsequences.len() >= 3 {
-        let mut clusterer = TimeSeriesClusterer::new(clustering_config);
-        if let Ok(clusters) = clusterer.fit_predict(&subsequences) {
-            println!(
-                "  Clustered {} subsequences into {} groups",
-                subsequences.len(),
-                clusters.iter().max().unwrap_or(&0) + 1
-            );
-        }
-    }
-}
-
-#[allow(dead_code)]
-fn streaming_analysis_demo(data: &Array1<f64>) {
-    let config = StreamConfig {
-        window_size: 50,
-        min_observations: 10,
-        update_frequency: 5,
-        memory_threshold: 1000,
-        adaptive_windowing: false,
-        change_detection_threshold: 2.5,
-    };
-
-    let mut analyzer = StreamingAnalyzer::new(config).unwrap();
-    let mut detected_changes = 0;
-
-    for (i, &value) in data.iter().enumerate() {
-        if let Ok(_) = analyzer.add_observation(value) {
-            let change_points = analyzer.get_change_points();
-            if change_points.len() > detected_changes {
-                detected_changes = change_points.len();
-                println!(
-                    "  Change detected at index {}: confidence {:.2}",
-                    i,
-                    change_points.last().unwrap().confidence
-                );
-            }
-
-            // Check for outliers
-            if analyzer.is_outlier(value) {
-                println!("  Outlier detected at index {}: value {:.2}", i, value);
+            if n_anomalies > 0 {
+                if let Some(first_idx) = result.is_anomaly.iter().position(|&x| x) {
+                    println!(
+                        "    First anomaly at index {}: value = {:.2}",
+                        first_idx, data[first_idx]
+                    );
+                }
             }
         }
+        Err(e) => println!("  Anomaly detection failed: {}", e),
     }
 
-    let stats = analyzer.get_stats();
-    println!(
-        "  Final streaming stats: mean={:.2}, std={:.2}, count={}",
-        stats.mean(),
-        stats.std_dev(),
-        stats.count()
-    );
-
-    // Generate streaming forecast
-    if let Ok(forecast) = analyzer.forecast(5) {
-        println!("  Streaming forecast: {:?}", forecast.to_vec());
-    }
-}
-
-#[allow(dead_code)]
-fn validate_models(data: &Array1<f64>) {
-    let cv_config = CrossValidationConfig {
-        n_folds: 5,
-        test_size: 0.2,
-        gap: 0,
-        metric: ValidationMetric::MSE,
-        shuffle: false,
-    };
-
-    // Validate ARIMA model
-    let arima_options = ArimaSelectionOptions {
-        max_p: 2,
-        max_d: 1,
-        max_q: 2,
-        criterion: SelectionCriterion::AIC,
-        stepwise: true,
+    // Try IQR method
+    let iqr_options = AnomalyOptions {
+        method: AnomalyMethod::InterquartileRange,
+        threshold: Some(1.5),
         ..Default::default()
     };
 
-    if let Ok(cv_results) = cross_validate(_data, &arima_options, &cv_config) {
-        println!("  Cross-validation results:");
-        println!("    Mean MSE: {:.4}", cv_results.mean_score);
-        println!("    Std MSE: {:.4}", cv_results.std_score);
-        println!(
-            "    Min MSE: {:.4}",
-            cv_results
-                .scores
-                .iter()
-                .fold(f64::INFINITY, |a, &b| a.min(b))
-        );
-        println!(
-            "    Max MSE: {:.4}",
-            cv_results
-                .scores
-                .iter()
-                .fold(f64::NEG_INFINITY, |a, &b| a.max(b))
-        );
-    } else {
-        println!("  Cross-validation failed");
+    match detect_anomalies(data, &iqr_options) {
+        Ok(result) => {
+            let n_iqr_anomalies = result.is_anomaly.iter().filter(|&&x| x).count();
+            println!("  IQR method detected {} anomalies", n_iqr_anomalies);
+        }
+        Err(e) => println!("  IQR anomaly detection failed: {}", e),
     }
 }
-*/
+
+fn change_point_demo() {
+    // Generate data with known change points
+    let mut series = Array1::zeros(300);
+    let changepoints = [100, 200];
+    let mut current_mean = 10.0;
+    let mut next_change_idx = 0;
+
+    for i in 0..300 {
+        if next_change_idx < changepoints.len() && i == changepoints[next_change_idx] {
+            current_mean += 15.0;
+            next_change_idx += 1;
+        }
+        let noise = ((i % 17) as f64 - 8.0) * 0.3;
+        series[i] = current_mean + noise;
+    }
+
+    let options = ChangePointOptions {
+        method: ChangePointMethod::PELT,
+        cost_function: CostFunction::Normal,
+        penalty: 3.0,
+        ..Default::default()
+    };
+
+    match detect_change_points(&series, &options) {
+        Ok(result) => {
+            println!(
+                "  PELT detected {} change points",
+                result.change_points.len()
+            );
+            if !result.change_points.is_empty() {
+                println!("    Change points at: {:?}", result.change_points);
+            }
+        }
+        Err(e) => println!("  Change point detection failed: {}", e),
+    }
+}
+
+fn arima_demo(data: &Array1<f64>) {
+    // Take a subset for faster fitting
+    let subset = data.slice(s![..200]).to_owned();
+
+    match ArimaModel::new(1, 1, 1) {
+        Ok(mut arima) => {
+            match arima.fit(&subset) {
+                Ok(_) => {
+                    println!("  ARIMA(1,1,1) fitted successfully");
+
+                    // Make predictions (forecast requires the data as second parameter)
+                    match arima.forecast(10, &subset) {
+                        Ok(forecast) => {
+                            println!("    Forecast next 10 steps:");
+                            for (i, &val) in forecast.iter().enumerate() {
+                                println!("      Step {}: {:.2}", i + 1, val);
+                            }
+                        }
+                        Err(e) => println!("    Forecast failed: {}", e),
+                    }
+                }
+                Err(e) => println!("  ARIMA fitting failed: {}", e),
+            }
+        }
+        Err(e) => println!("  ARIMA model creation failed: {}", e),
+    }
+}
+
+fn clustering_demo() {
+    // Create sample time series for clustering
+    let series1 = array![1.0, 2.0, 3.0, 4.0, 5.0];
+    let series2 = array![1.1, 2.1, 3.1, 4.1, 5.1];
+    let series3 = array![10.0, 11.0, 12.0, 13.0, 14.0];
+
+    println!("  Created 3 sample time series");
+    println!("    Series 1 & 2: similar pattern (values 1-5)");
+    println!("    Series 3: different pattern (values 10-14)");
+    println!("  Note: Clustering API requires further implementation");
+}

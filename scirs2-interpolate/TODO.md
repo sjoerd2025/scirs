@@ -1,6 +1,6 @@
-# scirs2-interpolate TODO - Post Alpha 5 Release Planning
+# scirs2-interpolate TODO - Release Candidate 2 Planning
 
-**Status**: Production-ready Release Candidate (0.1.0-rc.1) with platform testing - Following the [SciRS2 POLICY](../SCIRS2_POLICY.md) for ecosystem consistency
+**Status**: Production-ready Release Candidate (0.1.0-rc.2) with platform testing - Following the [SciRS2 POLICY](../SCIRS2_POLICY.md) for ecosystem consistency
 
 ## 🎯 0.1.0 Stable Release Goals
 
@@ -95,7 +95,7 @@
 - [ ] Memory layout optimizations for cache performance
 - [ ] Parallel algorithm improvements for NUMA systems
 
-## ✅ Alpha 5 Achievements
+## ✅ RC.2 Implementation Status
 
 **Complete Implementation** (100% of planned features):
 - ✅ All standard 1D/ND interpolation methods

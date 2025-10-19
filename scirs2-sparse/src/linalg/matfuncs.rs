@@ -7,6 +7,7 @@ use crate::sparray::SparseArray;
 use scirs2_core::ndarray::{Array1, ArrayView1};
 use scirs2_core::numeric::{Float, NumAssign};
 use scirs2_core::random::Rng;
+use scirs2_core::SparseElement;
 use std::fmt::Debug;
 use std::iter::Sum;
 use std::ops::{Add, Div, Mul, Sub};
@@ -36,7 +37,7 @@ pub fn expm_multiply<F>(
     tol: Option<F>,
 ) -> SparseResult<Vec<F>>
 where
-    F: Float + NumAssign + Sum + 'static,
+    F: Float + NumAssign + Sum + SparseElement + 'static,
 {
     let (rows, cols) = a.shape();
     if rows != cols {
@@ -56,21 +57,21 @@ where
     let tol = tol.unwrap_or(F::from(1e-7).unwrap());
 
     // Special case: t = 0
-    if t == F::zero() {
+    if t == F::sparse_zero() {
         return Ok(v.to_vec());
     }
 
     // Normalize the initial vector
     let v_norm = norm2(v);
-    if v_norm == F::zero() {
-        return Ok(vec![F::zero(); n]);
+    if v_norm == F::sparse_zero() {
+        return Ok(vec![F::sparse_zero(); n]);
     }
 
     let v_normalized: Vec<F> = v.iter().map(|&vi| vi / v_norm).collect();
 
     // Build Krylov subspace using Arnoldi iteration
     let mut v = vec![v_normalized.clone()]; // Orthonormal basis
-    let mut h = vec![vec![F::zero(); m]; m + 1]; // Upper Hessenberg matrix
+    let mut h = vec![vec![F::sparse_zero(); m]; m + 1]; // Upper Hessenberg matrix
 
     for j in 0..m {
         // Compute w = A * v[j]
@@ -108,14 +109,14 @@ where
         // For 1x1 case, h[0][0] contains the eigenvalue
         let lambda = h[0][0];
         let exp_t_lambda = (t * lambda).exp();
-        let mut y = vec![F::zero(); n];
+        let mut y = vec![F::sparse_zero(); n];
         for (j, y_val) in y.iter_mut().enumerate().take(n) {
             *y_val = v_norm * exp_t_lambda * v[0][j];
         }
         return Ok(y);
     }
 
-    let mut h_square = vec![vec![F::zero(); actual_m]; actual_m];
+    let mut h_square = vec![vec![F::sparse_zero(); actual_m]; actual_m];
     for (i, h_row) in h.iter().enumerate().take(actual_m) {
         for (j, &h_val) in h_row.iter().enumerate().take(actual_m) {
             h_square[i][j] = h_val;
@@ -126,7 +127,7 @@ where
     let exp_t_h = matrix_exponential_dense(&h_square, t)?;
 
     // Compute y = v_norm * V * exp(t*H) * e1
-    let mut y = vec![F::zero(); n];
+    let mut y = vec![F::sparse_zero(); n];
     for (i, v_row) in v.iter().enumerate().take(actual_m) {
         let coeff = v_norm * exp_t_h[i][0];
         for (j, y_val) in y.iter_mut().enumerate().take(n) {
@@ -141,17 +142,17 @@ where
 #[allow(dead_code)]
 fn matrix_exponential_dense<F>(h: &[Vec<F>], t: F) -> SparseResult<Vec<Vec<F>>>
 where
-    F: Float + NumAssign + 'static,
+    F: Float + NumAssign + SparseElement + 'static,
 {
     let _n = h.len();
 
     // Scaling: find s such that ||t*H/2^s|| < 1
     let mut s = 0;
-    let mut scale = F::one();
+    let mut scale = F::sparse_one();
     let h_norm = matrix_norm_inf(h);
     let mut scaled_norm = (t * h_norm).abs();
 
-    while scaled_norm > F::one() {
+    while scaled_norm > F::sparse_one() {
         s += 1;
         scale *= F::from(2).unwrap();
         scaled_norm /= F::from(2).unwrap();
@@ -174,12 +175,12 @@ where
 #[allow(dead_code)]
 fn pade_approximation<F>(a: &[Vec<F>], t: F, order: usize) -> SparseResult<Vec<Vec<F>>>
 where
-    F: Float + NumAssign + 'static,
+    F: Float + NumAssign + SparseElement + 'static,
 {
     let n = a.len();
 
     // Compute powers of t*A
-    let mut t_a = vec![vec![F::zero(); n]; n];
+    let mut t_a = vec![vec![F::sparse_zero(); n]; n];
     for i in 0..n {
         for j in 0..n {
             t_a[i][j] = t * a[i][j];
@@ -197,7 +198,7 @@ where
 
     // Padé coefficients for order 6
     let num_coeffs = [
-        F::one(),
+        F::sparse_one(),
         F::from(0.5).unwrap(),
         F::from(3.0 / 26.0).unwrap(),
         F::from(1.0 / 312.0).unwrap(),
@@ -207,7 +208,7 @@ where
     ];
 
     let den_coeffs = [
-        F::one(),
+        F::sparse_one(),
         F::from(-0.5).unwrap(),
         F::from(3.0 / 26.0).unwrap(),
         F::from(-1.0 / 312.0).unwrap(),
@@ -263,14 +264,14 @@ where
 #[allow(dead_code)]
 pub fn twonormest<F>(a: &CsrMatrix<F>, tol: Option<F>, maxiter: Option<usize>) -> SparseResult<F>
 where
-    F: Float + NumAssign + Sum + 'static + Debug,
+    F: Float + NumAssign + Sum + SparseElement + 'static + Debug,
 {
     let (m, n) = (a.rows(), a.cols());
     let tol = tol.unwrap_or_else(|| F::from(1e-6).unwrap());
     let maxiter = maxiter.unwrap_or(100);
 
     if m == 0 || n == 0 {
-        return Ok(F::zero());
+        return Ok(F::sparse_zero());
     }
 
     // For very small matrices, compute exactly
@@ -286,25 +287,25 @@ where
 
     // Normalize initial vector
     let v_norm = norm2(&v);
-    if v_norm == F::zero() {
-        return Ok(F::zero());
+    if v_norm == F::sparse_zero() {
+        return Ok(F::sparse_zero());
     }
     for v_elem in v.iter_mut() {
         *v_elem /= v_norm;
     }
 
-    let mut lambda = F::zero();
-    let mut lambda_old = F::zero();
+    let mut lambda = F::sparse_zero();
+    let mut lambda_old = F::sparse_zero();
 
     for iter in 0..maxiter {
         // Compute w = A * v
-        let mut w = vec![F::zero(); m];
+        let mut w = vec![F::sparse_zero(); m];
         for (row, w_val) in w.iter_mut().enumerate().take(m) {
             let row_range = a.row_range(row);
             let row_indices = &a.indices[row_range.clone()];
             let row_data = &a.data[row_range];
 
-            let mut sum = F::zero();
+            let mut sum = F::sparse_zero();
             for (col_idx, &col) in row_indices.iter().enumerate() {
                 sum += row_data[col_idx] * v[col];
             }
@@ -312,14 +313,14 @@ where
         }
 
         // Compute u = A^T * w
-        let mut u = vec![F::zero(); n];
+        let mut u = vec![F::sparse_zero(); n];
         let a_t = a.transpose();
         for (row, u_val) in u.iter_mut().enumerate().take(a_t.rows()) {
             let row_range = a_t.row_range(row);
             let row_indices = &a_t.indices[row_range.clone()];
             let row_data = &a_t.data[row_range];
 
-            let mut sum = F::zero();
+            let mut sum = F::sparse_zero();
             for (col_idx, &col) in row_indices.iter().enumerate() {
                 sum += row_data[col_idx] * w[col];
             }
@@ -331,7 +332,7 @@ where
 
         // Normalize u to get new v
         let u_norm = norm2(&u);
-        if u_norm == F::zero() {
+        if u_norm == F::sparse_zero() {
             break;
         }
 
@@ -341,7 +342,7 @@ where
 
         // Check convergence
         if iter > 0 {
-            let rel_change = if lambda_old != F::zero() {
+            let rel_change = if lambda_old != F::sparse_zero() {
                 ((lambda - lambda_old) / lambda_old).abs()
             } else {
                 lambda.abs()
@@ -397,7 +398,7 @@ pub fn condest<F>(
     maxiter: Option<usize>,
 ) -> SparseResult<F>
 where
-    F: Float + NumAssign + Sum + 'static + Debug,
+    F: Float + NumAssign + Sum + SparseElement + 'static + Debug,
 {
     let (m, n) = (a.rows(), a.cols());
     if m != n {
@@ -421,7 +422,7 @@ where
         }
     };
 
-    if norm_a == F::zero() {
+    if norm_a == F::sparse_zero() {
         return Ok(F::infinity());
     }
 
@@ -441,7 +442,7 @@ fn estimate_inverse_norm<F>(
     maxiter: usize,
 ) -> SparseResult<F>
 where
-    F: Float + NumAssign + Sum + 'static + Debug,
+    F: Float + NumAssign + Sum + SparseElement + 'static + Debug,
 {
     let _n = a.rows();
 
@@ -450,20 +451,20 @@ where
         // This is more complex and would require solving linear systems
         // For now, we'll use a simpler 2-norm based approach
         return estimate_smallest_singular_value(a, tol, maxiter).map(|sigma_min| {
-            if sigma_min == F::zero() {
+            if sigma_min == F::sparse_zero() {
                 F::infinity()
             } else {
-                F::one() / sigma_min
+                F::sparse_one() / sigma_min
             }
         });
     }
 
     // For 2-norm, estimate smallest singular value of A
     estimate_smallest_singular_value(a, tol, maxiter).map(|sigma_min| {
-        if sigma_min == F::zero() {
+        if sigma_min == F::sparse_zero() {
             F::infinity()
         } else {
-            F::one() / sigma_min
+            F::sparse_one() / sigma_min
         }
     })
 }
@@ -472,7 +473,7 @@ where
 #[allow(dead_code)]
 fn estimate_smallest_singular_value<F>(a: &CsrMatrix<F>, tol: F, maxiter: usize) -> SparseResult<F>
 where
-    F: Float + NumAssign + Sum + 'static + Debug,
+    F: Float + NumAssign + Sum + SparseElement + 'static + Debug,
 {
     let n = a.cols();
 
@@ -484,14 +485,14 @@ where
 
     // Normalize initial vector
     let v_norm = norm2(&v);
-    if v_norm == F::zero() {
-        return Ok(F::zero());
+    if v_norm == F::sparse_zero() {
+        return Ok(F::sparse_zero());
     }
     for v_elem in v.iter_mut() {
         *v_elem /= v_norm;
     }
 
-    let mut lambda = F::zero();
+    let mut lambda = F::sparse_zero();
     let mut lambda_old = F::infinity();
 
     for iter in 0..maxiter {
@@ -506,7 +507,7 @@ where
 
         // Normalize u
         let u_norm = norm2(&u);
-        if u_norm == F::zero() {
+        if u_norm == F::sparse_zero() {
             break;
         }
 
@@ -519,7 +520,7 @@ where
 
         // Check convergence
         if iter > 0 {
-            let rel_change = if lambda != F::zero() {
+            let rel_change = if lambda != F::sparse_zero() {
                 ((lambda - lambda_old) / lambda).abs()
             } else {
                 F::infinity()
@@ -545,34 +546,34 @@ fn solve_ata_approximately<F>(
     num_iterations: usize,
 ) -> SparseResult<Vec<F>>
 where
-    F: Float + NumAssign + Sum + 'static + Debug,
+    F: Float + NumAssign + Sum + SparseElement + 'static + Debug,
 {
     let n = a.cols();
     let mut x = b.to_vec(); // Initial guess
 
     for _ in 0..num_iterations {
         // Compute r = A^T * A * x
-        let mut ax = vec![F::zero(); a.rows()];
+        let mut ax = vec![F::sparse_zero(); a.rows()];
         for (row, ax_val) in ax.iter_mut().enumerate().take(a.rows()) {
             let row_range = a.row_range(row);
             let row_indices = &a.indices[row_range.clone()];
             let row_data = &a.data[row_range];
 
-            let mut sum = F::zero();
+            let mut sum = F::sparse_zero();
             for (col_idx, &col) in row_indices.iter().enumerate() {
                 sum += row_data[col_idx] * x[col];
             }
             *ax_val = sum;
         }
 
-        let mut ata_x = vec![F::zero(); n];
+        let mut ata_x = vec![F::sparse_zero(); n];
         let a_t = a.transpose();
         for (row, ata_x_val) in ata_x.iter_mut().enumerate().take(a_t.rows()) {
             let row_range = a_t.row_range(row);
             let row_indices = &a_t.indices[row_range.clone()];
             let row_data = &a_t.data[row_range];
 
-            let mut sum = F::zero();
+            let mut sum = F::sparse_zero();
             for (col_idx, &col) in row_indices.iter().enumerate() {
                 sum += row_data[col_idx] * ax[col];
             }
@@ -593,16 +594,16 @@ where
 #[allow(dead_code)]
 fn estimate_rayleigh_quotient<F>(a: &CsrMatrix<F>, v: &[F]) -> SparseResult<F>
 where
-    F: Float + NumAssign + Sum + 'static + Debug,
+    F: Float + NumAssign + Sum + SparseElement + 'static + Debug,
 {
     // Compute A * v
-    let mut av = vec![F::zero(); a.rows()];
+    let mut av = vec![F::sparse_zero(); a.rows()];
     for (row, av_val) in av.iter_mut().enumerate().take(a.rows()) {
         let row_range = a.row_range(row);
         let row_indices = &a.indices[row_range.clone()];
         let row_data = &a.data[row_range];
 
-        let mut sum = F::zero();
+        let mut sum = F::sparse_zero();
         for (col_idx, &col) in row_indices.iter().enumerate() {
             sum += row_data[col_idx] * v[col];
         }
@@ -610,14 +611,14 @@ where
     }
 
     // Compute A^T * (A * v)
-    let mut ata_v = vec![F::zero(); a.cols()];
+    let mut ata_v = vec![F::sparse_zero(); a.cols()];
     let a_t = a.transpose();
     for (row, ata_v_val) in ata_v.iter_mut().enumerate().take(a_t.rows()) {
         let row_range = a_t.row_range(row);
         let row_indices = &a_t.indices[row_range.clone()];
         let row_data = &a_t.data[row_range];
 
-        let mut sum = F::zero();
+        let mut sum = F::sparse_zero();
         for (col_idx, &col) in row_indices.iter().enumerate() {
             sum += row_data[col_idx] * av[col];
         }
@@ -632,7 +633,7 @@ where
 #[allow(dead_code)]
 fn exact_twonorm<F>(a: &CsrMatrix<F>) -> SparseResult<F>
 where
-    F: Float + NumAssign + Sum + 'static + Debug,
+    F: Float + NumAssign + Sum + SparseElement + 'static + Debug,
 {
     // For small matrices, we can afford to compute all singular values
     // This is a simplified implementation - in practice, you'd use SVD
@@ -641,12 +642,12 @@ where
     let min_dim = m.min(n);
 
     if min_dim == 0 {
-        return Ok(F::zero());
+        return Ok(F::sparse_zero());
     }
 
     if min_dim == 1 {
         // For 1D case, just compute the norm of the single row/column
-        let mut max_norm = F::zero();
+        let mut max_norm = F::sparse_zero();
         for i in 0..m {
             for j in 0..n {
                 let val = a.get(i, j).abs();
@@ -679,14 +680,14 @@ where
 #[allow(dead_code)]
 pub fn onenormest<F>(a: &CsrMatrix<F>, t: Option<usize>, itmax: Option<usize>) -> SparseResult<F>
 where
-    F: Float + NumAssign + Sum + 'static + Debug,
+    F: Float + NumAssign + Sum + SparseElement + 'static + Debug,
 {
     let n = a.cols();
     let t = t.unwrap_or(2);
     let itmax = itmax.unwrap_or(5);
 
     if n == 0 {
-        return Ok(F::zero());
+        return Ok(F::sparse_zero());
     }
 
     // Handle small matrices directly
@@ -696,39 +697,39 @@ where
 
     // Initialize with random vectors
     let mut rng = scirs2_core::random::rng();
-    let mut x = vec![vec![F::zero(); n]; t];
+    let mut x = vec![vec![F::sparse_zero(); n]; t];
     for x_j in x.iter_mut().take(t) {
         for x_elem in x_j.iter_mut().take(n) {
             *x_elem = if rng.random::<bool>() {
-                F::one()
+                F::sparse_one()
             } else {
-                -F::one()
+                -F::sparse_one()
             };
         }
     }
 
     // Make sure the first column is the all-ones vector
     for i in 0..n {
-        x[0][i] = F::one();
+        x[0][i] = F::sparse_one();
     }
 
-    let mut est = F::zero();
-    let mut est_old = F::zero();
+    let mut est = F::sparse_zero();
+    let mut est_old = F::sparse_zero();
     let mut ind_best = vec![0; n];
     let mut s = vec![false; n];
 
     for _ in 0..itmax {
         // Compute Y = A^T * X
-        let mut y = vec![vec![F::zero(); n]; t];
+        let mut y = vec![vec![F::sparse_zero(); n]; t];
         let a_t = a.transpose();
         for j in 0..t {
-            let mut y_j = vec![F::zero(); n];
+            let mut y_j = vec![F::sparse_zero(); n];
             for (row, y_val) in y_j.iter_mut().enumerate().take(a_t.rows()) {
                 let row_range = a_t.row_range(row);
                 let row_indices = &a_t.indices[row_range.clone()];
                 let row_data = &a_t.data[row_range];
 
-                let mut sum = F::zero();
+                let mut sum = F::sparse_zero();
                 for (col_idx, &col) in row_indices.iter().enumerate() {
                     sum += row_data[col_idx] * x[j][col];
                 }
@@ -738,7 +739,7 @@ where
         }
 
         // Find the column of Y with maximum 1-norm
-        let mut max_norm = F::zero();
+        let mut max_norm = F::sparse_zero();
         let mut max_col = 0;
         for (j, y_vec) in y.iter().enumerate().take(t) {
             let norm = onenorm_vec(y_vec);
@@ -786,22 +787,22 @@ where
         let z: Vec<F> = y[max_col]
             .iter()
             .map(|&y_val| {
-                if y_val >= F::zero() {
-                    F::one()
+                if y_val >= F::sparse_zero() {
+                    F::sparse_one()
                 } else {
-                    -F::one()
+                    -F::sparse_one()
                 }
             })
             .collect();
 
         // Compute w = A * Z
-        let mut w = vec![F::zero(); a.rows()];
+        let mut w = vec![F::sparse_zero(); a.rows()];
         for (row, w_val) in w.iter_mut().enumerate().take(a.rows()) {
             let row_range = a.row_range(row);
             let row_indices = &a.indices[row_range.clone()];
             let row_data = &a.data[row_range];
 
-            let mut sum = F::zero();
+            let mut sum = F::sparse_zero();
             for (col_idx, &col) in row_indices.iter().enumerate() {
                 sum += row_data[col_idx] * z[col];
             }
@@ -811,9 +812,9 @@ where
         // Update x with unit vectors at positions ind_best
         for j in 0..t {
             for i in 0..n {
-                x[j][i] = F::zero();
+                x[j][i] = F::sparse_zero();
             }
-            x[j][ind_best[j]] = F::one();
+            x[j][ind_best[j]] = F::sparse_one();
         }
 
         // Update estimate
@@ -832,16 +833,16 @@ where
 #[allow(dead_code)]
 fn exact_onenorm<F>(a: &CsrMatrix<F>) -> SparseResult<F>
 where
-    F: Float + NumAssign + Sum + 'static + Debug,
+    F: Float + NumAssign + Sum + SparseElement + 'static + Debug,
 {
     let n = a.cols();
-    let mut max_norm = F::zero();
+    let mut max_norm = F::sparse_zero();
 
     for j in 0..n {
-        let mut col_sum = F::zero();
+        let mut col_sum = F::sparse_zero();
         for i in 0..a.rows() {
             let val = a.get(i, j);
-            if val != F::zero() {
+            if val != F::sparse_zero() {
                 col_sum += val.abs();
             }
         }
@@ -873,10 +874,13 @@ fn norm2<F: Float + Sum>(x: &[F]) -> F {
 
 /// Compute the infinity norm of a matrix
 #[allow(dead_code)]
-fn matrix_norm_inf<F: Float>(a: &[Vec<F>]) -> F {
-    let mut max_norm = F::zero();
+fn matrix_norm_inf<F: Float + SparseElement>(a: &[Vec<F>]) -> F {
+    let mut max_norm = F::sparse_zero();
     for row in a {
-        let row_sum: F = row.iter().map(|&x| x.abs()).fold(F::zero(), |a, b| a + b);
+        let row_sum: F = row
+            .iter()
+            .map(|&x| x.abs())
+            .fold(F::sparse_zero(), |a, b| a + b);
         if row_sum > max_norm {
             max_norm = row_sum;
         }
@@ -886,18 +890,18 @@ fn matrix_norm_inf<F: Float>(a: &[Vec<F>]) -> F {
 
 /// Create an identity matrix
 #[allow(dead_code)]
-fn identity_matrix<F: Float>(n: usize) -> Vec<Vec<F>> {
-    let mut identity = vec![vec![F::zero(); n]; n];
+fn identity_matrix<F: Float + SparseElement>(n: usize) -> Vec<Vec<F>> {
+    let mut identity = vec![vec![F::sparse_zero(); n]; n];
     for (i, row) in identity.iter_mut().enumerate().take(n) {
-        row[i] = F::one();
+        row[i] = F::sparse_one();
     }
     identity
 }
 
 /// Create a zero matrix
 #[allow(dead_code)]
-fn zero_matrix<F: Float>(n: usize) -> Vec<Vec<F>> {
-    vec![vec![F::zero(); n]; n]
+fn zero_matrix<F: Float + SparseElement>(n: usize) -> Vec<Vec<F>> {
+    vec![vec![F::sparse_zero(); n]; n]
 }
 
 /// Add a scaled matrix to another: A += alpha * B
@@ -913,12 +917,12 @@ fn add_scaled_matrix<F: Float + NumAssign>(a: &mut [Vec<F>], b: &[Vec<F>], alpha
 
 /// Multiply two dense matrices
 #[allow(dead_code)]
-fn matrix_multiply_dense<F: Float + NumAssign>(
+fn matrix_multiply_dense<F: Float + NumAssign + SparseElement>(
     a: &[Vec<F>],
     b: &[Vec<F>],
 ) -> SparseResult<Vec<Vec<F>>> {
     let n = a.len();
-    let mut c = vec![vec![F::zero(); n]; n];
+    let mut c = vec![vec![F::sparse_zero(); n]; n];
 
     for (i, c_row) in c.iter_mut().enumerate().take(n) {
         for (j, c_val) in c_row.iter_mut().enumerate().take(n) {
@@ -933,18 +937,18 @@ fn matrix_multiply_dense<F: Float + NumAssign>(
 
 /// Solve the matrix equation AX = B for X
 #[allow(dead_code)]
-fn solve_matrix_equation<F: Float + NumAssign>(
+fn solve_matrix_equation<F: Float + NumAssign + SparseElement>(
     a: &[Vec<F>],
     b: &[Vec<F>],
 ) -> SparseResult<Vec<Vec<F>>> {
     let n = a.len();
 
     // LU decomposition
-    let mut l = vec![vec![F::zero(); n]; n];
+    let mut l = vec![vec![F::sparse_zero(); n]; n];
     let mut u = a.to_vec();
 
     for (i, l_row) in l.iter_mut().enumerate().take(n) {
-        l_row[i] = F::one();
+        l_row[i] = F::sparse_one();
     }
 
     // Gaussian elimination
@@ -966,7 +970,7 @@ fn solve_matrix_equation<F: Float + NumAssign>(
     }
 
     // Solve LY = B for Y
-    let mut y = vec![vec![F::zero(); n]; n];
+    let mut y = vec![vec![F::sparse_zero(); n]; n];
     for j in 0..n {
         for i in 0..n {
             let mut sum = b[i][j];
@@ -978,7 +982,7 @@ fn solve_matrix_equation<F: Float + NumAssign>(
     }
 
     // Solve UX = Y for X
-    let mut x = vec![vec![F::zero(); n]; n];
+    let mut x = vec![vec![F::sparse_zero(); n]; n];
     for j in 0..n {
         for i in (0..n).rev() {
             let mut sum = y[i][j];
@@ -1036,6 +1040,7 @@ pub fn twonormest_enhanced<T, S>(
 ) -> SparseResult<T>
 where
     T: Float
+        + SparseElement
         + NumAssign
         + Sum
         + Debug
@@ -1055,7 +1060,7 @@ where
     let maxiter = maxiter.unwrap_or(100);
 
     if m == 0 || n == 0 {
-        return Ok(T::zero());
+        return Ok(T::sparse_zero());
     }
 
     // For very small matrices, use more accurate computation
@@ -1086,15 +1091,15 @@ where
 
     // Normalize initial vector
     let v_norm = (v.iter().map(|&x| x * x).sum::<T>()).sqrt();
-    if v_norm == T::zero() {
-        return Ok(T::zero());
+    if v_norm == T::sparse_zero() {
+        return Ok(T::sparse_zero());
     }
     for i in 0..n {
         v[i] /= v_norm;
     }
 
-    let mut lambda = T::zero();
-    let mut lambda_old = T::zero();
+    let mut lambda = T::sparse_zero();
+    let mut lambda_old = T::sparse_zero();
     let mut _converged = false;
 
     for iter in 0..maxiter {
@@ -1109,7 +1114,7 @@ where
 
         // Normalize u to get new v
         let u_norm = (u.iter().map(|&x| x * x).sum::<T>()).sqrt();
-        if u_norm == T::zero() {
+        if u_norm == T::sparse_zero() {
             break;
         }
 
@@ -1119,7 +1124,7 @@ where
 
         // Check convergence using relative change
         if iter > 0 {
-            let rel_change = if lambda_old != T::zero() {
+            let rel_change = if lambda_old != T::sparse_zero() {
                 ((lambda - lambda_old) / lambda_old).abs()
             } else {
                 lambda.abs()
@@ -1176,6 +1181,7 @@ pub fn condest_enhanced<T, S>(
 ) -> SparseResult<T>
 where
     T: Float
+        + SparseElement
         + NumAssign
         + Sum
         + Debug
@@ -1212,7 +1218,7 @@ where
         }
     };
 
-    if norm_a == T::zero() {
+    if norm_a == T::sparse_zero() {
         return Ok(T::infinity());
     }
 
@@ -1240,6 +1246,7 @@ where
 pub fn onenormest_enhanced<T, S>(a: &S, t: Option<usize>, itmax: Option<usize>) -> SparseResult<T>
 where
     T: Float
+        + SparseElement
         + NumAssign
         + Sum
         + Debug
@@ -1256,7 +1263,7 @@ where
     let itmax = itmax.unwrap_or(5);
 
     if n == 0 {
-        return Ok(T::zero());
+        return Ok(T::sparse_zero());
     }
 
     // Handle small matrices exactly
@@ -1272,9 +1279,9 @@ where
         let mut x = Array1::zeros(n);
         for i in 0..n {
             x[i] = if rng.random::<bool>() {
-                T::one()
+                T::sparse_one()
             } else {
-                -T::one()
+                -T::sparse_one()
             };
         }
         x_vectors.push(x);
@@ -1283,12 +1290,12 @@ where
     // First vector is the all-ones vector for better convergence
     if !x_vectors.is_empty() {
         for i in 0..n {
-            x_vectors[0][i] = T::one();
+            x_vectors[0][i] = T::sparse_one();
         }
     }
 
-    let mut est = T::zero();
-    let mut est_old = T::zero();
+    let mut est = T::sparse_zero();
+    let mut est_old = T::sparse_zero();
 
     for _iter in 0..itmax {
         // Compute Y = A^T * X
@@ -1299,7 +1306,7 @@ where
         }
 
         // Find the column of Y with maximum 1-norm
-        let mut max_norm = T::zero();
+        let mut max_norm = T::sparse_zero();
         let mut max_col = 0;
         for (j, y) in y_vectors.iter().enumerate() {
             let norm = y.iter().map(|&val| val.abs()).sum();
@@ -1321,10 +1328,10 @@ where
         x_vectors.clear();
         let mut x = Array1::zeros(n);
         for i in 0..n {
-            x[i] = if y_vectors[max_col][i] >= T::zero() {
-                T::one()
+            x[i] = if y_vectors[max_col][i] >= T::sparse_zero() {
+                T::sparse_one()
             } else {
-                -T::one()
+                -T::sparse_one()
             };
         }
         x_vectors.push(x);
@@ -1334,9 +1341,9 @@ where
             let mut x = Array1::zeros(n);
             for i in 0..n {
                 x[i] = if rng.random::<bool>() {
-                    T::one()
+                    T::sparse_one()
                 } else {
-                    -T::one()
+                    -T::sparse_one()
                 };
             }
             x_vectors.push(x);
@@ -1356,6 +1363,7 @@ fn estimate_inverse_norm_enhanced<T, S>(
 ) -> SparseResult<T>
 where
     T: Float
+        + SparseElement
         + NumAssign
         + Sum
         + Debug
@@ -1373,10 +1381,10 @@ where
     // For both 1-norm and 2-norm, estimate smallest singular value of A
     let sigma_min = estimate_smallest_singular_value_enhanced(a, tol, maxiter)?;
 
-    if sigma_min == T::zero() {
+    if sigma_min == T::sparse_zero() {
         Ok(T::infinity())
     } else {
-        Ok(T::one() / sigma_min)
+        Ok(T::sparse_one() / sigma_min)
     }
 }
 
@@ -1385,6 +1393,7 @@ where
 fn estimate_smallest_singular_value_enhanced<T, S>(a: &S, tol: T, maxiter: usize) -> SparseResult<T>
 where
     T: Float
+        + SparseElement
         + NumAssign
         + Sum
         + Debug
@@ -1410,14 +1419,14 @@ where
 
     // Normalize initial vector
     let v_norm = (v.iter().map(|&x| x * x).sum::<T>()).sqrt();
-    if v_norm == T::zero() {
-        return Ok(T::zero());
+    if v_norm == T::sparse_zero() {
+        return Ok(T::sparse_zero());
     }
     for i in 0..n {
         v[i] /= v_norm;
     }
 
-    let mut lambda = T::zero();
+    let mut lambda = T::sparse_zero();
     let mut lambda_old = T::infinity();
 
     for iter in 0..maxiter {
@@ -1427,7 +1436,7 @@ where
 
         // Normalize u
         let u_norm = (u.iter().map(|&x| x * x).sum::<T>()).sqrt();
-        if u_norm == T::zero() {
+        if u_norm == T::sparse_zero() {
             break;
         }
 
@@ -1440,7 +1449,7 @@ where
 
         // Check convergence
         if iter > 0 {
-            let rel_change = if lambda != T::zero() {
+            let rel_change = if lambda != T::sparse_zero() {
                 ((lambda - lambda_old) / lambda).abs()
             } else {
                 T::infinity()
@@ -1462,7 +1471,7 @@ where
 #[allow(dead_code)]
 fn sparse_matvec<T, S>(a: &S, x: &ArrayView1<T>) -> SparseResult<Array1<T>>
 where
-    T: Float + Debug + Copy + Add<Output = T> + Mul<Output = T> + 'static,
+    T: Float + SparseElement + Debug + Copy + Add<Output = T> + Mul<Output = T> + 'static,
     S: SparseArray<T>,
 {
     let (m, n) = a.shape();
@@ -1487,7 +1496,7 @@ where
 #[allow(dead_code)]
 fn sparse_matvec_transpose<T, S>(a: &S, x: &ArrayView1<T>) -> SparseResult<Array1<T>>
 where
-    T: Float + Debug + Copy + Add<Output = T> + Mul<Output = T> + 'static,
+    T: Float + SparseElement + Debug + Copy + Add<Output = T> + Mul<Output = T> + 'static,
     S: SparseArray<T>,
 {
     let (m, n) = a.shape();
@@ -1517,6 +1526,7 @@ fn solve_ata_system_enhanced<T, S>(
 ) -> SparseResult<Array1<T>>
 where
     T: Float
+        + SparseElement
         + Debug
         + Copy
         + Add<Output = T>
@@ -1551,7 +1561,14 @@ where
 #[allow(dead_code)]
 fn estimate_rayleigh_quotient_enhanced<T, S>(a: &S, v: &Array1<T>) -> SparseResult<T>
 where
-    T: Float + Debug + Copy + Add<Output = T> + Mul<Output = T> + 'static + std::iter::Sum,
+    T: Float
+        + SparseElement
+        + Debug
+        + Copy
+        + Add<Output = T>
+        + Mul<Output = T>
+        + 'static
+        + std::iter::Sum,
     S: SparseArray<T>,
 {
     // Compute A * v
@@ -1569,6 +1586,7 @@ where
 fn exact_twonorm_enhanced<T, S>(a: &S) -> SparseResult<T>
 where
     T: Float
+        + SparseElement
         + NumAssign
         + Sum
         + Debug
@@ -1587,17 +1605,16 @@ where
     let min_dim = m.min(n);
 
     if min_dim == 0 {
-        return Ok(T::zero());
+        return Ok(T::sparse_zero());
     }
 
     if min_dim == 1 {
         // For 1D case, compute the norm of all entries
         let (_, _, values) = a.find();
-        let max_val =
-            values
-                .iter()
-                .map(|&v| v.abs())
-                .fold(T::zero(), |acc, v| if v > acc { v } else { acc });
+        let max_val = values
+            .iter()
+            .map(|&v| v.abs())
+            .fold(T::sparse_zero(), |acc, v| if v > acc { v } else { acc });
         return Ok(max_val);
     }
 
@@ -1609,14 +1626,14 @@ where
 #[allow(dead_code)]
 fn exact_onenorm_enhanced<T, S>(a: &S) -> SparseResult<T>
 where
-    T: Float + Debug + Copy + Add<Output = T> + 'static,
+    T: Float + SparseElement + Debug + Copy + Add<Output = T> + 'static,
     S: SparseArray<T>,
 {
     let (_, n) = a.shape();
-    let mut max_col_sum = T::zero();
+    let mut max_col_sum = T::sparse_zero();
 
     for j in 0..n {
-        let mut col_sum = T::zero();
+        let mut col_sum = T::sparse_zero();
         let (row_indices, col_indices, values) = a.find();
 
         for (k, (&_i, &col)) in row_indices.iter().zip(col_indices.iter()).enumerate() {

@@ -4,7 +4,7 @@
 // from matrix-based API to array-based API.
 
 use scirs2_core::ndarray::{Array1, Array2, ArrayView1};
-use scirs2_core::numeric::Float;
+use scirs2_core::numeric::{Float, SparseElement, Zero};
 use std::fmt::Debug;
 use std::ops::{Add, Div, Mul, Sub};
 
@@ -25,16 +25,15 @@ use crate::error::{SparseError, SparseResult};
 /// - Operations like `sum` produce arrays, not matrices
 /// - Sparse arrays use array-style slicing operations
 ///
+/// # Compatibility
+///
+/// This trait now supports both integer and floating-point element types through
+/// the `SparseElement` trait, enabling use cases like graph adjacency matrices (integers)
+/// and numerical computation (floats).
+///
 pub trait SparseArray<T>: std::any::Any
 where
-    T: Float
-        + Add<Output = T>
-        + Sub<Output = T>
-        + Mul<Output = T>
-        + Div<Output = T>
-        + Debug
-        + Copy
-        + 'static,
+    T: SparseElement + Div<Output = T> + 'static,
 {
     /// Returns the shape of the sparse array.
     fn shape(&self) -> (usize, usize);
@@ -158,7 +157,7 @@ where
 // Manually implement Debug and Clone instead of deriving them
 pub enum SparseSum<T>
 where
-    T: Float + Debug + Copy + 'static,
+    T: SparseElement + Div<Output = T> + 'static,
 {
     /// Sum over a single axis, returning a sparse array.
     SparseArray(Box<dyn SparseArray<T>>),
@@ -169,7 +168,7 @@ where
 
 impl<T> Debug for SparseSum<T>
 where
-    T: Float + Debug + Copy + 'static,
+    T: SparseElement + Div<Output = T> + 'static,
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -181,7 +180,7 @@ where
 
 impl<T> Clone for SparseSum<T>
 where
-    T: Float + Debug + Copy + 'static,
+    T: SparseElement + Div<Output = T> + 'static,
 {
     fn clone(&self) -> Self {
         match self {
@@ -195,14 +194,7 @@ where
 #[allow(dead_code)]
 pub fn is_sparse<T>(obj: &dyn SparseArray<T>) -> bool
 where
-    T: Float
-        + Add<Output = T>
-        + Sub<Output = T>
-        + Mul<Output = T>
-        + Div<Output = T>
-        + Debug
-        + Copy
-        + 'static,
+    T: SparseElement + Div<Output = T> + 'static,
 {
     true // Since this is a trait method, any object that implements it is sparse
 }
@@ -210,28 +202,14 @@ where
 /// Create a base SparseArray implementation for demonstrations and testing
 pub struct SparseArrayBase<T>
 where
-    T: Float
-        + Add<Output = T>
-        + Sub<Output = T>
-        + Mul<Output = T>
-        + Div<Output = T>
-        + Debug
-        + Copy
-        + 'static,
+    T: SparseElement + Div<Output = T> + 'static,
 {
     data: Array2<T>,
 }
 
 impl<T> SparseArrayBase<T>
 where
-    T: Float
-        + Add<Output = T>
-        + Sub<Output = T>
-        + Mul<Output = T>
-        + Div<Output = T>
-        + Debug
-        + Copy
-        + 'static,
+    T: SparseElement + Div<Output = T> + Zero + 'static,
 {
     /// Create a new SparseArrayBase from a dense ndarray.
     pub fn new(data: Array2<T>) -> Self {
@@ -241,14 +219,7 @@ where
 
 impl<T> SparseArray<T> for SparseArrayBase<T>
 where
-    T: Float
-        + Add<Output = T>
-        + Sub<Output = T>
-        + Mul<Output = T>
-        + Div<Output = T>
-        + Debug
-        + Copy
-        + 'static,
+    T: SparseElement + Div<Output = T> + PartialOrd + Zero + 'static,
 {
     fn shape(&self) -> (usize, usize) {
         let shape = self.data.shape();
@@ -256,7 +227,7 @@ where
     }
 
     fn nnz(&self) -> usize {
-        self.data.iter().filter(|&&x| !x.is_zero()).count()
+        self.data.iter().filter(|&&x| x != T::sparse_zero()).count()
     }
 
     fn dtype(&self) -> &str {
@@ -345,7 +316,7 @@ where
         let mut result = Array2::zeros((m, q));
         for i in 0..m {
             for j in 0..q {
-                let mut sum = T::zero();
+                let mut sum = T::sparse_zero();
                 for k in 0..n {
                     sum = sum + self.data[[i, k]] * other_array[[k, j]];
                 }
@@ -367,7 +338,7 @@ where
 
         let mut result = Array1::zeros(m);
         for i in 0..m {
-            let mut sum = T::zero();
+            let mut sum = T::sparse_zero();
             for j in 0..n {
                 sum = sum + self.data[[i, j]] * other[j];
             }
@@ -420,7 +391,7 @@ where
     fn sum(&self, axis: Option<usize>) -> SparseResult<SparseSum<T>> {
         match axis {
             None => {
-                let mut sum = T::zero();
+                let mut sum = T::sparse_zero();
                 for &val in self.data.iter() {
                     sum = sum + val;
                 }
@@ -430,7 +401,7 @@ where
                 let (_, n) = self.shape();
                 let mut result = Array2::zeros((1, n));
                 for j in 0..n {
-                    let mut sum = T::zero();
+                    let mut sum = T::sparse_zero();
                     for i in 0..self.data.shape()[0] {
                         sum = sum + self.data[[i, j]];
                     }
@@ -444,7 +415,7 @@ where
                 let (m_, _) = self.shape();
                 let mut result = Array2::zeros((m_, 1));
                 for i in 0..m_ {
-                    let mut sum = T::zero();
+                    let mut sum = T::sparse_zero();
                     for j in 0..self.data.shape()[1] {
                         sum = sum + self.data[[i, j]];
                     }
@@ -459,13 +430,29 @@ where
     }
 
     fn max(&self) -> T {
-        self.data
-            .iter()
-            .fold(T::neg_infinity(), |acc, &x| acc.max(x))
+        if self.data.is_empty() {
+            return T::sparse_zero();
+        }
+        let mut max_val = self.data[[0, 0]];
+        for &val in self.data.iter() {
+            if val > max_val {
+                max_val = val;
+            }
+        }
+        max_val
     }
 
     fn min(&self) -> T {
-        self.data.iter().fold(T::infinity(), |acc, &x| acc.min(x))
+        if self.data.is_empty() {
+            return T::sparse_zero();
+        }
+        let mut min_val = self.data[[0, 0]];
+        for &val in self.data.iter() {
+            if val < min_val {
+                min_val = val;
+            }
+        }
+        min_val
     }
 
     fn find(&self) -> (Array1<usize>, Array1<usize>, Array1<T>) {
@@ -478,7 +465,7 @@ where
         for i in 0..m {
             for j in 0..n {
                 let value = self.data[[i, j]];
-                if !value.is_zero() {
+                if value != T::sparse_zero() {
                     rows.push(i);
                     cols.push(j);
                     values.push(value);
@@ -526,14 +513,7 @@ where
 
 impl<T> Clone for SparseArrayBase<T>
 where
-    T: Float
-        + Add<Output = T>
-        + Sub<Output = T>
-        + Mul<Output = T>
-        + Div<Output = T>
-        + Debug
-        + Copy
-        + 'static,
+    T: SparseElement + Div<Output = T> + 'static,
 {
     fn clone(&self) -> Self {
         Self {

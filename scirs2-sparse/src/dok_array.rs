@@ -4,7 +4,7 @@
 // which is efficient for incremental construction of sparse arrays.
 
 use scirs2_core::ndarray::{Array1, Array2, ArrayView1};
-use scirs2_core::numeric::Float;
+use scirs2_core::numeric::{Float, SparseElement};
 use std::any::Any;
 use std::collections::HashMap;
 use std::fmt::Debug;
@@ -30,14 +30,7 @@ use crate::sparray::{SparseArray, SparseSum};
 #[derive(Clone)]
 pub struct DokArray<T>
 where
-    T: Float
-        + Add<Output = T>
-        + Sub<Output = T>
-        + Mul<Output = T>
-        + Div<Output = T>
-        + Debug
-        + Copy
-        + 'static,
+    T: SparseElement + Div<Output = T> + 'static,
 {
     /// Dictionary mapping (row, col) to value
     data: HashMap<(usize, usize), T>,
@@ -47,14 +40,7 @@ where
 
 impl<T> DokArray<T>
 where
-    T: Float
-        + Add<Output = T>
-        + Sub<Output = T>
-        + Mul<Output = T>
-        + Div<Output = T>
-        + Debug
-        + Copy
-        + 'static,
+    T: SparseElement + Div<Output = T> + 'static,
 {
     /// Creates a new DOK array with the given shape
     ///
@@ -104,7 +90,7 @@ where
                 });
             }
             // Only set non-zero values
-            if !data[i].is_zero() {
+            if !SparseElement::is_zero(&data[i]) {
                 dok.data.insert((rows[i], cols[i]), data[i]);
             }
         }
@@ -118,7 +104,10 @@ where
     }
 
     /// Returns the triplet representation (row indices, column indices, data)
-    pub fn to_triplets(&self) -> (Array1<usize>, Array1<usize>, Array1<T>) {
+    pub fn to_triplets(&self) -> (Array1<usize>, Array1<usize>, Array1<T>)
+    where
+        T: Float + PartialOrd,
+    {
         let nnz = self.nnz();
         let mut row_indices = Vec::with_capacity(nnz);
         let mut col_indices = Vec::with_capacity(nnz);
@@ -153,7 +142,7 @@ where
         let mut dok = Self::new(shape);
 
         for ((i, j), &value) in array.indexed_iter() {
-            if !value.is_zero() {
+            if !SparseElement::is_zero(&value) {
                 dok.data.insert((i, j), value);
             }
         }
@@ -164,14 +153,7 @@ where
 
 impl<T> SparseArray<T> for DokArray<T>
 where
-    T: Float
-        + Add<Output = T>
-        + Sub<Output = T>
-        + Mul<Output = T>
-        + Div<Output = T>
-        + Debug
-        + Copy
-        + 'static,
+    T: SparseElement + Div<Output = T> + Float + PartialOrd + 'static,
 {
     fn shape(&self) -> (usize, usize) {
         self.shape
@@ -263,7 +245,7 @@ where
 
         // Add values from other that aren't in self
         for ((row, col), &value) in other_array.indexed_iter() {
-            if !self.data.contains_key(&(row, col)) && !value.is_zero() {
+            if !self.data.contains_key(&(row, col)) && !SparseElement::is_zero(&value) {
                 result.set(row, col, value)?;
             }
         }
@@ -289,7 +271,7 @@ where
 
         // Subtract values from other that aren't in self
         for ((row, col), &value) in other_array.indexed_iter() {
-            if !self.data.contains_key(&(row, col)) && !value.is_zero() {
+            if !self.data.contains_key(&(row, col)) && !SparseElement::is_zero(&value) {
                 result.set(row, col, -value)?;
             }
         }
@@ -312,7 +294,7 @@ where
         // since a*0 = 0 for any a
         for (&(row, col), &value) in &self.data {
             let product = value * other_array[[row, col]];
-            if !product.is_zero() {
+            if !SparseElement::is_zero(&product) {
                 result.set(row, col, product)?;
             }
         }
@@ -333,14 +315,14 @@ where
 
         for (&(row, col), &value) in &self.data {
             let divisor = other_array[[row, col]];
-            if divisor.is_zero() {
+            if SparseElement::is_zero(&divisor) {
                 return Err(SparseError::ComputationError(
                     "Division by zero".to_string(),
                 ));
             }
 
             let quotient = value / divisor;
-            if !quotient.is_zero() {
+            if !SparseElement::is_zero(&quotient) {
                 result.set(row, col, quotient)?;
             }
         }
@@ -401,10 +383,10 @@ where
 
     fn get(&self, i: usize, j: usize) -> T {
         if i >= self.shape.0 || j >= self.shape.1 {
-            return T::zero();
+            return T::sparse_zero();
         }
 
-        *self.data.get(&(i, j)).unwrap_or(&T::zero())
+        *self.data.get(&(i, j)).unwrap_or(&T::sparse_zero())
     }
 
     fn set(&mut self, i: usize, j: usize, value: T) -> SparseResult<()> {
@@ -415,7 +397,7 @@ where
             });
         }
 
-        if value.is_zero() {
+        if SparseElement::is_zero(&value) {
             // Remove zero entries
             self.data.remove(&(i, j));
         } else {
@@ -428,7 +410,8 @@ where
 
     fn eliminate_zeros(&mut self) {
         // DOK format already doesn't store zeros, but just in case
-        self.data.retain(|_, &mut value| !value.is_zero());
+        self.data
+            .retain(|_, &mut value| !SparseElement::is_zero(&value));
     }
 
     fn sort_indices(&mut self) {
@@ -448,7 +431,7 @@ where
         match axis {
             None => {
                 // Sum all elements
-                let mut sum = T::zero();
+                let mut sum = T::sparse_zero();
                 for &value in self.data.values() {
                     sum = sum + value;
                 }
@@ -497,7 +480,9 @@ where
             return T::nan();
         }
 
-        self.data.values().fold(T::infinity(), |acc, &x| acc.min(x))
+        self.data
+            .values()
+            .fold(T::sparse_zero(), |acc, &x| acc.min(x))
     }
 
     fn find(&self) -> (Array1<usize>, Array1<usize>, Array1<T>) {

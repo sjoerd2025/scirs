@@ -8,6 +8,7 @@ use crate::error::{SparseError, SparseResult};
 use crate::sparray::SparseArray;
 use scirs2_core::ndarray::{Array1, Array2};
 use scirs2_core::numeric::Float;
+use scirs2_core::SparseElement;
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::ops::{Add, Div, Mul, Sub};
@@ -16,7 +17,7 @@ use std::ops::{Add, Div, Mul, Sub};
 #[derive(Debug, Clone)]
 pub struct LUResult<T>
 where
-    T: Float + Debug + Copy + 'static,
+    T: Float + SparseElement + Debug + Copy + 'static,
 {
     /// Lower triangular factor
     pub l: CsrArray<T>,
@@ -32,7 +33,7 @@ where
 #[derive(Debug, Clone)]
 pub struct QRResult<T>
 where
-    T: Float + Debug + Copy + 'static,
+    T: Float + SparseElement + Debug + Copy + 'static,
 {
     /// Orthogonal factor Q
     pub q: CsrArray<T>,
@@ -46,7 +47,7 @@ where
 #[derive(Debug, Clone)]
 pub struct CholeskyResult<T>
 where
-    T: Float + Debug + Copy + 'static,
+    T: Float + SparseElement + Debug + Copy + 'static,
 {
     /// Lower triangular Cholesky factor
     pub l: CsrArray<T>,
@@ -58,7 +59,7 @@ where
 #[derive(Debug, Clone)]
 pub struct PivotedCholeskyResult<T>
 where
-    T: Float + Debug + Copy + 'static,
+    T: Float + SparseElement + Debug + Copy + 'static,
 {
     /// Lower triangular Cholesky factor
     pub l: CsrArray<T>,
@@ -185,7 +186,14 @@ impl Default for ICOptions {
 #[allow(dead_code)]
 pub fn lu_decomposition<T, S>(_matrix: &S, pivotthreshold: f64) -> SparseResult<LUResult<T>>
 where
-    T: Float + Debug + Copy + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T>,
+    T: Float
+        + SparseElement
+        + Debug
+        + Copy
+        + Add<Output = T>
+        + Sub<Output = T>
+        + Mul<Output = T>
+        + Div<Output = T>,
     S: SparseArray<T>,
 {
     // Use _threshold pivoting for backward compatibility
@@ -238,7 +246,14 @@ pub fn lu_decomposition_with_options<T, S>(
     options: Option<LUOptions>,
 ) -> SparseResult<LUResult<T>>
 where
-    T: Float + Debug + Copy + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T>,
+    T: Float
+        + SparseElement
+        + Debug
+        + Copy
+        + Add<Output = T>
+        + Sub<Output = T>
+        + Mul<Output = T>
+        + Div<Output = T>,
     S: SparseArray<T>,
 {
     let opts = options.unwrap_or_default();
@@ -263,16 +278,15 @@ where
     let mut col_perm: Vec<usize> = (0..n).collect();
 
     // Compute row scaling factors for scaled partial pivoting
-    let mut row_scales = vec![T::one(); n];
+    let mut row_scales = vec![T::sparse_one(); n];
     if matches!(opts.pivoting, PivotingStrategy::ScaledPartial) {
         for (i, scale) in row_scales.iter_mut().enumerate().take(n) {
             let row_data = working_matrix.get_row(i);
-            let max_val =
-                row_data
-                    .values()
-                    .map(|&v| v.abs())
-                    .fold(T::zero(), |a, b| if a > b { a } else { b });
-            if max_val > T::zero() {
+            let max_val = row_data
+                .values()
+                .map(|&v| v.abs())
+                .fold(T::sparse_zero(), |a, b| if a > b { a } else { b });
+            if max_val > T::sparse_zero() {
                 *scale = max_val;
             }
         }
@@ -321,7 +335,7 @@ where
         for &actual_row_i in row_perm.iter().take(n).skip(k + 1) {
             let factor = working_matrix.get(actual_row_i, actual_pivot_col) / pivot_value;
 
-            if !factor.is_zero() {
+            if !SparseElement::is_zero(&factor) {
                 // Store multiplier in L
                 working_matrix.set(actual_row_i, actual_pivot_col, factor);
 
@@ -381,7 +395,14 @@ where
 #[allow(dead_code)]
 pub fn qr_decomposition<T, S>(matrix: &S) -> SparseResult<QRResult<T>>
 where
-    T: Float + Debug + Copy + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T>,
+    T: Float
+        + SparseElement
+        + Debug
+        + Copy
+        + Add<Output = T>
+        + Sub<Output = T>
+        + Mul<Output = T>
+        + Div<Output = T>,
     S: SparseArray<T>,
 {
     let (m, n) = matrix.shape();
@@ -401,7 +422,7 @@ where
 
         // Orthogonalize against previous columns
         for k in 0..j {
-            let mut dot = T::zero();
+            let mut dot = T::sparse_zero();
             for i in 0..m {
                 dot = dot + q[[i, k]] * dense_matrix[[i, j]];
             }
@@ -413,14 +434,14 @@ where
         }
 
         // Normalize
-        let mut norm = T::zero();
+        let mut norm = T::sparse_zero();
         for i in 0..m {
             norm = norm + q[[i, j]] * q[[i, j]];
         }
         norm = norm.sqrt();
         r[[j, j]] = norm;
 
-        if !norm.is_zero() {
+        if !SparseElement::is_zero(&norm) {
             for i in 0..m {
                 q[[i, j]] = q[[i, j]] / norm;
             }
@@ -468,7 +489,14 @@ where
 #[allow(dead_code)]
 pub fn cholesky_decomposition<T, S>(matrix: &S) -> SparseResult<CholeskyResult<T>>
 where
-    T: Float + Debug + Copy + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T>,
+    T: Float
+        + SparseElement
+        + Debug
+        + Copy
+        + Add<Output = T>
+        + Sub<Output = T>
+        + Mul<Output = T>
+        + Div<Output = T>,
     S: SparseArray<T>,
 {
     let (n, m) = matrix.shape();
@@ -490,7 +518,7 @@ where
     // Cholesky decomposition algorithm
     for k in 0..n {
         // Compute diagonal element
-        let mut sum = T::zero();
+        let mut sum = T::sparse_zero();
         for j in 0..k {
             let l_kj = working_matrix.get(k, j);
             sum = sum + l_kj * l_kj;
@@ -499,7 +527,7 @@ where
         let a_kk = working_matrix.get(k, k);
         let diag_val = a_kk - sum;
 
-        if diag_val <= T::zero() {
+        if diag_val <= T::sparse_zero() {
             return Ok(CholeskyResult {
                 l: CsrArray::from_triplets(&[], &[], &[], (n, n), false)?,
                 success: false,
@@ -511,7 +539,7 @@ where
 
         // Compute below-diagonal elements
         for i in (k + 1)..n {
-            let mut sum = T::zero();
+            let mut sum = T::sparse_zero();
             for j in 0..k {
                 sum = sum + working_matrix.get(i, j) * working_matrix.get(k, j);
             }
@@ -564,7 +592,14 @@ pub fn pivoted_cholesky_decomposition<T, S>(
     threshold: Option<T>,
 ) -> SparseResult<PivotedCholeskyResult<T>>
 where
-    T: Float + Debug + Copy + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T>,
+    T: Float
+        + SparseElement
+        + Debug
+        + Copy
+        + Add<Output = T>
+        + Sub<Output = T>
+        + Mul<Output = T>
+        + Div<Output = T>,
     S: SparseArray<T>,
 {
     let (n, m) = matrix.shape();
@@ -592,7 +627,7 @@ where
     // Pivoted Cholesky algorithm
     for k in 0..n {
         // Find the pivot: largest diagonal element among remaining
-        let mut max_diag = T::zero();
+        let mut max_diag = T::sparse_zero();
         let mut pivot_idx = k;
 
         for i in k..n {
@@ -624,7 +659,7 @@ where
 
         // Update column k below diagonal
         for i in (k + 1)..n {
-            let mut sum = T::zero();
+            let mut sum = T::sparse_zero();
             for j in 0..k {
                 sum = sum
                     + working_matrix.get(perm[i], perm[j]) * working_matrix.get(perm[k], perm[j]);
@@ -644,7 +679,7 @@ where
     for i in 0..rank {
         for j in 0..=i {
             let val = working_matrix.get(perm[i], perm[j]);
-            if val != T::zero() {
+            if val != T::sparse_zero() {
                 l_rows.push(i);
                 l_cols.push(j);
                 l_vals.push(val);
@@ -667,7 +702,7 @@ where
 #[derive(Debug, Clone)]
 pub struct LDLTResult<T>
 where
-    T: Float + Debug + Copy + 'static,
+    T: Float + SparseElement + Debug + Copy + 'static,
 {
     /// Lower triangular factor L (unit diagonal)
     pub l: CsrArray<T>,
@@ -716,7 +751,14 @@ pub fn ldlt_decomposition<T, S>(
     threshold: Option<T>,
 ) -> SparseResult<LDLTResult<T>>
 where
-    T: Float + Debug + Copy + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T>,
+    T: Float
+        + SparseElement
+        + Debug
+        + Copy
+        + Add<Output = T>
+        + Sub<Output = T>
+        + Mul<Output = T>
+        + Div<Output = T>,
     S: SparseArray<T>,
 {
     let (n, m) = matrix.shape();
@@ -740,7 +782,7 @@ where
 
     // Initialize permutation
     let mut perm: Vec<usize> = (0..n).collect();
-    let mut d_values = vec![T::zero(); n];
+    let mut d_values = vec![T::sparse_zero(); n];
 
     // LDLT decomposition with optional pivoting
     for k in 0..n {
@@ -790,7 +832,7 @@ where
         }
 
         // Set diagonal element of L to 1
-        working_matrix.set(actual_k, actual_k, T::one());
+        working_matrix.set(actual_k, actual_k, T::sparse_one());
     }
 
     // Extract L matrix (unit lower triangular)
@@ -814,10 +856,10 @@ fn find_ldlt_pivot<T>(
     threshold: T,
 ) -> usize
 where
-    T: Float + Debug + Copy,
+    T: Float + SparseElement + Debug + Copy,
 {
     let n = matrix.n;
-    let mut max_val = T::zero();
+    let mut max_val = T::sparse_zero();
     let mut pivot_idx = k;
 
     // Look for largest diagonal element among remaining rows
@@ -846,7 +888,7 @@ fn extract_unit_lower_triangular<T>(
     n: usize,
 ) -> (Vec<usize>, Vec<usize>, Vec<T>)
 where
-    T: Float + Debug + Copy,
+    T: Float + SparseElement + Debug + Copy,
 {
     let mut rows = Vec::new();
     let mut cols = Vec::new();
@@ -858,12 +900,12 @@ where
         // Add diagonal element (always 1 for unit triangular)
         rows.push(i);
         cols.push(i);
-        vals.push(T::one());
+        vals.push(T::sparse_one());
 
         // Add below-diagonal elements
         for (j, &perm_j) in perm.iter().enumerate().take(i) {
             let val = matrix.get(actual_i, perm_j);
-            if val != T::zero() {
+            if val != T::sparse_zero() {
                 rows.push(i);
                 cols.push(j);
                 vals.push(val);
@@ -890,7 +932,14 @@ where
 #[allow(dead_code)]
 pub fn incomplete_lu<T, S>(matrix: &S, options: Option<ILUOptions>) -> SparseResult<LUResult<T>>
 where
-    T: Float + Debug + Copy + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T>,
+    T: Float
+        + SparseElement
+        + Debug
+        + Copy
+        + Add<Output = T>
+        + Sub<Output = T>
+        + Mul<Output = T>
+        + Div<Output = T>,
     S: SparseArray<T>,
 {
     let opts = options.unwrap_or_default();
@@ -927,7 +976,7 @@ where
 
             // Drop small factors
             if factor.abs() < T::from(opts.drop_tol).unwrap() {
-                working_matrix.set(row_i, k, T::zero());
+                working_matrix.set(row_i, k, T::sparse_zero());
                 continue;
             }
 
@@ -942,7 +991,7 @@ where
 
                     // Drop small values
                     if new_val.abs() < T::from(opts.drop_tol).unwrap() {
-                        working_matrix.set(row_i, *col_j, T::zero());
+                        working_matrix.set(row_i, *col_j, T::sparse_zero());
                     } else {
                         working_matrix.set(row_i, *col_j, new_val);
                     }
@@ -986,7 +1035,14 @@ pub fn incomplete_cholesky<T, S>(
     options: Option<ICOptions>,
 ) -> SparseResult<CholeskyResult<T>>
 where
-    T: Float + Debug + Copy + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T>,
+    T: Float
+        + SparseElement
+        + Debug
+        + Copy
+        + Add<Output = T>
+        + Sub<Output = T>
+        + Mul<Output = T>
+        + Div<Output = T>,
     S: SparseArray<T>,
 {
     let opts = options.unwrap_or_default();
@@ -1010,7 +1066,7 @@ where
     // IC(0) algorithm - no fill-in beyond original sparsity pattern
     for k in 0..n {
         // Compute diagonal element
-        let mut sum = T::zero();
+        let mut sum = T::sparse_zero();
         let row_k_before_k = working_matrix.get_row_before_column(k, k);
         for &val_kj in row_k_before_k.values() {
             sum = sum + val_kj * val_kj;
@@ -1019,7 +1075,7 @@ where
         let a_kk = working_matrix.get(k, k);
         let diag_val = a_kk - sum;
 
-        if diag_val <= T::zero() {
+        if diag_val <= T::sparse_zero() {
             return Ok(CholeskyResult {
                 l: CsrArray::from_triplets(&[], &[], &[], (n, n), false)?,
                 success: false,
@@ -1032,7 +1088,7 @@ where
         // Compute below-diagonal elements (only existing entries)
         let col_k_below = working_matrix.get_column_below_diagonal(k);
         for &row_i in &col_k_below {
-            let mut sum = T::zero();
+            let mut sum = T::sparse_zero();
             let row_i_before_k = working_matrix.get_row_before_column(row_i, k);
             let row_k_before_k = working_matrix.get_row_before_column(k, k);
 
@@ -1048,7 +1104,7 @@ where
 
             // Drop small values
             if l_ik.abs() < T::from(opts.drop_tol).unwrap() {
-                working_matrix.set(row_i, k, T::zero());
+                working_matrix.set(row_i, k, T::sparse_zero());
             } else {
                 working_matrix.set(row_i, k, l_ik);
             }
@@ -1065,7 +1121,7 @@ where
 /// Simple sparse working matrix for decomposition algorithms
 struct SparseWorkingMatrix<T>
 where
-    T: Float + Debug + Copy,
+    T: Float + SparseElement + Debug + Copy,
 {
     data: HashMap<(usize, usize), T>,
     n: usize,
@@ -1073,7 +1129,14 @@ where
 
 impl<T> SparseWorkingMatrix<T>
 where
-    T: Float + Debug + Copy + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T>,
+    T: Float
+        + SparseElement
+        + Debug
+        + Copy
+        + Add<Output = T>
+        + Sub<Output = T>
+        + Mul<Output = T>
+        + Div<Output = T>,
 {
     fn from_triplets(rows: &[usize], cols: &[usize], values: &[T], n: usize) -> Self {
         let mut data = HashMap::new();
@@ -1086,11 +1149,14 @@ where
     }
 
     fn get(&self, row: usize, col: usize) -> T {
-        self.data.get(&(row, col)).copied().unwrap_or(T::zero())
+        self.data
+            .get(&(row, col))
+            .copied()
+            .unwrap_or(T::sparse_zero())
     }
 
     fn set(&mut self, row: usize, col: usize, value: T) {
-        if value.is_zero() {
+        if SparseElement::is_zero(&value) {
             self.data.remove(&(row, col));
         } else {
             self.data.insert((row, col), value);
@@ -1152,7 +1218,7 @@ fn find_pivot<T>(
     threshold: f64,
 ) -> SparseResult<usize>
 where
-    T: Float + Debug + Copy,
+    T: Float + SparseElement + Debug + Copy,
 {
     // Use threshold pivoting for backward compatibility
     let opts = LUOptions {
@@ -1161,7 +1227,7 @@ where
         check_singular: true,
     };
 
-    let row_scales = vec![T::one(); matrix.n];
+    let row_scales = vec![T::sparse_one(); matrix.n];
     let col_perm: Vec<usize> = (0..matrix.n).collect();
 
     let (pivot_row, pivot_col) = find_enhanced_pivot(matrix, k, p, &col_perm, &row_scales, &opts)?;
@@ -1179,7 +1245,7 @@ fn find_enhanced_pivot<T>(
     opts: &LUOptions,
 ) -> SparseResult<(usize, usize)>
 where
-    T: Float + Debug + Copy,
+    T: Float + SparseElement + Debug + Copy,
 {
     let n = matrix.n;
 
@@ -1191,7 +1257,7 @@ where
 
         PivotingStrategy::Partial => {
             // Standard partial pivoting - find largest element in column k
-            let mut max_val = T::zero();
+            let mut max_val = T::sparse_zero();
             let mut pivot_row = k;
 
             for (idx, &actual_row) in row_perm.iter().enumerate().skip(k).take(n - k) {
@@ -1209,7 +1275,7 @@ where
         PivotingStrategy::Threshold(threshold) => {
             // Threshold pivoting - use first element above threshold
             let threshold_val = T::from(*threshold).unwrap();
-            let mut max_val = T::zero();
+            let mut max_val = T::sparse_zero();
             let mut pivot_row = k;
 
             for (idx, &actual_row) in row_perm.iter().enumerate().skip(k).take(n - k) {
@@ -1231,7 +1297,7 @@ where
 
         PivotingStrategy::ScaledPartial => {
             // Scaled partial pivoting - account for row scaling
-            let mut max_ratio = T::zero();
+            let mut max_ratio = T::sparse_zero();
             let mut pivot_row = k;
 
             for (idx, &actual_row) in row_perm.iter().enumerate().skip(k).take(n - k) {
@@ -1239,7 +1305,11 @@ where
                 let val = matrix.get(actual_row, col_perm[k]).abs();
                 let scale = row_scales[actual_row];
 
-                let ratio = if scale > T::zero() { val / scale } else { val };
+                let ratio = if scale > T::sparse_zero() {
+                    val / scale
+                } else {
+                    val
+                };
 
                 if ratio > max_ratio {
                     max_ratio = ratio;
@@ -1252,7 +1322,7 @@ where
 
         PivotingStrategy::Complete => {
             // Complete pivoting - find largest element in remaining submatrix
-            let mut max_val = T::zero();
+            let mut max_val = T::sparse_zero();
             let mut pivot_row = k;
             let mut pivot_col = k;
 
@@ -1276,7 +1346,7 @@ where
             // Rook pivoting - alternating row and column searches
             let mut best_row = k;
             let mut best_col = k;
-            let mut max_val = T::zero();
+            let mut max_val = T::sparse_zero();
 
             // Start with partial pivoting in column k
             for (idx, &actual_row) in row_perm.iter().enumerate().skip(k).take(n - k) {
@@ -1291,7 +1361,7 @@ where
             // If we found a good pivot, check if we can improve by column pivoting
             if max_val > T::from(opts.zero_threshold).unwrap() {
                 let actual_best_row = row_perm[best_row];
-                let mut col_max = T::zero();
+                let mut col_max = T::sparse_zero();
 
                 for (idx, &actual_col) in col_perm.iter().enumerate().skip(k).take(n - k) {
                     let j = k + idx;
@@ -1306,7 +1376,7 @@ where
                 let improvement_threshold = T::from(1.5).unwrap();
                 if col_max > max_val * improvement_threshold {
                     // Recompute row pivot for the new column
-                    max_val = T::zero();
+                    max_val = T::sparse_zero();
                     for (idx, &actual_row) in row_perm.iter().enumerate().skip(k).take(n - k) {
                         let i = k + idx;
                         let val = matrix.get(actual_row, col_perm[best_col]).abs();
@@ -1336,7 +1406,7 @@ type LuFactors<T> = (
 #[allow(dead_code)]
 fn extract_lu_factors<T>(matrix: &SparseWorkingMatrix<T>, p: &[usize], n: usize) -> LuFactors<T>
 where
-    T: Float + Debug + Copy,
+    T: Float + SparseElement + Debug + Copy,
 {
     let mut l_rows = Vec::new();
     let mut l_cols = Vec::new();
@@ -1352,11 +1422,11 @@ where
         // Add diagonal 1 to L
         l_rows.push(i);
         l_cols.push(i);
-        l_vals.push(T::one());
+        l_vals.push(T::sparse_one());
 
         for j in 0..n {
             let val = matrix.get(actual_row, j);
-            if !val.is_zero() {
+            if !SparseElement::is_zero(&val) {
                 if j < i {
                     // Below diagonal - goes to L
                     l_rows.push(i);
@@ -1382,7 +1452,7 @@ fn extract_lower_triangular<T>(
     n: usize,
 ) -> (Vec<usize>, Vec<usize>, Vec<T>)
 where
-    T: Float + Debug + Copy,
+    T: Float + SparseElement + Debug + Copy,
 {
     let mut rows = Vec::new();
     let mut cols = Vec::new();
@@ -1391,7 +1461,7 @@ where
     for i in 0..n {
         for j in 0..=i {
             let val = matrix.get(i, j);
-            if !val.is_zero() {
+            if !SparseElement::is_zero(&val) {
                 rows.push(i);
                 cols.push(j);
                 vals.push(val);
@@ -1406,7 +1476,7 @@ where
 #[allow(dead_code)]
 fn dense_to_sparse<T>(matrix: &Array2<T>) -> SparseResult<CsrArray<T>>
 where
-    T: Float + Debug + Copy,
+    T: Float + SparseElement + Debug + Copy,
 {
     let (m, n) = matrix.dim();
     let mut rows = Vec::new();
@@ -1416,7 +1486,7 @@ where
     for i in 0..m {
         for j in 0..n {
             let val = matrix[[i, j]];
-            if !val.is_zero() {
+            if !SparseElement::is_zero(&val) {
                 rows.push(i);
                 cols.push(j);
                 vals.push(val);

@@ -35,7 +35,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! scirs2-text = "0.1.0-rc.1"
+//! scirs2-text = "0.1.0-rc.2"
 //! ```
 //!
 //! ```rust,no_run
@@ -51,7 +51,7 @@
 //! let matrix = vectorizer.fit_transform(&docs).unwrap();
 //! ```
 //!
-//! ## 🔒 Version: 0.1.0-rc.1 (October 03, 2025)
+//! ## 🔒 Version: 0.1.0-rc.2 (October 03, 2025)
 //!
 //! ## Quick Start
 //!

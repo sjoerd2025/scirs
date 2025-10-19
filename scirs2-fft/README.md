@@ -4,11 +4,11 @@
 [[![License](https://img.shields.io/badge/license-MIT%2FApache--2.0-blue.svg)]](../LICENSE)
 [![Documentation](https://img.shields.io/docsrs/scirs2-fft)](https://docs.rs/scirs2-fft)
 
-**Production-Ready Fast Fourier Transform Module (v0.1.0-rc.1 - SciRS2 POLICY & Enhanced GPU)**
+**Production-Ready Fast Fourier Transform Module (v0.1.0-rc.2 - SciRS2 POLICY & Enhanced GPU)**
 
 Fast Fourier Transform implementation and related functionality for the SciRS2 scientific computing library. Following the [SciRS2 POLICY](../SCIRS2_POLICY.md), this module provides comprehensive FFT implementations with **world-class GPU acceleration**, enhanced CUDA/Linux support, and extensive optimization capabilities through scirs2-core abstractions.
 
-🎯 **PRODUCTION STATUS**: Beta 4 release with SciRS2 POLICY implementation and major GPU enhancements. All features are production-ready with improved ecosystem consistency.
+🎯 **PRODUCTION STATUS**: rc.2 release with SciRS2 POLICY implementation and major GPU enhancements. All features are production-ready with improved ecosystem consistency.
 
 ## Features
 
@@ -81,21 +81,21 @@ Add the following to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-scirs2-fft = "0.1.0-rc.1"
+scirs2-fft = "0.1.0-rc.2"
 
 # Optional: Enable parallel processing
-scirs2-fft = { version = "0.1.0-rc.1", features = ["parallel"] }
+scirs2-fft = { version = "0.1.0-rc.2", features = ["parallel"] }
 
 # GPU acceleration options
-scirs2-fft = { version = "0.1.0-rc.1", features = ["cuda"] }     # NVIDIA GPUs
-scirs2-fft = { version = "0.1.0-rc.1", features = ["hip"] }      # AMD GPUs  
-scirs2-fft = { version = "0.1.0-rc.1", features = ["sycl"] }     # Cross-platform GPUs
+scirs2-fft = { version = "0.1.0-rc.2", features = ["cuda"] }     # NVIDIA GPUs
+scirs2-fft = { version = "0.1.0-rc.2", features = ["hip"] }      # AMD GPUs  
+scirs2-fft = { version = "0.1.0-rc.2", features = ["sycl"] }     # Cross-platform GPUs
 
 # Enable all GPU backends for maximum hardware support
-scirs2-fft = { version = "0.1.0-rc.1", features = ["cuda", "hip", "sycl"] }
+scirs2-fft = { version = "0.1.0-rc.2", features = ["cuda", "hip", "sycl"] }
 
 # Full acceleration stack with parallel processing and all GPU backends
-scirs2-fft = { version = "0.1.0-rc.1", features = ["parallel", "cuda", "hip", "sycl"] }
+scirs2-fft = { version = "0.1.0-rc.2", features = ["parallel", "cuda", "hip", "sycl"] }
 ```
 
 Basic usage examples:
@@ -773,9 +773,9 @@ See the [CONTRIBUTING.md](../CONTRIBUTING.md) file for contribution guidelines.
 
 ## 🎯 Production Status
 
-**🚀 FIRST BETA - PRODUCTION READY (v0.1.0-beta.1)**
+**🚀 RELEASE CANDIDATE 2 - PRODUCTION READY (v0.1.0-rc.2)**
 
-This SciRS2-FFT module represents a **complete, production-ready implementation** with:
+This SciRS2-FFT module represents a **complete, production-ready implementation** with zero-warning code quality and comprehensive GPU support:
 
 ### **✅ Implementation Status**
 - **100% Feature Completion**: All planned FFT features, optimizations, and acceleration methods implemented
@@ -802,7 +802,7 @@ This SciRS2-FFT module represents a **complete, production-ready implementation*
 - **Performance Guides**: Benchmarking and optimization recommendations
 - **Integration Guides**: GPU backend setup and configuration
 
-**This is the first beta release. The module is ready for production deployment.**
+**This is Release Candidate 2 (rc.2). The module is production-ready with comprehensive GPU support, SIMD optimizations, and zero-warning code quality.**
 
 ## License
 

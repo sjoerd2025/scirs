@@ -3,7 +3,7 @@
 use crate::csr::CsrMatrix;
 use crate::error::{SparseError, SparseResult};
 use crate::linalg::interface::LinearOperator;
-use scirs2_core::numeric::{Float, NumAssign};
+use scirs2_core::numeric::{Float, NumAssign, SparseElement};
 use std::fmt::Debug;
 use std::iter::Sum;
 
@@ -37,7 +37,7 @@ impl Default for SpaiOptions {
     }
 }
 
-impl<F: Float + NumAssign + Sum + Debug + 'static> SpaiPreconditioner<F> {
+impl<F: Float + NumAssign + Sum + Debug + SparseElement + 'static> SpaiPreconditioner<F> {
     /// Create a new SPAI preconditioner from a sparse matrix
     pub fn new(matrix: &CsrMatrix<F>, options: SpaiOptions) -> SparseResult<Self> {
         let n = matrix.rows();
@@ -52,9 +52,9 @@ impl<F: Float + NumAssign + Sum + Debug + 'static> SpaiPreconditioner<F> {
         // that uses a static sparsity pattern (diagonal + few off-diagonals)
 
         // Initialize M as identity _matrix in dense format
-        let mut m_dense = vec![vec![F::zero(); n]; n];
+        let mut m_dense = vec![vec![F::sparse_zero(); n]; n];
         for (i, row) in m_dense.iter_mut().enumerate().take(n) {
-            row[i] = F::one();
+            row[i] = F::sparse_one();
         }
 
         // For each column of M, solve a least squares problem
@@ -76,7 +76,7 @@ impl<F: Float + NumAssign + Sum + Debug + 'static> SpaiPreconditioner<F> {
 
             // Extract the relevant submatrix A_k from A
             let k = pattern.len();
-            let mut a_k = vec![vec![F::zero(); k]; n];
+            let mut a_k = vec![vec![F::sparse_zero(); k]; n];
 
             for (col_idx, &col) in pattern.iter().enumerate() {
                 for (row, a_k_row) in a_k.iter_mut().enumerate().take(n) {
@@ -86,18 +86,18 @@ impl<F: Float + NumAssign + Sum + Debug + 'static> SpaiPreconditioner<F> {
             }
 
             // Set up right-hand side (j-th unit vector)
-            let mut e_j = vec![F::zero(); n];
-            e_j[j] = F::one();
+            let mut e_j = vec![F::sparse_zero(); n];
+            e_j[j] = F::sparse_one();
 
             // Solve least squares problem: minimize ||A_k * m_k - e_j||
             // For now, use a simple normal equations approach
             // A_k^T * A_k * m_k = A_k^T * e_j
 
             // Compute A_k^T * A_k
-            let mut ata = vec![vec![F::zero(); k]; k];
+            let mut ata = vec![vec![F::sparse_zero(); k]; k];
             for i in 0..k {
                 for j_inner in 0..k {
-                    let mut sum = F::zero();
+                    let mut sum = F::sparse_zero();
                     for a_k_row in a_k.iter().take(n) {
                         sum += a_k_row[i] * a_k_row[j_inner];
                     }
@@ -106,7 +106,7 @@ impl<F: Float + NumAssign + Sum + Debug + 'static> SpaiPreconditioner<F> {
             }
 
             // Compute A_k^T * e_j
-            let mut atb = vec![F::zero(); k];
+            let mut atb = vec![F::sparse_zero(); k];
             atb[..k].copy_from_slice(&a_k[j][..k]);
 
             // Solve the system (simplified - in practice, use proper solver)
@@ -140,7 +140,9 @@ impl<F: Float + NumAssign + Sum + Debug + 'static> SpaiPreconditioner<F> {
     }
 }
 
-impl<F: Float + NumAssign + Sum + Debug + 'static> LinearOperator<F> for SpaiPreconditioner<F> {
+impl<F: Float + NumAssign + Sum + Debug + SparseElement + 'static> LinearOperator<F>
+    for SpaiPreconditioner<F>
+{
     fn shape(&self) -> (usize, usize) {
         self.approx_inverse.shape()
     }
@@ -153,7 +155,7 @@ impl<F: Float + NumAssign + Sum + Debug + 'static> LinearOperator<F> for SpaiPre
             });
         }
 
-        let mut result = vec![F::zero(); self.approx_inverse.rows()];
+        let mut result = vec![F::sparse_zero(); self.approx_inverse.rows()];
 
         for (row_idx, result_val) in result.iter_mut().enumerate() {
             for j in self.approx_inverse.indptr[row_idx]..self.approx_inverse.indptr[row_idx + 1] {
@@ -178,7 +180,7 @@ impl<F: Float + NumAssign + Sum + Debug + 'static> LinearOperator<F> for SpaiPre
             });
         }
 
-        let mut result = vec![F::zero(); self.approx_inverse.cols()];
+        let mut result = vec![F::sparse_zero(); self.approx_inverse.cols()];
 
         for (row_idx, &x_val) in x.iter().enumerate() {
             for j in self.approx_inverse.indptr[row_idx]..self.approx_inverse.indptr[row_idx + 1] {
@@ -193,7 +195,10 @@ impl<F: Float + NumAssign + Sum + Debug + 'static> LinearOperator<F> for SpaiPre
 
 /// Solve a dense linear system using Gaussian elimination with partial pivoting
 #[allow(dead_code)]
-fn solve_dense_system<F: Float + NumAssign>(a: &[Vec<F>], b: &[F]) -> SparseResult<Vec<F>> {
+fn solve_dense_system<F: Float + NumAssign + SparseElement>(
+    a: &[Vec<F>],
+    b: &[F],
+) -> SparseResult<Vec<F>> {
     let n = a.len();
     if n == 0 || n != a[0].len() || n != b.len() {
         return Err(SparseError::DimensionMismatch {
@@ -203,7 +208,7 @@ fn solve_dense_system<F: Float + NumAssign>(a: &[Vec<F>], b: &[F]) -> SparseResu
     }
 
     // Create augmented matrix
-    let mut aug = vec![vec![F::zero(); n + 1]; n];
+    let mut aug = vec![vec![F::sparse_zero(); n + 1]; n];
     for i in 0..n {
         for j in 0..n {
             aug[i][j] = a[i][j];
@@ -246,7 +251,7 @@ fn solve_dense_system<F: Float + NumAssign>(a: &[Vec<F>], b: &[F]) -> SparseResu
     }
 
     // Back substitution
-    let mut x = vec![F::zero(); n];
+    let mut x = vec![F::sparse_zero(); n];
     for i in (0..n).rev() {
         x[i] = aug[i][n];
         for j in (i + 1)..n {

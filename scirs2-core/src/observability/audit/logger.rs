@@ -311,24 +311,21 @@ impl AuditLogger {
     /// # Errors
     ///
     /// Returns an error if the log line cannot be parsed.
+    #[cfg(feature = "serialization")]
     fn parse_log_line(&self, line: &str) -> Result<AuditEvent, CoreError> {
-        if self.config.enable_json_format {
-            serde_json::from_str(line).map_err(|e| {
-                CoreError::ComputationError(crate::error::ErrorContext::new(format!(
-                    "Failed to parse JSON log line: {e}"
-                )))
-            })
-        } else {
-            self.parse_text_log_line(line)
-        }
+        serde_json::from_str(line).map_err(|e| {
+            CoreError::ComputationError(crate::error::ErrorContext::new(format!(
+                "Failed to parse JSON log line: {e}"
+            )))
+        })
     }
 
-    /// Parse a log line into an audit event (serde feature required for JSON).
+    /// Parse a log line into an audit event (serialization feature required for JSON).
     ///
     /// # Errors
     ///
     /// Returns an error if the log line cannot be parsed.
-    #[cfg(not(feature = "serde"))]
+    #[cfg(not(feature = "serialization"))]
     fn parse_log_line(&self, line: &str) -> Result<AuditEvent, CoreError> {
         if self.config.enable_json_format {
             Err(CoreError::ComputationError(

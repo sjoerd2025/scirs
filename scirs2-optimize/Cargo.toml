@@ -16,11 +16,11 @@ workspace = true
 # Core dependencies - ALL numeric/array/random functionality from scirs2-core (SciRS2 POLICY)
 scirs2-core = { workspace = true, features = ["simd", "parallel", "linalg", "gpu", "random", "array"] }
 scirs2-linalg = { workspace = true }
+scirs2-stats = { workspace = true }
 thiserror = { workspace = true }
 
 # Optimization specific dependencies
 argmin = { workspace = true }
-friedrich = { workspace = true }
 scirs2-sparse = { workspace = true }
 statrs = { workspace = true }
 serde = { workspace = true }

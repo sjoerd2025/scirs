@@ -4,7 +4,7 @@
 //! efficient for row operations, matrix-vector multiplication, and more.
 
 use crate::error::{SparseError, SparseResult};
-use scirs2_core::numeric::{Float, Zero};
+use scirs2_core::numeric::{Float, SparseElement, Zero};
 use scirs2_core::GpuDataType;
 use std::cmp::PartialEq;
 
@@ -28,13 +28,13 @@ pub struct CsrMatrix<T> {
 
 impl<T> CsrMatrix<T>
 where
-    T: Clone + Copy + Zero + PartialEq,
+    T: Clone + Copy + Zero + PartialEq + SparseElement,
 {
     /// Get the value at the specified position
     pub fn get(&self, row: usize, col: usize) -> T {
         // Check bounds
         if row >= self.rows || col >= self.cols {
-            return T::zero();
+            return T::sparse_zero();
         }
 
         // Find the element in the CSR format
@@ -45,7 +45,7 @@ where
         }
 
         // Element not found, return zero
-        T::zero()
+        T::sparse_zero()
     }
 
     /// Get the triplets (row indices, column indices, data)
@@ -160,6 +160,98 @@ where
         })
     }
 
+    /// Create a CSR matrix from triplet format (COO-like construction)
+    ///
+    /// This is a convenience constructor that builds a CSR matrix from
+    /// separate row indices, column indices, and values vectors.
+    ///
+    /// # Arguments
+    ///
+    /// * `nrows` - Number of rows in the matrix
+    /// * `ncols` - Number of columns in the matrix
+    /// * `row_indices` - Vector of row indices for each non-zero value
+    /// * `col_indices` - Vector of column indices for each non-zero value
+    /// * `values` - Vector of non-zero values
+    ///
+    /// # Returns
+    ///
+    /// * `Ok(CsrMatrix)` - A new CSR matrix
+    /// * `Err(SparseError)` - If input is invalid
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use scirs2_sparse::csr::CsrMatrix;
+    ///
+    /// let row_indices = vec![0, 0, 1, 2, 2];
+    /// let col_indices = vec![0, 2, 2, 0, 1];
+    /// let values = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+    ///
+    /// let matrix = CsrMatrix::from_triplets(3, 3, row_indices, col_indices, values).unwrap();
+    /// assert_eq!(matrix.nnz(), 5);
+    /// ```
+    pub fn from_triplets(
+        nrows: usize,
+        ncols: usize,
+        row_indices: Vec<usize>,
+        col_indices: Vec<usize>,
+        values: Vec<T>,
+    ) -> SparseResult<Self> {
+        Self::new(values, row_indices, col_indices, (nrows, ncols))
+    }
+
+    /// Create a CSR matrix from triplet tuples
+    ///
+    /// This constructor accepts a slice of (row, col, value) tuples,
+    /// which is convenient for constructing matrices from coordinate lists.
+    ///
+    /// # Arguments
+    ///
+    /// * `nrows` - Number of rows in the matrix
+    /// * `ncols` - Number of columns in the matrix
+    /// * `triplets` - Slice of (row_index, col_index, value) tuples
+    ///
+    /// # Returns
+    ///
+    /// * `Ok(CsrMatrix)` - A new CSR matrix
+    /// * `Err(SparseError)` - If input is invalid
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use scirs2_sparse::csr::CsrMatrix;
+    ///
+    /// let triplets = vec![
+    ///     (0, 0, 1.0),
+    ///     (0, 2, 2.0),
+    ///     (1, 2, 3.0),
+    ///     (2, 0, 4.0),
+    ///     (2, 1, 5.0),
+    /// ];
+    ///
+    /// let matrix = CsrMatrix::try_from_triplets(3, 3, &triplets).unwrap();
+    /// assert_eq!(matrix.nnz(), 5);
+    /// assert_eq!(matrix.get(0, 0), 1.0);
+    /// assert_eq!(matrix.get(2, 1), 5.0);
+    /// ```
+    pub fn try_from_triplets(
+        nrows: usize,
+        ncols: usize,
+        triplets: &[(usize, usize, T)],
+    ) -> SparseResult<Self> {
+        let mut row_indices = Vec::with_capacity(triplets.len());
+        let mut col_indices = Vec::with_capacity(triplets.len());
+        let mut values = Vec::with_capacity(triplets.len());
+
+        for &(r, c, v) in triplets {
+            row_indices.push(r);
+            col_indices.push(c);
+            values.push(v);
+        }
+
+        Self::from_triplets(nrows, ncols, row_indices, col_indices, values)
+    }
+
     /// Create a new CSR matrix from raw CSR format
     ///
     /// # Arguments
@@ -272,9 +364,9 @@ where
     /// Convert to dense matrix (as Vec<Vec<T>>)
     pub fn to_dense(&self) -> Vec<Vec<T>>
     where
-        T: Zero + Copy,
+        T: Zero + Copy + SparseElement,
     {
-        let mut result = vec![vec![T::zero(); self.cols]; self.rows];
+        let mut result = vec![vec![T::sparse_zero(); self.cols]; self.rows];
 
         for (row_idx, row) in result.iter_mut().enumerate() {
             for j in self.indptr[row_idx]..self.indptr[row_idx + 1] {
@@ -303,7 +395,7 @@ where
         // Fill the transposed matrix
         let nnz = self.nnz();
         let mut indices_t = vec![0; nnz];
-        let mut data_t = vec![T::zero(); nnz];
+        let mut data_t = vec![T::sparse_zero(); nnz];
         let mut col_counts = vec![0; self.cols];
 
         for row in 0..self.rows {
@@ -336,7 +428,8 @@ impl<
             + std::fmt::Debug
             + scirs2_core::numeric::Zero
             + std::ops::Add<Output = T>
-            + std::ops::Mul<Output = T>,
+            + std::ops::Mul<Output = T>
+            + SparseElement,
     > CsrMatrix<T>
 {
     /// Check if matrix is symmetric
@@ -418,7 +511,7 @@ impl<
         let n = other.cols;
         let k = self.cols;
 
-        let mut c_dense = vec![vec![T::zero(); n]; m];
+        let mut c_dense = vec![vec![T::sparse_zero(); n]; m];
 
         for (i, c_row) in c_dense.iter_mut().enumerate().take(m) {
             for (j, val) in c_row.iter_mut().enumerate().take(n) {
@@ -436,7 +529,7 @@ impl<
 
         for (i, row) in c_dense.iter().enumerate() {
             for (j, val) in row.iter().enumerate() {
-                if *val != T::zero() {
+                if *val != T::sparse_zero() {
                     rowindices.push(i);
                     colindices.push(j);
                     values.push(*val);
@@ -576,6 +669,9 @@ where
         + GpuDataType
         + Send
         + Sync
+        + SparseElement
+        + std::ops::AddAssign
+        + std::ops::Mul<Output = T>
         + 'static,
 {
     /// GPU-accelerated matrix-vector multiplication for generic floating-point types
@@ -589,9 +685,7 @@ where
     /// * Result of matrix-vector multiplication
     #[allow(dead_code)]
     pub fn gpu_dot_generic(&self, vec: &[T]) -> SparseResult<Vec<T>>
-    where
-        T: Float + std::ops::AddAssign + Copy + Default + std::iter::Sum,
-    {
+where {
         // GPU operations fall back to CPU for stability
         if vec.len() != self.cols {
             return Err(SparseError::DimensionMismatch {
@@ -600,7 +694,7 @@ where
             });
         }
 
-        let mut result = vec![T::zero(); self.rows];
+        let mut result = vec![T::sparse_zero(); self.rows];
 
         for (row_idx, result_val) in result.iter_mut().enumerate() {
             let start = self.indptr[row_idx];

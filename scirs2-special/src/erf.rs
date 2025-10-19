@@ -902,120 +902,59 @@ pub mod complex {
 ///
 /// // D(1) ≈ 0.5380795069127684 (SciPy reference)
 /// let d1 = dawsn(1.0f64);
-/// // TODO: Fix dawsn implementation - currently has algorithmic errors
-/// // Using relaxed tolerance until algorithm is corrected
-/// assert!((d1 - 0.5380795069127684).abs() < 0.2);
+/// assert!((d1 - 0.5380795069127684).abs() < 1e-10);
 /// ```
 #[allow(dead_code)]
-pub fn dawsn<F: Float + FromPrimitive>(x: F) -> F {
-    // Special cases
+pub fn dawsn<F: Float + FromPrimitive + ToPrimitive>(x: F) -> F {
+    // Use the relation between Dawson's function and the Faddeeva function:
+    // D(x) = (√π/2) * Im[w(x)] where w(x) = e^(-x²) * erfc(-ix)
+    //
+    // This provides excellent accuracy by leveraging our well-tested Faddeeva implementation.
+
+    use crate::erf::complex::faddeeva_complex;
+    use scirs2_core::numeric::Complex;
+
+    // Special case
     if x == F::zero() {
         return F::zero();
     }
 
-    // Use odd symmetry: D(-x) = -D(x)
-    let abs_x = x.abs();
-    let sign = if x.is_sign_positive() {
-        F::one()
-    } else {
-        -F::one()
-    };
+    // Convert to f64 for calculation
+    let x_f64 = x.to_f64().unwrap().abs();
 
-    let result = if abs_x < F::from(1.0).unwrap() {
-        // For small x, use extended Taylor series with more terms for better accuracy
-        // D(x) = x - (2/3)x³ + (4/15)x⁵ - (8/105)x⁷ + (16/945)x⁹ - (32/10395)x¹¹ + (64/135135)x¹³ - ...
-        let x2 = abs_x * abs_x;
-        let x3 = abs_x * x2;
-        let x5 = x3 * x2;
-        let x7 = x5 * x2;
-        let x9 = x7 * x2;
-        let x11 = x9 * x2;
-        let x13 = x11 * x2;
-
-        abs_x - F::from(2.0 / 3.0).unwrap() * x3 + F::from(4.0 / 15.0).unwrap() * x5
-            - F::from(8.0 / 105.0).unwrap() * x7
-            + F::from(16.0 / 945.0).unwrap() * x9
-            - F::from(32.0 / 10395.0).unwrap() * x11
-            + F::from(64.0 / 135135.0).unwrap() * x13
-    } else if abs_x < F::from(3.25).unwrap() {
-        // For moderate x, use improved rational approximation based on Cody's algorithm
-        // This uses a minimax rational approximation
-        let x2 = abs_x * abs_x;
-
-        // Numerator coefficients for rational approximation
-        let p = [
-            7.522_527_780_636_761e-1,
-            1.260_296_985_888_71e-1,
-            1.0635633601651994e-2,
-            3.4249051255096312e-4,
-            4.080_647_045_444_407e-6,
-            1.442_441_907_185_162e-8,
-        ];
-
-        // Denominator coefficients
-        let q = [
-            1.0,
-            2.5033812549855055e-1,
-            2.233_072_700_790_409e-2,
-            9.626_651_896_148_593e-4,
-            2.061_535_252_344_064e-5,
-            2.1223567090870932e-7,
-            8.360_649_246_447_305e-10,
-        ];
-
-        let mut num = F::zero();
-        let mut den = F::zero();
-
-        // Evaluate polynomials using Horner's method
-        for i in (0..p.len()).rev() {
-            num = num * x2 + F::from(p[i]).unwrap();
-        }
-
-        for i in (0..q.len()).rev() {
-            den = den * x2 + F::from(q[i]).unwrap();
-        }
-
-        abs_x * num / den
-    } else if abs_x < F::from(5.0).unwrap() {
-        // For intermediate x, use improved rational approximation
-        // Based on Cody's algorithm with better coefficients for this range
-        let x2 = abs_x * abs_x;
-        let _exp_neg_x2 = (-x2).exp();
-
-        // Enhanced rational approximation optimized for 3.25 <= x < 5.0
-        // Using more accurate continued fraction approach
-        let t = F::one() / x2;
-        let numerator = F::one()
-            + t * (F::from(0.5).unwrap()
-                + t * (F::from(0.75).unwrap() + t * F::from(1.875).unwrap()));
-        let denominator = F::one()
-            + t * (F::from(1.5).unwrap() + t * (F::from(3.0).unwrap() + t * F::from(6.0).unwrap()));
-
-        numerator / (F::from(2.0).unwrap() * abs_x * denominator)
-    } else {
-        // For large x, use enhanced asymptotic expansion with more accurate terms
-        // D(x) ≈ 1/(2x) * [1 + 1/(2x²) + 3/(4x⁴) + 15/(8x⁶) + 105/(16x⁸) + 945/(32x¹⁰) + ...]
-        let x_inv = abs_x.recip();
+    // For large |x|, use asymptotic expansion: D(x) ≈ 1/(2x)
+    // The Faddeeva function loses precision for large x
+    if x_f64 > 10.0 {
+        // Asymptotic expansion: D(x) = 1/(2x) * [1 + 1/(2x²) + 3/(4x⁴) + ...]
+        let x_inv = 1.0 / x_f64;
         let x_inv2 = x_inv * x_inv;
+        let dawson_value = x_inv * 0.5 * (1.0 + x_inv2 * (0.5 + x_inv2 * 0.75));
 
-        // More accurate coefficients: 1/2, 3/4, 15/8, 105/16, 945/32, 10395/64
-        let series = F::one()
-            + x_inv2
-                * (F::from(0.5).unwrap()
-                    + x_inv2
-                        * (F::from(0.75).unwrap()
-                            + x_inv2
-                                * (F::from(1.875).unwrap()
-                                    + x_inv2
-                                        * (F::from(6.5625).unwrap()
-                                            + x_inv2
-                                                * (F::from(29.53125).unwrap()
-                                                    + x_inv2 * F::from(162.421875).unwrap())))));
+        // Apply sign
+        let result = F::from(dawson_value).unwrap();
+        return if x.is_sign_positive() {
+            result
+        } else {
+            -result
+        };
+    }
 
-        x_inv * F::from(0.5).unwrap() * series
-    };
+    // For moderate |x|, use the Faddeeva function relation
+    // D(x) = (√π/2) * Im[w(x)] where w(x) = e^(-x²) * erfc(-ix)
+    let z = Complex::new(x_f64, 0.0);
+    let w_result = faddeeva_complex(z);
 
-    sign * result
+    // D(x) = (√π/2) * Im[w(x)]
+    let sqrt_pi_over_2 = std::f64::consts::PI.sqrt() / 2.0;
+    let dawson_value = sqrt_pi_over_2 * w_result.im;
+
+    // Apply sign based on input
+    let result = F::from(dawson_value).unwrap();
+    if x.is_sign_positive() {
+        result
+    } else {
+        -result
+    }
 }
 
 /// Scaled complementary error function: erfcx(x) = exp(x²) * erfc(x)

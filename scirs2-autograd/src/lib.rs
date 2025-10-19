@@ -25,7 +25,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! scirs2-autograd = { version = "0.1.0-rc.1", features = ["blas"] }
+//! scirs2-autograd = { version = "0.1.0-rc.2", features = ["blas"] }
 //! ```
 //!
 //! ### BLAS Acceleration (Recommended)
@@ -34,7 +34,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! scirs2-autograd = { version = "0.1.0-rc.1", features = ["blas", "openblas"] }
+//! scirs2-autograd = { version = "0.1.0-rc.2", features = ["blas", "openblas"] }
 //! ```
 //!
 //! Available BLAS implementations:
@@ -312,7 +312,7 @@
 //!
 //! ## 🔒 Version
 //!
-//! Current version: **0.1.0-rc.1** (Released October 03, 2025)
+//! Current version: **0.1.0-rc.2** (Released October 03, 2025)
 
 #[allow(unused_imports)]
 // Re-export from scirs2-core for POLICY compliance

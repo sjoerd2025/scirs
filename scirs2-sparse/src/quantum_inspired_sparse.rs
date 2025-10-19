@@ -5,7 +5,7 @@
 //! and novel computational strategies.
 
 use crate::error::SparseResult;
-use scirs2_core::numeric::{Float, NumAssign, NumCast};
+use scirs2_core::numeric::{Float, NumAssign, NumCast, SparseElement};
 use scirs2_core::random::Rng;
 use scirs2_core::simd_ops::SimdUnifiedOps;
 use std::collections::HashMap;
@@ -222,7 +222,15 @@ impl QuantumSparseProcessor {
         y: &mut [T],
     ) -> SparseResult<()>
     where
-        T: Float + NumAssign + Send + Sync + Copy + SimdUnifiedOps + Into<f64> + From<f64>,
+        T: Float
+            + SparseElement
+            + NumAssign
+            + Send
+            + Sync
+            + Copy
+            + SimdUnifiedOps
+            + Into<f64>
+            + From<f64>,
     {
         match self.config.strategy {
             QuantumStrategy::Superposition => {
@@ -247,7 +255,15 @@ impl QuantumSparseProcessor {
         y: &mut [T],
     ) -> SparseResult<()>
     where
-        T: Float + NumAssign + Send + Sync + Copy + SimdUnifiedOps + Into<f64> + From<f64>,
+        T: Float
+            + SparseElement
+            + NumAssign
+            + Send
+            + Sync
+            + Copy
+            + SimdUnifiedOps
+            + Into<f64>
+            + From<f64>,
     {
         // Quantum superposition: process multiple row states simultaneously
         let qubit_count = (rows as f64).log2().ceil() as usize;
@@ -281,7 +297,7 @@ impl QuantumSparseProcessor {
                     }
 
                     // Collapse quantum state to classical result
-                    y[row] = NumCast::from(quantum_sum).unwrap_or(T::zero());
+                    y[row] = NumCast::from(quantum_sum).unwrap_or(T::sparse_zero());
                 }
             }
 
@@ -304,7 +320,15 @@ impl QuantumSparseProcessor {
         y: &mut [T],
     ) -> SparseResult<()>
     where
-        T: Float + NumAssign + Send + Sync + Copy + SimdUnifiedOps + Into<f64> + From<f64>,
+        T: Float
+            + SparseElement
+            + NumAssign
+            + Send
+            + Sync
+            + Copy
+            + SimdUnifiedOps
+            + Into<f64>
+            + From<f64>,
     {
         // Create entanglement patterns between rows based on sparsity structure
         self.build_entanglement_matrix(rows, indptr, indices);
@@ -339,7 +363,7 @@ impl QuantumSparseProcessor {
                         sum += (1.0 + correlation) * data_val * x_val;
                     }
 
-                    y[entangled_row] = NumCast::from(sum).unwrap_or(T::zero());
+                    y[entangled_row] = NumCast::from(sum).unwrap_or(T::sparse_zero());
                     processed[entangled_row] = true;
                 }
             }
@@ -359,7 +383,15 @@ impl QuantumSparseProcessor {
         y: &mut [T],
     ) -> SparseResult<()>
     where
-        T: Float + NumAssign + Send + Sync + Copy + SimdUnifiedOps + Into<f64> + From<f64>,
+        T: Float
+            + SparseElement
+            + NumAssign
+            + Send
+            + Sync
+            + Copy
+            + SimdUnifiedOps
+            + Into<f64>
+            + From<f64>,
     {
         // Identify computational barriers (rows with high sparsity variance)
         let barriers = self.identify_computational_barriers(rows, indptr);
@@ -384,7 +416,7 @@ impl QuantumSparseProcessor {
                         let x_val: f64 = x[col].into();
                         sum += data_val * x_val;
                     }
-                    y[row] = NumCast::from(sum).unwrap_or(T::zero());
+                    y[row] = NumCast::from(sum).unwrap_or(T::sparse_zero());
                 }
             } else {
                 // Standard computation for non-barrier rows
@@ -395,7 +427,7 @@ impl QuantumSparseProcessor {
                     let x_val: f64 = x[col].into();
                     sum += data_val * x_val;
                 }
-                y[row] = NumCast::from(sum).unwrap_or(T::zero());
+                y[row] = NumCast::from(sum).unwrap_or(T::sparse_zero());
             }
         }
 
@@ -413,7 +445,15 @@ impl QuantumSparseProcessor {
         y: &mut [T],
     ) -> SparseResult<()>
     where
-        T: Float + NumAssign + Send + Sync + Copy + SimdUnifiedOps + Into<f64> + From<f64>,
+        T: Float
+            + SparseElement
+            + NumAssign
+            + Send
+            + Sync
+            + Copy
+            + SimdUnifiedOps
+            + Into<f64>
+            + From<f64>,
     {
         // Implement simulated quantum annealing for optimal row processing order
         let mut processing_order = (0..rows).collect::<Vec<_>>();
@@ -465,7 +505,7 @@ impl QuantumSparseProcessor {
                 let x_val: f64 = x[col].into();
                 sum += data_val * x_val;
             }
-            y[row] = NumCast::from(sum).unwrap_or(T::zero());
+            y[row] = NumCast::from(sum).unwrap_or(T::sparse_zero());
         }
 
         Ok(())
@@ -644,21 +684,21 @@ impl QuantumSparseProcessor {
 
     fn interpolate_result<T>(&self, row: usize, rows: usize, y: &[T]) -> T
     where
-        T: Float + NumAssign + Send + Sync + Copy + Into<f64> + From<f64>,
+        T: Float + SparseElement + NumAssign + Send + Sync + Copy + Into<f64> + From<f64>,
     {
         // Simple linear interpolation from neighboring computed results
         let prev_row = if row > 0 { row - 1 } else { 0 };
         let next_row = if row < rows - 1 { row + 1 } else { rows - 1 };
 
         if prev_row == next_row {
-            return T::zero();
+            return T::sparse_zero();
         }
 
         let prev_val: f64 = y[prev_row].into();
         let next_val: f64 = y[next_row].into();
         let interpolated = (prev_val + next_val) / 2.0;
 
-        NumCast::from(interpolated).unwrap_or(T::zero())
+        NumCast::from(interpolated).unwrap_or(T::sparse_zero())
     }
 
     fn calculate_processing_energy(&self, order: &[usize], indptr: &[usize]) -> f64 {

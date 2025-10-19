@@ -4,7 +4,7 @@
 // including npz format compatible with SciPy's sparse.save_npz and sparse.load_npz.
 
 use scirs2_core::ndarray::Array1;
-use scirs2_core::numeric::Float;
+use scirs2_core::numeric::{Float, SparseElement};
 use std::fmt::Debug;
 use std::fs::File;
 use std::io::{BufReader, BufWriter, Read, Write};
@@ -49,7 +49,7 @@ const DOK_FORMAT: &str = "dok_array";
 #[allow(dead_code)]
 pub fn save_npz<T, P>(array: &dyn SparseArray<T>, path: P) -> SparseResult<()>
 where
-    T: Float
+    T: Float + SparseElement
         + Add<Output = T>
         + Sub<Output = T>
         + Mul<Output = T>
@@ -189,7 +189,7 @@ where
 #[allow(dead_code)]
 pub fn load_npz<T, P>(path: P) -> SparseResult<Box<dyn SparseArray<T>>>
 where
-    T: Float
+    T: Float + SparseElement
         + Add<Output = T>
         + Sub<Output = T>
         + Mul<Output = T>
@@ -328,7 +328,7 @@ pub trait AsAny {
 
 impl<T> AsAny for dyn SparseArray<T>
 where
-    T: Float
+    T: Float + SparseElement
         + Add<Output = T>
         + Sub<Output = T>
         + Mul<Output = T>

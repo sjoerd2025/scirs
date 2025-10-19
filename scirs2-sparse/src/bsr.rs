@@ -4,7 +4,7 @@
 //! efficient for block-structured matrices.
 
 use crate::error::{SparseError, SparseResult};
-use scirs2_core::numeric::Zero;
+use scirs2_core::numeric::{SparseElement, Zero};
 
 /// Block Sparse Row (BSR) matrix
 ///
@@ -32,7 +32,7 @@ pub struct BsrMatrix<T> {
 
 impl<T> BsrMatrix<T>
 where
-    T: Clone + Copy + Zero + std::cmp::PartialEq,
+    T: Clone + Copy + Zero + std::cmp::PartialEq + SparseElement,
 {
     /// Create a new BSR matrix
     ///
@@ -243,7 +243,7 @@ where
         for block in &self.data {
             for row in block {
                 for &val in row {
-                    if val != T::zero() {
+                    if val != T::sparse_zero() {
                         count += 1;
                     }
                 }
@@ -256,9 +256,9 @@ where
     /// Convert to dense matrix (as Vec<Vec<T>>)
     pub fn to_dense(&self) -> Vec<Vec<T>>
     where
-        T: Zero + Copy,
+        T: Zero + Copy + SparseElement,
     {
-        let mut result = vec![vec![T::zero(); self.cols]; self.rows];
+        let mut result = vec![vec![T::sparse_zero(); self.cols]; self.rows];
         let (r, c) = self.block_size;
 
         for block_row in 0..self.block_rows {

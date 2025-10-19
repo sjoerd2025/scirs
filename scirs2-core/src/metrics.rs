@@ -4,6 +4,8 @@
 //! capabilities for production deployments of ``SciRS2`` Core.
 
 use crate::error::{CoreError, CoreResult, ErrorContext};
+#[cfg(feature = "serialization")]
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fmt;
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -11,6 +13,7 @@ use std::sync::RwLock;
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 /// Metric types supported by the system
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum MetricType {
     /// Counter metric (monotonically increasing)
@@ -23,6 +26,14 @@ pub enum MetricType {
     Timer,
     /// Summary metric (quantiles over sliding time window)
     Summary,
+    /// Throughput metric (operations per second)
+    Throughput,
+    /// Latency metric (response time)
+    Latency,
+    /// CPU utilization metric
+    Cpu,
+    /// Memory usage metric
+    Memory,
 }
 
 /// Metric value representation
@@ -490,6 +501,10 @@ impl MetricsRegistry {
                 MetricType::Histogram => "histogram",
                 MetricType::Timer => "histogram",
                 MetricType::Summary => "summary",
+                MetricType::Throughput => "gauge",
+                MetricType::Latency => "gauge",
+                MetricType::Cpu => "gauge",
+                MetricType::Memory => "gauge",
             };
             output.push_str(&format!(
                 "# TYPE {name} {type_str}\n",

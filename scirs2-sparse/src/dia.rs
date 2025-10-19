@@ -4,7 +4,7 @@
 //! efficient for matrices with values concentrated on a small number of diagonals.
 
 use crate::error::{SparseError, SparseResult};
-use scirs2_core::numeric::Zero;
+use scirs2_core::numeric::{SparseElement, Zero};
 
 /// Diagonal (DIA) matrix
 ///
@@ -23,7 +23,7 @@ pub struct DiaMatrix<T> {
 
 impl<T> DiaMatrix<T>
 where
-    T: Clone + Copy + Zero + std::cmp::PartialEq,
+    T: Clone + Copy + Zero + std::cmp::PartialEq + SparseElement,
 {
     /// Create a new DIA matrix from raw data
     ///
@@ -141,7 +141,7 @@ where
 
             // Count non-zeros in the valid range
             for val in diag.iter().skip(start).take(end - start) {
-                if *val != T::zero() {
+                if *val != T::sparse_zero() {
                     count += 1;
                 }
             }
@@ -153,9 +153,9 @@ where
     /// Convert to dense matrix (as Vec<Vec<T>>)
     pub fn to_dense(&self) -> Vec<Vec<T>>
     where
-        T: Zero + Copy,
+        T: Zero + Copy + SparseElement,
     {
-        let mut result = vec![vec![T::zero(); self.cols]; self.rows];
+        let mut result = vec![vec![T::sparse_zero(); self.cols]; self.rows];
 
         for (diag_idx, &offset) in self.offsets.iter().enumerate() {
             let diag = &self.data[diag_idx];

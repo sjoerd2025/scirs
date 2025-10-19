@@ -5,6 +5,7 @@
 
 use super::types::{default_instant, DistributedComputingConfig};
 use crate::error::{CoreError, CoreResult};
+#[cfg(feature = "serialization")]
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::net::SocketAddr;
@@ -30,11 +31,14 @@ pub struct ClusterManager {
 }
 
 /// Unique identifier for compute nodes
-#[derive(Debug, Clone, Hash, PartialEq, Eq, Serialize, Deserialize)]
+
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub struct NodeId(pub String);
 
 /// Compute node representation
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone)]
 pub struct ComputeNode {
     /// Node identifier
     pub id: NodeId,
@@ -71,7 +75,8 @@ impl Default for ComputeNode {
 }
 
 /// Node capabilities
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone)]
 pub struct NodeCapabilities {
     /// CPU cores
     pub cpu_cores: u32,
@@ -110,7 +115,8 @@ impl Default for NodeCapabilities {
 }
 
 /// GPU device information
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone)]
 pub struct GpuDevice {
     /// Device name
     pub name: String,
@@ -125,7 +131,8 @@ pub struct GpuDevice {
 }
 
 /// GPU device types
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone)]
 pub enum GpuType {
     CUDA,
     OpenCL,
@@ -135,7 +142,8 @@ pub enum GpuType {
 }
 
 /// Supported compute types
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone)]
 pub enum ComputeType {
     CPU,
     GPU,
@@ -148,7 +156,9 @@ pub enum ComputeType {
 }
 
 /// Node status
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, PartialEq)]
 pub enum NodeStatus {
     Initializing,
     Available,
@@ -160,7 +170,8 @@ pub enum NodeStatus {
 }
 
 /// Node performance metrics
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone)]
 pub struct NodePerformanceMetrics {
     /// Average task completion time
     pub avg_task_completion_time: Duration,
@@ -190,7 +201,8 @@ impl Default for NodePerformanceMetrics {
 }
 
 /// Node resource usage
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone)]
 pub struct NodeResourceUsage {
     /// CPU utilization (0.0..1.0)
     pub cpu_utilization: f64,
@@ -220,7 +232,8 @@ impl Default for NodeResourceUsage {
 }
 
 /// Node metadata
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone)]
 pub struct NodeMetadata {
     /// Node name
     pub name: String,
@@ -256,7 +269,8 @@ impl Default for NodeMetadata {
 }
 
 /// Geographic location
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone)]
 pub struct GeographicLocation {
     /// Latitude
     pub latitude: f64,
@@ -269,7 +283,8 @@ pub struct GeographicLocation {
 }
 
 /// Security credentials
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone)]
 pub struct SecurityCredentials {
     /// Public key
     pub public_key: Vec<u8>,
@@ -296,7 +311,8 @@ pub struct NodeDiscoveryService {
 }
 
 /// Discovery methods
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone)]
 pub enum DiscoveryMethod {
     Multicast,
     Broadcast,
@@ -309,7 +325,8 @@ pub enum DiscoveryMethod {
 }
 
 /// Discovered node information
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone)]
 pub struct DiscoveredNode {
     /// Node information
     pub node: ComputeNode,
@@ -375,7 +392,8 @@ pub enum HealthCheck {
 }
 
 /// Health record
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone)]
 pub struct HealthRecord {
     /// Timestamp
     #[cfg_attr(feature = "serde", serde(skip, default = "default_instant"))]

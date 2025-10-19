@@ -4,7 +4,7 @@
 
 use crate::error::{SparseError, SparseResult};
 use crate::linalg::interface::LinearOperator;
-use scirs2_core::numeric::{Float, NumAssign};
+use scirs2_core::numeric::{Float, NumAssign, SparseElement};
 use std::iter::Sum;
 
 /// Result of an iterative solver
@@ -48,7 +48,7 @@ pub fn cg<F>(
     options: CGOptions<F>,
 ) -> SparseResult<IterationResult<F>>
 where
-    F: Float + NumAssign + Sum + 'static,
+    F: Float + NumAssign + Sum + SparseElement + 'static,
 {
     let (rows, cols) = a.shape();
     if rows != cols {
@@ -76,7 +76,7 @@ where
             }
             x0.clone()
         }
-        None => vec![F::zero(); n],
+        None => vec![F::sparse_zero(); n],
     };
 
     // Compute initial residual: r = b - A*x
@@ -104,7 +104,7 @@ where
 
         // Compute alpha = (r,z) / (p,Ap)
         let pap = dot(&p, &ap);
-        if pap <= F::zero() {
+        if pap <= F::sparse_zero() {
             return Ok(IterationResult {
                 x,
                 iterations,
@@ -199,7 +199,7 @@ pub fn bicg<F>(
     options: BiCGOptions<F>,
 ) -> SparseResult<IterationResult<F>>
 where
-    F: Float + NumAssign + Sum + 'static,
+    F: Float + NumAssign + Sum + SparseElement + 'static,
 {
     let (rows, cols) = a.shape();
     if rows != cols {
@@ -227,7 +227,7 @@ where
             }
             x0.clone()
         }
-        None => vec![F::zero(); n],
+        None => vec![F::sparse_zero(); n],
     };
 
     // Compute initial residual: r = b - A*x
@@ -387,7 +387,7 @@ pub fn bicgstab<F>(
     options: BiCGSTABOptions<F>,
 ) -> SparseResult<BiCGSTABResult<F>>
 where
-    F: Float + NumAssign + Sum + 'static,
+    F: Float + NumAssign + Sum + SparseElement + 'static,
 {
     let (rows, cols) = a.shape();
     if rows != cols {
@@ -415,7 +415,7 @@ where
             }
             x0.clone()
         }
-        None => vec![F::zero(); n],
+        None => vec![F::sparse_zero(); n],
     };
 
     // Compute initial residual: r = b - A*x
@@ -440,15 +440,15 @@ where
     // Choose shadow residual (r_hat) as r0
     let r_hat = r.clone();
 
-    let mut v = vec![F::zero(); n];
-    let mut p = vec![F::zero(); n];
-    let mut y = vec![F::zero(); n];
-    let mut s = vec![F::zero(); n];
+    let mut v = vec![F::sparse_zero(); n];
+    let mut p = vec![F::sparse_zero(); n];
+    let mut y = vec![F::sparse_zero(); n];
+    let mut s = vec![F::sparse_zero(); n];
     let mut t: Vec<F>;
 
-    let mut rho_old = F::one();
-    let mut alpha = F::zero();
-    let mut omega = F::one();
+    let mut rho_old = F::sparse_one();
+    let mut alpha = F::sparse_zero();
+    let mut omega = F::sparse_one();
 
     // Main iteration loop
     let mut iterations = 0;
@@ -652,7 +652,7 @@ pub fn gmres<F>(
     options: GMRESOptions<F>,
 ) -> SparseResult<IterationResult<F>>
 where
-    F: Float + NumAssign + Sum + 'static,
+    F: Float + NumAssign + Sum + SparseElement + 'static,
 {
     let (rows, cols) = a.shape();
     if rows != cols {
@@ -681,7 +681,7 @@ where
             }
             x0.clone()
         }
-        None => vec![F::zero(); n],
+        None => vec![F::sparse_zero(); n],
     };
 
     // Compute initial residual: r = b - A*x
@@ -702,11 +702,11 @@ where
     // Outer iteration loop (restarts)
     while outer_iterations < options.max_iter && rnorm > tolerance {
         // Initialize Krylov subspace
-        let mut v = vec![vec![F::zero(); n]; restart + 1];
-        let mut h = vec![vec![F::zero(); restart]; restart + 1];
-        let mut cs = vec![F::zero(); restart]; // Cosines for Givens rotations
-        let mut sn = vec![F::zero(); restart]; // Sines for Givens rotations
-        let mut s = vec![F::zero(); restart + 1]; // RHS for triangular system
+        let mut v = vec![vec![F::sparse_zero(); n]; restart + 1];
+        let mut h = vec![vec![F::sparse_zero(); restart]; restart + 1];
+        let mut cs = vec![F::sparse_zero(); restart]; // Cosines for Givens rotations
+        let mut sn = vec![F::sparse_zero(); restart]; // Sines for Givens rotations
+        let mut s = vec![F::sparse_zero(); restart + 1]; // RHS for triangular system
 
         // Set up initial vector
         v[0] = r.iter().map(|&ri| ri / rnorm).collect();
@@ -760,7 +760,7 @@ where
 
             // Apply new Givens rotation
             h[inner_iter][inner_iter] = rho;
-            h[inner_iter + 1][inner_iter] = F::zero();
+            h[inner_iter + 1][inner_iter] = F::sparse_zero();
 
             let temp = cs[inner_iter] * s[inner_iter] + sn[inner_iter] * s[inner_iter + 1];
             s[inner_iter + 1] =
@@ -777,7 +777,7 @@ where
         }
 
         // Solve the upper triangular system
-        let mut y = vec![F::zero(); inner_iter];
+        let mut y = vec![F::sparse_zero(); inner_iter];
         for i in (0..inner_iter).rev() {
             y[i] = s[i];
             for j in i + 1..inner_iter {
@@ -879,7 +879,7 @@ pub struct LSMROptions<F> {
     pub damp: F,
 }
 
-impl<F: Float> Default for LSMROptions<F> {
+impl<F: Float + SparseElement> Default for LSMROptions<F> {
     fn default() -> Self {
         Self {
             max_iter: 1000,
@@ -887,7 +887,7 @@ impl<F: Float> Default for LSMROptions<F> {
             atol: F::from(1e-12).unwrap(),
             btol: F::from(1e-8).unwrap(),
             x0: None,
-            damp: F::zero(),
+            damp: F::sparse_zero(),
         }
     }
 }
@@ -951,7 +951,7 @@ pub fn lsqr<F>(
     options: LSQROptions<F>,
 ) -> SparseResult<IterationResult<F>>
 where
-    F: Float + NumAssign + Sum + 'static,
+    F: Float + NumAssign + Sum + SparseElement + 'static,
 {
     let (m, n) = a.shape();
     if b.len() != m {
@@ -972,7 +972,7 @@ where
             }
             x0.clone()
         }
-        None => vec![F::zero(); n],
+        None => vec![F::sparse_zero(); n],
     };
 
     // Compute initial residual r = b - A*x
@@ -981,11 +981,11 @@ where
 
     // Initialize variables
     let mut alpha = norm2(&u);
-    if alpha == F::zero() {
+    if alpha == F::sparse_zero() {
         return Ok(IterationResult {
             x,
             iterations: 0,
-            residual_norm: F::zero(),
+            residual_norm: F::sparse_zero(),
             converged: true,
             message: "Zero initial residual".to_string(),
         });
@@ -999,7 +999,7 @@ where
     let mut beta = norm2(&v);
 
     let mut w = v.clone();
-    if beta != F::zero() {
+    if beta != F::sparse_zero() {
         for element in &mut w {
             *element /= beta;
         }
@@ -1018,7 +1018,7 @@ where
         }
         alpha = norm2(&u);
 
-        if alpha != F::zero() {
+        if alpha != F::sparse_zero() {
             for elem in &mut u {
                 *elem /= alpha;
             }
@@ -1030,7 +1030,7 @@ where
         }
         beta = norm2(&w);
 
-        if beta != F::zero() {
+        if beta != F::sparse_zero() {
             for elem in &mut w {
                 *elem /= beta;
             }
@@ -1085,7 +1085,7 @@ pub fn lsmr<F>(
     options: LSMROptions<F>,
 ) -> SparseResult<IterationResult<F>>
 where
-    F: Float + NumAssign + Sum + 'static,
+    F: Float + NumAssign + Sum + SparseElement + 'static,
 {
     let (m, n) = a.shape();
     if b.len() != m {
@@ -1106,7 +1106,7 @@ where
             }
             x0.clone()
         }
-        None => vec![F::zero(); n],
+        None => vec![F::sparse_zero(); n],
     };
 
     // Compute initial residual r = b - A*x
@@ -1114,11 +1114,11 @@ where
     let mut u: Vec<F> = b.iter().zip(&ax).map(|(&bi, &axi)| bi - axi).collect();
 
     let beta_1 = norm2(&u);
-    if beta_1 == F::zero() {
+    if beta_1 == F::sparse_zero() {
         return Ok(IterationResult {
             x,
             iterations: 0,
-            residual_norm: F::zero(),
+            residual_norm: F::sparse_zero(),
             converged: true,
             message: "Zero initial residual".to_string(),
         });
@@ -1131,13 +1131,13 @@ where
     let mut v = a.rmatvec(&u)?;
     let mut alpha_1 = norm2(&v);
 
-    if alpha_1 != F::zero() {
+    if alpha_1 != F::sparse_zero() {
         for item in &mut v {
             *item /= alpha_1;
         }
     }
 
-    let mut h = vec![F::zero(); n];
+    let mut h = vec![F::sparse_zero(); n];
     let mut h_bar = v.clone();
 
     let mut rho_bar = alpha_1;
@@ -1153,7 +1153,7 @@ where
         }
         let beta = norm2(&u);
 
-        if beta != F::zero() {
+        if beta != F::sparse_zero() {
             for item in &mut u {
                 *item /= beta;
             }
@@ -1165,7 +1165,7 @@ where
         }
         let alpha = norm2(&h_bar);
 
-        if alpha != F::zero() {
+        if alpha != F::sparse_zero() {
             for item in &mut h_bar {
                 *item /= alpha;
             }
@@ -1226,7 +1226,7 @@ pub fn tfqmr<F>(
     options: TFQMROptions<F>,
 ) -> SparseResult<IterationResult<F>>
 where
-    F: Float + NumAssign + Sum + 'static,
+    F: Float + NumAssign + Sum + SparseElement + 'static,
 {
     let (rows, cols) = a.shape();
     if rows != cols {
@@ -1254,7 +1254,7 @@ where
             }
             x0.clone()
         }
-        None => vec![F::zero(); n],
+        None => vec![F::sparse_zero(); n],
     };
 
     // Compute initial residual
@@ -1279,15 +1279,15 @@ where
     let r_tilde = r.clone(); // Shadow residual
     let mut w = r.clone();
     let mut u = r.clone();
-    let mut v = vec![F::zero(); n];
-    let mut d = vec![F::zero(); n];
+    let mut v = vec![F::sparse_zero(); n];
+    let mut d = vec![F::sparse_zero(); n];
 
     let mut tau = rnorm;
-    let mut theta = F::zero();
-    let mut eta = F::zero();
+    let mut theta = F::sparse_zero();
+    let mut eta = F::sparse_zero();
     let mut rho = dot(&r_tilde, &r);
 
-    if rho == F::zero() {
+    if rho == F::sparse_zero() {
         return Ok(IterationResult {
             x,
             iterations: 0,
@@ -1315,7 +1315,7 @@ where
         // First half-step update
         let theta_old = theta;
         theta = norm2(&w) / tau;
-        let c = F::one() / (F::one() + theta * theta).sqrt();
+        let c = F::sparse_one() / (F::sparse_one() + theta * theta).sqrt();
         tau = tau * theta * c;
         eta = c * c * alpha;
 
@@ -1325,7 +1325,7 @@ where
         }
 
         // Check convergence after first half-step
-        if tau * (F::one() + theta * theta).sqrt() <= tolerance {
+        if tau * (F::sparse_one() + theta * theta).sqrt() <= tolerance {
             return Ok(IterationResult {
                 x,
                 iterations: iterations * 2 + 1,
@@ -1342,7 +1342,7 @@ where
 
         let theta_old = theta;
         theta = norm2(&u) / tau;
-        let c = F::one() / (F::one() + theta * theta).sqrt();
+        let c = F::sparse_one() / (F::sparse_one() + theta * theta).sqrt();
         tau = tau * theta * c;
         eta = c * c * alpha;
 
@@ -1366,7 +1366,7 @@ where
         let rho_old = rho;
         rho = dot(&r_tilde, &u);
 
-        if rho == F::zero() {
+        if rho == F::sparse_zero() {
             return Ok(IterationResult {
                 x,
                 iterations: iterations * 2 + 2,

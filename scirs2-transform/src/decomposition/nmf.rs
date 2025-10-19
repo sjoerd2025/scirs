@@ -9,7 +9,6 @@ use scirs2_core::numeric::{Float, NumCast};
 use scirs2_core::random::Rng;
 
 use crate::error::{Result, TransformError};
-// use statrs::statistics::Statistics; // TODO: Add statrs dependency - needs generic type fixes
 
 /// Non-negative Matrix Factorization (NMF)
 ///

@@ -536,49 +536,28 @@ mod tests {
 
     #[test]
     fn test_j0_zeros() {
-        // First few zeros of J₀(x)
-        // TODO: Fix convergence issues in Bessel zero computation
-        if let Ok(zero) = j0_zeros::<f64>(1) {
-            assert_relative_eq!(
-                zero,
-                2.404_825_557_695_773,
-                epsilon = 1e-8 // Relaxed tolerance
-            );
-        } else {
-            // Skip test if convergence fails - needs algorithm improvement
-            return;
-        }
-        if let Ok(zero) = j0_zeros::<f64>(2) {
-            assert_relative_eq!(zero, 5.520_078_110_286_311, epsilon = 1e-8);
-        }
-        if let Ok(zero) = j0_zeros::<f64>(3) {
-            assert_relative_eq!(zero, 8.653_727_912_911_013, epsilon = 1e-8);
-        }
+        // First few zeros of J₀(x) - SciPy reference values
+        let zero1 = j0_zeros::<f64>(1).unwrap();
+        assert_relative_eq!(zero1, 2.404_825_557_695_773, epsilon = 1e-14);
+
+        let zero2 = j0_zeros::<f64>(2).unwrap();
+        assert_relative_eq!(zero2, 5.520_078_110_286_311, epsilon = 1e-14);
+
+        let zero3 = j0_zeros::<f64>(3).unwrap();
+        assert_relative_eq!(zero3, 8.653_727_912_911_013, epsilon = 1e-14);
     }
 
     #[test]
     fn test_j1_zeros() {
-        // Test that j1_zeros produces reasonable results
-        match j1_zeros::<f64>(1) {
-            Ok(zero) => {
-                // First zero should be around 3.83
-                assert!(zero > 3.0 && zero < 4.5);
-            }
-            Err(_) => {
-                // If Newton iteration fails, at least the function doesn't crash
-                // This is acceptable for edge cases
-            }
-        }
+        // First few zeros of J₁(x) - SciPy reference values
+        let zero1 = j1_zeros::<f64>(1).unwrap();
+        assert_relative_eq!(zero1, 3.831_705_970_207_512, epsilon = 1e-14);
 
-        match j1_zeros::<f64>(2) {
-            Ok(zero) => {
-                // Second zero should be around 7.01
-                assert!(zero > 6.5 && zero < 7.5);
-            }
-            Err(_) => {
-                // If Newton iteration fails, at least the function doesn't crash
-            }
-        }
+        let zero2 = j1_zeros::<f64>(2).unwrap();
+        assert_relative_eq!(zero2, 7.015_586_669_815_619, epsilon = 1e-14);
+
+        let zero3 = j1_zeros::<f64>(3).unwrap();
+        assert_relative_eq!(zero3, 10.173_468_135_062_722, epsilon = 1e-14);
     }
 
     #[test]

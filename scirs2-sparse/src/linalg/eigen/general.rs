@@ -8,6 +8,7 @@ use crate::error::{SparseError, SparseResult};
 use crate::sparray::SparseArray;
 use scirs2_core::ndarray::{Array1, Array2};
 use scirs2_core::numeric::Float;
+use scirs2_core::SparseElement;
 use std::fmt::Debug;
 use std::ops::{Add, Div, Mul, Sub};
 
@@ -59,6 +60,7 @@ pub fn eigs<T, S>(
 ) -> SparseResult<EigenResult<T>>
 where
     T: Float
+        + SparseElement
         + Debug
         + Copy
         + Add<Output = T>
@@ -98,7 +100,7 @@ where
 /// Check if a sparse matrix is approximately symmetric
 fn is_approximately_symmetric<T, S>(matrix: &S) -> SparseResult<bool>
 where
-    T: Float + Debug + Copy + 'static,
+    T: Float + SparseElement + Debug + Copy + 'static,
     S: SparseArray<T>,
 {
     let (n, m) = matrix.shape();
@@ -129,7 +131,7 @@ where
 /// Convert a general sparse matrix to symmetric format (simplified)
 fn convert_to_symmetric<T, S>(matrix: &S) -> SparseResult<crate::sym_csr::SymCsrMatrix<T>>
 where
-    T: Float + Debug + Copy + Add<Output = T> + Div<Output = T> + 'static,
+    T: Float + SparseElement + Debug + Copy + Add<Output = T> + Div<Output = T> + 'static,
     S: SparseArray<T>,
 {
     let (n, _) = matrix.shape();
@@ -147,7 +149,7 @@ where
         // Only store lower triangular part for symmetric matrix
         for j in 0..=i {
             let value = matrix.get(i, j);
-            if !value.is_zero() {
+            if !SparseElement::is_zero(&value) {
                 data.push(value);
                 indices.push(j);
                 row_nnz += 1;
@@ -169,6 +171,7 @@ fn general_arnoldi_iteration<T, S>(
 ) -> SparseResult<EigenResult<T>>
 where
     T: Float
+        + SparseElement
         + Debug
         + Copy
         + Add<Output = T>
@@ -189,11 +192,11 @@ where
 
     // Initialize first Arnoldi vector
     let mut v = Array1::zeros(n);
-    v[0] = T::one(); // Simple initialization
+    v[0] = T::sparse_one(); // Simple initialization
 
     // Normalize the initial vector
     let norm = (v.iter().map(|&x| x * x).sum::<T>()).sqrt();
-    if !norm.is_zero() {
+    if !SparseElement::is_zero(&norm) {
         v = v / norm;
     }
 
@@ -269,7 +272,7 @@ where
     let mut ritz_vectors = Array2::zeros((n, eigenvalues.len()));
     for (k, eigvec) in eigenvectors.iter().enumerate() {
         for i in 0..n {
-            let mut sum = T::zero();
+            let mut sum = T::sparse_zero();
             for j in 0..eigvec.len().min(v_vectors.len()) {
                 sum = sum + eigvec[j] * v_vectors[j][i];
             }
@@ -296,7 +299,14 @@ where
 /// Matrix-vector multiplication for general sparse matrix
 fn matrix_vector_multiply<T, S>(matrix: &S, vector: &Array1<T>) -> SparseResult<Array1<T>>
 where
-    T: Float + Debug + Copy + Add<Output = T> + Mul<Output = T> + std::iter::Sum + 'static,
+    T: Float
+        + SparseElement
+        + Debug
+        + Copy
+        + Add<Output = T>
+        + Mul<Output = T>
+        + std::iter::Sum
+        + 'static,
     S: SparseArray<T>,
 {
     let (n, m) = matrix.shape();
@@ -311,7 +321,7 @@ where
 
     // For each row, compute the dot product with the vector
     for i in 0..n {
-        let mut sum = T::zero();
+        let mut sum = T::sparse_zero();
         for j in 0..m {
             let aij = matrix.get(i, j);
             sum = sum + aij * vector[j];
@@ -329,7 +339,14 @@ fn solve_hessenberg_eigenproblem<T>(
     which: &str,
 ) -> SparseResult<(Vec<T>, Vec<Vec<T>>)>
 where
-    T: Float + Debug + Copy + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T>,
+    T: Float
+        + SparseElement
+        + Debug
+        + Copy
+        + Add<Output = T>
+        + Sub<Output = T>
+        + Mul<Output = T>
+        + Div<Output = T>,
 {
     let n = h_matrix.nrows().min(h_matrix.ncols());
 
@@ -346,8 +363,8 @@ where
         eigenvalues.push(h_matrix[[i, i]]);
 
         // Create a unit eigenvector
-        let mut eigvec = vec![T::zero(); n];
-        eigvec[i] = T::one();
+        let mut eigvec = vec![T::sparse_zero(); n];
+        eigvec[i] = T::sparse_one();
         eigenvectors.push(eigvec);
     }
 

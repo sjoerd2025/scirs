@@ -30,7 +30,7 @@ use crate::csr_array::CsrArray;
 use crate::error::{SparseError, SparseResult};
 use crate::sparray::SparseArray;
 use scirs2_core::ndarray::{Array1, ArrayView1};
-use scirs2_core::numeric::Float;
+use scirs2_core::numeric::{Float, SparseElement};
 use std::fmt::Debug;
 
 // GpuDataType is already available from the pub use statements above
@@ -163,7 +163,7 @@ impl GpuSpMatVec {
         device: Option<&GpuDevice>,
     ) -> SparseResult<Array1<T>>
     where
-        T: Float + Debug + Copy + GpuDataType + std::iter::Sum,
+        T: Float + SparseElement + Debug + Copy + GpuDataType + std::iter::Sum,
     {
         match self.backend {
             GpuBackend::Cuda => {
@@ -246,7 +246,7 @@ impl GpuSpMatVec {
         optimization_hint: OptimizationHint,
     ) -> SparseResult<Array1<T>>
     where
-        T: Float + Debug + Copy + GpuDataType + std::iter::Sum,
+        T: Float + SparseElement + Debug + Copy + GpuDataType + std::iter::Sum,
     {
         match self.backend {
             GpuBackend::Cuda => {
@@ -447,7 +447,7 @@ pub mod convenience {
     /// Execute sparse matrix-vector multiplication with automatic GPU detection
     pub fn gpu_spmv<T>(matrix: &CsrArray<T>, vector: &ArrayView1<T>) -> SparseResult<Array1<T>>
     where
-        T: Float + Debug + Copy + GpuDataType + std::iter::Sum,
+        T: Float + SparseElement + Debug + Copy + GpuDataType + std::iter::Sum,
     {
         let gpu_handler = GpuSpMatVec::new()?;
         gpu_handler.spmv(matrix, vector, None)
@@ -460,7 +460,7 @@ pub mod convenience {
         optimization: OptimizationHint,
     ) -> SparseResult<Array1<T>>
     where
-        T: Float + Debug + Copy + GpuDataType + std::iter::Sum,
+        T: Float + SparseElement + Debug + Copy + GpuDataType + std::iter::Sum,
     {
         let gpu_handler = GpuSpMatVec::new()?;
         gpu_handler.spmv_optimized(matrix, vector, None, optimization)

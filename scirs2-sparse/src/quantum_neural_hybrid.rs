@@ -6,7 +6,7 @@
 use crate::error::SparseResult;
 use crate::neural_adaptive_sparse::{NeuralAdaptiveConfig, NeuralAdaptiveSparseProcessor};
 use crate::quantum_inspired_sparse::{QuantumSparseConfig, QuantumSparseProcessor};
-use scirs2_core::numeric::{Float, NumAssign, NumCast};
+use scirs2_core::numeric::{Float, NumAssign, NumCast, SparseElement};
 use scirs2_core::random::Rng;
 use scirs2_core::simd_ops::SimdUnifiedOps;
 use std::collections::HashMap;
@@ -196,6 +196,7 @@ impl QuantumNeuralHybridProcessor {
     ) -> SparseResult<()>
     where
         T: Float
+            + SparseElement
             + NumAssign
             + Send
             + Sync
@@ -337,6 +338,7 @@ impl QuantumNeuralHybridProcessor {
     ) -> SparseResult<()>
     where
         T: Float
+            + SparseElement
             + NumAssign
             + Send
             + Sync
@@ -348,13 +350,13 @@ impl QuantumNeuralHybridProcessor {
             + 'static,
     {
         // Primary computation with quantum processor
-        let mut quantum_result = vec![T::zero(); rows];
+        let mut quantum_result = vec![T::sparse_zero(); rows];
         self.quantum_processor
             .quantum_spmv(rows, indptr, indices, data, x, &mut quantum_result)?;
 
         // Neural guidance for post-processing
         if self._config.neural_guidance {
-            let mut neural_result = vec![T::zero(); rows];
+            let mut neural_result = vec![T::sparse_zero(); rows];
             self.neural_processor.adaptive_spmv(
                 &[rows],
                 &[cols],
@@ -374,7 +376,7 @@ impl QuantumNeuralHybridProcessor {
                     quantum_weight * quantum_result[i].into()
                         + neural_weight * neural_result[i].into(),
                 )
-                .unwrap_or(T::zero());
+                .unwrap_or(T::sparse_zero());
             }
         } else {
             y.copy_from_slice(&quantum_result);
@@ -396,6 +398,7 @@ impl QuantumNeuralHybridProcessor {
     ) -> SparseResult<()>
     where
         T: Float
+            + SparseElement
             + NumAssign
             + Send
             + Sync
@@ -412,7 +415,7 @@ impl QuantumNeuralHybridProcessor {
 
         // Quantum enhancement for specific patterns
         if self._config.quantum_feedback && self.hybrid_state.quantum_coherence > 0.5 {
-            let mut quantum_enhancement = vec![T::zero(); rows];
+            let mut quantum_enhancement = vec![T::sparse_zero(); rows];
             self.quantum_processor.quantum_spmv(
                 rows,
                 indptr,
@@ -429,7 +432,7 @@ impl QuantumNeuralHybridProcessor {
                 let current_val: f64 = y[i].into();
                 let enhancement: f64 = quantum_enhancement[i].into();
                 y[i] = NumCast::from(current_val + enhancement_strength * enhancement)
-                    .unwrap_or(T::zero());
+                    .unwrap_or(T::sparse_zero());
             }
         }
 
@@ -449,6 +452,7 @@ impl QuantumNeuralHybridProcessor {
     ) -> SparseResult<()>
     where
         T: Float
+            + SparseElement
             + NumAssign
             + Send
             + Sync
@@ -460,8 +464,8 @@ impl QuantumNeuralHybridProcessor {
             + 'static,
     {
         // Parallel execution of both approaches
-        let mut quantum_result = vec![T::zero(); rows];
-        let mut neural_result = vec![T::zero(); rows];
+        let mut quantum_result = vec![T::sparse_zero(); rows];
+        let mut neural_result = vec![T::sparse_zero(); rows];
 
         // Execute both in sequence (in a real implementation, this could be parallel)
         self.quantum_processor
@@ -484,7 +488,7 @@ impl QuantumNeuralHybridProcessor {
             y[i] = NumCast::from(
                 quantum_weight * quantum_result[i].into() + neural_weight * neural_result[i].into(),
             )
-            .unwrap_or(T::zero());
+            .unwrap_or(T::sparse_zero());
         }
 
         Ok(())
@@ -503,6 +507,7 @@ impl QuantumNeuralHybridProcessor {
     ) -> SparseResult<()>
     where
         T: Float
+            + SparseElement
             + NumAssign
             + Send
             + Sync
@@ -551,7 +556,7 @@ impl QuantumNeuralHybridProcessor {
 
             // Adaptive blending
             y[row] = NumCast::from(quantum_ratio * quantum_sum + neural_ratio * neural_sum)
-                .unwrap_or(T::zero());
+                .unwrap_or(T::sparse_zero());
         }
 
         Ok(())

@@ -1,13 +1,13 @@
 # scirs2-linalg TODO
 
-**Current Version**: 0.1.0-rc.1 (Released October 03, 2025)
+**Current Version**: 0.1.0-rc.2 (Released October 19, 2025)
 **Status**: Production Ready - Comprehensive linear algebra for scientific computing
 
 This module provides comprehensive linear algebra functionality comparable to NumPy/SciPy's linalg module. Following the [SciRS2 POLICY](../SCIRS2_POLICY.md), this module uses scirs2-core abstractions for consistent ecosystem integration.
 
 ---
 
-## 🎯 Current Release: RC.1 (October 2025)
+## 🎯 Current Release: rc.2 (October 2025)
 
 ### ✅ Production Status: COMPLETE
 
@@ -81,7 +81,7 @@ This module provides comprehensive linear algebra functionality comparable to Nu
 - ✅ Adaptive algorithm selection based on sparsity patterns
 - ✅ Sparse-dense matrix multiplication and operations
 
-### 🔧 Beta 4 Active Work
+### 🔧 RC.2 Implementation Status
 
 #### SciRS2 POLICY Implementation (ONGOING)
 - [x] Integration with scirs2-core error handling
@@ -240,7 +240,7 @@ This module provides comprehensive linear algebra functionality comparable to Nu
 
 ## 🎯 Production Release Summary
 
-**v0.1.0-rc.1 delivers:**
+**v0.1.0-rc.2 delivers:**
 - ✅ **Enterprise-Grade Performance**: Comparable to NumPy/SciPy with native BLAS/LAPACK
 - ✅ **ML/AI Ready**: Complete attention mechanisms, quantization, mixed-precision
 - ✅ **Comprehensive API**: 500+ functions with SciPy compatibility layer
@@ -261,7 +261,7 @@ This release is suitable for:
 
 ## 🗺️ Roadmap
 
-- **✅ 0.1.0-rc.1** (2025-10-03): **CURRENT** - Production-ready with ultra-precision solvers
+- **✅ 0.1.0-rc.2** (2025-10-19): **CURRENT** - Production-ready with ultra-precision solvers
 - **🎯 0.1.0** (2026-Q4): First stable release with full SciPy feature parity and API guarantees
 - **🎯 0.2.0** (2027+): Performance optimization, GPU acceleration, and hardware acceleration
 
@@ -269,4 +269,4 @@ This release is suitable for:
 
 **Built with ❤️ for the scientific computing community**
 
-*Version: 0.1.0-rc.1 | Released: October 03, 2025 | Next: 0.1.0 (Q4 2026)*
+*Version: 0.1.0-rc.2 | Released: October 19, 2025 | Next: 0.1.0 (Q4 2026)*

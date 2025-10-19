@@ -4,7 +4,7 @@
 // which is efficient for incremental matrix construction and row-based operations.
 
 use scirs2_core::ndarray::{Array1, Array2, ArrayView1};
-use scirs2_core::numeric::Float;
+use scirs2_core::numeric::{Float, SparseElement};
 use std::fmt::{self, Debug};
 use std::ops::{Add, Div, Mul, Sub};
 
@@ -30,14 +30,7 @@ use crate::sparray::{SparseArray, SparseSum};
 #[derive(Clone)]
 pub struct LilArray<T>
 where
-    T: Float
-        + Add<Output = T>
-        + Sub<Output = T>
-        + Mul<Output = T>
-        + Div<Output = T>
-        + Debug
-        + Copy
-        + 'static,
+    T: SparseElement + Div<Output = T> + Float + 'static,
 {
     /// Data for each row (list of lists of values)
     data: Vec<Vec<T>>,
@@ -49,14 +42,7 @@ where
 
 impl<T> LilArray<T>
 where
-    T: Float
-        + Add<Output = T>
-        + Sub<Output = T>
-        + Mul<Output = T>
-        + Div<Output = T>
-        + Debug
-        + Copy
-        + 'static,
+    T: SparseElement + Div<Output = T> + Float + 'static,
 {
     /// Creates a new LIL array
     ///
@@ -252,14 +238,7 @@ where
 
 impl<T> SparseArray<T> for LilArray<T>
 where
-    T: Float
-        + Add<Output = T>
-        + Sub<Output = T>
-        + Mul<Output = T>
-        + Div<Output = T>
-        + Debug
-        + Copy
-        + 'static,
+    T: SparseElement + Div<Output = T> + Float + 'static,
 {
     fn shape(&self) -> (usize, usize) {
         self.shape
@@ -421,12 +400,12 @@ where
 
     fn get(&self, i: usize, j: usize) -> T {
         if i >= self.shape.0 || j >= self.shape.1 {
-            return T::zero();
+            return T::sparse_zero();
         }
 
         match self.indices[i].binary_search(&j) {
             Ok(pos) => self.data[i][pos],
-            Err(_) => T::zero(),
+            Err(_) => T::sparse_zero(),
         }
     }
 
@@ -440,7 +419,7 @@ where
 
         match self.indices[i].binary_search(&j) {
             Ok(pos) => {
-                if value.is_zero() {
+                if SparseElement::is_zero(&value) {
                     // Remove zero value
                     self.data[i].remove(pos);
                     self.indices[i].remove(pos);
@@ -450,7 +429,7 @@ where
                 }
             }
             Err(pos) => {
-                if !value.is_zero() {
+                if !SparseElement::is_zero(&value) {
                     // Insert new non-zero value
                     self.data[i].insert(pos, value);
                     self.indices[i].insert(pos, j);
@@ -467,7 +446,7 @@ where
             let mut new_indices = Vec::new();
 
             for (idx, &value) in self.data[row].iter().enumerate() {
-                if !value.is_zero() {
+                if !SparseElement::is_zero(&value) {
                     new_data.push(value);
                     new_indices.push(self.indices[row][idx]);
                 }
@@ -507,7 +486,7 @@ where
         match axis {
             None => {
                 // Sum over all elements
-                let mut sum = T::zero();
+                let mut sum = T::sparse_zero();
                 for row in 0..self.shape.0 {
                     for &val in self.data[row].iter() {
                         sum = sum + val;
@@ -529,7 +508,7 @@ where
                 // Create a 1 x cols sparse array
                 let mut lil = LilArray::new((1, cols));
                 for (col, &val) in result.iter().enumerate() {
-                    if !val.is_zero() {
+                    if !SparseElement::is_zero(&val) {
                         lil.set(0, col, val)?;
                     }
                 }
@@ -550,7 +529,7 @@ where
                 // Create a rows x 1 sparse array
                 let mut lil = LilArray::new((rows, 1));
                 for (row, &val) in result.iter().enumerate() {
-                    if !val.is_zero() {
+                    if !SparseElement::is_zero(&val) {
                         lil.set(row, 0, val)?;
                     }
                 }
@@ -563,21 +542,28 @@ where
 
     fn max(&self) -> T {
         if self.nnz() == 0 {
-            return T::neg_infinity();
+            // Empty sparse matrix - all elements are implicitly zero
+            return T::sparse_zero();
         }
 
-        let mut max_val = T::neg_infinity();
+        // Start with first non-zero value
+        let mut max_val = T::sparse_zero();
+        let mut found_value = false;
         for row in 0..self.shape.0 {
             for &val in self.data[row].iter() {
-                if val > max_val {
+                if !found_value {
+                    max_val = val;
+                    found_value = true;
+                } else if val > max_val {
                     max_val = val;
                 }
             }
         }
 
         // If matrix is not entirely filled and max is negative, zero is the max
-        if max_val < T::zero() && self.nnz() < self.shape.0 * self.shape.1 {
-            T::zero()
+        let zero = T::sparse_zero();
+        if max_val < zero && self.nnz() < self.shape.0 * self.shape.1 {
+            zero
         } else {
             max_val
         }
@@ -585,10 +571,10 @@ where
 
     fn min(&self) -> T {
         if self.nnz() == 0 {
-            return T::infinity();
+            return T::sparse_zero();
         }
 
-        let mut min_val = T::infinity();
+        let mut min_val = T::sparse_zero();
         for row in 0..self.shape.0 {
             for &val in self.data[row].iter() {
                 if val < min_val {
@@ -598,8 +584,8 @@ where
         }
 
         // If matrix is not entirely filled and min is positive, zero is the min
-        if min_val > T::zero() && self.nnz() < self.shape.0 * self.shape.1 {
-            T::zero()
+        if min_val > T::sparse_zero() && self.nnz() < self.shape.0 * self.shape.1 {
+            T::sparse_zero()
         } else {
             min_val
         }
@@ -670,14 +656,7 @@ where
 
 impl<T> fmt::Debug for LilArray<T>
 where
-    T: Float
-        + Add<Output = T>
-        + Sub<Output = T>
-        + Mul<Output = T>
-        + Div<Output = T>
-        + Debug
-        + Copy
-        + 'static,
+    T: SparseElement + Div<Output = T> + Float + 'static,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(

@@ -11,7 +11,7 @@
 use crate::error::{SparseError, SparseResult};
 use crate::sparray::SparseArray;
 use scirs2_core::ndarray::{Array1, ArrayView1};
-use scirs2_core::numeric::Float;
+use scirs2_core::numeric::{Float, SparseElement};
 use std::fmt::Debug;
 
 /// Options for the TFQMR solver
@@ -97,7 +97,7 @@ pub fn tfqmr<T, S>(
     options: TFQMROptions,
 ) -> SparseResult<TFQMRResult<T>>
 where
-    T: Float + Debug + Copy + 'static,
+    T: Float + SparseElement + Debug + Copy + 'static,
     S: SparseArray<T>,
 {
     let n = b.len();
@@ -145,14 +145,14 @@ where
     let mut z = w.clone();
 
     let mut d = Array1::zeros(n);
-    let mut theta = T::zero();
-    let mut eta = T::zero();
+    let mut theta = T::sparse_zero();
+    let mut eta = T::sparse_zero();
     let mut tau = initial_residual_norm;
 
     // TFQMR parameters
     let mut rho = dot_product(&r_star.view(), &r.view());
-    let mut alpha = T::zero();
-    let mut beta = T::zero();
+    let mut alpha = T::sparse_zero();
+    let mut beta = T::sparse_zero();
 
     let mut residual_history = Vec::new();
     residual_history.push(initial_residual_norm);
@@ -181,7 +181,7 @@ where
         // Compute theta and c for odd step
         let v_norm = l2_norm(&v.view());
         theta = v_norm / tau;
-        let c = T::one() / (T::one() + theta * theta).sqrt();
+        let c = T::sparse_one() / (T::sparse_one() + theta * theta).sqrt();
         tau = tau * theta * c;
         eta = c * c * alpha;
 
@@ -217,7 +217,7 @@ where
         // Compute theta and c for even step
         let y_norm = l2_norm(&y.view());
         theta = y_norm / tau;
-        let c = T::one() / (T::one() + theta * theta).sqrt();
+        let c = T::sparse_one() / (T::sparse_one() + theta * theta).sqrt();
         tau = tau * theta * c;
         eta = c * c * alpha;
 
@@ -258,7 +258,7 @@ where
 #[allow(dead_code)]
 fn matrix_vector_multiply<T, S>(matrix: &S, x: &ArrayView1<T>) -> SparseResult<Array1<T>>
 where
-    T: Float + Debug + Copy + 'static,
+    T: Float + SparseElement + Debug + Copy + 'static,
     S: SparseArray<T>,
 {
     let (rows, cols) = matrix.shape();
@@ -283,21 +283,24 @@ where
 #[allow(dead_code)]
 fn l2_norm<T>(x: &ArrayView1<T>) -> T
 where
-    T: Float + Debug + Copy,
+    T: Float + SparseElement + Debug + Copy,
 {
-    (x.iter().map(|&val| val * val).fold(T::zero(), |a, b| a + b)).sqrt()
+    (x.iter()
+        .map(|&val| val * val)
+        .fold(T::sparse_zero(), |a, b| a + b))
+    .sqrt()
 }
 
 /// Compute dot product of two vectors
 #[allow(dead_code)]
 fn dot_product<T>(x: &ArrayView1<T>, y: &ArrayView1<T>) -> T
 where
-    T: Float + Debug + Copy,
+    T: Float + SparseElement + Debug + Copy,
 {
     x.iter()
         .zip(y.iter())
         .map(|(&xi, &yi)| xi * yi)
-        .fold(T::zero(), |a, b| a + b)
+        .fold(T::sparse_zero(), |a, b| a + b)
 }
 
 #[cfg(test)]

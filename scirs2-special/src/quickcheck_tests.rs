@@ -394,10 +394,27 @@ mod orthogonal_polynomial_properties {
 
     #[quickcheck]
     fn hermite_recurrence(n: SmallInt, x: f64) -> bool {
-        // TODO: Fix Hermite polynomial implementation - has fundamental issues with recurrence relation
-        // The current implementation has incorrect calculation in line 411 of orthogonal.rs:
-        // Should be: (x + x) * h_n instead of: x + x * h_n
-        true // Skip test until Hermite implementation is fixed
+        // Fixed: operator precedence corrected in orthogonal.rs
+        // H_{n+1}(x) = 2x H_n(x) - 2n H_{n-1}(x)
+        let n = n.0.clamp(1, 10);
+        let x = x.clamp(-5.0, 5.0);
+
+        if !x.is_finite() {
+            return true;
+        }
+
+        let h_n = crate::orthogonal::hermite(n, x);
+        let h_n_minus_1 = crate::orthogonal::hermite(n - 1, x);
+        let h_n_plus_1 = crate::orthogonal::hermite(n + 1, x);
+
+        // Check recurrence: H_{n+1}(x) = 2x H_n(x) - 2n H_{n-1}(x)
+        let expected = 2.0 * x * h_n - 2.0 * (n as f64) * h_n_minus_1;
+
+        if !expected.is_finite() || !h_n_plus_1.is_finite() {
+            return true;
+        }
+
+        (h_n_plus_1 - expected).abs() <= 1e-8 * (1.0 + expected.abs().max(h_n_plus_1.abs()))
     }
 }
 

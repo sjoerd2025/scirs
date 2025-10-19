@@ -11,7 +11,7 @@
 use crate::error::{SparseError, SparseResult};
 use crate::sparray::SparseArray;
 use scirs2_core::ndarray::{Array1, ArrayView1};
-use scirs2_core::numeric::Float;
+use scirs2_core::numeric::{Float, SparseElement};
 use std::fmt::Debug;
 
 /// Options for the LSQR solver
@@ -110,7 +110,7 @@ pub fn lsqr<T, S>(
     options: LSQROptions,
 ) -> SparseResult<LSQRResult<T>>
 where
-    T: Float + Debug + Copy + 'static,
+    T: Float + SparseElement + Debug + Copy + 'static,
     S: SparseArray<T>,
 {
     let (m, n) = matrix.shape();
@@ -141,7 +141,7 @@ where
     let mut u = b - &ax;
     let beta = l2_norm(&u.view());
 
-    if beta > T::zero() {
+    if beta > T::sparse_zero() {
         for i in 0..m {
             u[i] = u[i] / beta;
         }
@@ -151,15 +151,15 @@ where
     let mut v = matrix_transpose_vector_multiply(matrix, &u.view())?;
     let mut alpha = l2_norm(&v.view());
 
-    if alpha > T::zero() {
+    if alpha > T::sparse_zero() {
         for i in 0..n {
             v[i] = v[i] / alpha;
         }
     }
 
     let mut w = v.clone();
-    let mut x_norm = T::zero();
-    let mut dd_norm = T::zero();
+    let mut x_norm = T::sparse_zero();
+    let mut dd_norm = T::sparse_zero();
     let mut res2 = beta;
 
     // Variables for QR factorization of bidiagonal matrix
@@ -191,7 +191,7 @@ where
         }
         let beta_new = l2_norm(&u.view());
 
-        if beta_new > T::zero() {
+        if beta_new > T::sparse_zero() {
             for i in 0..m {
                 u[i] = u[i] / beta_new;
             }
@@ -204,7 +204,7 @@ where
         }
         let alpha_new = l2_norm(&v.view());
 
-        if alpha_new > T::zero() {
+        if alpha_new > T::sparse_zero() {
             for i in 0..n {
                 v[i] = v[i] / alpha_new;
             }
@@ -227,7 +227,7 @@ where
 
         // Update norms and residual estimate
         x_norm = (x_norm * x_norm + (phi / rho) * (phi / rho)).sqrt();
-        dd_norm = dd_norm + (T::one() / rho) * (T::one() / rho);
+        dd_norm = dd_norm + (T::sparse_one() / rho) * (T::sparse_one() / rho);
         res2 = phi_bar_new.abs();
 
         if let Some(ref mut history) = residual_history {
@@ -236,37 +236,37 @@ where
 
         // Check convergence
         let r1_norm = res2;
-        let r2_norm = if x_norm > T::zero() {
+        let r2_norm = if x_norm > T::sparse_zero() {
             alpha_new.abs() * x_norm
         } else {
             alpha_new.abs()
         };
 
         let test1 = r1_norm / (atol + btol * beta);
-        let test2 = if x_norm > T::zero() {
+        let test2 = if x_norm > T::sparse_zero() {
             alpha_new.abs() / (atol + btol * x_norm)
         } else {
             alpha_new.abs() / atol
         };
-        let test3 = T::one() / conlim;
+        let test3 = T::sparse_one() / conlim;
 
-        if test1 <= T::one() {
+        if test1 <= T::sparse_one() {
             converged = true;
             convergence_reason = "Residual tolerance satisfied".to_string();
             break;
         }
 
-        if test2 <= T::one() {
+        if test2 <= T::sparse_one() {
             converged = true;
             convergence_reason = "Solution tolerance satisfied".to_string();
             break;
         }
 
         // Condition number estimate should be compared to limit, not x_norm to test3
-        let condition_estimate = if dd_norm > T::zero() {
+        let condition_estimate = if dd_norm > T::sparse_zero() {
             x_norm / dd_norm.sqrt()
         } else {
-            T::one()
+            T::sparse_one()
         };
 
         if condition_estimate > conlim {
@@ -292,10 +292,10 @@ where
     let final_solution_norm = l2_norm(&x.view());
 
     // Estimate condition number (simplified)
-    let condition_number = if dd_norm > T::zero() {
+    let condition_number = if dd_norm > T::sparse_zero() {
         x_norm / dd_norm.sqrt()
     } else {
-        T::one()
+        T::sparse_one()
     };
 
     // Compute standard errors if requested
@@ -322,7 +322,7 @@ where
 #[allow(dead_code)]
 fn matrix_vector_multiply<T, S>(matrix: &S, x: &ArrayView1<T>) -> SparseResult<Array1<T>>
 where
-    T: Float + Debug + Copy + 'static,
+    T: Float + SparseElement + Debug + Copy + 'static,
     S: SparseArray<T>,
 {
     let (rows, cols) = matrix.shape();
@@ -347,7 +347,7 @@ where
 #[allow(dead_code)]
 fn matrix_transpose_vector_multiply<T, S>(matrix: &S, x: &ArrayView1<T>) -> SparseResult<Array1<T>>
 where
-    T: Float + Debug + Copy + 'static,
+    T: Float + SparseElement + Debug + Copy + 'static,
     S: SparseArray<T>,
 {
     let (rows, cols) = matrix.shape();
@@ -372,16 +372,19 @@ where
 #[allow(dead_code)]
 fn l2_norm<T>(x: &ArrayView1<T>) -> T
 where
-    T: Float + Debug + Copy,
+    T: Float + SparseElement + Debug + Copy,
 {
-    (x.iter().map(|&val| val * val).fold(T::zero(), |a, b| a + b)).sqrt()
+    (x.iter()
+        .map(|&val| val * val)
+        .fold(T::sparse_zero(), |a, b| a + b))
+    .sqrt()
 }
 
 /// Compute standard errors (simplified implementation)
 #[allow(dead_code)]
 fn compute_standard_errors<T, S>(matrix: &S, residualnorm: T, n: usize) -> SparseResult<Array1<T>>
 where
-    T: Float + Debug + Copy + 'static,
+    T: Float + SparseElement + Debug + Copy + 'static,
     S: SparseArray<T>,
 {
     let (m, _) = matrix.shape();

@@ -4,7 +4,7 @@
 //! efficient for incremental matrix construction.
 
 use crate::error::{SparseError, SparseResult};
-use scirs2_core::numeric::Zero;
+use scirs2_core::numeric::{SparseElement, Zero};
 use std::collections::HashMap;
 
 /// Dictionary of Keys (DOK) matrix
@@ -22,7 +22,7 @@ pub struct DokMatrix<T> {
 
 impl<T> DokMatrix<T>
 where
-    T: Clone + Copy + Zero + std::cmp::PartialEq,
+    T: Clone + Copy + Zero + std::cmp::PartialEq + SparseElement,
 {
     /// Create a new DOK matrix
     ///
@@ -77,7 +77,7 @@ where
             ));
         }
 
-        if value == T::zero() {
+        if value == T::sparse_zero() {
             // Remove zero entries
             self.data.remove(&(row, col));
         } else {
@@ -100,10 +100,10 @@ where
     /// * Value at the specified position, or zero if not set
     pub fn get(&self, row: usize, col: usize) -> T {
         if row >= self.rows || col >= self.cols {
-            return T::zero();
+            return T::sparse_zero();
         }
 
-        *self.data.get(&(row, col)).unwrap_or(&T::zero())
+        *self.data.get(&(row, col)).unwrap_or(&T::sparse_zero())
     }
 
     /// Get the number of rows in the matrix
@@ -129,9 +129,9 @@ where
     /// Convert to dense matrix (as Vec<Vec<T>>)
     pub fn to_dense(&self) -> Vec<Vec<T>>
     where
-        T: Zero + Copy,
+        T: Zero + Copy + SparseElement,
     {
-        let mut result = vec![vec![T::zero(); self.cols]; self.rows];
+        let mut result = vec![vec![T::sparse_zero(); self.cols]; self.rows];
 
         for (&(row, col), &value) in &self.data {
             result[row][col] = value;

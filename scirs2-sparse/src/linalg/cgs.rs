@@ -1,7 +1,7 @@
 use crate::error::{SparseError, SparseResult};
 use crate::linalg::interface::LinearOperator;
 use crate::linalg::iterative::{dot, norm2, BiCGOptions, IterationResult};
-use scirs2_core::numeric::{Float, NumAssign};
+use scirs2_core::numeric::{Float, NumAssign, SparseElement};
 use std::iter::Sum;
 
 /// Options for CGS solver
@@ -19,7 +19,7 @@ pub fn cgs<F>(
     options: CGSOptions<F>,
 ) -> SparseResult<CGSResult<F>>
 where
-    F: Float + NumAssign + Sum + 'static,
+    F: Float + NumAssign + Sum + SparseElement + 'static,
 {
     let (rows, cols) = a.shape();
     if rows != cols {
@@ -47,7 +47,7 @@ where
             }
             x0.clone()
         }
-        None => vec![F::zero(); n],
+        None => vec![F::sparse_zero(); n],
     };
 
     // Compute initial residual: r = b - A*x
@@ -73,11 +73,11 @@ where
     let r_tilde = r.clone();
 
     // Initialize vectors
-    let mut u = vec![F::zero(); n];
-    let mut p = vec![F::zero(); n];
-    let mut q = vec![F::zero(); n];
+    let mut u = vec![F::sparse_zero(); n];
+    let mut p = vec![F::sparse_zero(); n];
+    let mut q = vec![F::sparse_zero(); n];
 
-    let mut rho = F::one();
+    let mut rho = F::sparse_one();
     let mut iterations = 0;
 
     // Main CGS iteration
@@ -98,7 +98,7 @@ where
 
         // Compute β = ρ_i / ρ_{i-1}
         let beta = if iterations == 0 {
-            F::zero()
+            F::sparse_zero()
         } else {
             rho_new / rho
         };

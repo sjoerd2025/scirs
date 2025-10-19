@@ -915,6 +915,7 @@ impl ImmutableAuditTrail {
     }
 
     /// Export audit trail for external verification
+    #[cfg(feature = "serialization")]
     pub fn export_trail(&self) -> CoreResult<String> {
         if let Ok(chain) = self.audit_chain.read() {
             serde_json::to_string_pretty(&*chain).map_err(|e| {
@@ -927,6 +928,14 @@ impl ImmutableAuditTrail {
                 "Cannot access audit chain for export".to_string(),
             )))
         }
+    }
+
+    /// Export audit trail for external verification (fallback without serialization)
+    #[cfg(not(feature = "serialization"))]
+    pub fn export_trail(&self) -> CoreResult<String> {
+        Err(CoreError::ValidationError(ErrorContext::new(
+            "Audit trail export requires serialization feature".to_string(),
+        )))
     }
 }
 

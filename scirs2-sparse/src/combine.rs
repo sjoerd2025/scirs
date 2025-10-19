@@ -8,7 +8,7 @@ use crate::coo_array::CooArray;
 use crate::csr_array::CsrArray;
 use crate::error::{SparseError, SparseResult};
 use crate::sparray::SparseArray;
-use scirs2_core::numeric::Float;
+use scirs2_core::numeric::{Float, SparseElement};
 use std::fmt::Debug;
 use std::ops::{Add, AddAssign, Div, Mul, Sub};
 
@@ -45,6 +45,7 @@ pub fn hstack<'a, T>(
 where
     T: 'a
         + Float
+        + SparseElement
         + Add<Output = T>
         + Sub<Output = T>
         + Mul<Output = T>
@@ -143,6 +144,7 @@ pub fn vstack<'a, T>(
 where
     T: 'a
         + Float
+        + SparseElement
         + Add<Output = T>
         + Sub<Output = T>
         + Mul<Output = T>
@@ -247,6 +249,7 @@ pub fn block_diag<'a, T>(
 where
     T: 'a
         + Float
+        + SparseElement
         + Add<Output = T>
         + Sub<Output = T>
         + Mul<Output = T>
@@ -340,6 +343,7 @@ pub fn tril<T>(
 ) -> SparseResult<Box<dyn SparseArray<T>>>
 where
     T: Float
+        + SparseElement
         + Add<Output = T>
         + Sub<Output = T>
         + Mul<Output = T>
@@ -416,6 +420,7 @@ pub fn triu<T>(
 ) -> SparseResult<Box<dyn SparseArray<T>>>
 where
     T: Float
+        + SparseElement
         + Add<Output = T>
         + Sub<Output = T>
         + Mul<Output = T>
@@ -498,6 +503,7 @@ pub fn kron<'a, T>(
 where
     T: 'a
         + Float
+        + SparseElement
         + Add<Output = T>
         + AddAssign
         + Sub<Output = T>
@@ -631,6 +637,7 @@ pub fn kronsum<'a, T>(
 where
     T: 'a
         + Float
+        + SparseElement
         + Add<Output = T>
         + AddAssign
         + Sub<Output = T>
@@ -671,17 +678,17 @@ where
         for i in 0..m * n {
             rows.push(i);
             cols.push(i);
-            data.push(T::one() + T::one()); // 2.0
+            data.push(T::sparse_one() + T::sparse_one()); // 2.0
         }
 
         // Add connections within blocks from B ⊗ I_m
         for i in 0..n {
             for j in 0..n {
-                if i != j && (b.get(i, j) > T::zero() || b.get(j, i) > T::zero()) {
+                if i != j && (b.get(i, j) > T::sparse_zero() || b.get(j, i) > T::sparse_zero()) {
                     for k in 0..m {
                         rows.push(i * m + k);
                         cols.push(j * m + k);
-                        data.push(T::one());
+                        data.push(T::sparse_one());
                     }
                 }
             }
@@ -696,12 +703,12 @@ where
                 // This means connecting (i*m+j) to ((i+1)*m+j)
                 rows.push(i * m + j);
                 cols.push((i + 1) * m + j);
-                data.push(T::one());
+                data.push(T::sparse_one());
 
                 // Also add the symmetric connection
                 rows.push((i + 1) * m + j);
                 cols.push(i * m + j);
-                data.push(T::one());
+                data.push(T::sparse_one());
             }
         }
 
@@ -806,6 +813,7 @@ pub fn bmat<'a, T>(
 where
     T: 'a
         + Float
+        + SparseElement
         + Add<Output = T>
         + AddAssign
         + Sub<Output = T>
@@ -975,7 +983,7 @@ where
 #[allow(dead_code)]
 fn is_identity_matrix<T>(array: &dyn SparseArray<T>) -> bool
 where
-    T: Float + Debug + Copy + 'static,
+    T: Float + SparseElement + Debug + Copy + 'static,
 {
     let shape = array.shape();
 
@@ -1005,7 +1013,7 @@ where
         }
 
         // All diagonal elements must be 1
-        if (data[i] - T::one()).abs() > T::epsilon() {
+        if (data[i] - T::sparse_one()).abs() > T::epsilon() {
             return false;
         }
     }

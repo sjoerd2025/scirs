@@ -4,7 +4,7 @@
 //! efficient for incremental matrix construction.
 
 use crate::error::{SparseError, SparseResult};
-use scirs2_core::numeric::Zero;
+use scirs2_core::numeric::{SparseElement, Zero};
 use std::cmp::PartialEq;
 
 /// Coordinate (COO) matrix
@@ -26,7 +26,7 @@ pub struct CooMatrix<T> {
 
 impl<T> CooMatrix<T>
 where
-    T: Clone + Copy + Zero + PartialEq,
+    T: Clone + Copy + Zero + PartialEq + SparseElement,
 {
     /// Get the triplets (row indices, column indices, data)
     pub fn get_triplets(&self) -> (Vec<usize>, Vec<usize>, Vec<T>) {
@@ -184,9 +184,9 @@ where
     /// Convert to dense matrix (as Vec<Vec<T>>)
     pub fn to_dense(&self) -> Vec<Vec<T>>
     where
-        T: Zero + Copy,
+        T: Zero + Copy + SparseElement,
     {
-        let mut result = vec![vec![T::zero(); self.cols]; self.rows];
+        let mut result = vec![vec![T::sparse_zero(); self.cols]; self.rows];
 
         for i in 0..self.data.len() {
             let row = self.row_indices[i];
@@ -275,14 +275,14 @@ where
     /// Get the value at the specified position
     pub fn get(&self, row: usize, col: usize) -> T
     where
-        T: Zero,
+        T: Zero + SparseElement,
     {
         for i in 0..self.data.len() {
             if self.row_indices[i] == row && self.col_indices[i] == col {
                 return self.data[i];
             }
         }
-        T::zero()
+        T::sparse_zero()
     }
 
     /// Sum duplicate entries (elements with the same row and column indices)

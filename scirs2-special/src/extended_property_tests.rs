@@ -363,11 +363,26 @@ mod orthogonal_polynomial_properties {
 
     #[quickcheck]
     fn hermite_parity(n: NonNegInt, x: f64) -> TestResult {
-        // TODO: Fix Hermite polynomial implementation
-        // The parity property H_n(-x) = (-1)^n * H_n(x) fails due to the same
-        // fundamental issues in the Hermite polynomial implementation as seen
-        // in the hermite_recurrence test
-        TestResult::discard() // Skip test until Hermite implementation is fixed
+        // Fixed: Hermite polynomial implementation now correct
+        // Test parity property: H_n(-x) = (-1)^n * H_n(x)
+        let n = n.0 as usize;
+        let x = x.clamp(-5.0, 5.0);
+
+        if !x.is_finite() || n > 15 {
+            return TestResult::discard();
+        }
+
+        let h_n_x = crate::orthogonal::hermite(n, x);
+        let h_n_neg_x = crate::orthogonal::hermite(n, -x);
+        let sign = if n.is_multiple_of(2) { 1.0 } else { -1.0 };
+        let expected = sign * h_n_x;
+
+        if !h_n_x.is_finite() || !h_n_neg_x.is_finite() {
+            return TestResult::discard();
+        }
+
+        let result = approx_eq(h_n_neg_x, expected, 1e-10);
+        TestResult::from_bool(result)
     }
 
     #[quickcheck]
@@ -396,6 +411,11 @@ mod spherical_harmonics_properties {
         let m = 0;
 
         if l > 5 {
+            return TestResult::discard();
+        }
+
+        // Discard if phi is not finite (inf/NaN) before modulo operation
+        if !phi.is_finite() {
             return TestResult::discard();
         }
 

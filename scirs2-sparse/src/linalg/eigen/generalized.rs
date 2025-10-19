@@ -68,6 +68,8 @@ where
         + Div<Output = T>
         + std::iter::Sum
         + scirs2_core::simd_ops::SimdUnifiedOps
+        + scirs2_core::SparseElement
+        + PartialOrd
         + Send
         + Sync
         + 'static,
@@ -157,12 +159,14 @@ where
         + Div<Output = T>
         + std::iter::Sum
         + scirs2_core::simd_ops::SimdUnifiedOps
+        + scirs2_core::SparseElement
+        + PartialOrd
         + Send
         + Sync
         + 'static,
 {
     let mode = mode.unwrap_or("standard");
-    let _sigma = sigma.unwrap_or(T::zero());
+    let _sigma = sigma.unwrap_or(T::sparse_zero());
 
     match mode {
         "standard" => eigsh_generalized(a_matrix, b_matrix, k, which, options),
@@ -204,6 +208,8 @@ where
         + Div<Output = T>
         + std::iter::Sum
         + scirs2_core::simd_ops::SimdUnifiedOps
+        + scirs2_core::SparseElement
+        + PartialOrd
         + Send
         + Sync
         + 'static,
@@ -243,14 +249,14 @@ where
 /// Check if matrix is positive definite (simplified diagonal check)
 fn is_positive_definite_diagonal<T>(matrix: &SymCsrMatrix<T>) -> SparseResult<bool>
 where
-    T: Float + Debug + Copy,
+    T: Float + Debug + Copy + scirs2_core::SparseElement + PartialOrd,
 {
     let n = matrix.shape().0;
 
     // Check diagonal elements are positive
     for i in 0..n {
         let mut diagonal_found = false;
-        let mut diagonal_value = T::zero();
+        let mut diagonal_value = T::sparse_zero();
 
         // Find diagonal element in row i
         for j in matrix.indptr[i]..matrix.indptr[i + 1] {
@@ -261,7 +267,7 @@ where
             }
         }
 
-        if !diagonal_found || diagonal_value <= T::zero() {
+        if !diagonal_found || diagonal_value <= T::sparse_zero() {
             return Ok(false);
         }
     }
@@ -276,7 +282,15 @@ fn compute_generalized_matrix<T>(
     b_matrix: &SymCsrMatrix<T>,
 ) -> SparseResult<SymCsrMatrix<T>>
 where
-    T: Float + Debug + Copy + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T>,
+    T: Float
+        + Debug
+        + Copy
+        + Add<Output = T>
+        + Sub<Output = T>
+        + Mul<Output = T>
+        + Div<Output = T>
+        + scirs2_core::SparseElement
+        + PartialOrd,
 {
     let n = a_matrix.shape().0;
 
@@ -324,6 +338,8 @@ where
         + Div<Output = T>
         + std::iter::Sum
         + scirs2_core::simd_ops::SimdUnifiedOps
+        + scirs2_core::SparseElement
+        + PartialOrd
         + Send
         + Sync
         + 'static,

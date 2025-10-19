@@ -7,6 +7,7 @@ use crate::error::{SparseError, SparseResult};
 use crate::linalg::interface::{AdjointOperator, LinearOperator};
 use crate::parallel_vector_ops::*;
 use scirs2_core::numeric::{Float, NumAssign};
+use scirs2_core::SparseElement;
 use std::fmt::Debug;
 use std::iter::Sum;
 
@@ -70,8 +71,8 @@ impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> EnhancedD
     }
 }
 
-impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> LinearOperator<F>
-    for EnhancedDiagonalOperator<F>
+impl<F: Float + SparseElement + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps>
+    LinearOperator<F> for EnhancedDiagonalOperator<F>
 {
     fn shape(&self) -> (usize, usize) {
         let n = self.diagonal.len();
@@ -86,7 +87,7 @@ impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> LinearOpe
             });
         }
 
-        let mut result = vec![F::zero(); x.len()];
+        let mut result = vec![F::sparse_zero(); x.len()];
 
         // Use optimized element-wise multiplication via parallel vector operations
         // This is equivalent to diagonal multiplication: result[i] = diagonal[i] * x[i]
@@ -160,8 +161,8 @@ impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> EnhancedS
     }
 }
 
-impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> LinearOperator<F>
-    for EnhancedSumOperator<F>
+impl<F: Float + SparseElement + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps>
+    LinearOperator<F> for EnhancedSumOperator<F>
 {
     fn shape(&self) -> (usize, usize) {
         self.a.shape()
@@ -171,7 +172,7 @@ impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> LinearOpe
         let a_result = self.a.matvec(x)?;
         let b_result = self.b.matvec(x)?;
 
-        let mut result = vec![F::zero(); a_result.len()];
+        let mut result = vec![F::sparse_zero(); a_result.len()];
         let parallel_opts = Some(ParallelVectorOptions {
             use_parallel: self.options.use_parallel,
             parallel_threshold: self.options.parallel_threshold,
@@ -194,7 +195,7 @@ impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> LinearOpe
         let a_result = self.a.rmatvec(x)?;
         let b_result = self.b.rmatvec(x)?;
 
-        let mut result = vec![F::zero(); a_result.len()];
+        let mut result = vec![F::sparse_zero(); a_result.len()];
         let parallel_opts = Some(ParallelVectorOptions {
             use_parallel: self.options.use_parallel,
             parallel_threshold: self.options.parallel_threshold,
@@ -256,8 +257,8 @@ impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps>
     }
 }
 
-impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> LinearOperator<F>
-    for EnhancedDifferenceOperator<F>
+impl<F: Float + SparseElement + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps>
+    LinearOperator<F> for EnhancedDifferenceOperator<F>
 {
     fn shape(&self) -> (usize, usize) {
         self.a.shape()
@@ -267,7 +268,7 @@ impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> LinearOpe
         let a_result = self.a.matvec(x)?;
         let b_result = self.b.matvec(x)?;
 
-        let mut result = vec![F::zero(); a_result.len()];
+        let mut result = vec![F::sparse_zero(); a_result.len()];
         let parallel_opts = Some(ParallelVectorOptions {
             use_parallel: self.options.use_parallel,
             parallel_threshold: self.options.parallel_threshold,
@@ -290,7 +291,7 @@ impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> LinearOpe
         let a_result = self.a.rmatvec(x)?;
         let b_result = self.b.rmatvec(x)?;
 
-        let mut result = vec![F::zero(); a_result.len()];
+        let mut result = vec![F::sparse_zero(); a_result.len()];
         let parallel_opts = Some(ParallelVectorOptions {
             use_parallel: self.options.use_parallel,
             parallel_threshold: self.options.parallel_threshold,
@@ -342,8 +343,8 @@ impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> EnhancedS
     }
 }
 
-impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> LinearOperator<F>
-    for EnhancedScaledOperator<F>
+impl<F: Float + SparseElement + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps>
+    LinearOperator<F> for EnhancedScaledOperator<F>
 {
     fn shape(&self) -> (usize, usize) {
         self.operator.shape()
@@ -351,7 +352,7 @@ impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> LinearOpe
 
     fn matvec(&self, x: &[F]) -> SparseResult<Vec<F>> {
         let result = self.operator.matvec(x)?;
-        let mut scaled_result = vec![F::zero(); result.len()];
+        let mut scaled_result = vec![F::sparse_zero(); result.len()];
 
         let parallel_opts = Some(ParallelVectorOptions {
             use_parallel: self.options.use_parallel,
@@ -373,7 +374,7 @@ impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> LinearOpe
             ));
         }
         let result = self.operator.rmatvec(x)?;
-        let mut scaled_result = vec![F::zero(); result.len()];
+        let mut scaled_result = vec![F::sparse_zero(); result.len()];
 
         let parallel_opts = Some(ParallelVectorOptions {
             use_parallel: self.options.use_parallel,
@@ -412,7 +413,9 @@ pub enum ConvolutionMode {
     Valid,
 }
 
-impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> ConvolutionOperator<F> {
+impl<F: Float + SparseElement + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps>
+    ConvolutionOperator<F>
+{
     /// Create a new convolution operator
     #[allow(dead_code)]
     pub fn new(kernel: Vec<F>, input_size: usize, mode: ConvolutionMode) -> Self {
@@ -447,7 +450,7 @@ impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> Convoluti
         let chunks: Vec<&[usize]> = indices.chunks(chunk_size).collect();
 
         let parallel_results: Vec<Vec<F>> = parallel_map(&chunks, |chunk| {
-            let mut chunk_result = vec![F::zero(); chunk.len()];
+            let mut chunk_result = vec![F::sparse_zero(); chunk.len()];
 
             for (local_i, &global_i) in chunk.iter().enumerate() {
                 chunk_result[local_i] = self.compute_convolution_at_index(global_i, x);
@@ -487,7 +490,7 @@ impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> Convoluti
 
     /// Compute convolution at a specific output index (scalar version)
     fn compute_convolution_at_index(&self, i: usize, x: &[F]) -> F {
-        let mut sum = F::zero();
+        let mut sum = F::sparse_zero();
 
         match self.mode {
             ConvolutionMode::Full => {
@@ -601,8 +604,8 @@ impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> Convoluti
     }
 }
 
-impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> LinearOperator<F>
-    for ConvolutionOperator<F>
+impl<F: Float + SparseElement + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps>
+    LinearOperator<F> for ConvolutionOperator<F>
 {
     fn shape(&self) -> (usize, usize) {
         (self.output_size, self.input_size)
@@ -616,13 +619,13 @@ impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> LinearOpe
             });
         }
 
-        let mut result = vec![F::zero(); self.output_size];
+        let mut result = vec![F::sparse_zero(); self.output_size];
 
         // Implement convolution based on mode
         match self.mode {
             ConvolutionMode::Full => {
                 for i in 0..self.output_size {
-                    let mut sum = F::zero();
+                    let mut sum = F::sparse_zero();
                     for (j, &kernel_val) in self.kernel.iter().enumerate() {
                         if i >= j && (i - j) < x.len() {
                             sum += kernel_val * x[i - j];
@@ -635,7 +638,7 @@ impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> LinearOpe
                 let pad = self.kernel.len() / 2;
                 #[allow(clippy::needless_range_loop)]
                 for i in 0..self.output_size {
-                    let mut sum = F::zero();
+                    let mut sum = F::sparse_zero();
                     for (j, &kernel_val) in self.kernel.iter().enumerate() {
                         let idx = i + j;
                         if idx >= pad && (idx - pad) < x.len() {
@@ -649,7 +652,7 @@ impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> LinearOpe
             {
                 #[allow(clippy::needless_range_loop)]
                 for i in 0..self.output_size {
-                    let mut sum = F::zero();
+                    let mut sum = F::sparse_zero();
                     for (j, &kernel_val) in self.kernel.iter().enumerate() {
                         let idx = i + j;
                         if idx < x.len() {
@@ -684,7 +687,7 @@ impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> LinearOpe
         }
 
         // Adjoint of convolution is correlation with flipped kernel
-        let mut result = vec![F::zero(); self.input_size];
+        let mut result = vec![F::sparse_zero(); self.input_size];
         let flipped_kernel: Vec<F> = self.kernel.iter().rev().copied().collect();
 
         // Implement correlation (adjoint of convolution)
@@ -693,7 +696,7 @@ impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> LinearOpe
             {
                 #[allow(clippy::needless_range_loop)]
                 for i in 0..self.input_size {
-                    let mut sum = F::zero();
+                    let mut sum = F::sparse_zero();
                     for (j, &kernel_val) in flipped_kernel.iter().enumerate() {
                         let idx = i + j;
                         if idx < x.len() {
@@ -706,7 +709,7 @@ impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> LinearOpe
             ConvolutionMode::Same => {
                 let pad = flipped_kernel.len() / 2;
                 for i in 0..self.input_size {
-                    let mut sum = F::zero();
+                    let mut sum = F::sparse_zero();
                     for (j, &kernel_val) in flipped_kernel.iter().enumerate() {
                         if i + pad >= j && (i + pad - j) < x.len() {
                             sum += kernel_val * x[i + pad - j];
@@ -717,7 +720,7 @@ impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> LinearOpe
             }
             ConvolutionMode::Valid => {
                 for i in 0..self.input_size {
-                    let mut sum = F::zero();
+                    let mut sum = F::sparse_zero();
                     for (j, &kernel_val) in flipped_kernel.iter().enumerate() {
                         if i >= j && (i - j) < x.len() {
                             sum += kernel_val * x[i - j];
@@ -752,7 +755,9 @@ pub enum BoundaryCondition {
     Periodic,
 }
 
-impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> FiniteDifferenceOperator<F> {
+impl<F: Float + SparseElement + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps>
+    FiniteDifferenceOperator<F>
+{
     /// Create a new finite difference operator
     #[allow(dead_code)]
     pub fn new(size: usize, order: usize, spacing: F, boundary: BoundaryCondition) -> Self {
@@ -789,31 +794,31 @@ impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> FiniteDif
             1 => {
                 // First derivative: central difference
                 vec![
-                    -F::one() / (F::from(2.0).unwrap() * self.spacing),
-                    F::zero(),
-                    F::one() / (F::from(2.0).unwrap() * self.spacing),
+                    -F::sparse_one() / (F::from(2.0).unwrap() * self.spacing),
+                    F::sparse_zero(),
+                    F::sparse_one() / (F::from(2.0).unwrap() * self.spacing),
                 ]
             }
             2 => {
                 // Second derivative: central difference
                 let h_sq = self.spacing * self.spacing;
                 vec![
-                    F::one() / h_sq,
+                    F::sparse_one() / h_sq,
                     -F::from(2.0).unwrap() / h_sq,
-                    F::one() / h_sq,
+                    F::sparse_one() / h_sq,
                 ]
             }
             _ => {
                 // Higher order derivatives - simplified implementation
                 // In practice, would use more sophisticated stencils
-                vec![F::zero(); 2 * self.order + 1]
+                vec![F::sparse_zero(); 2 * self.order + 1]
             }
         }
     }
 }
 
-impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> LinearOperator<F>
-    for FiniteDifferenceOperator<F>
+impl<F: Float + SparseElement + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps>
+    LinearOperator<F> for FiniteDifferenceOperator<F>
 {
     fn shape(&self) -> (usize, usize) {
         (self.size, self.size)
@@ -827,13 +832,13 @@ impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> LinearOpe
             });
         }
 
-        let mut result = vec![F::zero(); self.size];
+        let mut result = vec![F::sparse_zero(); self.size];
         let coeffs = self.get_coefficients();
         let stencil_radius = coeffs.len() / 2;
 
         #[allow(clippy::needless_range_loop)]
         for i in 0..self.size {
-            let mut sum = F::zero();
+            let mut sum = F::sparse_zero();
             for (j, &coeff) in coeffs.iter().enumerate() {
                 let idx = i as isize + j as isize - stencil_radius as isize;
 
@@ -849,7 +854,7 @@ impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> LinearOpe
                     }
                     BoundaryCondition::Dirichlet => {
                         if idx < 0 || idx >= self.size as isize {
-                            F::zero()
+                            F::sparse_zero()
                         } else {
                             x[idx as usize]
                         }
@@ -885,7 +890,7 @@ impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> LinearOpe
 /// Create an enhanced diagonal operator
 #[allow(dead_code)]
 pub fn enhanced_diagonal<
-    F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps + 'static,
+    F: Float + SparseElement + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps + 'static,
 >(
     diagonal: Vec<F>,
 ) -> Box<dyn LinearOperator<F>> {
@@ -894,7 +899,9 @@ pub fn enhanced_diagonal<
 
 /// Create an enhanced sum operator
 #[allow(dead_code)]
-pub fn enhanced_add<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps + 'static>(
+pub fn enhanced_add<
+    F: Float + SparseElement + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps + 'static,
+>(
     left: Box<dyn LinearOperator<F>>,
     right: Box<dyn LinearOperator<F>>,
 ) -> SparseResult<Box<dyn LinearOperator<F>>> {
@@ -904,7 +911,7 @@ pub fn enhanced_add<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifie
 /// Create an enhanced difference operator
 #[allow(dead_code)]
 pub fn enhanced_subtract<
-    F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps + 'static,
+    F: Float + SparseElement + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps + 'static,
 >(
     left: Box<dyn LinearOperator<F>>,
     right: Box<dyn LinearOperator<F>>,
@@ -915,7 +922,7 @@ pub fn enhanced_subtract<
 /// Create an enhanced scaled operator
 #[allow(dead_code)]
 pub fn enhanced_scale<
-    F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps + 'static,
+    F: Float + SparseElement + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps + 'static,
 >(
     alpha: F,
     operator: Box<dyn LinearOperator<F>>,
@@ -926,7 +933,7 @@ pub fn enhanced_scale<
 /// Create a convolution operator
 #[allow(dead_code)]
 pub fn convolution_operator<
-    F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps + 'static,
+    F: Float + SparseElement + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps + 'static,
 >(
     kernel: Vec<F>,
     input_size: usize,
@@ -938,7 +945,7 @@ pub fn convolution_operator<
 /// Create a finite difference operator
 #[allow(dead_code)]
 pub fn finite_difference_operator<
-    F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps + 'static,
+    F: Float + SparseElement + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps + 'static,
 >(
     size: usize,
     order: usize,
@@ -1010,8 +1017,8 @@ impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps>
     }
 }
 
-impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> LinearOperator<F>
-    for EnhancedCompositionOperator<F>
+impl<F: Float + SparseElement + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps>
+    LinearOperator<F> for EnhancedCompositionOperator<F>
 {
     fn shape(&self) -> (usize, usize) {
         let (left_rows, _) = self.left.shape();
@@ -1079,8 +1086,8 @@ impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps>
     }
 }
 
-impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> LinearOperator<F>
-    for ElementwiseFunctionOperator<F>
+impl<F: Float + SparseElement + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps>
+    LinearOperator<F> for ElementwiseFunctionOperator<F>
 {
     fn shape(&self) -> (usize, usize) {
         (self.size, self.size)
@@ -1151,8 +1158,8 @@ impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> Kronecker
     }
 }
 
-impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> LinearOperator<F>
-    for KroneckerProductOperator<F>
+impl<F: Float + SparseElement + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps>
+    LinearOperator<F> for KroneckerProductOperator<F>
 {
     fn shape(&self) -> (usize, usize) {
         let (left_rows, left_cols) = self.left.shape();
@@ -1173,7 +1180,7 @@ impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> LinearOpe
 
         // Reshape x as a matrix (right_cols × left_cols)
         // Apply right operator to each column, then left operator to each row
-        let mut result = vec![F::zero(); left_rows * right_rows];
+        let mut result = vec![F::sparse_zero(); left_rows * right_rows];
 
         for j in 0..left_cols {
             // Extract column j from the reshaped x
@@ -1192,7 +1199,7 @@ impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> LinearOpe
         }
 
         // Now apply the left operator to each row
-        let mut final_result = vec![F::zero(); left_rows * right_rows];
+        let mut final_result = vec![F::sparse_zero(); left_rows * right_rows];
         for i in 0..right_rows {
             // Extract row i
             let mut row: Vec<F> = Vec::with_capacity(left_cols);
@@ -1236,7 +1243,7 @@ impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> LinearOpe
 /// Create an enhanced composition operator (left * right)
 #[allow(dead_code)]
 pub fn enhanced_compose<
-    F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps + 'static,
+    F: Float + SparseElement + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps + 'static,
 >(
     left: Box<dyn LinearOperator<F>>,
     right: Box<dyn LinearOperator<F>>,
@@ -1247,7 +1254,7 @@ pub fn enhanced_compose<
 /// Create an element-wise function operator
 #[allow(dead_code)]
 pub fn elementwisefunction<
-    F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps + 'static,
+    F: Float + SparseElement + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps + 'static,
     Func: Fn(F) -> F + Send + Sync + 'static,
 >(
     function: Func,
@@ -1259,7 +1266,7 @@ pub fn elementwisefunction<
 /// Create a Kronecker product operator
 #[allow(dead_code)]
 pub fn kronecker_product<
-    F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps + 'static,
+    F: Float + SparseElement + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps + 'static,
 >(
     left: Box<dyn LinearOperator<F>>,
     right: Box<dyn LinearOperator<F>>,

@@ -8,7 +8,7 @@ use crate::error::SparseResult;
 use crate::sym_coo::{SymCooArray, SymCooMatrix};
 use crate::sym_csr::{SymCsrArray, SymCsrMatrix};
 use crate::sym_sparray::SymSparseArray;
-use scirs2_core::numeric::Float;
+use scirs2_core::numeric::{Float, SparseElement};
 use std::fmt::Debug;
 use std::ops::{Add, Div, Mul, Sub};
 
@@ -41,20 +41,16 @@ use std::ops::{Add, Div, Mul, Sub};
 pub fn eye_sym_array<T>(n: usize, format: &str) -> SparseResult<Box<dyn SymSparseArray<T>>>
 where
     T: Float
-        + Debug
-        + Copy
-        + 'static
-        + Add<Output = T>
-        + Sub<Output = T>
-        + Mul<Output = T>
+        + SparseElement
         + Div<Output = T>
         + scirs2_core::simd_ops::SimdUnifiedOps
         + Send
-        + Sync,
+        + Sync
+        + 'static,
 {
     // Create data for identity matrix
     let mut data = Vec::with_capacity(n);
-    let one = T::one();
+    let one = T::sparse_one();
 
     for _ in 0..n {
         data.push(one);
@@ -140,16 +136,12 @@ pub fn tridiagonal_sym_array<T>(
 ) -> SparseResult<Box<dyn SymSparseArray<T>>>
 where
     T: Float
-        + Debug
-        + Copy
-        + 'static
-        + Add<Output = T>
-        + Sub<Output = T>
-        + Mul<Output = T>
+        + SparseElement
         + Div<Output = T>
         + scirs2_core::simd_ops::SimdUnifiedOps
         + Send
-        + Sync,
+        + Sync
+        + 'static,
 {
     let n = diag.len();
 
@@ -178,7 +170,7 @@ where
             let mut nnz = 0;
 
             // First row - diagonal only (since we only store lower triangular elements)
-            if !diag[0].is_zero() {
+            if !SparseElement::is_zero(&diag[0]) {
                 data.push(diag[0]);
                 indices.push(0);
                 nnz += 1;
@@ -191,14 +183,14 @@ where
             // Middle rows
             for i in 1..n - 1 {
                 // Off-diagonal below (from previous row)
-                if !offdiag[i - 1].is_zero() {
+                if !SparseElement::is_zero(&offdiag[i - 1]) {
                     data.push(offdiag[i - 1]);
                     indices.push(i - 1);
                     nnz += 1;
                 }
 
                 // Diagonal
-                if !diag[i].is_zero() {
+                if !SparseElement::is_zero(&diag[i]) {
                     data.push(diag[i]);
                     indices.push(i);
                     nnz += 1;
@@ -213,14 +205,14 @@ where
             // Last row - diagonal and above
             if n > 1 {
                 // Off-diagonal below (from previous row)
-                if !offdiag[n - 2].is_zero() {
+                if !SparseElement::is_zero(&offdiag[n - 2]) {
                     data.push(offdiag[n - 2]);
                     indices.push(n - 2);
                     nnz += 1;
                 }
 
                 // Diagonal
-                if !diag[n - 1].is_zero() {
+                if !SparseElement::is_zero(&diag[n - 1]) {
                     data.push(diag[n - 1]);
                     indices.push(n - 1);
                     nnz += 1;
@@ -242,7 +234,7 @@ where
 
             // Add diagonal elements
             for (i, &diag_val) in diag.iter().enumerate().take(n) {
-                if !diag_val.is_zero() {
+                if !SparseElement::is_zero(&diag_val) {
                     data.push(diag_val);
                     rows.push(i);
                     cols.push(i);
@@ -251,7 +243,7 @@ where
 
             // Add off-diagonal elements (only the lower triangular part)
             for (i, &offdiag_val) in offdiag.iter().enumerate().take(n - 1) {
-                if !offdiag_val.is_zero() {
+                if !SparseElement::is_zero(&offdiag_val) {
                     // For SymCOO, we only store the lower triangular part
                     // So we store (i+1, i) instead of (i, i+1)
                     data.push(offdiag_val);
@@ -313,16 +305,12 @@ pub fn banded_sym_array<T>(
 ) -> SparseResult<Box<dyn SymSparseArray<T>>>
 where
     T: Float
-        + Debug
-        + Copy
-        + 'static
-        + Add<Output = T>
-        + Sub<Output = T>
-        + Mul<Output = T>
+        + SparseElement
         + Div<Output = T>
         + scirs2_core::simd_ops::SimdUnifiedOps
         + Send
-        + Sync,
+        + Sync
+        + 'static,
 {
     if diagonals.is_empty() {
         return Err(crate::error::SparseError::ValueError(
@@ -350,7 +338,7 @@ where
 
             // Add main diagonal (k=0)
             for i in 0..n {
-                if !diagonals[0][i].is_zero() {
+                if !SparseElement::is_zero(&diagonals[0][i]) {
                     data.push(diagonals[0][i]);
                     rows.push(i);
                     cols.push(i);
@@ -360,7 +348,7 @@ where
             // Add off-diagonals (only lower triangular part)
             for (k, diag) in diagonals.iter().enumerate().skip(1) {
                 for (i, &diag_val) in diag.iter().enumerate() {
-                    if !diag_val.is_zero() {
+                    if !SparseElement::is_zero(&diag_val) {
                         // Store in lower triangular part (i+k, i)
                         data.push(diag_val);
                         rows.push(i + k);
@@ -385,7 +373,7 @@ where
                     let k = i - j; // Diagonal index
                     if k < diagonals.len() {
                         let val = diagonals[k][j];
-                        if !val.is_zero() {
+                        if !SparseElement::is_zero(&val) {
                             data.push(val);
                             indices.push(j);
                         }
@@ -393,7 +381,7 @@ where
                 }
 
                 // Add diagonal element
-                if !diagonals[0][i].is_zero() {
+                if !SparseElement::is_zero(&diagonals[0][i]) {
                     data.push(diagonals[0][i]);
                     indices.push(i);
                 }
@@ -445,16 +433,12 @@ pub fn random_sym_array<T>(
 ) -> SparseResult<Box<dyn SymSparseArray<T>>>
 where
     T: Float
-        + Debug
-        + Copy
-        + 'static
-        + Add<Output = T>
-        + Sub<Output = T>
-        + Mul<Output = T>
+        + SparseElement
         + Div<Output = T>
         + scirs2_core::simd_ops::SimdUnifiedOps
         + Send
-        + Sync,
+        + Sync
+        + 'static,
 {
     if !(0.0..=1.0).contains(&density) {
         return Err(crate::error::SparseError::ValueError(

@@ -11,7 +11,7 @@
 use crate::error::{SparseError, SparseResult};
 use crate::sparray::SparseArray;
 use scirs2_core::ndarray::{Array1, ArrayView1};
-use scirs2_core::numeric::Float;
+use scirs2_core::numeric::{Float, SparseElement};
 use std::fmt::Debug;
 
 /// Options for the LSMR solver
@@ -113,7 +113,7 @@ pub fn lsmr<T, S>(
     options: LSMROptions,
 ) -> SparseResult<LSMRResult<T>>
 where
-    T: Float + Debug + Copy + 'static,
+    T: Float + SparseElement + Debug + Copy + 'static,
     S: SparseArray<T>,
 {
     let (m, n) = matrix.shape();
@@ -163,7 +163,7 @@ where
             iterations: 0,
             residualnorm: beta,
             solution_norm,
-            condition_number: T::one(),
+            condition_number: T::sparse_one(),
             converged: true,
             standard_errors: None,
             residual_history,
@@ -172,7 +172,7 @@ where
     }
 
     // Normalize u
-    if beta > T::zero() {
+    if beta > T::sparse_zero() {
         for i in 0..m {
             u[i] = u[i] / beta;
         }
@@ -182,7 +182,7 @@ where
     let mut v = matrix_transpose_vector_multiply(matrix, &u.view())?;
     let mut alpha = l2_norm(&v.view());
 
-    if alpha > T::zero() {
+    if alpha > T::sparse_zero() {
         for i in 0..n {
             v[i] = v[i] / alpha;
         }
@@ -191,10 +191,10 @@ where
     // Initialize other variables
     let mut alphabar = alpha;
     let mut zetabar = alpha * beta;
-    let mut rho = T::one();
-    let mut rhobar = T::one();
-    let mut cbar = T::one();
-    let mut sbar = T::zero();
+    let mut rho = T::sparse_one();
+    let mut rhobar = T::sparse_one();
+    let mut cbar = T::sparse_one();
+    let mut sbar = T::sparse_zero();
 
     let mut h = v.clone();
     let mut hbar = Array1::zeros(n);
@@ -202,13 +202,13 @@ where
     // LSMR iteration variables
     let mut arnorm = alpha * beta;
     let mut beta_dd = beta;
-    let mut tau = T::zero();
-    let mut theta = T::zero();
-    let mut zeta = T::zero();
-    let mut d = T::zero();
-    let mut res2 = T::zero();
-    let mut anorm = T::zero();
-    let mut xxnorm = T::zero();
+    let mut tau = T::sparse_zero();
+    let mut theta = T::sparse_zero();
+    let mut zeta = T::sparse_zero();
+    let mut d = T::sparse_zero();
+    let mut res2 = T::sparse_zero();
+    let mut anorm = T::sparse_zero();
+    let mut xxnorm = T::sparse_zero();
 
     let mut converged = false;
     let mut convergence_reason = String::new();
@@ -224,7 +224,7 @@ where
         }
         beta = l2_norm(&u.view());
 
-        if beta > T::zero() {
+        if beta > T::sparse_zero() {
             for i in 0..m {
                 u[i] = u[i] / beta;
             }
@@ -235,7 +235,7 @@ where
             }
             alpha = l2_norm(&v.view());
 
-            if alpha > T::zero() {
+            if alpha > T::sparse_zero() {
                 for i in 0..n {
                     v[i] = v[i] / alpha;
                 }
@@ -294,9 +294,9 @@ where
         let r2norm = arnorm;
         let cond = anorm * xxnorm;
 
-        let test1 = res2 / (T::one() + anorm * xxnorm);
-        let test2 = arnorm / (T::one() + anorm);
-        let test3 = T::one() / (T::one() + cond);
+        let test1 = res2 / (T::sparse_one() + anorm * xxnorm);
+        let test2 = arnorm / (T::sparse_one() + anorm);
+        let test3 = T::sparse_one() / (T::sparse_one() + cond);
 
         if test1 <= atol {
             converged = true;
@@ -310,7 +310,7 @@ where
             break;
         }
 
-        if test3 <= T::one() / conlim {
+        if test3 <= T::sparse_one() / conlim {
             converged = true;
             convergence_reason = "Condition number limit reached".to_string();
             break;
@@ -360,7 +360,7 @@ where
 #[allow(dead_code)]
 fn matrix_vector_multiply<T, S>(matrix: &S, x: &ArrayView1<T>) -> SparseResult<Array1<T>>
 where
-    T: Float + Debug + Copy + 'static,
+    T: Float + SparseElement + Debug + Copy + 'static,
     S: SparseArray<T>,
 {
     let (rows, cols) = matrix.shape();
@@ -385,7 +385,7 @@ where
 #[allow(dead_code)]
 fn matrix_transpose_vector_multiply<T, S>(matrix: &S, x: &ArrayView1<T>) -> SparseResult<Array1<T>>
 where
-    T: Float + Debug + Copy + 'static,
+    T: Float + SparseElement + Debug + Copy + 'static,
     S: SparseArray<T>,
 {
     let (rows, cols) = matrix.shape();
@@ -410,16 +410,19 @@ where
 #[allow(dead_code)]
 fn l2_norm<T>(x: &ArrayView1<T>) -> T
 where
-    T: Float + Debug + Copy,
+    T: Float + SparseElement + Debug + Copy,
 {
-    (x.iter().map(|&val| val * val).fold(T::zero(), |a, b| a + b)).sqrt()
+    (x.iter()
+        .map(|&val| val * val)
+        .fold(T::sparse_zero(), |a, b| a + b))
+    .sqrt()
 }
 
 /// Compute standard errors (simplified implementation)
 #[allow(dead_code)]
 fn compute_standard_errors<T, S>(matrix: &S, residualnorm: T, n: usize) -> SparseResult<Array1<T>>
 where
-    T: Float + Debug + Copy + 'static,
+    T: Float + SparseElement + Debug + Copy + 'static,
     S: SparseArray<T>,
 {
     let (m, _) = matrix.shape();

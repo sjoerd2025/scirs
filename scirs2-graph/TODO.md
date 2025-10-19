@@ -1,6 +1,6 @@
-# SciRS2 Graph - Production TODO (v0.1.0-rc.1)
+# SciRS2 Graph - Production TODO (v0.1.0-rc.2)
 
-This Release Candidate 1 features comprehensive platform testing and final preparation for stable release. Following the [SciRS2 POLICY](../SCIRS2_POLICY.md), the module is production-ready with comprehensive graph functionality and ecosystem consistency.
+This Release Candidate 2 features comprehensive platform testing and final preparation for stable release. Following the [SciRS2 POLICY](../SCIRS2_POLICY.md), the module is production-ready with comprehensive graph functionality and ecosystem consistency.
 
 ## Production Status
 

@@ -4,7 +4,7 @@
 // which is efficient for matrices with block-structured sparsity patterns.
 
 use scirs2_core::ndarray::{Array1, Array2, ArrayView1};
-use scirs2_core::numeric::Float;
+use scirs2_core::numeric::{Float, SparseElement};
 use std::fmt::{self, Debug};
 use std::ops::{Add, Div, Mul, Sub};
 
@@ -34,15 +34,7 @@ use crate::sparray::{SparseArray, SparseSum};
 #[derive(Clone)]
 pub struct BsrArray<T>
 where
-    T: Float
-        + Add<Output = T>
-        + Sub<Output = T>
-        + Mul<Output = T>
-        + Div<Output = T>
-        + Debug
-        + Copy
-        + 'static
-        + std::ops::AddAssign,
+    T: SparseElement + Div<Output = T> + Float + 'static + std::ops::AddAssign,
 {
     /// Number of rows
     rows: usize,
@@ -65,15 +57,7 @@ where
 
 impl<T> BsrArray<T>
 where
-    T: Float
-        + Add<Output = T>
-        + Sub<Output = T>
-        + Mul<Output = T>
-        + Div<Output = T>
-        + Debug
-        + Copy
-        + 'static
-        + std::ops::AddAssign,
+    T: SparseElement + Div<Output = T> + Float + 'static + std::ops::AddAssign,
 {
     /// Create a new BSR array from raw data
     ///
@@ -307,7 +291,7 @@ where
 
             // Create or get the block
             let block = block_data.entry((block_row, block_col)).or_insert_with(|| {
-                let block = vec![vec![T::zero(); c]; r];
+                let block = vec![vec![T::sparse_zero(); c]; r];
                 block
             });
 
@@ -373,7 +357,7 @@ where
                     if row < self.rows {
                         for (j, &value) in block_row_data.iter().enumerate().take(c) {
                             let col = block_col * c + j;
-                            if col < self.cols && !value.is_zero() {
+                            if col < self.cols && !SparseElement::is_zero(&value) {
                                 row_indices.push(row);
                                 col_indices.push(col);
                                 values.push(value);
@@ -390,15 +374,7 @@ where
 
 impl<T> SparseArray<T> for BsrArray<T>
 where
-    T: Float
-        + Add<Output = T>
-        + Sub<Output = T>
-        + Mul<Output = T>
-        + Div<Output = T>
-        + Debug
-        + Copy
-        + 'static
-        + std::ops::AddAssign,
+    T: SparseElement + Div<Output = T> + Float + 'static + std::ops::AddAssign,
 {
     fn shape(&self) -> (usize, usize) {
         (self.rows, self.cols)
@@ -410,7 +386,7 @@ where
         for block in &self.data {
             for row in block {
                 for &val in row {
-                    if !val.is_zero() {
+                    if !SparseElement::is_zero(&val) {
                         count += 1;
                     }
                 }
@@ -433,7 +409,6 @@ where
                 let block_col = self.indices[k][0];
                 let block = &self.data[k];
 
-                // Copy block to dense array
                 for (i, block_row_data) in block.iter().enumerate().take(r) {
                     let row = block_row * r + i;
                     if row < self.rows {
@@ -567,7 +542,7 @@ where
             let mut values = Vec::new();
 
             for (i, &val) in result.iter().enumerate() {
-                if !val.is_zero() {
+                if !SparseElement::is_zero(&val) {
                     rows.push(i);
                     cols.push(0);
                     values.push(val);
@@ -630,7 +605,7 @@ where
 
     fn get(&self, i: usize, j: usize) -> T {
         if i >= self.rows || j >= self.cols {
-            return T::zero();
+            return T::sparse_zero();
         }
 
         let (r, c) = self.block_size;
@@ -646,7 +621,7 @@ where
             }
         }
 
-        T::zero()
+        T::sparse_zero()
     }
 
     fn set(&mut self, i: usize, j: usize, value: T) -> SparseResult<()> {
@@ -673,12 +648,12 @@ where
         }
 
         // Block doesn't exist, we need to create it
-        if !value.is_zero() {
+        if !SparseElement::is_zero(&value) {
             // Find position to insert
             let pos = self.indptr[block_row + 1];
 
             // Create new block
-            let mut block = vec![vec![T::zero(); c]; r];
+            let mut block = vec![vec![T::sparse_zero(); c]; r];
             block[block_row_pos][block_col_pos] = value;
 
             // Insert block, indices
@@ -713,7 +688,7 @@ where
                 let mut has_nonzero = false;
                 for row in block {
                     for &val in row {
-                        if !val.is_zero() {
+                        if !SparseElement::is_zero(&val) {
                             has_nonzero = true;
                             break;
                         }
@@ -800,7 +775,7 @@ where
         match axis {
             None => {
                 // Sum all elements
-                let mut total = T::zero();
+                let mut total = T::sparse_zero();
 
                 for block in &self.data {
                     for row in block {
@@ -814,7 +789,7 @@ where
             }
             Some(0) => {
                 // Sum along rows (result is 1 x cols)
-                let mut result = vec![T::zero(); self.cols];
+                let mut result = vec![T::sparse_zero(); self.cols];
                 let (r, c) = self.block_size;
 
                 for block_row in 0..self.block_rows {
@@ -839,7 +814,7 @@ where
                 let mut values = Vec::new();
 
                 for (j, &val) in result.iter().enumerate() {
-                    if !val.is_zero() {
+                    if !SparseElement::is_zero(&val) {
                         row_indices.push(0);
                         col_indices.push(j);
                         values.push(val);
@@ -859,7 +834,7 @@ where
             }
             Some(1) => {
                 // Sum along columns (result is rows x 1)
-                let mut result = vec![T::zero(); self.rows];
+                let mut result = vec![T::sparse_zero(); self.rows];
                 let (r, c) = self.block_size;
 
                 for block_row in 0..self.block_rows {
@@ -883,7 +858,7 @@ where
                 let mut values = Vec::new();
 
                 for (i, &val) in result.iter().enumerate() {
-                    if !val.is_zero() {
+                    if !SparseElement::is_zero(&val) {
                         row_indices.push(i);
                         col_indices.push(0);
                         values.push(val);
@@ -918,20 +893,20 @@ where
 
         // If no elements or all negative infinity, return zero
         if max_val == T::neg_infinity() {
-            T::zero()
+            T::sparse_zero()
         } else {
             max_val
         }
     }
 
     fn min(&self) -> T {
-        let mut min_val = T::infinity();
+        let mut min_val = T::sparse_zero();
         let mut has_nonzero = false;
 
         for block in &self.data {
             for row in block {
                 for &val in row {
-                    if !val.is_zero() {
+                    if !SparseElement::is_zero(&val) {
                         has_nonzero = true;
                         min_val = min_val.min(val);
                     }
@@ -941,7 +916,7 @@ where
 
         // If no non-zero elements, return zero
         if !has_nonzero {
-            T::zero()
+            T::sparse_zero()
         } else {
             min_val
         }
@@ -990,15 +965,7 @@ where
 // Implement Display for BsrArray for better debugging
 impl<T> fmt::Display for BsrArray<T>
 where
-    T: Float
-        + Add<Output = T>
-        + Sub<Output = T>
-        + Mul<Output = T>
-        + Div<Output = T>
-        + Debug
-        + Copy
-        + 'static
-        + std::ops::AddAssign,
+    T: SparseElement + Div<Output = T> + Float + 'static + std::ops::AddAssign,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         writeln!(

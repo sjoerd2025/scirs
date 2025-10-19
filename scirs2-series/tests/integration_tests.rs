@@ -6,38 +6,30 @@
 use approx::assert_abs_diff_eq;
 use scirs2_core::ndarray::{Array1, Array2, Axis};
 use scirs2_series::{
-    // TODO: Fix these imports when modules are implemented
-    // anomaly::AnomalyDetector,
+    // Actual function-based APIs
+    anomaly::{detect_anomalies, AnomalyMethod, AnomalyOptions},
     arima_models::ArimaModel,
-    // biomedical::ECGAnalysis,
-    // causality::GrangerCausalityTest,
-    // change_point::PELTDetector,
+    // biomedical::ECGAnalysis, // TODO: Verify exports
+    causality::GrangerCausalityResult,
+    change_point::{detect_change_points, ChangePointMethod, ChangePointOptions, CostFunction},
     clustering::TimeSeriesClusterer,
-    // correlation::CrossCorrelation,
-    // decomposition::stl::STLDecomposer,
-    // detection::pattern::PatternDetector,
-    // dimensionality_reduction::FunctionalPCA,
+    correlation::CorrelationAnalyzer,
+    // decomposition::stl::STLDecomposer, // TODO: Check actual exports
+    // detection::pattern::PatternDetector, // TODO: Check exports
+    // dimensionality_reduction::FunctionalPCA, // TODO: Check exports
     distributed::{ClusterConfig, DistributedProcessor, DistributedTask, TaskPriority, TaskType},
-    // environmental::EnvironmentalSensorAnalysis,
-    // feature_selection::filter::FilterSelector,
-    // features::statistical::StatisticalFeatures,
-    // financial::{bollinger_bands, garch_model, BollingerBandsConfig, MovingAverageType},
-    // forecasting::neural::NeuralForecaster,
-    // gpu_acceleration::GpuTimeSeriesProcessor,
-    // iot_sensors::EnvironmentalSensorAnalysis as IoTEnvironmental,
-    // neural_forecasting::LSTMForecaster,
-    // optimization::OptimizationConfig,
-    // out_of_core::{ChunkedProcessor, ProcessingConfig},
-    // regression::TimeSeriesRegression,
-    // sarima_models::SARIMAModel,
-    // state_space::KalmanFilter,
+    environmental::EnvironmentalAnalysis,
+    // feature_selection::filter::FilterSelector, // TODO: Check exports
+    // features::statistical::StatisticalFeatures, // TODO: Check exports
+    financial::bollinger_bands,
+    // forecasting::neural::NeuralForecaster, // TODO: Check exports
+    gpu_acceleration::GpuTimeSeriesProcessor,
+    iot_sensors::EnvironmentalSensorAnalysis as IoTEnvironmental,
+    // neural_forecasting::LSTMForecaster, // TODO: Check exports
+    // optimization::OptimizationConfig, // TODO: Check exports
+    out_of_core::{ChunkedProcessor, ProcessingConfig},
     streaming::StreamingAnalyzer,
-    // transformations::BoxCoxTransform,
-    // trends::robust::RobustTrendFilter,
     utils::*,
-    // validation::CrossValidator,
-    // var_models::VectorAutoregression,
-    // visualization::TimeSeriesPlot,
 };
 use statrs::statistics::Statistics;
 

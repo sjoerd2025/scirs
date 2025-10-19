@@ -15,7 +15,7 @@ workspace = true
 [dependencies]
 # Core dependencies - ALL numeric/array/random functionality from scirs2-core (SciRS2 POLICY)
 scirs2-core = { workspace = true, features = ["parallel", "simd", "random", "array"] }
-# scirs2-sparse = { workspace = true }  # Temporarily disabled due to compilation issues
+scirs2-sparse = { workspace = true }
 thiserror = { workspace = true }
 
 # Graph processing specific dependencies

@@ -8,6 +8,7 @@ use std::collections::{BTreeMap, HashMap};
 use std::net::{IpAddr, SocketAddr};
 use std::time::{Duration, Instant, SystemTime};
 
+#[cfg(feature = "serialization")]
 use serde::{Deserialize, Serialize};
 
 // ================================================================================================
@@ -60,7 +61,8 @@ pub struct NodeInfo {
     pub metadata: NodeMetadata,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum NodeType {
     Master,
     Worker,
@@ -96,7 +98,8 @@ impl Default for NodeCapabilities {
 }
 
 /// Specialized computing units available on a node
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SpecializedUnit {
     TensorCore,
     QuantumProcessor,
@@ -296,7 +299,8 @@ pub struct ResourceRequirements {
     pub specialized_requirements: Vec<SpecializedRequirement>,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, PartialEq)]
 pub struct SpecializedRequirement {
     pub unit_type: SpecializedUnit,
     pub count: usize,

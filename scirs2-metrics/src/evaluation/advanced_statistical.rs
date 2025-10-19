@@ -9,6 +9,7 @@ use scirs2_core::numeric::Float;
 use std::collections::HashMap;
 
 use crate::error::{MetricsError, Result};
+use statrs::distribution::{ContinuousCDF, StudentsT};
 use statrs::statistics::Statistics;
 
 /// Advanced statistical analysis results
@@ -288,11 +289,50 @@ impl<F: Float + scirs2_core::numeric::FromPrimitive + std::iter::Sum>
         let sd_diff = self.std_dev(diff_array.view())?;
 
         let n_f = F::from(n).unwrap();
+        let df = n - 1;
+
+        // Handle zero or near-zero variance case (all differences are identical or nearly so)
+        let epsilon = F::epsilon() * F::from(100).unwrap(); // Numerical tolerance
+        if sd_diff < epsilon {
+            if mean_diff.abs() < epsilon {
+                // No difference at all - p-value = 1.0
+                return Ok(StatisticalTest {
+                    statistic: F::zero(),
+                    p_value: F::one(),
+                    degrees_of_freedom: Some(df),
+                    test_name: "Paired t-test".to_string(),
+                    effect_size: Some(F::zero()),
+                });
+            } else {
+                // Perfect or near-perfect consistency in non-zero difference
+                // This is extremely significant - use smallest positive value
+                return Ok(StatisticalTest {
+                    statistic: if mean_diff > F::zero() {
+                        F::infinity()
+                    } else {
+                        -F::infinity()
+                    },
+                    p_value: F::from(1e-300).unwrap_or(F::epsilon()), // Very small but positive
+                    degrees_of_freedom: Some(df),
+                    test_name: "Paired t-test".to_string(),
+                    effect_size: Some(if mean_diff > F::zero() {
+                        F::infinity()
+                    } else {
+                        -F::infinity()
+                    }),
+                });
+            }
+        }
+
         let t_stat = mean_diff / (sd_diff / n_f.sqrt());
 
-        // Calculate p-value (two-tailed)
-        let df = n - 1;
-        let p_value = F::from(2).unwrap() * (F::one() - self.t_cdf(t_stat.abs(), df)?);
+        // Calculate p-value (two-tailed), ensuring it's at least epsilon
+        let mut p_value = F::from(2).unwrap() * (F::one() - self.t_cdf(t_stat.abs(), df)?);
+
+        // Clamp p-value to be at least epsilon (avoid exact zero)
+        if p_value < F::epsilon() {
+            p_value = F::epsilon();
+        }
 
         Ok(StatisticalTest {
             statistic: t_stat,
@@ -504,26 +544,37 @@ impl<F: Float + scirs2_core::numeric::FromPrimitive + std::iter::Sum>
     }
 
     fn t_cdf(&self, t: F, df: usize) -> Result<F> {
-        // Approximation for t-distribution CDF
-        // For large df, approaches standard normal
-        if df > 30 {
-            self.standard_normal_cdf(t)
-        } else {
-            // Simplified approximation
-            let x = t / (F::from(df).unwrap()).sqrt();
-            self.standard_normal_cdf(x)
-        }
+        // Use statrs for proper t-distribution CDF
+        let t_f64 = t.to_f64().ok_or_else(|| {
+            MetricsError::InvalidInput("Cannot convert t-statistic to f64".to_string())
+        })?;
+
+        let t_dist = StudentsT::new(0.0, 1.0, df as f64).map_err(|e| {
+            MetricsError::InvalidInput(format!("Failed to create t-distribution: {}", e))
+        })?;
+
+        let cdf_value = t_dist.cdf(t_f64);
+        F::from(cdf_value).ok_or_else(|| {
+            MetricsError::InvalidInput("Cannot convert CDF value back to generic type".to_string())
+        })
     }
 
     fn inverse_t_cdf(&self, p: F, df: usize) -> Result<F> {
-        // Approximation for inverse t-distribution
-        if df > 30 {
-            self.inverse_standard_normal_cdf(p)
-        } else {
-            // Simplified approximation
-            let z = self.inverse_standard_normal_cdf(p)?;
-            Ok(z * (F::from(df).unwrap()).sqrt())
-        }
+        // Use statrs for proper inverse t-distribution (quantile function)
+        let p_f64 = p.to_f64().ok_or_else(|| {
+            MetricsError::InvalidInput("Cannot convert probability to f64".to_string())
+        })?;
+
+        let t_dist = StudentsT::new(0.0, 1.0, df as f64).map_err(|e| {
+            MetricsError::InvalidInput(format!("Failed to create t-distribution: {}", e))
+        })?;
+
+        let quantile = t_dist.inverse_cdf(p_f64);
+        F::from(quantile).ok_or_else(|| {
+            MetricsError::InvalidInput(
+                "Cannot convert quantile value back to generic type".to_string(),
+            )
+        })
     }
 
     fn standard_normal_cdf(&self, z: F) -> Result<F> {
@@ -652,7 +703,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: t-distribution CDF implementation needs fixing for proper p-value calculation
     fn test_paired_t_test() {
         let analyzer = AdvancedStatisticalAnalyzer::<f64>::new();
 

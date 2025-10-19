@@ -285,6 +285,7 @@ use std::slice;
 
 use memmap2::MmapOptions;
 use ndarray::{Array, Dimension};
+#[cfg(feature = "serialization")]
 use serde::{Deserialize, Serialize};
 
 use super::memmap::{AccessMode, MemoryMappedArray};

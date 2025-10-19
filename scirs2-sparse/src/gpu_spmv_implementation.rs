@@ -5,7 +5,7 @@
 
 use crate::error::{SparseError, SparseResult};
 use scirs2_core::gpu::{GpuBackend, GpuContext, GpuDataType};
-use scirs2_core::numeric::{Float, NumAssign};
+use scirs2_core::numeric::{Float, NumAssign, SparseElement};
 use scirs2_core::simd_ops::SimdUnifiedOps;
 use std::fmt::Debug;
 
@@ -68,6 +68,7 @@ impl GpuSpMV {
     ) -> SparseResult<Vec<T>>
     where
         T: Float
+            + SparseElement
             + Debug
             + Copy
             + Default
@@ -106,7 +107,7 @@ impl GpuSpMV {
         x: &[T],
     ) -> SparseResult<()>
     where
-        T: Float + Debug,
+        T: Float + SparseElement + Debug,
     {
         if indptr.len() != rows + 1 {
             return Err(SparseError::InvalidFormat(format!(
@@ -155,6 +156,7 @@ impl GpuSpMV {
     ) -> SparseResult<Vec<T>>
     where
         T: Float
+            + SparseElement
             + Debug
             + Copy
             + Default
@@ -216,6 +218,7 @@ impl GpuSpMV {
     ) -> SparseResult<Vec<T>>
     where
         T: Float
+            + SparseElement
             + Debug
             + Copy
             + Default
@@ -270,6 +273,7 @@ impl GpuSpMV {
     ) -> SparseResult<Vec<T>>
     where
         T: Float
+            + SparseElement
             + Debug
             + Copy
             + Default
@@ -330,9 +334,17 @@ impl GpuSpMV {
         x: &[T],
     ) -> SparseResult<Vec<T>>
     where
-        T: Float + Debug + Copy + Default + Send + Sync + NumAssign + SimdUnifiedOps,
+        T: Float
+            + SparseElement
+            + Debug
+            + Copy
+            + Default
+            + Send
+            + Sync
+            + NumAssign
+            + SimdUnifiedOps,
     {
-        let mut y = vec![T::zero(); rows];
+        let mut y = vec![T::sparse_zero(); rows];
 
         // Use parallel processing for CPU implementation
         #[cfg(feature = "parallel")]
@@ -344,7 +356,7 @@ impl GpuSpMV {
         #[cfg(not(feature = "parallel"))]
         {
             for row in 0..rows {
-                let mut sum = T::zero();
+                let mut sum = T::sparse_zero();
                 let start = indptr[row];
                 let end = indptr[row + 1];
 

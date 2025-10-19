@@ -1153,7 +1153,7 @@ mod tests {
     use scirs2_core::ndarray::array;
 
     #[test]
-    #[ignore] // FIXME: Test failing - needs investigation
+    #[ignore] // BUG: Cached evaluation produces incorrect results (1.875 vs 2.5) - basis function computation or caching logic has errors
     fn test_cached_bspline_evaluation() {
         // Create a simple B-spline
         let knots = array![0.0, 0.0, 0.0, 1.0, 2.0, 3.0, 3.0, 3.0];

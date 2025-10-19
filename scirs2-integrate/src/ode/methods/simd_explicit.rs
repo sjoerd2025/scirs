@@ -11,7 +11,8 @@ use crate::ode::utils::common::{estimate_initial_step, ODEState, StepResult};
 use scirs2_core::ndarray::{Array1, ArrayView1};
 
 #[cfg(feature = "simd")]
-use crate::ode::utils::simd_ops::{SimdOdeOps};
+use crate::ode::utils::simd_ops::SimdOdeOps;
+use scirs2_core::simd_ops::SimdUnifiedOps;
 
 /// SIMD-accelerated 4th-order Runge-Kutta method
 ///
@@ -38,7 +39,7 @@ pub fn simd_rk4_method<F, Func>(
     opts: ODEOptions<F>,
 ) -> IntegrateResult<ODEResult<F>>
 where
-    F: IntegrateFloat,
+    F: IntegrateFloat + SimdUnifiedOps,
     Func: Fn(F, ArrayView1<F>) -> Array1<F>,
 {
     let [t_start, t_end] = t_span;
@@ -46,7 +47,9 @@ where
 
     // Determine step size
     let h = opts.h0.unwrap_or_else(|| {
-        estimate_initial_step(&f, t_start, &y0.view(), F::from_f64(1e-3).unwrap())
+        let dy0 = f(t_start, y0.view());
+        let tol = opts.atol + opts.rtol;
+        estimate_initial_step(&f, t_start, &y0, &dy0, tol, t_end)
     });
 
     // Storage for solution
@@ -67,7 +70,7 @@ where
         func_evals += n_evals;
 
         // Update state
-        t = t + h_current;
+        t += h_current;
         y = y_new;
         steps += 1;
 
@@ -77,7 +80,7 @@ where
 
         // Safety check
         if steps > 1_000_000 {
-            return Err(crate::error::IntegrateError::MaxStepsExceeded(
+            return Err(crate::error::IntegrateError::ConvergenceError(
                 "Maximum number of steps exceeded in SIMD RK4 method".to_string(),
             ));
         }
@@ -87,9 +90,12 @@ where
         t: t_values,
         y: y_values,
         n_steps: steps,
-        n_func_evals: func_evals,
+        n_eval: func_evals,
+        n_accepted: steps,
         n_rejected: 0,
-        method: "SIMD RK4".to_string(),
+        n_lu: 0,
+        n_jac: 0,
+        method: crate::ode::types::ODEMethod::RK4,
         success: true,
         message: Some("Integration completed successfully".to_string()),
     })
@@ -119,22 +125,24 @@ pub fn simd_rk45_method<F, Func>(
     opts: ODEOptions<F>,
 ) -> IntegrateResult<ODEResult<F>>
 where
-    F: IntegrateFloat,
+    F: IntegrateFloat + SimdUnifiedOps,
     Func: Fn(F, ArrayView1<F>) -> Array1<F>,
 {
     let [t_start, t_end] = t_span;
 
     // Initial step size
     let mut h = opts.h0.unwrap_or_else(|| {
-        estimate_initial_step(&f, t_start, &y0.view(), F::from_f64(1e-3).unwrap())
+        let dy0 = f(t_start, y0.view());
+        let tol = opts.atol + opts.rtol;
+        estimate_initial_step(&f, t_start, &y0, &dy0, tol, t_end)
     });
 
     let min_step = opts.min_step.unwrap_or(F::from_f64(1e-12).unwrap());
     let max_step = opts
         .max_step
         .unwrap_or((t_end - t_start) / F::from_f64(10.0).unwrap());
-    let abs_tol = opts.abs_tol.unwrap_or(F::from_f64(1e-6).unwrap());
-    let rel_tol = opts.rel_tol.unwrap_or(F::from_f64(1e-6).unwrap());
+    let abs_tol = opts.atol;
+    let rel_tol = opts.rtol;
 
     // Storage for solution
     let mut t_values = vec![t_start];
@@ -152,16 +160,33 @@ where
             h = t_end - t;
         }
 
+        // Limit step size to bounds
+        h = h.min(max_step).max(min_step);
+
         // SIMD-accelerated RK45 step with error estimation
-        let (y_new, error_est, n_evals) = simd_rk45_step(&f, t, &y.view(), h)?;
+        let (y_new, y_star, n_evals) = simd_rk45_step(&f, t, &y.view(), h)?;
         func_evals += n_evals;
 
-        // Compute error tolerance
-        let error_tolerance = compute_error_tolerance(&y, &y_new, abs_tol, rel_tol);
+        // Compute scaled error norm (matching non-SIMD version)
+        let mut err_norm = F::zero();
+        for i in 0..y_new.len() {
+            let sc = abs_tol + rel_tol * y_new[i].abs();
+            let err = (y_new[i] - y_star[i]).abs() / sc;
+            err_norm = err_norm.max(err);
+        }
 
-        if error_est <= error_tolerance {
+        // Step size control (matching non-SIMD version)
+        let order = F::from_f64(5.0).unwrap();
+        let exponent = F::one() / (order + F::one());
+        let safety = F::from_f64(0.9).unwrap();
+        let factor = safety * (F::one() / err_norm).powf(exponent);
+        let factor_min = F::from_f64(0.2).unwrap();
+        let factor_max = F::from_f64(5.0).unwrap();
+        let factor = factor.min(factor_max).max(factor_min);
+
+        if err_norm <= F::one() {
             // Accept step
-            t = t + h;
+            t += h;
             y = y_new;
             steps += 1;
 
@@ -170,36 +195,27 @@ where
             y_values.push(y.clone());
 
             // Adjust step size for next step
-            if error_est > F::zero() {
-                let safety_factor = F::from_f64(0.9).unwrap();
-                let growth_factor =
-                    safety_factor * (error_tolerance / error_est).powf(F::from_f64(0.2).unwrap());
-                h = h * growth_factor.min(F::from_f64(2.0).unwrap());
+            if err_norm <= F::from_f64(0.1).unwrap() {
+                h *= factor.max(F::from_f64(2.0).unwrap());
             } else {
-                h = h * F::from_f64(1.5).unwrap();
+                h *= factor;
             }
         } else {
             // Reject step
             rejected_steps += 1;
-            let safety_factor = F::from_f64(0.9).unwrap();
-            let shrink_factor =
-                safety_factor * (error_tolerance / error_est).powf(F::from_f64(0.25).unwrap());
-            h = h * shrink_factor.max(F::from_f64(0.2).unwrap());
-        }
+            h *= factor.min(F::one());
 
-        // Check minimum step size
-        if h < min_step {
-            return Err(crate::error::IntegrateError::StepSizeTooSmall(
-                "Step size became too small in SIMD RK45 method".to_string(),
-            ));
+            // Check minimum step size
+            if h < min_step {
+                return Err(crate::error::IntegrateError::StepSizeTooSmall(
+                    "Step size became too small in SIMD RK45 method".to_string(),
+                ));
+            }
         }
-
-        // Limit maximum step size
-        h = h.min(max_step);
 
         // Safety check
         if steps > 100_000 {
-            return Err(crate::error::IntegrateError::MaxStepsExceeded(
+            return Err(crate::error::IntegrateError::ConvergenceError(
                 "Maximum number of steps exceeded in SIMD RK45 method".to_string(),
             ));
         }
@@ -209,9 +225,12 @@ where
         t: t_values,
         y: y_values,
         n_steps: steps,
-        n_func_evals: func_evals,
+        n_eval: func_evals,
+        n_accepted: steps - rejected_steps,
         n_rejected: rejected_steps,
-        method: "SIMD RK45".to_string(),
+        n_lu: 0,
+        n_jac: 0,
+        method: crate::ode::types::ODEMethod::RK45,
         success: true,
         message: Some("Integration completed successfully".to_string()),
     })
@@ -227,44 +246,41 @@ fn simd_rk4_step<F, Func>(
     h: F,
 ) -> IntegrateResult<(Array1<F>, usize)>
 where
-    F: IntegrateFloat,
+    F: IntegrateFloat + SimdUnifiedOps,
     Func: Fn(F, ArrayView1<F>) -> Array1<F>,
 {
     let h_half = h * F::from_f64(0.5).unwrap();
 
     // k1 = f(t, y)
-    let k1 = simd_ode_function_eval(f, t, y, true)?;
+    let k1 = f(t, y.to_owned().view());
 
     // k2 = f(t + h/2, y + h/2 * k1)
-    let y_temp1 = y + &k1 * h_half;
-    let k2 = simd_ode_function_eval(f, t + h_half, &y_temp1.view(), true)?;
+    let y_temp1 = F::simd_add(y, &F::simd_scalar_mul(&k1.view(), h_half).view());
+    let k2 = f(t + h_half, y_temp1.view());
 
     // k3 = f(t + h/2, y + h/2 * k2)
-    let y_temp2 = y + &k2 * h_half;
-    let k3 = simd_ode_function_eval(f, t + h_half, &y_temp2.view(), true)?;
+    let y_temp2 = F::simd_add(y, &F::simd_scalar_mul(&k2.view(), h_half).view());
+    let k3 = f(t + h_half, y_temp2.view());
 
     // k4 = f(t + h, y + h * k3)
-    let y_temp3 = y + &k3 * h;
-    let k4 = simd_ode_function_eval(f, t + h, &y_temp3.view(), true)?;
+    let y_temp3 = F::simd_add(y, &F::simd_scalar_mul(&k3.view(), h).view());
+    let k4 = f(t + h, y_temp3.view());
 
     // y_new = y + h/6 * (k1 + 2*k2 + 2*k3 + k4)
     let c1 = F::one() / F::from_f64(6.0).unwrap();
     let c2 = F::from_f64(2.0).unwrap() / F::from_f64(6.0).unwrap();
-    let c3 = c2;
-    let c4 = c1;
 
-    let y_new = simd_rk_step(
-        y,
-        h,
-        &k1.view(),
-        &k2.view(),
-        &k3.view(),
-        &k4.view(),
-        c1,
-        c2,
-        c3,
-        c4,
-    );
+    // Compute weighted sum: k1/6 + k2/3 + k3/3 + k4/6
+    let term1 = F::simd_scalar_mul(&k1.view(), c1 * h);
+    let term2 = F::simd_scalar_mul(&k2.view(), c2 * h);
+    let term3 = F::simd_scalar_mul(&k3.view(), c2 * h);
+    let term4 = F::simd_scalar_mul(&k4.view(), c1 * h);
+
+    let sum12 = F::simd_add(&term1.view(), &term2.view());
+    let sum34 = F::simd_add(&term3.view(), &term4.view());
+    let weighted_sum = F::simd_add(&sum12.view(), &sum34.view());
+
+    let y_new = F::simd_add(y, &weighted_sum.view());
 
     Ok((y_new, 4)) // 4 function evaluations
 }
@@ -277,9 +293,9 @@ fn simd_rk45_step<F, Func>(
     t: F,
     y: &ArrayView1<F>,
     h: F,
-) -> IntegrateResult<(Array1<F>, F, usize)>
+) -> IntegrateResult<(Array1<F>, Array1<F>, usize)>
 where
-    F: IntegrateFloat,
+    F: IntegrateFloat + SimdUnifiedOps,
     Func: Fn(F, ArrayView1<F>) -> Array1<F>,
 {
     // Dormand-Prince coefficients
@@ -300,43 +316,71 @@ where
     let a65 = F::from_f64(-5103.0 / 18656.0).unwrap();
 
     // k1 = f(t, y)
-    let k1 = simd_ode_function_eval(f, t, y, true)?;
+    let k1 = f(t, y.to_owned().view());
 
     // k2 = f(t + h/5, y + h/5 * k1)
-    let y2 = y + &k1 * (h * a21);
-    let k2 = simd_ode_function_eval(f, t + h * a21, &y2.view(), true)?;
+    let y2 = F::simd_add(y, &F::simd_scalar_mul(&k1.view(), h * a21).view());
+    let k2 = f(t + h * a21, y2.view());
 
     // k3 = f(t + 3h/10, y + h * (3/40 * k1 + 9/40 * k2))
-    let y3 = y + &(&k1 * a31 + &k2 * a32) * h;
-    let k3 = simd_ode_function_eval(
-        f,
-        t + h * F::from_f64(3.0 / 10.0).unwrap(),
-        &y3.view(),
-        true,
-    )?;
+    let term1 = F::simd_scalar_mul(&k1.view(), a31 * h);
+    let term2 = F::simd_scalar_mul(&k2.view(), a32 * h);
+    let y3 = F::simd_add(y, &F::simd_add(&term1.view(), &term2.view()).view());
+    let k3 = f(t + h * F::from_f64(3.0 / 10.0).unwrap(), y3.view());
 
     // k4 = f(t + 4h/5, y + h * (44/45 * k1 - 56/15 * k2 + 32/9 * k3))
-    let y4 = y + &(&(&k1 * a41 + &k2 * a42) + &k3 * a43) * h;
-    let k4 = simd_ode_function_eval(f, t + h * F::from_f64(4.0 / 5.0).unwrap(), &y4.view(), true)?;
+    let t1 = F::simd_scalar_mul(&k1.view(), a41 * h);
+    let t2 = F::simd_scalar_mul(&k2.view(), a42 * h);
+    let t3 = F::simd_scalar_mul(&k3.view(), a43 * h);
+    let y4 = F::simd_add(
+        y,
+        &F::simd_add(&F::simd_add(&t1.view(), &t2.view()).view(), &t3.view()).view(),
+    );
+    let k4 = f(t + h * F::from_f64(4.0 / 5.0).unwrap(), y4.view());
 
-    // k5 = f(t + 8h/9, y + h * (19372/6561 * k1 - 25360/2187 * k2 + 64448/6561 * k3 - 212/729 * k4))
-    let y5 = y + &(&(&(&k1 * a51 + &k2 * a52) + &k3 * a53) + &k4 * a54) * h;
-    let k5 = simd_ode_function_eval(f, t + h * F::from_f64(8.0 / 9.0).unwrap(), &y5.view(), true)?;
+    // k5
+    let r1 = F::simd_scalar_mul(&k1.view(), a51 * h);
+    let r2 = F::simd_scalar_mul(&k2.view(), a52 * h);
+    let r3 = F::simd_scalar_mul(&k3.view(), a53 * h);
+    let r4 = F::simd_scalar_mul(&k4.view(), a54 * h);
+    let sum1 = F::simd_add(&r1.view(), &r2.view());
+    let sum2 = F::simd_add(&r3.view(), &r4.view());
+    let y5 = F::simd_add(y, &F::simd_add(&sum1.view(), &sum2.view()).view());
+    let k5 = f(t + h * F::from_f64(8.0 / 9.0).unwrap(), y5.view());
 
-    // k6 = f(t + h, y + h * (9017/3168 * k1 - 355/33 * k2 + 46732/5247 * k3 + 49/176 * k4 - 5103/18656 * k5))
-    let y6 = y + &(&(&(&(&k1 * a61 + &k2 * a62) + &k3 * a63) + &k4 * a64) + &k5 * a65) * h;
-    let k6 = simd_ode_function_eval(f, t + h, &y6.view(), true)?;
+    // k6
+    let s1 = F::simd_scalar_mul(&k1.view(), a61 * h);
+    let s2 = F::simd_scalar_mul(&k2.view(), a62 * h);
+    let s3 = F::simd_scalar_mul(&k3.view(), a63 * h);
+    let s4 = F::simd_scalar_mul(&k4.view(), a64 * h);
+    let s5 = F::simd_scalar_mul(&k5.view(), a65 * h);
+    let ssum1 = F::simd_add(&s1.view(), &s2.view());
+    let ssum2 = F::simd_add(&s3.view(), &s4.view());
+    let ssum3 = F::simd_add(&ssum1.view(), &ssum2.view());
+    let y6 = F::simd_add(y, &F::simd_add(&ssum3.view(), &s5.view()).view());
+    let k6 = f(t + h, y6.view());
 
-    // 5th order solution
+    // 5th order solution (y_stage is same as y_new for FSAL property)
     let b1 = F::from_f64(35.0 / 384.0).unwrap();
     let b3 = F::from_f64(500.0 / 1113.0).unwrap();
     let b4 = F::from_f64(125.0 / 192.0).unwrap();
     let b5 = F::from_f64(-2187.0 / 6784.0).unwrap();
     let b6 = F::from_f64(11.0 / 84.0).unwrap();
 
-    let y_new = y + &(&(&(&(&k1 * b1 + &k3 * b3) + &k4 * b4) + &k5 * b5) + &k6 * b6) * h;
+    let w1 = F::simd_scalar_mul(&k1.view(), b1 * h);
+    let w3 = F::simd_scalar_mul(&k3.view(), b3 * h);
+    let w4 = F::simd_scalar_mul(&k4.view(), b4 * h);
+    let w5 = F::simd_scalar_mul(&k5.view(), b5 * h);
+    let w6 = F::simd_scalar_mul(&k6.view(), b6 * h);
+    let wsum1 = F::simd_add(&w1.view(), &w3.view());
+    let wsum2 = F::simd_add(&w4.view(), &w5.view());
+    let wsum3 = F::simd_add(&wsum1.view(), &wsum2.view());
+    let y_new = F::simd_add(y, &F::simd_add(&wsum3.view(), &w6.view()).view());
 
-    // 4th order solution for error estimation
+    // k7 = f(t + h, y_new) - needed for 4th order solution
+    let k7 = f(t + h, y_new.view());
+
+    // 4th order solution for error estimation (includes k7)
     let b1_star = F::from_f64(5179.0 / 57600.0).unwrap();
     let b3_star = F::from_f64(7571.0 / 16695.0).unwrap();
     let b4_star = F::from_f64(393.0 / 640.0).unwrap();
@@ -344,41 +388,20 @@ where
     let b6_star = F::from_f64(187.0 / 2100.0).unwrap();
     let b7_star = F::from_f64(1.0 / 40.0).unwrap();
 
-    // Note: k7 would be calculated here for the full RK45, but we'll use a simplified error estimate
-    let y_star = y + &(&(&(&(&k1 * b1_star + &k3 * b3_star) + &k4 * b4_star) + &k5 * b5_star)
-        + &k6 * b6_star)
-        * h;
+    let v1 = F::simd_scalar_mul(&k1.view(), b1_star * h);
+    let v3 = F::simd_scalar_mul(&k3.view(), b3_star * h);
+    let v4 = F::simd_scalar_mul(&k4.view(), b4_star * h);
+    let v5 = F::simd_scalar_mul(&k5.view(), b5_star * h);
+    let v6 = F::simd_scalar_mul(&k6.view(), b6_star * h);
+    let v7 = F::simd_scalar_mul(&k7.view(), b7_star * h);
+    let vsum1 = F::simd_add(&v1.view(), &v3.view());
+    let vsum2 = F::simd_add(&v4.view(), &v5.view());
+    let vsum3 = F::simd_add(&v6.view(), &v7.view());
+    let vsum4 = F::simd_add(&vsum1.view(), &vsum2.view());
+    let y_star = F::simd_add(y, &F::simd_add(&vsum4.view(), &vsum3.view()).view());
 
-    // Error estimate
-    #[cfg(feature = "simd")]
-    let error_vec = &y_new - &y_star;
-    let error_est = SimdOdeOps::simd_norm_inf(&error_vec.view());
-    #[cfg(not(feature = "simd"))]
-    let error_est = (&y_new - &y_star)
-        .iter()
-        .map(|&x| x.abs())
-        .fold(F::zero(), |a, b| a.max(b));
-
-    Ok((y_new, error_est, 6)) // 6 function evaluations
-}
-
-/// Compute error tolerance for adaptive step size control
-#[allow(dead_code)]
-fn compute_error_tolerance<F: IntegrateFloat>(
-    y_old: &ArrayView1<F>,
-    y_new: &ArrayView1<F>,
-    abs_tol: F,
-    rel_tol: F,
-) -> F {
-    let mut max_tol = F::zero();
-
-    for (_i, (&y_old_i, &y_new_i)) in y_old.iter().zip(y_new.iter()).enumerate() {
-        let scale = y_old_i.abs().max(y_new_i.abs());
-        let tol_i = abs_tol + rel_tol * scale;
-        max_tol = max_tol.max(tol_i);
-    }
-
-    max_tol
+    // Return both 5th and 4th order solutions for error estimation
+    Ok((y_new, y_star, 7)) // 7 function evaluations
 }
 
 /// Fallback methods when SIMD is not available
@@ -391,11 +414,16 @@ pub fn simd_rk4_method<F, Func>(
     opts: ODEOptions<F>,
 ) -> IntegrateResult<ODEResult<F>>
 where
-    F: IntegrateFloat,
+    F: IntegrateFloat + SimdUnifiedOps,
     Func: Fn(F, ArrayView1<F>) -> Array1<F>,
 {
     // Fallback to regular RK4 method
-    crate::ode::methods::rk4_method(f, t_span, y0, opts)
+    let h = opts.h0.unwrap_or_else(|| {
+        let dy0 = f(t_span[0], y0.view());
+        let tol = opts.atol + opts.rtol;
+        estimate_initial_step(&f, t_span[0], &y0, &dy0, tol, t_span[1])
+    });
+    crate::ode::methods::explicit::rk4_method(f, t_span, y0, h, opts)
 }
 
 #[cfg(not(feature = "simd"))]
@@ -407,11 +435,11 @@ pub fn simd_rk45_method<F, Func>(
     opts: ODEOptions<F>,
 ) -> IntegrateResult<ODEResult<F>>
 where
-    F: IntegrateFloat,
+    F: IntegrateFloat + SimdUnifiedOps,
     Func: Fn(F, ArrayView1<F>) -> Array1<F>,
 {
     // Fallback to regular RK45 method
-    crate::ode::methods::rk45_method(f, t_span, y0, opts)
+    crate::ode::methods::adaptive::rk45_method(f, t_span, y0, opts)
 }
 
 #[cfg(test)]
@@ -419,20 +447,6 @@ mod tests {
     use super::*;
     use approx::assert_relative_eq;
     use scirs2_core::ndarray::arr1;
-
-    #[test]
-    fn test_error_tolerance_computation() {
-        let y_old = arr1(&[1.0, 2.0, 3.0]);
-        let y_new = arr1(&[1.01, 2.02, 3.03]);
-        let abs_tol = 1e-6;
-        let rel_tol = 1e-6;
-
-        let tolerance = compute_error_tolerance(&y_old.view(), &y_new.view(), abs_tol, rel_tol);
-
-        // Should be dominated by relative tolerance * max(|y_old|, |y_new|)
-        let expected = abs_tol + rel_tol * 3.03;
-        assert_relative_eq!(tolerance, expected, epsilon = 1e-12);
-    }
 
     #[test]
     #[cfg(feature = "simd")]
@@ -468,8 +482,8 @@ mod tests {
         let y0 = arr1(&[1.0, 0.0]); // y(0) = 1, dy/dt(0) = 0
         let t_span = [0.0, std::f64::consts::PI]; // Half period
         let opts = ODEOptions {
-            atol: Some(1e-8),
-            rtol: Some(1e-8),
+            atol: 1e-8,
+            rtol: 1e-8,
             h0: Some(0.1),
             ..Default::default()
         };

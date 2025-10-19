@@ -7,10 +7,12 @@ use super::{ApiVersion, Version};
 use crate::error::CoreError;
 use std::collections::HashMap;
 
+#[cfg(feature = "serialization")]
 use serde::{Deserialize, Serialize};
 
 /// Compatibility levels between API versions
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum CompatibilityLevel {
     /// Fully backward compatible
     BackwardCompatible,
@@ -58,7 +60,8 @@ impl CompatibilityLevel {
 }
 
 /// Detailed compatibility report
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone)]
 pub struct CompatibilityReport {
     /// Source version
     pub from_version: Version,
@@ -81,7 +84,8 @@ pub struct CompatibilityReport {
 }
 
 /// Specific compatibility issue
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone)]
 pub struct CompatibilityIssue {
     /// Issue severity
     pub severity: IssueSeverity,
@@ -96,7 +100,8 @@ pub struct CompatibilityIssue {
 }
 
 /// Issue severity levels
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum IssueSeverity {
     /// Informational - no action required
     Info,
@@ -109,7 +114,8 @@ pub enum IssueSeverity {
 }
 
 /// Impact level of compatibility issues
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum ImpactLevel {
     /// No user impact
     None,
@@ -124,7 +130,8 @@ pub enum ImpactLevel {
 }
 
 /// Breaking change information
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone)]
 pub struct BreakingChange {
     /// Change type
     pub change_type: ChangeType,
@@ -139,7 +146,8 @@ pub struct BreakingChange {
 }
 
 /// Types of breaking changes
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ChangeType {
     /// API signature changed
     ApiSignatureChange,

@@ -48,7 +48,7 @@
 
 use crate::error::{SparseError, SparseResult};
 use crate::sparray::SparseArray;
-use scirs2_core::numeric::Float;
+use scirs2_core::numeric::{Float, SparseElement};
 use std::cmp::Ordering;
 use std::fmt::Debug;
 
@@ -129,7 +129,7 @@ where
 #[allow(dead_code)]
 pub fn validate_graph<T, S>(matrix: &S, directed: bool) -> SparseResult<()>
 where
-    T: Float + Debug + Copy + 'static,
+    T: Float + SparseElement + Debug + Copy + 'static,
     S: SparseArray<T>,
 {
     let (rows, cols) = matrix.shape();
@@ -144,7 +144,7 @@ where
     // Check for negative weights (not allowed in some algorithms)
     let (row_indices, col_indices, values) = matrix.find();
     for &value in values.iter() {
-        if value < T::zero() {
+        if value < T::sparse_zero() {
             return Err(SparseError::ValueError(
                 "Negative edge weights not supported".to_string(),
             ));
@@ -183,7 +183,7 @@ where
 #[allow(dead_code)]
 pub fn to_adjacency_list<T, S>(matrix: &S, directed: bool) -> SparseResult<Vec<Vec<(usize, T)>>>
 where
-    T: Float + Debug + Copy + 'static,
+    T: Float + SparseElement + Debug + Copy + 'static,
     S: SparseArray<T>,
 {
     let (n_, _) = matrix.shape();
@@ -194,7 +194,7 @@ where
     for (i, (&row, &col)) in row_indices.iter().zip(col_indices.iter()).enumerate() {
         let weight = values[i];
 
-        if !weight.is_zero() {
+        if !SparseElement::is_zero(&weight) {
             adj_list[row].push((col, weight));
 
             // For undirected graphs, add the reverse edge only if it doesn't already exist
@@ -219,7 +219,7 @@ where
 #[allow(dead_code)]
 pub fn num_vertices<T, S>(matrix: &S) -> usize
 where
-    T: Float + Debug + Copy + 'static,
+    T: Float + SparseElement + Debug + Copy + 'static,
     S: SparseArray<T>,
 {
     matrix.shape().0
@@ -229,7 +229,7 @@ where
 #[allow(dead_code)]
 pub fn num_edges<T, S>(matrix: &S, directed: bool) -> SparseResult<usize>
 where
-    T: Float + Debug + Copy + 'static,
+    T: Float + SparseElement + Debug + Copy + 'static,
     S: SparseArray<T>,
 {
     let nnz = matrix.nnz();

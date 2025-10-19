@@ -328,7 +328,12 @@ pub fn coo_to_csc(coo: &CooMatrix<f64>) -> CscMatrix<f64> {
 #[allow(dead_code)]
 pub fn csr_to_csc<F>(csr: &CsrMatrix<F>) -> SparseResult<CscMatrix<F>>
 where
-    F: Clone + Copy + std::fmt::Debug + PartialEq + scirs2_core::numeric::Zero,
+    F: Clone
+        + Copy
+        + std::fmt::Debug
+        + PartialEq
+        + scirs2_core::numeric::Zero
+        + scirs2_core::SparseElement,
 {
     // Start with CSR in triplet format
     let (rows, cols) = csr.shape();

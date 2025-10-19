@@ -1,6 +1,6 @@
 use crate::error::{SparseError, SparseResult};
 use crate::linalg::interface::LinearOperator;
-use scirs2_core::numeric::{Float, NumAssign};
+use scirs2_core::numeric::{Float, NumAssign, SparseElement};
 use std::iter::Sum;
 
 /// Result of MINRES solver
@@ -70,7 +70,7 @@ pub fn minres<F>(
     options: MINRESOptions<F>,
 ) -> SparseResult<MINRESResult<F>>
 where
-    F: Float + NumAssign + Sum + 'static,
+    F: Float + NumAssign + Sum + SparseElement + 'static,
 {
     let (m, n) = a.shape();
     if m != n {
@@ -88,14 +88,17 @@ where
     }
 
     // Initial guess
-    let mut x = options.x0.clone().unwrap_or_else(|| vec![F::zero(); n]);
+    let mut x = options
+        .x0
+        .clone()
+        .unwrap_or_else(|| vec![F::sparse_zero(); n]);
     let bnorm = norm2(b);
 
     if bnorm < options.atol {
         return Ok(MINRESResult {
             x,
             iterations: 0,
-            residual_norm: F::zero(),
+            residual_norm: F::sparse_zero(),
             converged: true,
             message: "System has zero right-hand side".to_string(),
         });
@@ -114,17 +117,17 @@ where
     // beta1 = sqrt(r1' * M^{-1} * r1)
     let beta1_sq = inner(&r1, &y);
 
-    if beta1_sq < F::zero() {
+    if beta1_sq < F::sparse_zero() {
         return Err(SparseError::ComputationError(
             "Indefinite preconditioner".to_string(),
         ));
     }
 
-    if beta1_sq == F::zero() {
+    if beta1_sq == F::sparse_zero() {
         return Ok(MINRESResult {
             x,
             iterations: 0,
-            residual_norm: F::zero(),
+            residual_norm: F::sparse_zero(),
             converged: true,
             message: "Initial residual is zero".to_string(),
         });
@@ -133,30 +136,30 @@ where
     let beta1 = beta1_sq.sqrt();
 
     // Initialize quantities for the iteration
-    let mut oldb = F::zero();
+    let mut oldb = F::sparse_zero();
     let mut beta = beta1;
-    let mut dbar = F::zero();
-    let mut epsln = F::zero();
+    let mut dbar = F::sparse_zero();
+    let mut epsln = F::sparse_zero();
     let mut phibar = beta1;
     let mut cs = F::from(-1.0).unwrap();
-    let mut sn = F::zero();
-    let mut w = vec![F::zero(); n];
-    let mut w2 = vec![F::zero(); n];
+    let mut sn = F::sparse_zero();
+    let mut w = vec![F::sparse_zero(); n];
+    let mut w2 = vec![F::sparse_zero(); n];
     let mut r2 = r1.clone();
-    let mut v = vec![F::zero(); n];
-    let mut r1 = vec![F::zero(); n];
+    let mut v = vec![F::sparse_zero(); n];
+    let mut r1 = vec![F::sparse_zero(); n];
     let mut y_vec = y;
 
-    let mut gmax = F::zero();
+    let mut gmax = F::sparse_zero();
     let mut gmin = F::max_value();
-    let mut tnorm2 = F::zero();
+    let mut tnorm2 = F::sparse_zero();
     let mut qrnorm = beta1;
 
     let eps = F::epsilon();
 
     for itn in 0..options.max_iter {
         // Lanczos iteration
-        let s = F::one() / beta;
+        let s = F::sparse_one() / beta;
         for i in 0..n {
             v[i] = s * y_vec[i];
         }
@@ -187,7 +190,7 @@ where
         oldb = beta;
         let beta_sq = inner(&r2, &y_vec);
 
-        if beta_sq < F::zero() {
+        if beta_sq < F::sparse_zero() {
             return Err(SparseError::ComputationError(
                 "Non-symmetric matrix".to_string(),
             ));
@@ -212,10 +215,10 @@ where
         phibar = sn * phibar;
 
         // Update solution
-        let denom = F::one() / gamma_clamped;
+        let denom = F::sparse_one() / gamma_clamped;
         let w1 = w2;
         w2 = w;
-        w = vec![F::zero(); n];
+        w = vec![F::sparse_zero(); n];
         for i in 0..n {
             w[i] = (v[i] - oldeps * w1[i] - delta * w2[i]) * denom;
             x[i] += phi * w[i];
@@ -231,7 +234,7 @@ where
         let anorm = tnorm2.sqrt();
         let ynorm = norm2(&x);
 
-        let test1 = if ynorm == F::zero() || anorm == F::zero() {
+        let test1 = if ynorm == F::sparse_zero() || anorm == F::sparse_zero() {
             F::infinity()
         } else {
             rnorm / (anorm * ynorm)

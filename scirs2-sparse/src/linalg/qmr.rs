@@ -1,6 +1,6 @@
 use crate::error::{SparseError, SparseResult};
 use crate::linalg::interface::LinearOperator;
-use scirs2_core::numeric::{Float, NumAssign};
+use scirs2_core::numeric::{Float, NumAssign, SparseElement};
 use std::fmt::Display;
 use std::iter::Sum;
 
@@ -48,7 +48,7 @@ pub fn qmr<F>(
     options: QMROptions<F>,
 ) -> SparseResult<QMRResult<F>>
 where
-    F: Float + NumAssign + Sum + Display + 'static,
+    F: Float + SparseElement + NumAssign + Sum + Display + 'static,
 {
     let n = b.len();
 
@@ -61,10 +61,10 @@ where
     }
 
     // Initialize solution
-    let mut x = options.x0.unwrap_or_else(|| vec![F::zero(); n]);
+    let mut x = options.x0.unwrap_or_else(|| vec![F::sparse_zero(); n]);
 
     // Compute initial residual r = b - Ax
-    let mut r = if !x.iter().all(|&xi| xi == F::zero()) {
+    let mut r = if !x.iter().all(|&xi| xi == F::sparse_zero()) {
         let ax = a.matvec(&x)?;
         vec_sub(b, &ax)
     } else {
@@ -80,16 +80,16 @@ where
     let r_tilde = r.clone();
 
     // Initialize Lanczos vectors
-    let mut p = vec![F::zero(); n];
-    let mut p_tilde = vec![F::zero(); n];
-    let mut q = vec![F::zero(); n];
-    let mut q_tilde = vec![F::zero(); n];
+    let mut p = vec![F::sparse_zero(); n];
+    let mut p_tilde = vec![F::sparse_zero(); n];
+    let mut q = vec![F::sparse_zero(); n];
+    let mut q_tilde = vec![F::sparse_zero(); n];
 
     // Initialize scalars
-    let mut rho = F::one();
+    let mut rho = F::sparse_one();
     let mut rho_old;
-    let mut alpha = F::zero();
-    let mut omega = F::one();
+    let mut alpha = F::sparse_zero();
+    let mut omega = F::sparse_one();
 
     // Compute initial norms
     let bnorm = norm2(b);
@@ -128,7 +128,7 @@ where
 
         // Compute beta
         let beta = if iter == 0 {
-            F::zero()
+            F::sparse_zero()
         } else {
             (rho / rho_old) * (alpha / omega)
         };
@@ -208,8 +208,8 @@ where
 
         // Compute omega (quasi-minimization parameter)
         let dot_tt = dot(&t, &t);
-        if dot_tt == F::zero() {
-            omega = F::zero();
+        if dot_tt == F::sparse_zero() {
+            omega = F::sparse_zero();
         } else {
             omega = dot(&t, &s) / dot_tt;
         }

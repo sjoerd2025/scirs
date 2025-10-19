@@ -1,5 +1,102 @@
 # Release Notes - SciRS2
 
+## 🚀 v0.1.0-rc.2 (2025-10-19) - Release Candidate 2
+
+### 🎯 Performance & Quality Refinements
+
+This is the second Release Candidate for SciRS2 v0.1.0, focusing on performance optimizations, code quality improvements, and completing deferred high-priority features from RC.1.
+
+**🌟 Highlights**:
+- ⚡ **SIMD-Accelerated ODE Solvers** - High-performance RK4 and RK45 implementations
+- ✨ **Zero Warnings Build** - Full clippy compliance across all 23 crates
+- 📚 **80+ Examples Restored** - Complete example coverage in scirs2-core
+- 📝 **107 Files Updated** - Comprehensive version consistency across entire workspace
+- ✅ **9,303 Tests Passing** - Production-ready quality assurance
+
+#### ✨ Major Features & Improvements:
+
+**SIMD-Accelerated ODE Solvers (scirs2-integrate)**:
+- ✅ Implemented high-performance SIMD methods:
+  - `simd_rk4_method`: 4th-order Runge-Kutta with SIMD acceleration
+  - `simd_rk45_method`: Adaptive RK45 with full Dormand-Prince SIMD implementation
+- ✅ Uses `scirs2-core::simd_ops::SimdUnifiedOps` trait for portable SIMD operations
+- ✅ Feature-gated fallbacks for non-SIMD builds
+- ✅ Updated examples to demonstrate SIMD performance benefits
+
+**Code Quality Improvements**:
+- ✅ Fixed all clippy warnings across the workspace - **zero warnings build**
+- ✅ Improved code clarity with `.is_multiple_of()` for even/odd checks
+- ✅ Cleaned up unnecessary type casts and unused variables
+- ✅ Enhanced pattern matching and iterator usage
+
+**Examples & Documentation**:
+- ✅ Restored 80 gutted examples in scirs2-core that were stripped in previous refactoring
+- ✅ Fixed examples in scirs2-series:
+  - `financial_analysis_demo.rs`: Updated for current function-based API
+  - `series_comprehensive_analysis.rs`: Fixed ARIMA forecast signature
+- ✅ Enhanced inline documentation with performance notes
+- ✅ Added feature requirement clarifications for SIMD functionality
+
+**Comprehensive Documentation Update**:
+- ✅ Updated all 24 subcrate README.md files with rc.2 version references
+  - Fixed "Beta 4" → "rc.2" in 6 crates
+  - Updated version badges across all READMEs
+  - Ensured installation examples reflect rc.2
+- ✅ Updated all 22 subcrate TODO.md files with rc.2 versions and dates
+- ✅ Updated all 24 subcrate lib.rs files with rc.2 installation examples
+- ✅ Updated tutorial files in scirs2-datasets and scirs2-metrics
+- ✅ Achieved 100% version consistency across 107 files
+
+#### 🔧 Technical Details:
+
+**SIMD Implementation**:
+- Vector operations: `F::simd_add`, `F::simd_sub`, `F::simd_scalar_mul`
+- Error estimation: `SimdOdeOps::simd_norm_inf`
+- Initial step estimation: Fixed 6-parameter signature for all ODE methods
+- Corrected `ODEOptions` field names (`atol`/`rtol` instead of `abs_tol`/`rel_tol`)
+
+**Build & Test Status**:
+- ✅ All 9,303 tests passing (334 skipped)
+- ✅ Zero compilation warnings across entire workspace
+- ✅ Full clippy compliance
+- ✅ Verified on macOS (M3), Linux (x86_64), and Linux + CUDA
+
+#### 📋 Changes Summary:
+- **Added**: SIMD-accelerated ODE solvers
+- **Fixed**: All clippy warnings, example API compatibility issues
+- **Improved**: Documentation clarity and performance notes
+- **Restored**: 80+ examples in scirs2-core
+- **Updated**: 107 files across the entire workspace for version consistency
+  - 7 core documentation files
+  - 24 subcrate lib.rs files
+  - 24 subcrate README.md files
+  - 22 subcrate TODO.md files
+  - 2 tutorial files
+  - 1 Cargo.lock with 111 updated packages
+
+#### 📦 Installation:
+```toml
+[dependencies]
+scirs2-core = "0.1.0-rc.2"
+scirs2 = "0.1.0-rc.2"
+```
+
+#### 🎯 Migration from rc.1:
+- **No breaking API changes** - Fully backward compatible
+- **Examples updated** - All examples now use current APIs
+- **SIMD ODE methods** - Available with `simd` feature flag in scirs2-integrate
+- **Documentation** - All 107 files updated for version consistency
+- See [CHANGELOG.md](CHANGELOG.md) for complete details
+
+#### 📊 Release Statistics:
+- **Files Updated**: 107 files across entire workspace
+- **Version References**: 100+ rc.2 references verified
+- **Test Status**: 9,303 tests passing (334 skipped)
+- **Code Quality**: Zero warnings, full clippy compliance
+- **Platform Support**: macOS (M3), Linux (x86_64), Linux + CUDA verified
+
+---
+
 ## 🚀 v0.1.0-rc.1 (2025-10-03) - Release Candidate 1
 
 ### 🎯 First Release Candidate - Production Readiness Verification
@@ -336,4 +433,4 @@ Dual-licensed under MIT and Apache 2.0.
 
 **Note**: This is a beta release. While core functionality is stable and well-tested, some features are still under development. Production use should be carefully evaluated based on your specific requirements.
 
-For detailed documentation, visit: https://docs.rs/scirs2/0.1.0-rc.1/
+For detailed documentation, visit: https://docs.rs/scirs2/0.1.0-rc.2/

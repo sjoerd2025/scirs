@@ -33,15 +33,15 @@ fn test_shichi_function() {
     // Print actual values for debugging
     println!("Actual shichi(1.0) = ({:.6}, {:.6})", shi_val, chi_val);
 
-    // Use more reasonable tolerances and check for approximate values
-    // These are the correct values for Shi(1) ≈ 0.930209 and Chi(1) ≈ 0.781714
+    // Use SciPy reference values for comparison
+    // SciPy: shichi(1.0) = (1.0572508753757286, 0.8378669409802082)
     assert!(
-        (shi_val - 0.930209).abs() < 0.01,
+        (shi_val - 1.0572508753757286).abs() < 1e-10,
         "Shi(1) value incorrect: got {}",
         shi_val
     );
     assert!(
-        (chi_val - 0.781714).abs() < 0.01,
+        (chi_val - 0.8378669409802082).abs() < 1e-10,
         "Chi(1) value incorrect: got {}",
         chi_val
     );

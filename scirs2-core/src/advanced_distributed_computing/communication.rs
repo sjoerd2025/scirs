@@ -6,6 +6,7 @@
 use super::cluster::NodeId;
 use super::types::DistributedComputingConfig;
 use crate::error::{CoreError, CoreResult};
+#[cfg(feature = "serialization")]
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::net::SocketAddr;
@@ -103,11 +104,14 @@ pub struct Message {
 }
 
 /// Message identifier
-#[derive(Debug, Clone, Hash, PartialEq, Eq, Serialize, Deserialize)]
+
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub struct MessageId(pub String);
 
 /// Message types
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone)]
 pub enum MessageType {
     TaskAssignment,
     TaskResult,
@@ -119,7 +123,9 @@ pub enum MessageType {
 }
 
 /// Message priority
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum MessagePriority {
     Critical,
     High,

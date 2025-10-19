@@ -8,6 +8,7 @@ use crate::error::{SparseError, SparseResult};
 use crate::sparray::SparseArray;
 use scirs2_core::ndarray::{Array1, Array2, ArrayView1};
 use scirs2_core::numeric::{Float, One, Zero};
+use scirs2_core::SparseElement;
 use std::fmt::{Debug, Display};
 
 /// Banded array format for sparse matrices
@@ -36,7 +37,17 @@ where
 
 impl<T> BandedArray<T>
 where
-    T: Float + Debug + Display + Copy + Zero + One + Send + Sync + 'static + std::ops::AddAssign,
+    T: Float
+        + SparseElement
+        + Debug
+        + Display
+        + Copy
+        + Zero
+        + One
+        + Send
+        + Sync
+        + 'static
+        + std::ops::AddAssign,
 {
     /// Create a new banded array
     pub fn new(data: Array2<T>, kl: usize, ku: usize, shape: (usize, usize)) -> SparseResult<Self> {
@@ -83,7 +94,7 @@ where
 
         // Set main diagonal to 1
         for i in 0..n {
-            result.set_unchecked(i, i, T::one());
+            result.set_unchecked(i, i, T::sparse_one());
         }
 
         result
@@ -107,7 +118,7 @@ where
 
             if result.is_in_band(row, col) {
                 result.set_unchecked(row, col, value);
-            } else if !value.is_zero() {
+            } else if !SparseElement::is_zero(&value) {
                 return Err(SparseError::ValueError(format!(
                     "Non-zero element at ({row}, {col}) is outside band structure"
                 )));
@@ -180,7 +191,7 @@ where
         }
 
         if !self.is_in_band(row, col) {
-            if !value.is_zero() {
+            if !SparseElement::is_zero(&value) {
                 return Err(SparseError::ValueError(format!(
                     "Cannot set non-zero value {value} at ({row}, {col}) - outside band structure"
                 )));
@@ -268,7 +279,7 @@ where
             }
 
             let pivot = u.get(k, k);
-            if pivot.is_zero() {
+            if SparseElement::is_zero(&pivot) {
                 return Err(SparseError::ValueError("Matrix is singular".to_string()));
             }
 
@@ -288,7 +299,7 @@ where
 
         // Set L diagonal to 1
         for i in 0..n {
-            l.set_unchecked(i, i, T::one());
+            l.set_unchecked(i, i, T::sparse_one());
         }
 
         Ok((l, u, p))
@@ -300,7 +311,7 @@ where
         let mut x = Array1::zeros(n);
 
         for i in 0..n {
-            let mut sum = T::zero();
+            let mut sum = T::sparse_zero();
             let start = i.saturating_sub(self.kl);
 
             for j in start..i {
@@ -319,7 +330,7 @@ where
         let mut x = Array1::zeros(n);
 
         for i in (0..n).rev() {
-            let mut sum = T::zero();
+            let mut sum = T::sparse_zero();
             let end = (i + self.ku + 1).min(n);
 
             for j in (i + 1)..end {
@@ -377,7 +388,18 @@ where
 
 impl<T> SparseArray<T> for BandedArray<T>
 where
-    T: Float + Debug + Display + Copy + Zero + One + Send + Sync + 'static + std::ops::AddAssign,
+    T: Float
+        + SparseElement
+        + Debug
+        + Display
+        + Copy
+        + Zero
+        + One
+        + SparseElement
+        + Send
+        + Sync
+        + 'static
+        + std::ops::AddAssign,
 {
     fn shape(&self) -> (usize, usize) {
         self.shape
@@ -387,7 +409,7 @@ where
         let mut count = 0;
         for band in 0..(self.kl + self.ku + 1) {
             for col in 0..self.shape.0 {
-                if !self.data[[band, col]].is_zero() {
+                if !SparseElement::is_zero(&self.data[[band, col]]) {
                     count += 1;
                 }
             }
@@ -397,7 +419,7 @@ where
 
     fn get(&self, row: usize, col: usize) -> T {
         if !self.is_in_band(row, col) {
-            return T::zero();
+            return T::sparse_zero();
         }
 
         if let Some(band_idx) = self
@@ -408,10 +430,10 @@ where
             if band_idx < self.kl + self.ku + 1 && col < self.shape.1 {
                 self.data[[band_idx, col]]
             } else {
-                T::zero()
+                T::sparse_zero()
             }
         } else {
-            T::zero()
+            T::sparse_zero()
         }
     }
 
@@ -426,7 +448,7 @@ where
 
             for j in start_col..end_col {
                 let val = self.get(i, j);
-                if !val.is_zero() {
+                if !SparseElement::is_zero(&val) {
                     rows.push(i);
                     cols.push(j);
                     data.push(val);
@@ -544,7 +566,7 @@ where
 
             for j in start_col..end_col {
                 let val = self.get(i, j);
-                if !val.is_zero() {
+                if !SparseElement::is_zero(&val) {
                     lil.set(i, j, val)?;
                 }
             }
@@ -567,7 +589,7 @@ where
                 }
             }
 
-            if diagonal.iter().any(|&x| !x.is_zero()) {
+            if diagonal.iter().any(|&x| !SparseElement::is_zero(&x)) {
                 diagonals.push(Array1::from_vec(diagonal));
                 offsets.push(offset);
             }
@@ -671,7 +693,7 @@ where
 
             for j in start_col..end_col {
                 let val = self.get(i, j);
-                if !val.is_zero() {
+                if !SparseElement::is_zero(&val) {
                     result[i] += val * other[j];
                 }
             }
@@ -689,7 +711,7 @@ where
 
             for j in start_col..end_col {
                 let val = self.get(i, j);
-                if !val.is_zero() {
+                if !SparseElement::is_zero(&val) {
                     transposed.set_direct(j, i, val)?;
                 }
             }
@@ -727,7 +749,7 @@ where
         match axis {
             None => {
                 // Sum all elements
-                let total = self.data.iter().fold(T::zero(), |acc, &x| acc + x);
+                let total = self.data.iter().fold(T::sparse_zero(), |acc, &x| acc + x);
                 Ok(crate::sparray::SparseSum::Scalar(total))
             }
             Some(0) => {
@@ -748,7 +770,7 @@ where
                 let mut indptr = vec![0];
 
                 for (col, &val) in result.iter().enumerate() {
-                    if !val.is_zero() {
+                    if !SparseElement::is_zero(&val) {
                         data.push(val);
                         indices.push(col);
                     }
@@ -784,7 +806,7 @@ where
                 let mut indptr = vec![0];
 
                 for &val in result.iter() {
-                    if !val.is_zero() {
+                    if !SparseElement::is_zero(&val) {
                         data.push(val);
                         indices.push(0); // All values are in column 0
                     }
@@ -842,7 +864,7 @@ where
 
             for j in band_start_col..band_end_col {
                 let val = self.get(i, j);
-                if !val.is_zero() {
+                if !SparseElement::is_zero(&val) {
                     rows.push(i - start_row);
                     cols.push(j - start_col);
                     data.push(val);
@@ -868,7 +890,7 @@ fn apply_permutation<T: Copy + Zero>(p: &[usize], v: &ArrayView1<T>) -> Array1<T
 
 /// Convert dense array to triplet format
 #[allow(dead_code)]
-fn array_to_triplets<T: Float + Debug + Copy + Zero>(
+fn array_to_triplets<T: Float + SparseElement + Debug + Copy + Zero>(
     array: &Array2<T>,
 ) -> (Vec<usize>, Vec<usize>, Vec<T>) {
     let mut rows = Vec::new();
@@ -876,7 +898,7 @@ fn array_to_triplets<T: Float + Debug + Copy + Zero>(
     let mut data = Vec::new();
 
     for ((i, j), &val) in array.indexed_iter() {
-        if !val.is_zero() {
+        if !SparseElement::is_zero(&val) {
             rows.push(i);
             cols.push(j);
             data.push(val);

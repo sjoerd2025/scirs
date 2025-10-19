@@ -5,7 +5,7 @@
 
 use crate::csr::CsrMatrix;
 use crate::error::{SparseError, SparseResult};
-use scirs2_core::numeric::{Float, NumAssign, One, Zero};
+use scirs2_core::numeric::{Float, NumAssign, One, SparseElement, Zero};
 use std::iter::Sum;
 
 /// Compute the matrix exponential using scaling and squaring with Padé approximation
@@ -29,7 +29,7 @@ use std::iter::Sum;
 #[allow(dead_code)]
 pub fn expm<F>(a: &CsrMatrix<F>) -> SparseResult<CsrMatrix<F>>
 where
-    F: Float + NumAssign + Sum + 'static + std::fmt::Debug,
+    F: Float + NumAssign + Sum + SparseElement + 'static + std::fmt::Debug,
 {
     let (rows, cols) = a.shape();
     if rows != cols {
@@ -62,7 +62,7 @@ where
 
     // Compute A/2^s
     let scale_factor = two.powi(s);
-    let scaled_a = scale_matrix(a, F::one() / scale_factor)?;
+    let scaled_a = scale_matrix(a, F::sparse_one() / scale_factor)?;
 
     // Compute exp(A/2^s) using Padé approximation
     let mut exp_scaled = pade_approximation(&scaled_a, 13)?;
@@ -81,7 +81,7 @@ where
 #[allow(dead_code)]
 fn pade_approximation<F>(a: &CsrMatrix<F>, p: usize) -> SparseResult<CsrMatrix<F>>
 where
-    F: Float + NumAssign + Sum + 'static + std::fmt::Debug,
+    F: Float + NumAssign + Sum + SparseElement + 'static + std::fmt::Debug,
 {
     let n = a.shape().0;
 
@@ -141,14 +141,14 @@ where
         }
         _ => {
             // General formula for Padé coefficients
-            let mut coeffs = vec![F::zero(); p + 1];
-            let mut factorial: F = F::one();
+            let mut coeffs = vec![F::sparse_zero(); p + 1];
+            let mut factorial: F = F::sparse_one();
             for (i, coeff) in coeffs.iter_mut().enumerate().take(p + 1) {
                 if i > 0 {
                     factorial *= F::from(i).unwrap();
                 }
                 let numerator = factorial;
-                let mut denominator = F::one();
+                let mut denominator = F::sparse_one();
                 for j in 1..=i {
                     denominator *= F::from(p + 1 - j).unwrap();
                 }
@@ -188,9 +188,9 @@ where
 #[allow(dead_code)]
 fn matrix_inf_norm<F>(a: &CsrMatrix<F>) -> SparseResult<F>
 where
-    F: Float + NumAssign + Sum + std::fmt::Debug,
+    F: Float + NumAssign + Sum + SparseElement + std::fmt::Debug,
 {
-    let mut max_row_sum = F::zero();
+    let mut max_row_sum = F::sparse_zero();
 
     // For CSR format, efficiently compute row sums
     for row in 0..a.rows() {
@@ -210,7 +210,7 @@ where
 #[allow(dead_code)]
 fn scale_matrix<F>(a: &CsrMatrix<F>, scale: F) -> SparseResult<CsrMatrix<F>>
 where
-    F: Float + NumAssign,
+    F: Float + NumAssign + SparseElement,
 {
     let mut data = a.data.clone();
     for val in data.iter_mut() {
@@ -223,7 +223,7 @@ where
 #[allow(dead_code)]
 fn sparse_identity<F>(n: usize) -> SparseResult<CsrMatrix<F>>
 where
-    F: Float + Zero + One,
+    F: Float + Zero + One + SparseElement,
 {
     let mut rows = Vec::with_capacity(n);
     let mut cols = Vec::with_capacity(n);
@@ -232,7 +232,7 @@ where
     for i in 0..n {
         rows.push(i);
         cols.push(i);
-        values.push(F::one());
+        values.push(F::sparse_one());
     }
 
     CsrMatrix::new(values, rows, cols, (n, n))
@@ -242,7 +242,7 @@ where
 #[allow(dead_code)]
 fn sparse_zero<F>(n: usize) -> SparseResult<CsrMatrix<F>>
 where
-    F: Float + Zero,
+    F: Float + Zero + SparseElement,
 {
     Ok(CsrMatrix::empty((n, n)))
 }
@@ -251,7 +251,7 @@ where
 #[allow(dead_code)]
 fn sparse_add<F>(a: &CsrMatrix<F>, b: &CsrMatrix<F>) -> SparseResult<CsrMatrix<F>>
 where
-    F: Float + NumAssign,
+    F: Float + NumAssign + SparseElement,
 {
     if a.shape() != b.shape() {
         return Err(SparseError::ShapeMismatch {
@@ -284,7 +284,7 @@ where
 #[allow(dead_code)]
 fn sparse_solve<F>(a: &CsrMatrix<F>, b: &CsrMatrix<F>) -> SparseResult<CsrMatrix<F>>
 where
-    F: Float + NumAssign + Sum + 'static + std::fmt::Debug,
+    F: Float + NumAssign + Sum + SparseElement + 'static + std::fmt::Debug,
 {
     use crate::linalg::interface::MatrixLinearOperator;
     use crate::linalg::iterative::bicgstab;

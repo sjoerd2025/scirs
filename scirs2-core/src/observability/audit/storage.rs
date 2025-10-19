@@ -175,6 +175,7 @@ impl LogFileManager {
     /// # Errors
     ///
     /// Returns an error if the event cannot be serialized to JSON.
+    #[cfg(feature = "serialization")]
     pub fn serialize_json(&self, event: &AuditEvent) -> Result<String, CoreError> {
         serde_json::to_string(event).map_err(|e| {
             CoreError::ComputationError(crate::error::ErrorContext::new(format!(
@@ -183,12 +184,12 @@ impl LogFileManager {
         })
     }
 
-    /// Serialize an audit event to JSON format (serde feature required).
+    /// Serialize an audit event to JSON format (serialization feature required).
     ///
     /// # Errors
     ///
-    /// Returns an error indicating that the serde feature is required.
-    #[cfg(not(feature = "serde"))]
+    /// Returns an error indicating that the serialization feature is required.
+    #[cfg(not(feature = "serialization"))]
     pub fn serialize_json(&self, _event: &AuditEvent) -> Result<String, CoreError> {
         Err(CoreError::ComputationError(
             crate::error::ErrorContext::new(

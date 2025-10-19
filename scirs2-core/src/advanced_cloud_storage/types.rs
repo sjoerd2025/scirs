@@ -4,6 +4,7 @@
 //! and basic enums used throughout the cloud storage system.
 
 use crate::error::{CoreError, CoreResult};
+#[cfg(feature = "serialization")]
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::{Duration, Instant};

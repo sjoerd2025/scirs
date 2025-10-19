@@ -2,6 +2,7 @@
 
 use super::types::*;
 use crate::error::{CoreError, CoreResult, ErrorContext};
+#[cfg(feature = "serialization")]
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
@@ -35,7 +36,8 @@ pub struct CommunicationStatistics {
 
 /// Optimization opportunity identified by the ecosystem
 #[allow(dead_code)]
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone)]
 pub struct OptimizationOpportunity {
     /// Module name
     pub modulename: String,

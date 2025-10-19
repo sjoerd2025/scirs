@@ -13,13 +13,8 @@ use scirs2_integrate::ode::{
 use std::time::Instant;
 
 // SIMD methods are only available when the "simd" feature is enabled
-// Temporarily disabled SIMD methods due to implementation complexity
-// #[cfg(feature = "simd")]
-// use scirs2_integrate::ode::methods::{simd_rk45_method, simd_rk4_method};
-
-// Temporarily disabled SIMD utils due to implementation complexity
-// #[cfg(feature = "simd")]
-// use scirs2_integrate::ode::utils::{simd_ode_function_eval, simd_rk_step, SimdOdeOps};
+#[cfg(feature = "simd")]
+use scirs2_integrate::ode::methods::{simd_rk45_method, simd_rk4_method};
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -67,22 +62,20 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             rk4_method(system_func, t_span, y0.clone(), 0.01, opts.clone())
         })?;
 
-        // Temporarily disabled SIMD methods
-        // #[cfg(feature = "simd")]
-        // test_method_performance("RK4 (SIMD)", || {
-        //     simd_rk4_method(system_func, t_span, y0.clone(), opts.clone())
-        // })?;
+        #[cfg(feature = "simd")]
+        test_method_performance("RK4 (SIMD)", || {
+            simd_rk4_method(system_func, t_span, y0.clone(), opts.clone())
+        })?;
 
         // Test adaptive methods
         test_method_performance("RK45 (Standard)", || {
             rk45_method(system_func, t_span, y0.clone(), opts.clone())
         })?;
 
-        // Temporarily disabled SIMD methods
-        // #[cfg(feature = "simd")]
-        // test_method_performance("RK45 (SIMD)", || {
-        //     simd_rk45_method(system_func, t_span, y0.clone(), opts.clone())
-        // })?;
+        #[cfg(feature = "simd")]
+        test_method_performance("RK45 (SIMD)", || {
+            simd_rk45_method(system_func, t_span, y0.clone(), opts.clone())
+        })?;
     }
 
     #[cfg(feature = "simd")]
@@ -373,12 +366,10 @@ fn analyze_scalability() -> Result<(), Box<dyn std::error::Error>> {
         let std_time = start.elapsed();
 
         // SIMD method (if available)
-        // Temporarily disabled: simd_rk4_method not yet implemented
         #[cfg(feature = "simd")]
         let simd_time = {
             let start = Instant::now();
-            // let _result_simd = simd_rk4_method(simple_ode, t_span, y0.clone(), 0.01, opts.clone())?;
-            let _result_simd = rk4_method(simple_ode, t_span, y0.clone(), 0.01, opts.clone())?; // Use standard method for now
+            let _result_simd = simd_rk4_method(simple_ode, t_span, y0.clone(), opts.clone())?;
             start.elapsed()
         };
 

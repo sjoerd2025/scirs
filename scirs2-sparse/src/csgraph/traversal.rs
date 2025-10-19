@@ -7,7 +7,7 @@ use super::{num_vertices, to_adjacency_list, validate_graph};
 use crate::error::{SparseError, SparseResult};
 use crate::sparray::SparseArray;
 use scirs2_core::ndarray::Array1;
-use scirs2_core::numeric::Float;
+use scirs2_core::numeric::{Float, SparseElement};
 use std::collections::VecDeque;
 use std::fmt::Debug;
 
@@ -73,7 +73,7 @@ pub fn traversegraph<T, S>(
     return_predecessors: bool,
 ) -> SparseResult<(Vec<usize>, Option<Array1<isize>>)>
 where
-    T: Float + Debug + Copy + 'static,
+    T: Float + SparseElement + Debug + Copy + 'static,
     S: SparseArray<T>,
 {
     validate_graph(graph, directed)?;
@@ -106,7 +106,7 @@ pub fn breadth_first_search<T, S>(
     return_predecessors: bool,
 ) -> SparseResult<(Vec<usize>, Option<Array1<isize>>)>
 where
-    T: Float + Debug + Copy + 'static,
+    T: Float + SparseElement + Debug + Copy + 'static,
     S: SparseArray<T>,
 {
     let n = num_vertices(graph);
@@ -153,7 +153,7 @@ pub fn depth_first_search<T, S>(
     return_predecessors: bool,
 ) -> SparseResult<(Vec<usize>, Option<Array1<isize>>)>
 where
-    T: Float + Debug + Copy + 'static,
+    T: Float + SparseElement + Debug + Copy + 'static,
     S: SparseArray<T>,
 {
     let n = num_vertices(graph);
@@ -211,7 +211,7 @@ pub fn depth_first_search_recursive<T, S>(
     return_predecessors: bool,
 ) -> SparseResult<(Vec<usize>, Option<Array1<isize>>)>
 where
-    T: Float + Debug + Copy + 'static,
+    T: Float + SparseElement + Debug + Copy + 'static,
     S: SparseArray<T>,
 {
     let n = num_vertices(graph);
@@ -245,7 +245,7 @@ fn dfs_recursive_helper<T>(
     traversal_order: &mut Vec<usize>,
     predecessors: &mut Option<Array1<isize>>,
 ) where
-    T: Float + Debug + Copy + 'static,
+    T: Float + SparseElement + Debug + Copy + 'static,
 {
     visited[node] = true;
     traversal_order.push(node);
@@ -288,7 +288,7 @@ fn dfs_recursive_helper<T>(
 #[allow(dead_code)]
 pub fn bfs_distances<T, S>(graph: &S, start: usize, directed: bool) -> SparseResult<Array1<isize>>
 where
-    T: Float + Debug + Copy + 'static,
+    T: Float + SparseElement + Debug + Copy + 'static,
     S: SparseArray<T>,
 {
     let n = num_vertices(graph);
@@ -350,7 +350,7 @@ where
 #[allow(dead_code)]
 pub fn has_path<T, S>(graph: &S, source: usize, target: usize, directed: bool) -> SparseResult<bool>
 where
-    T: Float + Debug + Copy + 'static,
+    T: Float + SparseElement + Debug + Copy + 'static,
     S: SparseArray<T>,
 {
     let n = num_vertices(graph);
@@ -401,7 +401,7 @@ pub fn reachable_vertices<T, S>(
     directed: bool,
 ) -> SparseResult<Vec<usize>>
 where
-    T: Float + Debug + Copy + 'static,
+    T: Float + SparseElement + Debug + Copy + 'static,
     S: SparseArray<T>,
 {
     let (traversal_order, _) = breadth_first_search(graph, source, directed, false)?;
@@ -435,7 +435,7 @@ where
 #[allow(dead_code)]
 pub fn topological_sort<T, S>(graph: &S) -> SparseResult<Vec<usize>>
 where
-    T: Float + Debug + Copy + 'static,
+    T: Float + SparseElement + Debug + Copy + 'static,
     S: SparseArray<T>,
 {
     let n = num_vertices(graph);

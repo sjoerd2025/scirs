@@ -4,7 +4,7 @@
 // which is efficient for incrementally constructing a sparse array.
 
 use scirs2_core::ndarray::{Array1, Array2, ArrayView1};
-use scirs2_core::numeric::Float;
+use scirs2_core::numeric::{Float, SparseElement, Zero};
 use std::fmt::{self, Debug};
 use std::ops::{Add, Div, Mul, Sub};
 
@@ -30,14 +30,7 @@ use crate::sparray::{SparseArray, SparseSum};
 #[derive(Clone)]
 pub struct CooArray<T>
 where
-    T: Float
-        + Add<Output = T>
-        + Sub<Output = T>
-        + Mul<Output = T>
-        + Div<Output = T>
-        + Debug
-        + Copy
-        + 'static,
+    T: SparseElement + Div<Output = T> + PartialOrd + 'static,
 {
     /// Row indices
     row: Array1<usize>,
@@ -53,14 +46,7 @@ where
 
 impl<T> CooArray<T>
 where
-    T: Float
-        + Add<Output = T>
-        + Sub<Output = T>
-        + Mul<Output = T>
-        + Div<Output = T>
-        + Debug
-        + Copy
-        + 'static,
+    T: SparseElement + Div<Output = T> + PartialOrd + Zero + 'static,
 {
     /// Creates a new COO array
     ///
@@ -205,7 +191,7 @@ where
             if self.row[i] == curr_row && self.col[i] == curr_col {
                 curr_sum = curr_sum + self.data[i];
             } else {
-                if !curr_sum.is_zero() {
+                if curr_sum != T::sparse_zero() {
                     new_data.push(curr_sum);
                     new_row.push(curr_row);
                     new_col.push(curr_col);
@@ -217,7 +203,7 @@ where
         }
 
         // Add the last element
-        if !curr_sum.is_zero() {
+        if curr_sum != T::sparse_zero() {
             new_data.push(curr_sum);
             new_row.push(curr_row);
             new_col.push(curr_col);
@@ -231,14 +217,7 @@ where
 
 impl<T> SparseArray<T> for CooArray<T>
 where
-    T: Float
-        + Add<Output = T>
-        + Sub<Output = T>
-        + Mul<Output = T>
-        + Div<Output = T>
-        + Debug
-        + Copy
-        + 'static,
+    T: SparseElement + Div<Output = T> + PartialOrd + Zero + 'static,
 {
     fn shape(&self) -> (usize, usize) {
         self.shape
@@ -395,10 +374,10 @@ where
 
     fn get(&self, i: usize, j: usize) -> T {
         if i >= self.shape.0 || j >= self.shape.1 {
-            return T::zero();
+            return T::sparse_zero();
         }
 
-        let mut sum = T::zero();
+        let mut sum = T::sparse_zero();
         for idx in 0..self.data.len() {
             if self.row[idx] == i && self.col[idx] == j {
                 sum = sum + self.data[idx];
@@ -416,7 +395,7 @@ where
             });
         }
 
-        if value.is_zero() {
+        if value == T::sparse_zero() {
             // Remove existing entries at (i, j)
             let mut new_data = Vec::new();
             let mut new_row = Vec::new();
@@ -435,7 +414,7 @@ where
             self.col = Array1::from_vec(new_col);
         } else {
             // First remove any existing entries
-            self.set(i, j, T::zero())?;
+            self.set(i, j, T::sparse_zero())?;
 
             // Then add the new value
             let mut new_data = self.data.to_vec();
@@ -463,7 +442,7 @@ where
         let mut new_col = Vec::new();
 
         for i in 0..self.data.len() {
-            if !self.data[i].is_zero() {
+            if !SparseElement::is_zero(&self.data[i]) {
                 new_data.push(self.data[i]);
                 new_row.push(self.row[i]);
                 new_col.push(self.col[i]);
@@ -501,7 +480,8 @@ where
 
     fn max(&self) -> T {
         if self.data.is_empty() {
-            return T::neg_infinity();
+            // Empty sparse matrix - all elements are implicitly zero
+            return T::sparse_zero();
         }
 
         let mut max_val = self.data[0];
@@ -512,8 +492,9 @@ where
         }
 
         // Check if max_val is less than zero, as zeros aren't explicitly stored
-        if max_val < T::zero() && self.nnz() < self.shape.0 * self.shape.1 {
-            max_val = T::zero();
+        let zero = T::sparse_zero();
+        if max_val < zero && self.nnz() < self.shape.0 * self.shape.1 {
+            max_val = zero;
         }
 
         max_val
@@ -521,7 +502,8 @@ where
 
     fn min(&self) -> T {
         if self.data.is_empty() {
-            return T::infinity();
+            // Empty sparse matrix - all elements are implicitly zero
+            return T::sparse_zero();
         }
 
         let mut min_val = self.data[0];
@@ -532,8 +514,8 @@ where
         }
 
         // Check if min_val is greater than zero, as zeros aren't explicitly stored
-        if min_val > T::zero() && self.nnz() < self.shape.0 * self.shape.1 {
-            min_val = T::zero();
+        if min_val > T::sparse_zero() && self.nnz() < self.shape.0 * self.shape.1 {
+            min_val = T::sparse_zero();
         }
 
         min_val
@@ -570,7 +552,7 @@ where
                     if r == curr_row && c == curr_col {
                         curr_sum = curr_sum + v;
                     } else {
-                        if !curr_sum.is_zero() {
+                        if curr_sum != T::sparse_zero() {
                             result_row.push(curr_row);
                             result_col.push(curr_col);
                             result_data.push(curr_sum);
@@ -582,7 +564,7 @@ where
                 }
 
                 // Add the last element
-                if !curr_sum.is_zero() {
+                if curr_sum != T::sparse_zero() {
                     result_row.push(curr_row);
                     result_col.push(curr_col);
                     result_data.push(curr_sum);
@@ -649,14 +631,7 @@ where
 
 impl<T> fmt::Debug for CooArray<T>
 where
-    T: Float
-        + Add<Output = T>
-        + Sub<Output = T>
-        + Mul<Output = T>
-        + Div<Output = T>
-        + Debug
-        + Copy
-        + 'static,
+    T: SparseElement + Div<Output = T> + PartialOrd + Zero + 'static,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(

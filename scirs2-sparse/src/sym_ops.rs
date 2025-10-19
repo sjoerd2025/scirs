@@ -5,7 +5,7 @@
 // and other computations that can take advantage of symmetry.
 
 use scirs2_core::ndarray::{Array1, ArrayView1};
-use scirs2_core::numeric::Float;
+use scirs2_core::numeric::{Float, SparseElement};
 use std::fmt::Debug;
 use std::ops::{Add, Mul};
 
@@ -59,7 +59,7 @@ use scirs2_core::parallel_ops::*;
 #[allow(dead_code)]
 pub fn sym_csr_matvec<T>(matrix: &SymCsrMatrix<T>, x: &ArrayView1<T>) -> SparseResult<Array1<T>>
 where
-    T: Float + Debug + Copy + Add<Output = T> + Send + Sync,
+    T: Float + SparseElement + Debug + Copy + Add<Output = T> + Send + Sync,
 {
     let (n, _) = matrix.shape();
     if x.len() != n {
@@ -86,7 +86,7 @@ fn sym_csr_matvec_parallel<T>(
     x: &ArrayView1<T>,
 ) -> SparseResult<Array1<T>>
 where
-    T: Float + Debug + Copy + Add<Output = T> + Send + Sync,
+    T: Float + SparseElement + Debug + Copy + Add<Output = T> + Send + Sync,
 {
     let (n, _) = matrix.shape();
     let mut y = Array1::zeros(n);
@@ -109,7 +109,7 @@ where
             let row_end = matrix.indptr[row_i + 1];
 
             // Compute the dot product for this row
-            let mut sum = T::zero();
+            let mut sum = T::sparse_zero();
             for j in row_start..row_end {
                 let col = matrix.indices[j];
                 let val = matrix.data[j];
@@ -141,7 +141,7 @@ where
 #[allow(dead_code)]
 fn sym_csr_matvec_scalar<T>(matrix: &SymCsrMatrix<T>, x: &ArrayView1<T>) -> SparseResult<Array1<T>>
 where
-    T: Float + Debug + Copy + Add<Output = T>,
+    T: Float + SparseElement + Debug + Copy + Add<Output = T>,
 {
     let (n, _) = matrix.shape();
     let mut y = Array1::zeros(n);
@@ -207,7 +207,7 @@ where
 #[allow(dead_code)]
 pub fn sym_coo_matvec<T>(matrix: &SymCooMatrix<T>, x: &ArrayView1<T>) -> SparseResult<Array1<T>>
 where
-    T: Float + Debug + Copy + Add<Output = T>,
+    T: Float + SparseElement + Debug + Copy + Add<Output = T>,
 {
     let (n, _) = matrix.shape();
     if x.len() != n {
@@ -263,7 +263,13 @@ pub fn sym_csr_rank1_update<T>(
     alpha: T,
 ) -> SparseResult<()>
 where
-    T: Float + Debug + Copy + Add<Output = T> + Mul<Output = T> + std::ops::AddAssign,
+    T: Float
+        + SparseElement
+        + Debug
+        + Copy
+        + Add<Output = T>
+        + Mul<Output = T>
+        + std::ops::AddAssign,
 {
     let (n, _) = matrix.shape();
     if x.len() != n {
@@ -298,7 +304,7 @@ where
     for (i, row) in dense.iter().enumerate().take(n) {
         for (j, &val) in row.iter().enumerate().take(i + 1) {
             // Only include lower triangular (including diagonal)
-            if val != T::zero() {
+            if val != T::sparse_zero() {
                 data.push(val);
                 indices.push(j);
             }
@@ -352,13 +358,13 @@ where
 #[allow(dead_code)]
 pub fn sym_csr_quadratic_form<T>(matrix: &SymCsrMatrix<T>, x: &ArrayView1<T>) -> SparseResult<T>
 where
-    T: Float + Debug + Copy + Add<Output = T> + Mul<Output = T> + Send + Sync,
+    T: Float + SparseElement + Debug + Copy + Add<Output = T> + Mul<Output = T> + Send + Sync,
 {
     // First compute A * x
     let ax = sym_csr_matvec(matrix, x)?;
 
     // Then compute x^T * (A * x)
-    let mut result = T::zero();
+    let mut result = T::sparse_zero();
     for i in 0..ax.len() {
         result = result + x[i] * ax[i];
     }
@@ -399,10 +405,10 @@ where
 #[allow(dead_code)]
 pub fn sym_csr_trace<T>(matrix: &SymCsrMatrix<T>) -> T
 where
-    T: Float + Debug + Copy + Add<Output = T>,
+    T: Float + SparseElement + Debug + Copy + Add<Output = T>,
 {
     let (n, _) = matrix.shape();
-    let mut trace = T::zero();
+    let mut trace = T::sparse_zero();
 
     // Sum the diagonal elements
     for i in 0..n {

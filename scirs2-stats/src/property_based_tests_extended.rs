@@ -37,7 +37,8 @@ impl StatisticalTestData {
     }
 
     pub fn generate_large_sample() -> Self {
-        let data: Vec<f64> = (1..=1000).map(|i| i as f64).collect();
+        // Reduced from 1000 to 100 to prevent hanging in CI
+        let data: Vec<f64> = (1..=100).map(|i| i as f64).collect();
         Self { data }
     }
 }
@@ -944,8 +945,8 @@ impl RobustnessTester {
 
     /// Test with extremely large datasets
     pub fn test_largedataset_stability() -> bool {
-        // Create a large dataset that might stress memory or algorithms
-        let largesize = 100_000;
+        // Reduced from 100,000 to 10,000 to prevent hanging in CI
+        let largesize = 10_000;
         let data: Vec<f64> = (0..largesize).map(|i| (i as f64).sin()).collect();
         let arr = Array1::from_vec(data);
 
@@ -1062,8 +1063,9 @@ impl PerformanceRegressionTester {
 
     /// Test that performance doesn't degrade with certain data patterns
     pub fn test_performance_stability() -> bool {
-        let size = 10_000;
-        let iterations = 100;
+        // Reduced for faster CI tests
+        let size = 1_000;
+        let iterations = 10;
 
         // Test with different data patterns
         let patterns = [
@@ -1265,7 +1267,6 @@ mod tests {
     use super::*;
 
     #[test]
-    #[ignore] // Temporarily disabled due to hanging issues
     fn test_simd_consistency() {
         let testdata = StatisticalTestData::generate_large_sample();
 
@@ -1283,7 +1284,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // Temporarily disabled due to hanging issues
     fn test_mathematical_invariants() {
         let testdata1 = StatisticalTestData::generate_sample(); // 10 elements
         let testdata2 = StatisticalTestData::new(vec![2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0, 16.0, 18.0, 20.0]); // 10 elements
@@ -1351,7 +1351,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // Temporarily disabled due to hanging issues
     fn test_fuzzing_framework() {
         // Test fuzzing with minimal iteration count to avoid hanging
         assert!(FuzzingTester::test_mean_stability_fuzz(1));
@@ -1371,7 +1370,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // Temporarily disabled due to hanging issues
     fn test_robustness() {
         assert!(RobustnessTester::test_nan_infinity_handling());
         assert!(RobustnessTester::test_largedataset_stability());

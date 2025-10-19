@@ -7,6 +7,7 @@
 use crate::error::{SparseError, SparseResult};
 use crate::sparray::SparseArray;
 use scirs2_core::numeric::{Float, NumAssign};
+use scirs2_core::SparseElement;
 use std::fmt::Debug;
 use std::iter::Sum;
 use std::marker::PhantomData;
@@ -207,7 +208,7 @@ impl<F> ZeroOperator<F> {
     }
 }
 
-impl<F: Float> LinearOperator<F> for ZeroOperator<F> {
+impl<F: Float + SparseElement> LinearOperator<F> for ZeroOperator<F> {
     fn shape(&self) -> (usize, usize) {
         self.shape
     }
@@ -219,7 +220,7 @@ impl<F: Float> LinearOperator<F> for ZeroOperator<F> {
                 found: x.len(),
             });
         }
-        Ok(vec![F::zero(); self.shape.0])
+        Ok(vec![F::sparse_zero(); self.shape.0])
     }
 
     fn rmatvec(&self, x: &[F]) -> SparseResult<Vec<F>> {
@@ -229,7 +230,7 @@ impl<F: Float> LinearOperator<F> for ZeroOperator<F> {
                 found: x.len(),
             });
         }
-        Ok(vec![F::zero(); self.shape.1])
+        Ok(vec![F::sparse_zero(); self.shape.1])
     }
 
     fn has_adjoint(&self) -> bool {
@@ -262,7 +263,7 @@ impl<F, M> MatrixLinearOperator<F, M> {
 // Implementation of LinearOperator for CSR matrices
 use crate::csr::CsrMatrix;
 
-impl<F: Float + NumAssign + Sum + 'static + Debug> LinearOperator<F>
+impl<F: Float + SparseElement + NumAssign + Sum + 'static + Debug> LinearOperator<F>
     for MatrixLinearOperator<F, CsrMatrix<F>>
 {
     fn shape(&self) -> (usize, usize) {
@@ -278,13 +279,13 @@ impl<F: Float + NumAssign + Sum + 'static + Debug> LinearOperator<F>
         }
 
         // Manual implementation for generic types
-        let mut result = vec![F::zero(); self.matrix.rows()];
+        let mut result = vec![F::sparse_zero(); self.matrix.rows()];
         for (row, result_elem) in result.iter_mut().enumerate().take(self.matrix.rows()) {
             let row_range = self.matrix.row_range(row);
             let row_indices = &self.matrix.colindices()[row_range.clone()];
             let row_data = &self.matrix.data[row_range];
 
-            let mut sum = F::zero();
+            let mut sum = F::sparse_zero();
             for (col_idx, &col) in row_indices.iter().enumerate() {
                 sum += row_data[col_idx] * x[col];
             }
@@ -307,7 +308,7 @@ impl<F: Float + NumAssign + Sum + 'static + Debug> LinearOperator<F>
 // Implementation of LinearOperator for CsrArray
 use crate::csr_array::CsrArray;
 
-impl<F: Float + NumAssign + Sum + 'static + Debug> LinearOperator<F>
+impl<F: Float + SparseElement + NumAssign + Sum + 'static + Debug> LinearOperator<F>
     for MatrixLinearOperator<F, CsrArray<F>>
 {
     fn shape(&self) -> (usize, usize) {
@@ -337,11 +338,11 @@ impl<F: Float + NumAssign + Sum + 'static + Debug> LinearOperator<F>
             });
         }
 
-        let mut result = vec![F::zero(); self.matrix.shape().1];
+        let mut result = vec![F::sparse_zero(); self.matrix.shape().1];
 
         // Iterate through each row of the matrix
         for (row_idx, &x_val) in x.iter().enumerate() {
-            if x_val != F::zero() {
+            if x_val != F::sparse_zero() {
                 // Get row data for this row
                 let row_start = self.matrix.get_indptr()[row_idx];
                 let row_end = self.matrix.get_indptr()[row_idx + 1];
@@ -362,13 +363,15 @@ impl<F: Float + NumAssign + Sum + 'static + Debug> LinearOperator<F>
     }
 }
 
-impl<F: Float + NumAssign + Sum + 'static + Debug> AsLinearOperator<F> for CsrMatrix<F> {
+impl<F: Float + SparseElement + NumAssign + Sum + 'static + Debug> AsLinearOperator<F>
+    for CsrMatrix<F>
+{
     fn as_linear_operator(&self) -> Box<dyn LinearOperator<F>> {
         Box::new(MatrixLinearOperator::new(self.clone()))
     }
 }
 
-impl<F: Float + NumAssign + Sum + 'static + Debug> AsLinearOperator<F>
+impl<F: Float + SparseElement + NumAssign + Sum + 'static + Debug> AsLinearOperator<F>
     for crate::csr_array::CsrArray<F>
 {
     fn as_linear_operator(&self) -> Box<dyn LinearOperator<F>> {
@@ -971,7 +974,46 @@ macro_rules! impl_linear_operator_ext {
 impl_linear_operator_ext!(IdentityOperator<F>);
 impl_linear_operator_ext!(ScaledIdentityOperator<F>);
 impl_linear_operator_ext!(DiagonalOperator<F>);
-impl_linear_operator_ext!(ZeroOperator<F>);
+
+// ZeroOperator needs special implementation with SparseElement bound
+impl<F: Float + NumAssign + Copy + SparseElement + 'static> LinearOperatorExt<F>
+    for ZeroOperator<F>
+{
+    fn add(&self, other: Box<dyn LinearOperator<F>>) -> SparseResult<Box<dyn LinearOperator<F>>> {
+        let self_box = Box::new(self.clone());
+        Ok(Box::new(SumOperator::new(self_box, other)?))
+    }
+
+    fn sub(&self, other: Box<dyn LinearOperator<F>>) -> SparseResult<Box<dyn LinearOperator<F>>> {
+        let self_box = Box::new(self.clone());
+        Ok(Box::new(DifferenceOperator::new(self_box, other)?))
+    }
+
+    fn mul(&self, other: Box<dyn LinearOperator<F>>) -> SparseResult<Box<dyn LinearOperator<F>>> {
+        let self_box = Box::new(self.clone());
+        Ok(Box::new(ProductOperator::new(self_box, other)?))
+    }
+
+    fn scale(&self, alpha: F) -> Box<dyn LinearOperator<F>> {
+        let self_box = Box::new(self.clone());
+        Box::new(ScaledOperator::new(alpha, self_box))
+    }
+
+    fn transpose(&self) -> Box<dyn LinearOperator<F>> {
+        let self_box = Box::new(self.clone());
+        Box::new(TransposeOperator::new(self_box))
+    }
+
+    fn adjoint(&self) -> SparseResult<Box<dyn LinearOperator<F>>> {
+        let self_box = Box::new(self.clone());
+        Ok(Box::new(AdjointOperator::new(self_box)?))
+    }
+
+    fn pow(&self, n: usize) -> SparseResult<Box<dyn LinearOperator<F>>> {
+        let self_box = Box::new(self.clone());
+        Ok(Box::new(PowerOperator::new(self_box, n)?))
+    }
+}
 
 /// Utility functions for operator composition
 /// Add two operators: left + right

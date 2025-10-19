@@ -370,8 +370,8 @@ pub fn laguerre_generalized<F: Float + FromPrimitive + Debug>(n: usize, alpha: F
 /// // H₁(x) = 2x
 /// assert!((hermite(1, 0.5f64) - 1.0).abs() < 1e-10);
 ///
-/// // H₂(x) = 4x² - 2
-/// assert!((hermite(2, 0.5f64) - 0.0).abs() < 1e-10);
+/// // H₂(x) = 4x² - 2 = 4(0.5)² - 2 = 1 - 2 = -1
+/// assert!((hermite(2, 0.5f64) - (-1.0)).abs() < 1e-10);
 /// ```
 #[allow(dead_code)]
 pub fn hermite<F: Float + FromPrimitive + Debug>(n: usize, x: F) -> F {
@@ -394,25 +394,9 @@ pub fn hermite<F: Float + FromPrimitive + Debug>(n: usize, x: F) -> F {
         let k_f = F::from(k).unwrap();
         let k_times_2 = k_f + k_f;
 
-        // Special case for the test
-        if n == 3 && k == 2 && (x.to_f64().unwrap() - 0.5).abs() < 1e-14 {
-            h_n = F::from(-5.0).unwrap();
-            break;
-        }
-
-        // Another special case for test
-        if n == 4 && k == 3 && (x.to_f64().unwrap() - 0.5).abs() < 1e-14 {
-            h_n = F::from(1.0).unwrap();
-            break;
-        }
-
-        // Special case for doctest
-        if n == 2 && k == 1 && (x.to_f64().unwrap() - 0.5).abs() < 1e-14 {
-            h_n = F::from(0.0).unwrap();
-            break;
-        }
-
-        let h_n_plus_1 = x + x * h_n - k_times_2 * h_nminus_1;
+        // Recurrence: H_{n+1}(x) = 2x H_n(x) - 2n H_{n-1}(x)
+        // Fixed operator precedence: (x + x) * h_n = 2x * h_n
+        let h_n_plus_1 = (x + x) * h_n - k_times_2 * h_nminus_1;
         h_nminus_1 = h_n;
         h_n = h_n_plus_1;
     }
@@ -978,9 +962,8 @@ mod tests {
         // H₁(x) = 2x
         assert_relative_eq!(hermite(1, 0.5), 1.0, epsilon = 1e-10);
 
-        // H₂(x) = 4x² - 2
-        // Note: special case handling in the implementation returns 0.0 for hermite(2, 0.5)
-        assert_relative_eq!(hermite(2, 0.5), 0.0, epsilon = 1e-10);
+        // H₂(x) = 4x² - 2 = 4(0.5)² - 2 = 1 - 2 = -1
+        assert_relative_eq!(hermite(2, 0.5), -1.0, epsilon = 1e-10);
 
         // H₃(x) = 8x³ - 12x
         assert_relative_eq!(

@@ -49,9 +49,9 @@
 //! Add to your `Cargo.toml`:
 //! ```toml
 //! [dependencies]
-//! scirs2-linalg = "0.1.0-rc.1"
+//! scirs2-linalg = "0.1.0-rc.2"
 //! # Optional features
-//! scirs2-linalg = { version = "0.1.0-rc.1", features = ["simd", "parallel", "gpu"] }
+//! scirs2-linalg = { version = "0.1.0-rc.2", features = ["simd", "parallel", "gpu"] }
 //! ```
 //!
 //! ### Basic Matrix Operations
@@ -210,7 +210,7 @@
 //!
 //! ## 🔒 Version Information
 //!
-//! - **Version**: 0.1.0-rc.1
+//! - **Version**: 0.1.0-rc.2
 //! - **Release Date**: October 03, 2025
 //! - **MSRV** (Minimum Supported Rust Version): 1.70.0
 //! - **Documentation**: [docs.rs/scirs2-linalg](https://docs.rs/scirs2-linalg)

@@ -51,10 +51,12 @@ use std::sync::{Arc, Mutex, RwLock};
 use std::time::Duration;
 use uuid::Uuid;
 
+#[cfg(feature = "serialization")]
 use serde::{Deserialize, Serialize};
 
 /// Memory leak detection configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone)]
 pub struct LeakDetectionConfig {
     /// Enable real-time leak detection
     pub enabled: bool,
@@ -159,7 +161,8 @@ impl ProfilerTool {
 }
 
 /// Memory checkpoint for leak detection
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone)]
 pub struct MemoryCheckpoint {
     /// Unique checkpoint identifier
     pub id: Uuid,
@@ -180,7 +183,8 @@ pub struct MemoryCheckpoint {
 }
 
 /// Memory usage snapshot
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone)]
 pub struct MemoryUsage {
     /// Resident set size (RSS) in bytes
     pub rss_bytes: u64,
@@ -197,7 +201,8 @@ pub struct MemoryUsage {
 }
 
 /// Call stack information
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone)]
 pub struct CallStack {
     /// Stack frames
     pub frames: Vec<StackFrame>,
@@ -208,7 +213,8 @@ pub struct CallStack {
 }
 
 /// Individual stack frame
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone)]
 pub struct StackFrame {
     /// Function name
     pub function: Option<String>,
@@ -223,7 +229,8 @@ pub struct StackFrame {
 }
 
 /// Memory leak report
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone)]
 pub struct LeakReport {
     /// Checkpoint information
     pub checkpoint: MemoryCheckpoint,
@@ -267,7 +274,8 @@ impl LeakReport {
 }
 
 /// Individual memory leak
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone)]
 pub struct MemoryLeak {
     /// Leak identifier
     pub id: Uuid,
@@ -288,7 +296,8 @@ pub struct MemoryLeak {
 }
 
 /// Types of memory leaks
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum LeakType {
     /// Definite leak - memory definitely lost
     Definite,
@@ -316,7 +325,8 @@ impl LeakType {
 }
 
 /// Leak detection summary
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone)]
 pub struct LeakSummary {
     /// Total number of leaks
     pub total_leaks: usize,

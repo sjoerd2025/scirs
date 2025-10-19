@@ -49,6 +49,7 @@ use std::sync::{Arc, Mutex, RwLock};
 use std::time::{Duration, Instant, SystemTime};
 use uuid::Uuid;
 
+#[cfg(feature = "serialization")]
 use serde::{Deserialize, Serialize};
 
 // W3C Trace Context constants for OpenTelemetry compatibility
@@ -59,7 +60,8 @@ const TRACE_HEADER_NAME: &str = "traceparent";
 const TRACE_STATE_HEADER_NAME: &str = "tracestate";
 
 /// Distributed tracing system configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone)]
 pub struct TracingConfig {
     /// Service name for trace identification
     pub service_name: String,
@@ -107,7 +109,8 @@ impl Default for TracingConfig {
 }
 
 /// Span kind for categorizing operations
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SpanKind {
     /// Internal span within the same process
     Internal,
@@ -122,7 +125,8 @@ pub enum SpanKind {
 }
 
 /// Span status for tracking operation outcomes
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SpanStatus {
     /// Operation completed successfully
     Ok,
@@ -135,7 +139,8 @@ pub enum SpanStatus {
 }
 
 /// Trace context for distributed tracing (W3C Trace Context compatible)
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone)]
 pub struct TraceContext {
     /// Unique trace identifier (16 bytes for W3C compatibility)
     pub trace_id: Uuid,
@@ -340,7 +345,8 @@ impl Default for TraceContext {
 }
 
 /// Performance metrics for a span
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone)]
 pub struct SpanMetrics {
     /// Duration of the span
     pub duration: Duration,
@@ -373,7 +379,8 @@ impl Default for SpanMetrics {
 }
 
 /// Span data structure
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone)]
 pub struct Span {
     /// Trace context
     pub context: TraceContext,
@@ -400,7 +407,8 @@ pub struct Span {
 }
 
 /// Event recorded during a span
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone)]
 pub struct SpanEvent {
     /// Event timestamp
     pub timestamp: SystemTime,
@@ -1011,7 +1019,8 @@ impl Clone for TracingSystem {
 }
 
 /// Tracing metrics for monitoring system health
-#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Default)]
 pub struct TracingMetrics {
     /// Total spans started
     pub spans_started: u64,
@@ -1383,6 +1392,7 @@ impl HttpExporter {
 #[cfg(feature = "reqwest")]
 impl TraceExporter for HttpExporter {
     fn export_span(&self, span: &Span) -> Result<(), CoreError> {
+        #[cfg(feature = "serialization")]
         {
             let json = serde_json::to_string(span).map_err(|e| {
                 CoreError::ComputationError(crate::error::ErrorContext::new(format!(
@@ -1412,16 +1422,18 @@ impl TraceExporter for HttpExporter {
                     )),
                 ));
             }
+
+            Ok(())
         }
 
-        #[cfg(not(feature = "serde"))]
+        #[cfg(not(feature = "serialization"))]
         {
-            return Err(CoreError::ComputationError(
-                crate::error::ErrorContext::new("HTTP export requires serde feature".to_string()),
-            ));
+            Err(CoreError::ComputationError(
+                crate::error::ErrorContext::new(
+                    "HTTP export requires serialization feature".to_string(),
+                ),
+            ))
         }
-
-        Ok(())
     }
 
     fn flush(&self) -> Result<(), CoreError> {
@@ -1496,7 +1508,8 @@ macro_rules! trace_async_fn {
 }
 
 /// Version negotiation for distributed tracing compatibility
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone)]
 pub struct TracingVersion {
     pub major: u32,
     pub minor: u32,
@@ -1530,7 +1543,8 @@ impl std::fmt::Display for TracingVersion {
 }
 
 /// Negotiation result for version compatibility
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone)]
 pub struct NegotiationResult {
     pub agreed_version: TracingVersion,
     pub features_supported: Vec<String>,
@@ -1538,7 +1552,8 @@ pub struct NegotiationResult {
 }
 
 /// Resource attribution tracker for performance analysis
-#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Default)]
 pub struct ResourceAttribution {
     /// CPU time consumed (in nanoseconds)
     pub cpu_timens: Option<u64>,
@@ -1625,7 +1640,8 @@ impl ResourceAttribution {
 }
 
 /// Enhanced span metrics with resource attribution
-#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Default)]
 pub struct EnhancedSpanMetrics {
     /// Basic span metrics
     pub basic: SpanMetrics,

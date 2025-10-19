@@ -10,7 +10,7 @@
 use crate::error::{SparseError, SparseResult};
 use crate::sparray::SparseArray;
 use scirs2_core::ndarray::{Array1, Array2};
-use scirs2_core::numeric::Float;
+use scirs2_core::numeric::{Float, SparseElement};
 use std::fmt::Debug;
 use std::ops::{Add, Div, Mul, Sub};
 
@@ -85,7 +85,7 @@ impl Default for SVDOptions {
 #[derive(Debug, Clone)]
 pub struct SVDResult<T>
 where
-    T: Float + Debug + Copy,
+    T: Float + SparseElement + Debug + Copy,
 {
     /// Left singular vectors (U matrix)
     pub u: Option<Array2<T>>,
@@ -137,6 +137,7 @@ pub fn svds<T, S>(
 ) -> SparseResult<SVDResult<T>>
 where
     T: Float
+        + SparseElement
         + Debug
         + Copy
         + Add<Output = T>
@@ -176,6 +177,7 @@ pub fn svd_truncated<T, S>(
 ) -> SparseResult<SVDResult<T>>
 where
     T: Float
+        + SparseElement
         + Debug
         + Copy
         + Add<Output = T>
@@ -208,6 +210,7 @@ fn lanczos_bidiag_svd<T, S>(
 ) -> SparseResult<SVDResult<T>>
 where
     T: Float
+        + SparseElement
         + Debug
         + Copy
         + Add<Output = T>
@@ -223,11 +226,11 @@ where
 
     // Initialize starting vector
     let mut u = Array1::zeros(m);
-    u[0] = T::one();
+    u[0] = T::sparse_one();
 
     // Normalize
     let norm = (u.iter().map(|&v| v * v).sum::<T>()).sqrt();
-    if !norm.is_zero() {
+    if !SparseElement::is_zero(&norm) {
         for i in 0..m {
             u[i] = u[i] / norm;
         }
@@ -260,7 +263,7 @@ where
         let alpha_j = (v.iter().map(|&val| val * val).sum::<T>()).sqrt();
         alpha.push(alpha_j);
 
-        if alpha_j.is_zero() {
+        if SparseElement::is_zero(&alpha_j) {
             break;
         }
 
@@ -304,7 +307,7 @@ where
         let mut u_final = Array2::zeros((m, k.min(singular_values.len())));
         for j in 0..k.min(singular_values.len()) {
             for i in 0..m {
-                let mut sum = T::zero();
+                let mut sum = T::sparse_zero();
                 for l in 0..u_vectors.len().min(u_bidiag.len()) {
                     if j < u_bidiag[l].len() {
                         sum = sum + T::from(u_bidiag[l][j]).unwrap() * u_vectors[l][i];
@@ -322,7 +325,7 @@ where
         let mut vt_final = Array2::zeros((k.min(singular_values.len()), n));
         for j in 0..k.min(singular_values.len()) {
             for i in 0..n {
-                let mut sum = T::zero();
+                let mut sum = T::sparse_zero();
                 for l in 0..v_vectors.len().min(vt_bidiag.len()) {
                     if j < vt_bidiag[l].len() {
                         sum = sum + T::from(vt_bidiag[l][j]).unwrap() * v_vectors[l][i];
@@ -350,6 +353,7 @@ where
 fn randomized_svd<T, S>(matrix: &S, k: usize, options: &SVDOptions) -> SparseResult<SVDResult<T>>
 where
     T: Float
+        + SparseElement
         + Debug
         + Copy
         + Add<Output = T>
@@ -423,7 +427,7 @@ where
             let mut u_result = Array2::zeros((m, k));
             for i in 0..m {
                 for j in 0..k {
-                    let mut sum = T::zero();
+                    let mut sum = T::sparse_zero();
                     for l_idx in 0..l {
                         sum = sum + q[[l_idx, i]] * u_b[[l_idx, j]];
                     }
@@ -452,6 +456,7 @@ where
 fn power_method_svd<T, S>(matrix: &S, k: usize, options: &SVDOptions) -> SparseResult<SVDResult<T>>
 where
     T: Float
+        + SparseElement
         + Debug
         + Copy
         + Add<Output = T>
@@ -476,6 +481,7 @@ fn cross_approximation_svd<T, S>(
 ) -> SparseResult<SVDResult<T>>
 where
     T: Float
+        + SparseElement
         + Debug
         + Copy
         + Add<Output = T>
@@ -496,6 +502,7 @@ where
 fn matrix_vector_product<T, S>(matrix: &S, vector: &Array1<T>) -> SparseResult<Array1<T>>
 where
     T: Float
+        + SparseElement
         + Debug
         + Copy
         + Add<Output = T>
@@ -529,6 +536,7 @@ where
 fn matrix_transpose_vector_product<T, S>(matrix: &S, vector: &Array1<T>) -> SparseResult<Array1<T>>
 where
     T: Float
+        + SparseElement
         + Debug
         + Copy
         + Add<Output = T>
@@ -566,6 +574,7 @@ fn solve_bidiagonal_svd<T>(
 ) -> SparseResult<BidiagonalSvdResult<T>>
 where
     T: Float
+        + SparseElement
         + Debug
         + Copy
         + Add<Output = T>
@@ -589,7 +598,7 @@ where
         let largest_sv = alpha
             .iter()
             .map(|&x| x.abs())
-            .fold(T::zero(), |a, b| if a > b { a } else { b });
+            .fold(T::sparse_zero(), |a, b| if a > b { a } else { b });
         singular_values.push(largest_sv);
 
         // Create identity-like vectors
@@ -607,9 +616,9 @@ where
 
     // Fill remaining with zeros (simplified)
     while singular_values.len() < k && singular_values.len() < n {
-        singular_values.push(T::zero());
-        u_vectors.push(vec![0.0; n]);
-        vt_vectors.push(vec![0.0; n]);
+        singular_values.push(T::sparse_zero());
+        u_vectors.push(vec![0.0_f64; n]);
+        vt_vectors.push(vec![0.0_f64; n]);
     }
 
     Ok((singular_values, u_vectors, vt_vectors))
@@ -620,6 +629,7 @@ where
 fn qr_decomposition_orthogonal<T>(matrix: &Array2<T>) -> SparseResult<Array2<T>>
 where
     T: Float
+        + SparseElement
         + Debug
         + Copy
         + Add<Output = T>
@@ -635,13 +645,13 @@ where
     // Simple Gram-Schmidt orthogonalization
     for j in 0..n {
         // Normalize column j
-        let mut norm = T::zero();
+        let mut norm = T::sparse_zero();
         for i in 0..m {
             norm = norm + q[[i, j]] * q[[i, j]];
         }
         norm = norm.sqrt();
 
-        if !norm.is_zero() {
+        if !SparseElement::is_zero(&norm) {
             for i in 0..m {
                 q[[i, j]] = q[[i, j]] / norm;
             }
@@ -649,7 +659,7 @@ where
 
         // Orthogonalize remaining columns against column j
         for k in (j + 1)..n {
-            let mut dot = T::zero();
+            let mut dot = T::sparse_zero();
             for i in 0..m {
                 dot = dot + q[[i, j]] * q[[i, k]];
             }
@@ -668,6 +678,7 @@ where
 fn dense_svd<T>(matrix: &Array2<T>, k: usize) -> SparseResult<SVDResult<T>>
 where
     T: Float
+        + SparseElement
         + Debug
         + Copy
         + Add<Output = T>
@@ -681,7 +692,7 @@ where
     let rank = k.min(m).min(n);
 
     // Simplified implementation - in practice, use LAPACK or similar
-    let singular_values = Array1::from_elem(rank, T::one());
+    let singular_values = Array1::from_elem(rank, T::sparse_one());
     let u = Some(
         Array2::eye(m)
             .slice(scirs2_core::ndarray::s![.., ..rank])

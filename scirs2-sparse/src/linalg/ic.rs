@@ -3,7 +3,7 @@
 use crate::csr::CsrMatrix;
 use crate::error::{SparseError, SparseResult};
 use crate::linalg::interface::LinearOperator;
-use scirs2_core::numeric::{Float, NumAssign};
+use scirs2_core::numeric::{Float, NumAssign, SparseElement};
 use std::fmt::Debug;
 use std::iter::Sum;
 
@@ -17,7 +17,7 @@ pub struct IC0Preconditioner<F> {
     l_factor: CsrMatrix<F>,
 }
 
-impl<F: Float + NumAssign + Sum + Debug + 'static> IC0Preconditioner<F> {
+impl<F: Float + SparseElement + NumAssign + Sum + Debug + 'static> IC0Preconditioner<F> {
     /// Create a new IC(0) preconditioner from a symmetric positive definite matrix
     pub fn new(matrix: &CsrMatrix<F>) -> SparseResult<Self> {
         let n = matrix.rows();
@@ -81,7 +81,7 @@ impl<F: Float + NumAssign + Sum + Debug + 'static> IC0Preconditioner<F> {
                 // Find L[j,j]
                 let j_row_start = l_indptr[j];
                 let j_row_end = l_indptr[j + 1];
-                let mut l_jj = F::zero();
+                let mut l_jj = F::sparse_zero();
 
                 for idx in j_row_start..j_row_end {
                     if l_indices[idx] == j {
@@ -94,7 +94,7 @@ impl<F: Float + NumAssign + Sum + Debug + 'static> IC0Preconditioner<F> {
             }
 
             // Check if factorization is possible
-            if diag_val <= F::zero() {
+            if diag_val <= F::sparse_zero() {
                 return Err(SparseError::ValueError(
                     "Matrix is not positive definite or factorization broke down".to_string(),
                 ));
@@ -105,7 +105,7 @@ impl<F: Float + NumAssign + Sum + Debug + 'static> IC0Preconditioner<F> {
             // Update off-diagonal elements
             for k in (diag_idx + 1)..row_end {
                 let j = l_indices[k];
-                let mut sum = F::zero();
+                let mut sum = F::sparse_zero();
 
                 // Compute dot product of row i and row j up to column j
                 for p in row_start..diag_idx {
@@ -134,7 +134,9 @@ impl<F: Float + NumAssign + Sum + Debug + 'static> IC0Preconditioner<F> {
     }
 }
 
-impl<F: Float + NumAssign + Sum + Debug + 'static> LinearOperator<F> for IC0Preconditioner<F> {
+impl<F: Float + SparseElement + NumAssign + Sum + Debug + 'static> LinearOperator<F>
+    for IC0Preconditioner<F>
+{
     fn shape(&self) -> (usize, usize) {
         self.l_factor.shape()
     }
@@ -150,13 +152,13 @@ impl<F: Float + NumAssign + Sum + Debug + 'static> LinearOperator<F> for IC0Prec
 
         // Solve L * L^T * y = x
         // First solve L * z = x (forward substitution)
-        let mut z = vec![F::zero(); n];
+        let mut z = vec![F::sparse_zero(); n];
         for i in 0..n {
             let row_start = self.l_factor.indptr[i];
             let row_end = self.l_factor.indptr[i + 1];
 
             let mut sum = x[i];
-            let mut diag_val = F::one();
+            let mut diag_val = F::sparse_one();
 
             for k in row_start..row_end {
                 let j = self.l_factor.indices[k];
@@ -173,14 +175,14 @@ impl<F: Float + NumAssign + Sum + Debug + 'static> LinearOperator<F> for IC0Prec
         }
 
         // Then solve L^T * y = z (backward substitution)
-        let mut y = vec![F::zero(); n];
+        let mut y = vec![F::sparse_zero(); n];
         for i in (0..n).rev() {
             let mut sum = z[i];
 
             // Find diagonal element
             let row_start = self.l_factor.indptr[i];
             let row_end = self.l_factor.indptr[i + 1];
-            let mut diag_val = F::one();
+            let mut diag_val = F::sparse_one();
 
             for k in row_start..row_end {
                 let j = self.l_factor.indices[k];

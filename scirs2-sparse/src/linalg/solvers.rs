@@ -2,7 +2,7 @@
 
 use crate::csr::CsrMatrix;
 use crate::error::{SparseError, SparseResult};
-use scirs2_core::numeric::{Float, NumAssign};
+use scirs2_core::numeric::{Float, NumAssign, SparseElement};
 use std::iter::Sum;
 
 // Re-export the functions from the original linalg.rs
@@ -16,7 +16,7 @@ use std::iter::Sum;
 #[allow(dead_code)]
 pub fn spsolve<F>(a: &CsrMatrix<F>, b: &[F]) -> SparseResult<Vec<F>>
 where
-    F: Float + NumAssign + Sum + 'static + std::fmt::Debug,
+    F: Float + NumAssign + Sum + SparseElement + 'static + std::fmt::Debug,
 {
     // This implementation should be moved from linalg.rs
     // For now, I'll forward to sparse_direct_solve
@@ -34,7 +34,7 @@ pub fn sparse_direct_solve<F>(
     _positive_definite: bool,
 ) -> SparseResult<Vec<F>>
 where
-    F: Float + NumAssign + Sum + 'static + std::fmt::Debug,
+    F: Float + NumAssign + Sum + SparseElement + 'static + std::fmt::Debug,
 {
     if a.rows() != b.len() {
         return Err(SparseError::DimensionMismatch {
@@ -61,19 +61,19 @@ where
 #[allow(dead_code)]
 pub fn sparse_lstsq<F>(a: &CsrMatrix<F>, b: &[F]) -> SparseResult<Vec<F>>
 where
-    F: Float + NumAssign + Sum + 'static + std::fmt::Debug,
+    F: Float + NumAssign + Sum + SparseElement + 'static + std::fmt::Debug,
 {
     // For now, solve normal equations: A^T * A * x = A^T * b
     let at = a.transpose();
     let ata = matmul(&at, a)?;
     // Compute A^T * b
-    let mut atb = vec![F::zero(); at.rows()];
+    let mut atb = vec![F::sparse_zero(); at.rows()];
     for (row, atb_val) in atb.iter_mut().enumerate().take(at.rows()) {
         let row_range = at.row_range(row);
         let row_indices = &at.indices[row_range.clone()];
         let row_data = &at.data[row_range];
 
-        let mut sum = F::zero();
+        let mut sum = F::sparse_zero();
         for (col_idx, &col) in row_indices.iter().enumerate() {
             sum += row_data[col_idx] * b[col];
         }
@@ -86,17 +86,17 @@ where
 #[allow(dead_code)]
 pub fn norm<F>(a: &CsrMatrix<F>, ord: &str) -> SparseResult<F>
 where
-    F: Float + NumAssign + Sum + 'static + std::fmt::Debug,
+    F: Float + NumAssign + Sum + SparseElement + 'static + std::fmt::Debug,
 {
     match ord {
         "1" => {
             // 1-norm: maximum column sum
-            let mut max_sum = F::zero();
+            let mut max_sum = F::sparse_zero();
             for j in 0..a.cols() {
-                let mut col_sum = F::zero();
+                let mut col_sum = F::sparse_zero();
                 for i in 0..a.rows() {
                     let val = a.get(i, j);
-                    if val != F::zero() {
+                    if val != F::sparse_zero() {
                         col_sum += val.abs();
                     }
                 }
@@ -108,12 +108,12 @@ where
         }
         "inf" => {
             // Infinity norm: maximum row sum
-            let mut max_sum = F::zero();
+            let mut max_sum = F::sparse_zero();
             for i in 0..a.rows() {
-                let mut row_sum = F::zero();
+                let mut row_sum = F::sparse_zero();
                 for j in 0..a.cols() {
                     let val = a.get(i, j);
-                    if val != F::zero() {
+                    if val != F::sparse_zero() {
                         row_sum += val.abs();
                     }
                 }
@@ -136,7 +136,7 @@ where
 #[allow(dead_code)]
 pub fn matmul<F>(a: &CsrMatrix<F>, b: &CsrMatrix<F>) -> SparseResult<CsrMatrix<F>>
 where
-    F: Float + NumAssign + Sum + 'static + std::fmt::Debug,
+    F: Float + NumAssign + Sum + SparseElement + 'static + std::fmt::Debug,
 {
     // Matrix multiplication - use a simple implementation
     let mut result_rows = Vec::new();
@@ -145,11 +145,11 @@ where
 
     for i in 0..a.rows() {
         for j in 0..b.cols() {
-            let mut sum = F::zero();
+            let mut sum = F::sparse_zero();
             for k in 0..a.cols() {
                 sum += a.get(i, k) * b.get(k, j);
             }
-            if sum != F::zero() {
+            if sum != F::sparse_zero() {
                 result_rows.push(i);
                 result_cols.push(j);
                 result_data.push(sum);
@@ -164,7 +164,7 @@ where
 #[allow(dead_code)]
 pub fn add<F>(a: &CsrMatrix<F>, b: &CsrMatrix<F>) -> SparseResult<CsrMatrix<F>>
 where
-    F: Float + NumAssign + Sum + 'static + std::fmt::Debug,
+    F: Float + NumAssign + Sum + SparseElement + 'static + std::fmt::Debug,
 {
     if a.shape() != b.shape() {
         return Err(SparseError::ShapeMismatch {
@@ -177,7 +177,7 @@ where
     let a_dense = a.to_dense();
     let b_dense = b.to_dense();
 
-    let mut result_dense = vec![vec![F::zero(); a.cols()]; a.rows()];
+    let mut result_dense = vec![vec![F::sparse_zero(); a.cols()]; a.rows()];
     for i in 0..a.rows() {
         for j in 0..a.cols() {
             result_dense[i][j] = a_dense[i][j] + b_dense[i][j];
@@ -191,7 +191,7 @@ where
 
     for (i, row) in result_dense.iter().enumerate().take(a.rows()) {
         for (j, &val) in row.iter().enumerate().take(a.cols()) {
-            if val != F::zero() {
+            if val != F::sparse_zero() {
                 rows.push(i);
                 cols.push(j);
                 data.push(val);
@@ -206,7 +206,7 @@ where
 #[allow(dead_code)]
 pub fn multiply<F>(a: &CsrMatrix<F>, b: &CsrMatrix<F>) -> SparseResult<CsrMatrix<F>>
 where
-    F: Float + NumAssign + Sum + 'static + std::fmt::Debug,
+    F: Float + NumAssign + Sum + SparseElement + 'static + std::fmt::Debug,
 {
     if a.shape() != b.shape() {
         return Err(SparseError::ShapeMismatch {
@@ -224,7 +224,7 @@ where
         for j in 0..a.cols() {
             let a_val = a.get(i, j);
             let b_val = b.get(i, j);
-            if a_val != F::zero() && b_val != F::zero() {
+            if a_val != F::sparse_zero() && b_val != F::sparse_zero() {
                 rows.push(i);
                 cols.push(j);
                 data.push(a_val * b_val);
@@ -239,7 +239,7 @@ where
 #[allow(dead_code)]
 pub fn diag_matrix<F>(diag: &[F], n: Option<usize>) -> SparseResult<CsrMatrix<F>>
 where
-    F: Float + NumAssign + Sum + 'static + std::fmt::Debug,
+    F: Float + NumAssign + Sum + SparseElement + 'static + std::fmt::Debug,
 {
     let size = n.unwrap_or(diag.len());
     if size < diag.len() {
@@ -253,7 +253,7 @@ where
     let mut data = Vec::new();
 
     for (i, &val) in diag.iter().enumerate() {
-        if val != F::zero() {
+        if val != F::sparse_zero() {
             rows.push(i);
             cols.push(i);
             data.push(val);
@@ -267,9 +267,9 @@ where
 #[allow(dead_code)]
 pub fn eye<F>(n: usize) -> SparseResult<CsrMatrix<F>>
 where
-    F: Float + NumAssign + Sum + 'static + std::fmt::Debug,
+    F: Float + NumAssign + Sum + SparseElement + 'static + std::fmt::Debug,
 {
-    let diag = vec![F::one(); n];
+    let diag = vec![F::sparse_one(); n];
     diag_matrix(&diag, Some(n))
 }
 
@@ -277,7 +277,7 @@ where
 #[allow(dead_code)]
 pub fn inv<F>(a: &CsrMatrix<F>) -> SparseResult<CsrMatrix<F>>
 where
-    F: Float + NumAssign + Sum + 'static + std::fmt::Debug,
+    F: Float + NumAssign + Sum + SparseElement + 'static + std::fmt::Debug,
 {
     if a.rows() != a.cols() {
         return Err(SparseError::ValueError(
@@ -292,8 +292,8 @@ where
 
     for j in 0..n {
         // Get column j from identity matrix
-        let mut col_vec = vec![F::zero(); n];
-        col_vec[j] = F::one();
+        let mut col_vec = vec![F::sparse_zero(); n];
+        col_vec[j] = F::sparse_one();
         let x = spsolve(a, &col_vec)?;
         inv_cols.push(x);
     }
@@ -322,7 +322,7 @@ where
 #[allow(dead_code)]
 pub fn matrix_power<F>(a: &CsrMatrix<F>, power: i32) -> SparseResult<CsrMatrix<F>>
 where
-    F: Float + NumAssign + Sum + 'static + std::fmt::Debug,
+    F: Float + NumAssign + Sum + SparseElement + 'static + std::fmt::Debug,
 {
     if a.rows() != a.cols() {
         return Err(SparseError::ValueError(
@@ -353,10 +353,10 @@ where
 #[allow(dead_code)]
 fn gaussian_elimination<F>(a: &[Vec<F>], b: &[F]) -> SparseResult<Vec<F>>
 where
-    F: Float + NumAssign,
+    F: Float + NumAssign + SparseElement,
 {
     let n = a.len();
-    let mut aug = vec![vec![F::zero(); n + 1]; n];
+    let mut aug = vec![vec![F::sparse_zero(); n + 1]; n];
 
     // Create augmented matrix
     for i in 0..n {
@@ -394,7 +394,7 @@ where
     }
 
     // Back substitution
-    let mut x = vec![F::zero(); n];
+    let mut x = vec![F::sparse_zero(); n];
     for i in (0..n).rev() {
         x[i] = aug[i][n];
         for j in (i + 1)..n {

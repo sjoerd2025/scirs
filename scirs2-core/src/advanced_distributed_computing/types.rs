@@ -4,6 +4,7 @@
 //! used throughout the distributed computing framework.
 
 use crate::distributed::NodeType;
+#[cfg(feature = "serialization")]
 use serde::{Deserialize, Serialize};
 use std::time::{Duration, Instant};
 
@@ -14,7 +15,8 @@ pub fn default_instant() -> Instant {
 }
 
 /// Configuration for distributed computing
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone)]
 pub struct DistributedComputingConfig {
     /// Enable automatic node discovery
     pub enable_auto_discovery: bool,
@@ -65,7 +67,8 @@ impl Default for DistributedComputingConfig {
 }
 
 /// Configuration for fault tolerance
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone)]
 pub struct FaultToleranceConfig {
     /// Enable predictive failure detection
     pub enable_predictive_detection: bool,
@@ -98,7 +101,8 @@ impl Default for FaultToleranceConfig {
 }
 
 /// Requirements specification for distributed tasks
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone)]
 pub struct TaskRequirements {
     /// Minimum CPU cores required
     pub min_cpu_cores: u32,
@@ -140,7 +144,9 @@ impl Default for TaskRequirements {
 }
 
 /// Distribution strategy for distributed tasks
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, PartialEq)]
 pub enum DistributionStrategy {
     DataParallel,
     ModelParallel,
@@ -155,7 +161,9 @@ impl Default for DistributionStrategy {
 }
 
 /// Fault tolerance level for tasks
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, PartialEq)]
 pub enum FaultToleranceLevel {
     None,
     Basic,
@@ -181,7 +189,9 @@ pub struct ResourceAnalysis {
 }
 
 /// Resource profile for grouping tasks by requirements
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum ResourceProfile {
     LowMemoryLowCpu,
     LowMemoryHighCpu,

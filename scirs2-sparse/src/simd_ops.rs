@@ -8,7 +8,7 @@ use crate::csr_array::CsrArray;
 use crate::error::{SparseError, SparseResult};
 use crate::sparray::SparseArray;
 use scirs2_core::ndarray::{Array1, ArrayView1};
-use scirs2_core::numeric::Float;
+use scirs2_core::numeric::{Float, SparseElement};
 use std::fmt::Debug;
 
 // Import SIMD and parallel operations from scirs2-core
@@ -86,7 +86,7 @@ pub fn simd_csr_matvec<T>(
     options: SimdOptions,
 ) -> SparseResult<Array1<T>>
 where
-    T: Float + Debug + Copy + 'static + SimdUnifiedOps + Send + Sync,
+    T: Float + SparseElement + Debug + Copy + 'static + SimdUnifiedOps + Send + Sync,
 {
     let (rows, cols) = matrix.shape();
 
@@ -114,7 +114,7 @@ where
             .collect();
 
         let results: Vec<_> = parallel_map(&row_chunks, |row_chunk| {
-            let mut local_y = vec![T::zero(); row_chunk.len()];
+            let mut local_y = vec![T::sparse_zero(); row_chunk.len()];
 
             for (local_idx, &i) in row_chunk.iter().enumerate() {
                 let start = row_ptr[i];
@@ -123,14 +123,14 @@ where
 
                 if row_length >= options.min_simd_size {
                     // Enhanced SIMD processing for longer rows
-                    let mut sum = T::zero();
+                    let mut sum = T::sparse_zero();
                     let mut j = start;
 
                     // Process in SIMD chunks
                     while j + options.chunk_size <= end {
                         // Gather values for SIMD processing
-                        let mut values_chunk = vec![T::zero(); options.chunk_size];
-                        let mut x_vals_chunk = vec![T::zero(); options.chunk_size];
+                        let mut values_chunk = vec![T::sparse_zero(); options.chunk_size];
+                        let mut x_vals_chunk = vec![T::sparse_zero(); options.chunk_size];
 
                         for (idx, k) in (j..j + options.chunk_size).enumerate() {
                             values_chunk[idx] = values[k];
@@ -153,7 +153,7 @@ where
                     local_y[local_idx] = sum;
                 } else {
                     // Use scalar processing for shorter rows
-                    let mut sum = T::zero();
+                    let mut sum = T::sparse_zero();
                     for k in start..end {
                         sum = sum + values[k] * x[col_indices[k]];
                     }
@@ -179,14 +179,14 @@ where
 
             if row_length >= options.min_simd_size {
                 // Enhanced SIMD implementation for longer rows
-                let mut sum = T::zero();
+                let mut sum = T::sparse_zero();
                 let mut j = start;
 
                 // Process in SIMD-friendly chunks
                 while j + options.chunk_size <= end {
                     // Prepare data for SIMD operations
-                    let mut values_chunk = vec![T::zero(); options.chunk_size];
-                    let mut x_vals_chunk = vec![T::zero(); options.chunk_size];
+                    let mut values_chunk = vec![T::sparse_zero(); options.chunk_size];
+                    let mut x_vals_chunk = vec![T::sparse_zero(); options.chunk_size];
 
                     for (idx, k) in (j..j + options.chunk_size).enumerate() {
                         values_chunk[idx] = values[k];
@@ -209,7 +209,7 @@ where
                 y[i] = sum;
             } else {
                 // Scalar implementation for shorter rows
-                let mut sum = T::zero();
+                let mut sum = T::sparse_zero();
                 for k in start..end {
                     sum = sum + values[k] * x[col_indices[k]];
                 }
@@ -254,7 +254,7 @@ pub fn simd_sparse_elementwise<T, S1, S2>(
     options: Option<SimdOptions>,
 ) -> SparseResult<CsrArray<T>>
 where
-    T: Float + Debug + Copy + 'static + SimdUnifiedOps + Send + Sync,
+    T: Float + SparseElement + Debug + Copy + 'static + SimdUnifiedOps + Send + Sync,
     S1: SparseArray<T>,
     S2: SparseArray<T>,
 {
@@ -394,7 +394,7 @@ fn simd_sparse_binary_op<T, F>(
     op: F,
 ) -> SparseResult<CsrArray<T>>
 where
-    T: Float + Debug + Copy + 'static + SimdUnifiedOps + Send + Sync,
+    T: Float + SparseElement + Debug + Copy + 'static + SimdUnifiedOps + Send + Sync,
     F: Fn(T, T) -> T + Send + Sync + Copy,
 {
     let (rows, cols) = a.shape();
@@ -440,11 +440,11 @@ where
             let mut local_values = Vec::new();
 
             for &(row, col) in *chunk {
-                let a_val = a_map.get(&(row, col)).copied().unwrap_or(T::zero());
-                let b_val = b_map.get(&(row, col)).copied().unwrap_or(T::zero());
+                let a_val = a_map.get(&(row, col)).copied().unwrap_or(T::sparse_zero());
+                let b_val = b_map.get(&(row, col)).copied().unwrap_or(T::sparse_zero());
                 let result_val = op(a_val, b_val);
 
-                if !result_val.is_zero() {
+                if !SparseElement::is_zero(&result_val) {
                     local_rows.push(row);
                     local_cols.push(col);
                     local_values.push(result_val);
@@ -463,11 +463,11 @@ where
     } else {
         // Sequential processing with SIMD
         for (row, col) in positions {
-            let a_val = a_map.get(&(row, col)).copied().unwrap_or(T::zero());
-            let b_val = b_map.get(&(row, col)).copied().unwrap_or(T::zero());
+            let a_val = a_map.get(&(row, col)).copied().unwrap_or(T::sparse_zero());
+            let b_val = b_map.get(&(row, col)).copied().unwrap_or(T::sparse_zero());
             let result_val = op(a_val, b_val);
 
-            if !result_val.is_zero() {
+            if !SparseElement::is_zero(&result_val) {
                 result_rows.push(row);
                 result_cols.push(col);
                 result_values.push(result_val);
@@ -500,7 +500,7 @@ pub fn simd_sparse_transpose<T, S>(
     options: Option<SimdOptions>,
 ) -> SparseResult<CsrArray<T>>
 where
-    T: Float + Debug + Copy + 'static + SimdUnifiedOps + Send + Sync,
+    T: Float + SparseElement + Debug + Copy + 'static + SimdUnifiedOps + Send + Sync,
     S: SparseArray<T>,
 {
     let opts = options.unwrap_or_default();
@@ -577,7 +577,7 @@ pub fn simd_sparse_matmul<T, S1, S2>(
     options: Option<SimdOptions>,
 ) -> SparseResult<CsrArray<T>>
 where
-    T: Float + Debug + Copy + 'static + SimdUnifiedOps + Send + Sync,
+    T: Float + SparseElement + Debug + Copy + 'static + SimdUnifiedOps + Send + Sync,
     S1: SparseArray<T>,
     S2: SparseArray<T>,
 {
@@ -647,7 +647,7 @@ where
                     let b_end = b_indptr[j + 1];
 
                     // Compute dot product of A[i,:] and B[:,j]
-                    let mut sum = T::zero();
+                    let mut sum = T::sparse_zero();
                     let mut a_idx = a_start;
                     let mut b_idx = b_start;
 
@@ -696,7 +696,7 @@ where
                         }
                     }
 
-                    if !sum.is_zero() {
+                    if !SparseElement::is_zero(&sum) {
                         local_rows.push(i);
                         local_cols.push(j);
                         local_values.push(sum);
@@ -724,7 +724,7 @@ where
                 let b_end = b_indptr[j + 1];
 
                 // Compute dot product of A[i,:] and B[:,j]
-                let mut sum = T::zero();
+                let mut sum = T::sparse_zero();
                 let mut a_idx = a_start;
                 let mut b_idx = b_start;
 
@@ -747,7 +747,7 @@ where
                     }
                 }
 
-                if !sum.is_zero() {
+                if !SparseElement::is_zero(&sum) {
                     result_rows.push(i);
                     result_cols.push(j);
                     result_values.push(sum);
@@ -785,7 +785,7 @@ pub fn simd_sparse_norm<T, S>(
     options: Option<SimdOptions>,
 ) -> SparseResult<T>
 where
-    T: Float + Debug + Copy + 'static + SimdUnifiedOps + Send + Sync,
+    T: Float + SparseElement + Debug + Copy + 'static + SimdUnifiedOps + Send + Sync,
     S: SparseArray<T>,
 {
     let opts = options.unwrap_or_default();
@@ -807,7 +807,7 @@ where
                 Ok(partial_sums
                     .iter()
                     .copied()
-                    .fold(T::zero(), |acc, x| acc + x)
+                    .fold(T::sparse_zero(), |acc, x| acc + x)
                     .sqrt())
             } else {
                 let values_view = values.view();
@@ -820,7 +820,7 @@ where
             let (_rows, cols) = matrix.shape();
             let (_row_indices, col_indices, values) = matrix.find();
 
-            let mut column_sums = vec![T::zero(); cols];
+            let mut column_sums = vec![T::sparse_zero(); cols];
 
             if opts.use_parallel && values.len() >= opts.parallel_threshold {
                 let chunks: Vec<_> = (0..values.len())
@@ -829,7 +829,7 @@ where
                     .map(|chunk| chunk.to_vec())
                     .collect();
                 let partial_sums: Vec<Vec<T>> = parallel_map(&chunks, |chunk| {
-                    let mut local_sums = vec![T::zero(); cols];
+                    let mut local_sums = vec![T::sparse_zero(); cols];
                     for &idx in chunk {
                         let col = col_indices[idx];
                         let val = values[idx].abs();
@@ -853,14 +853,14 @@ where
             Ok(column_sums
                 .iter()
                 .copied()
-                .fold(T::zero(), |acc, x| if x > acc { x } else { acc }))
+                .fold(T::sparse_zero(), |acc, x| if x > acc { x } else { acc }))
         }
         "inf" | "infinity" => {
             // Infinity norm: maximum absolute row sum
             let (rows, cols) = matrix.shape();
             let (row_indices, col_indices, values) = matrix.find();
 
-            let mut row_sums = vec![T::zero(); rows];
+            let mut row_sums = vec![T::sparse_zero(); rows];
 
             if opts.use_parallel && values.len() >= opts.parallel_threshold {
                 let chunks: Vec<_> = (0..values.len())
@@ -869,7 +869,7 @@ where
                     .map(|chunk| chunk.to_vec())
                     .collect();
                 let partial_sums: Vec<Vec<T>> = parallel_map(&chunks, |chunk| {
-                    let mut local_sums = vec![T::zero(); rows];
+                    let mut local_sums = vec![T::sparse_zero(); rows];
                     for &idx in chunk {
                         let row = row_indices[idx];
                         let val = values[idx].abs();
@@ -893,7 +893,7 @@ where
             Ok(row_sums
                 .iter()
                 .copied()
-                .fold(T::zero(), |acc, x| if x > acc { x } else { acc }))
+                .fold(T::sparse_zero(), |acc, x| if x > acc { x } else { acc }))
         }
         _ => Err(SparseError::ValueError(format!(
             "Unknown norm _type: {norm_type}"
@@ -921,7 +921,7 @@ pub fn simd_sparse_scale<T, S>(
     options: Option<SimdOptions>,
 ) -> SparseResult<CsrArray<T>>
 where
-    T: Float + Debug + Copy + 'static + SimdUnifiedOps + Send + Sync,
+    T: Float + SparseElement + Debug + Copy + 'static + SimdUnifiedOps + Send + Sync,
     S: SparseArray<T>,
 {
     let opts = options.unwrap_or_default();
@@ -937,7 +937,7 @@ where
             .collect();
         let scaled_chunks: Vec<Vec<T>> = parallel_map(&chunks, |chunk: &&[T]| {
             let _scalar_vec = vec![scalar; chunk.len()];
-            let mut result = vec![T::zero(); chunk.len()];
+            let mut result = vec![T::sparse_zero(); chunk.len()];
 
             // Use SIMD multiplication
             for i in 0..chunk.len() {
@@ -982,7 +982,7 @@ pub fn simd_sparse_linear_combination<T, S>(
     options: Option<SimdOptions>,
 ) -> SparseResult<CsrArray<T>>
 where
-    T: Float + Debug + Copy + 'static + SimdUnifiedOps + Send + Sync,
+    T: Float + SparseElement + Debug + Copy + 'static + SimdUnifiedOps + Send + Sync,
     S: SparseArray<T> + Sync,
 {
     if matrices.is_empty() {
@@ -1020,7 +1020,7 @@ where
             let (row_indices, col_indices, values) = matrix.find();
 
             for (k, (&i, &j)) in row_indices.iter().zip(col_indices.iter()).enumerate() {
-                let entry = local_accumulator.entry((i, j)).or_insert(T::zero());
+                let entry = local_accumulator.entry((i, j)).or_insert(T::sparse_zero());
                 *entry = *entry + values[k];
             }
 
@@ -1031,7 +1031,7 @@ where
         for (idx, local_acc) in results.into_iter().enumerate() {
             let coeff = coefficients[idx];
             for ((i, j), val) in local_acc {
-                let entry = accumulator.entry((i, j)).or_insert(T::zero());
+                let entry = accumulator.entry((i, j)).or_insert(T::sparse_zero());
                 *entry = *entry + coeff * val;
             }
         }
@@ -1042,7 +1042,7 @@ where
             let (row_indices, col_indices, values) = matrix.find();
 
             for (k, (&i, &j)) in row_indices.iter().zip(col_indices.iter()).enumerate() {
-                let entry = accumulator.entry((i, j)).or_insert(T::zero());
+                let entry = accumulator.entry((i, j)).or_insert(T::sparse_zero());
                 *entry = *entry + coeff * values[k];
             }
         }
@@ -1054,7 +1054,7 @@ where
     let mut result_values = Vec::new();
 
     for ((i, j), val) in accumulator {
-        if !val.is_zero() {
+        if !SparseElement::is_zero(&val) {
             result_rows.push(i);
             result_cols.push(j);
             result_values.push(val);
@@ -1074,7 +1074,7 @@ where
 #[allow(dead_code)]
 pub fn simd_sparse_matmul_default<T, S1, S2>(a: &S1, b: &S2) -> SparseResult<CsrArray<T>>
 where
-    T: Float + Debug + Copy + 'static + SimdUnifiedOps + Send + Sync,
+    T: Float + SparseElement + Debug + Copy + 'static + SimdUnifiedOps + Send + Sync,
     S1: SparseArray<T>,
     S2: SparseArray<T>,
 {

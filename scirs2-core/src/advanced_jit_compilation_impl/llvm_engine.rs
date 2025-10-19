@@ -2,6 +2,7 @@
 
 use crate::advanced_jit_compilation::config::JitCompilerConfig;
 use crate::error::{CoreError, CoreResult};
+#[cfg(feature = "serialization")]
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
@@ -50,7 +51,8 @@ pub struct CompiledModule {
 }
 
 /// Compilation metadata
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", serde(default))]
 pub struct CompilationMetadata {
     /// Source language

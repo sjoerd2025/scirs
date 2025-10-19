@@ -1196,12 +1196,17 @@ mod tests {
     use super::*;
 
     #[test]
-    #[ignore] // FIXME: SIMD validation test takes >14 minutes - too slow for CI
     fn test_simd_validation_basic() {
+        // Ultra-minimal configuration for fast CI testing
+        // Tests only 1 kernel, 1 size, with minimal iterations
         let config = SimdValidationConfig {
-            test_sizes: vec![100, 1000], // Small sizes for testing
-            timing_iterations: 5,
-            warmup_iterations: 2,
+            test_sizes: vec![100],            // Single small size
+            timing_iterations: 3,             // Minimal iterations
+            warmup_iterations: 1,             // Minimal warmup
+            test_all_instruction_sets: false, // Don't test all instruction sets
+            validate_memory_alignment: false, // Skip memory validation
+            run_regression_detection: false,  // Skip regression detection
+            max_benchmark_time: 5.0,          // 5 second limit per benchmark
             ..Default::default()
         };
 
@@ -1210,7 +1215,11 @@ mod tests {
 
         let summary = result.unwrap();
         assert!(summary.total_tests > 0);
-        println!("SIMD validation completed: {} tests", summary.total_tests);
+        println!(
+            "SIMD validation completed: {} tests in {:.2}s",
+            summary.total_tests,
+            summary.validation_duration.as_secs_f64()
+        );
     }
 
     #[test]

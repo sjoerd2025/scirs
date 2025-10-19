@@ -8,9 +8,9 @@ Computer vision module for SciRS2, providing comprehensive functionality for ima
 
 ⚠️ **SciRS2 POLICY Migration**: This module is currently being updated to follow the [SciRS2 POLICY](../SCIRS2_POLICY.md) - migration from direct `rand::` usage to scirs2-core abstractions is in progress.
 
-## Production Status (0.1.0-rc.1)
+## Production Status (0.1.0-rc.2)
 
-**✅ PRODUCTION READY** - Beta 4 release with SciRS2 POLICY implementation:
+**✅ PRODUCTION READY** - rc.2 release with SciRS2 POLICY implementation:
 - **217 unit tests** passing with zero warnings
 - **Comprehensive API** covering all major computer vision operations
 - **Working examples** demonstrating real-world usage
@@ -209,14 +209,14 @@ Add `scirs2-vision` to your dependencies in `Cargo.toml`:
 
 ```toml
 [dependencies]
-scirs2-vision = "0.1.0-rc.1"
+scirs2-vision = "0.1.0-rc.2"
 ```
 
 To enable optimizations through the core module, add feature flags:
 
 ```toml
 [dependencies]
-scirs2-vision = { version = "0.1.0-rc.1", features = ["parallel"] }
+scirs2-vision = { version = "0.1.0-rc.2", features = ["parallel"] }
 ```
 
 ## Documentation
@@ -279,7 +279,7 @@ This project is dual-licensed under:
 You can choose to use either license. See the [LICENSE](../LICENSE) file for details.
 ## Production Readiness
 
-This **0.1.0-rc.1** release represents a mature, production-ready computer vision library suitable for:
+This **0.1.0-rc.2** release represents a mature, production-ready computer vision library suitable for:
 
 ### 🏭 Production Applications
 - **Scientific Computing**: Research applications requiring reliable computer vision algorithms
@@ -295,15 +295,17 @@ All implemented algorithms have been validated against reference implementations
 - **Memory Safety**: Rust's guarantees ensure memory safety without runtime overhead
 
 ### 🎯 API Stability
-The public API is considered stable for the alpha release series, meaning:
+The public API is considered stable for **Release Candidate 2** (rc.2), meaning:
+- **Production Ready**: API is stable with minimal changes expected before 1.0
 - **Consistent Interface**: Function signatures and behavior will remain consistent
 - **Backward Compatibility**: New features will be added without breaking existing code
 - **Clear Documentation**: All public functions are documented with examples
+- **Zero Warnings**: Full clippy compliance and code quality assurance
 - **Semantic Versioning**: Version numbers follow semantic versioning principles
 
 ## Future Development
 
-Post-alpha development will focus on:
+Post-RC development will focus on:
 - **Performance Optimization**: SIMD acceleration and GPU support
 - **Advanced Algorithms**: Deep learning integration and advanced computer vision techniques
 - **Domain-Specific Features**: Medical imaging, remote sensing, and specialized applications

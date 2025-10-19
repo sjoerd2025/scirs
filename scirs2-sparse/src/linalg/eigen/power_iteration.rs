@@ -8,6 +8,7 @@ use crate::sym_csr::SymCsrMatrix;
 use crate::sym_ops::sym_csr_matvec;
 use scirs2_core::ndarray::{Array1, Array2, ArrayView1};
 use scirs2_core::numeric::Float;
+use scirs2_core::SparseElement;
 use std::fmt::Debug;
 use std::ops::{Add, Div, Mul, Sub};
 
@@ -102,6 +103,7 @@ pub fn power_iteration<T>(
 ) -> SparseResult<EigenResult<T>>
 where
     T: Float
+        + SparseElement
         + Debug
         + Copy
         + Add<Output = T>
@@ -135,7 +137,7 @@ where
         None => {
             // Random initialization
             let mut x_arr = Array1::zeros(n);
-            x_arr[0] = T::one(); // Simple initialization with [1, 0, 0, ...]
+            x_arr[0] = T::sparse_one(); // Simple initialization with [1, 0, 0, ...]
             x_arr
         }
     };
@@ -143,15 +145,15 @@ where
     // Normalize the initial vector
     if options.normalize {
         let norm = (x.iter().map(|&v| v * v).sum::<T>()).sqrt();
-        if !norm.is_zero() {
+        if !SparseElement::is_zero(&norm) {
             for i in 0..n {
                 x[i] = x[i] / norm;
             }
         }
     }
 
-    let mut lambda = T::zero();
-    let mut prev_lambda = T::zero();
+    let mut lambda = T::sparse_zero();
+    let mut prev_lambda = T::sparse_zero();
     let mut converged = false;
     let mut iter = 0;
 
@@ -175,7 +177,7 @@ where
 
             // Normalize y to get the next x
             let norm = (y.iter().map(|&v| v * v).sum::<T>()).sqrt();
-            if !norm.is_zero() {
+            if !SparseElement::is_zero(&norm) {
                 for i in 0..n {
                     x[i] = y[i] / norm;
                 }
@@ -186,7 +188,7 @@ where
 
             // Compute eigenvalue estimate
             let norm_x = (x.iter().map(|&v| v * v).sum::<T>()).sqrt();
-            if !norm_x.is_zero() {
+            if !SparseElement::is_zero(&norm_x) {
                 lambda = rayleigh_numerator / (norm_x * norm_x);
             }
 

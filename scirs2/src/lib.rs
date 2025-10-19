@@ -70,14 +70,14 @@
 //!
 //! ```toml
 //! [dependencies]
-//! scirs2 = { version = "0.1.0-rc.1", features = ["linalg", "stats"] }
+//! scirs2 = { version = "0.1.0-rc.2", features = ["linalg", "stats"] }
 //! ```
 //!
 //! Or install all features:
 //!
 //! ```toml
 //! [dependencies]
-//! scirs2 = { version = "0.1.0-rc.1", features = ["full"] }
+//! scirs2 = { version = "0.1.0-rc.2", features = ["full"] }
 //! ```
 //!
 //! ### Linear Algebra Example
@@ -230,11 +230,11 @@
 //!
 //! SciRS2 follows semantic versioning and provides:
 //!
-//! - **API Stability**: Beta releases maintain API compatibility
+//! - **API Stability**: Release Candidate releases maintain API compatibility
 //! - **Deprecation Policy**: 2-release deprecation cycle
 //! - **Production Features**: Enterprise-grade error handling and diagnostics
 //!
-//! Current version: **0.1.0-rc.1** (Released October 03, 2025)
+//! Current version: **0.1.0-rc.2** (Released October 19, 2025)
 //!
 //! ## 🤝 Ecosystem Integration
 //!

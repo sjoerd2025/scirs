@@ -156,6 +156,7 @@ pub fn solve_eigenvalues<T>(
 ) -> crate::error::SparseResult<EigenResult<T>>
 where
     T: scirs2_core::numeric::Float
+        + scirs2_core::SparseElement
         + std::fmt::Debug
         + Copy
         + std::ops::Add<Output = T>
@@ -217,7 +218,7 @@ where
             let opts = config.to_lanczos_options();
             let result = symmetric::eigsh_shift_invert(
                 matrix,
-                T::zero(),
+                T::sparse_zero(),
                 Some(config.num_eigenvalues),
                 Some(&config.which),
                 Some(opts),

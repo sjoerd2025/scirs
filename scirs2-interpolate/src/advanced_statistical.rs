@@ -742,13 +742,22 @@ impl<T: crate::traits::InterpolationFloat + ScalarOperand + 'static>
         // Fit polynomial to each segment
         let mut coefficients = Vec::new();
 
-        for i in 0..breakpoints.len() {
-            let start_idx = if i == 0 {
+        // Handle the case of no breakpoints (single polynomial)
+        let num_segments = if breakpoints.is_empty() {
+            1
+        } else {
+            breakpoints.len() + 1
+        };
+
+        for i in 0..num_segments {
+            let start_idx = if i == 0 || breakpoints.is_empty() {
                 0
             } else {
                 self.find_closest_index(x, breakpoints[i - 1])?
             };
-            let end_idx = if i == breakpoints.len() - 1 {
+            let end_idx = if i == num_segments - 1 {
+                n
+            } else if breakpoints.is_empty() {
                 n
             } else {
                 self.find_closest_index(x, breakpoints[i])?
@@ -991,6 +1000,9 @@ impl<T: crate::traits::InterpolationFloat + ScalarOperand + 'static>
 
     /// Find which segment a value belongs to
     fn find_segment(&self, xval: T, breakpoints: &Array1<T>) -> usize {
+        if breakpoints.is_empty() {
+            return 0; // Single segment
+        }
         for (i, &bp) in breakpoints.iter().enumerate() {
             if xval <= bp {
                 return i;
@@ -1149,7 +1161,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Test failing - needs investigation
     fn test_piecewise_polynomial() {
         let mut interpolator =
             make_piecewise_polynomial_interpolator::<f64>(Some(2), Some(3), None);

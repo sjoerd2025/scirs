@@ -3,6 +3,7 @@
 use crate::advanced_jit_compilation::config::{CacheConfig, EvictionPolicy, JitCompilerConfig};
 use crate::advanced_jit_compilation::llvm_engine::CompiledModule;
 use crate::error::{CoreError, CoreResult};
+#[cfg(feature = "serialization")]
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
@@ -40,7 +41,8 @@ pub struct CachedKernel {
 }
 
 /// Kernel metadata
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone)]
 pub struct KernelMetadata {
     /// Kernel name
     pub name: String,

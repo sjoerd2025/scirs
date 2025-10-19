@@ -1591,10 +1591,13 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Test failing - needs investigation
+    #[ignore] // Dependency issue: num-complex rand feature incompatibility
     fn test_quick_validation() {
         // This would run actual benchmarks in a real test
         let result = run_quick_validation::<f64>();
+        if let Err(e) = &result {
+            eprintln!("Benchmark error: {:?}", e);
+        }
         assert!(result.is_ok());
     }
 

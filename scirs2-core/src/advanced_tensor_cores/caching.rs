@@ -18,6 +18,7 @@ use crate::gpu::{
 };
 
 #[cfg(all(feature = "serde", feature = "gpu"))]
+#[cfg(feature = "serialization")]
 use serde::{Deserialize, Serialize};
 
 /// Smart cache system for optimized configurations

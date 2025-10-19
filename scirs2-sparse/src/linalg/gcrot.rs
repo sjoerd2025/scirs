@@ -8,6 +8,7 @@ use crate::error::{SparseError, SparseResult};
 use crate::sparray::SparseArray;
 use scirs2_core::ndarray::{Array1, Array2, ArrayView1};
 use scirs2_core::numeric::Float;
+use scirs2_core::SparseElement;
 use std::fmt::Debug;
 
 /// Type alias for GCROT inner iteration result
@@ -96,7 +97,7 @@ pub fn gcrot<T, S>(
     options: GCROTOptions,
 ) -> SparseResult<GCROTResult<T>>
 where
-    T: Float + Debug + Copy + 'static,
+    T: Float + SparseElement + Debug + Copy + 'static,
     S: SparseArray<T>,
 {
     let n = b.len();
@@ -256,7 +257,7 @@ fn gcrot_inner_iteration<T, S>(
     tolerance: T,
 ) -> GCROTInnerResult<T>
 where
-    T: Float + Debug + Copy + 'static,
+    T: Float + SparseElement + Debug + Copy + 'static,
     S: SparseArray<T>,
 {
     let n = r.len();
@@ -277,7 +278,7 @@ where
 
     // Orthogonalize against the truncated space
     for j in 0..k {
-        let mut proj = T::zero();
+        let mut proj = T::sparse_zero();
         for i in 0..n {
             proj = proj + u_vectors[[i, j]] * v[i];
         }
@@ -320,7 +321,7 @@ where
 #[allow(dead_code)]
 fn matrix_vector_multiply<T, S>(matrix: &S, x: &ArrayView1<T>) -> SparseResult<Array1<T>>
 where
-    T: Float + Debug + Copy + 'static,
+    T: Float + SparseElement + Debug + Copy + 'static,
     S: SparseArray<T>,
 {
     let (rows, cols) = matrix.shape();
@@ -345,21 +346,24 @@ where
 #[allow(dead_code)]
 fn l2_norm<T>(x: &ArrayView1<T>) -> T
 where
-    T: Float + Debug + Copy,
+    T: Float + Debug + Copy + SparseElement,
 {
-    (x.iter().map(|&val| val * val).fold(T::zero(), |a, b| a + b)).sqrt()
+    (x.iter()
+        .map(|&val| val * val)
+        .fold(T::sparse_zero(), |a, b| a + b))
+    .sqrt()
 }
 
 /// Compute dot product of two vectors
 #[allow(dead_code)]
 fn dot_product<T>(x: &ArrayView1<T>, y: &ArrayView1<T>) -> T
 where
-    T: Float + Debug + Copy,
+    T: Float + Debug + Copy + SparseElement,
 {
     x.iter()
         .zip(y.iter())
         .map(|(&xi, &yi)| xi * yi)
-        .fold(T::zero(), |a, b| a + b)
+        .fold(T::sparse_zero(), |a, b| a + b)
 }
 
 #[cfg(test)]

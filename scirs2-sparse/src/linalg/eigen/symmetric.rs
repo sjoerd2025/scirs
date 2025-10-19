@@ -8,6 +8,7 @@ use crate::error::{SparseError, SparseResult};
 use crate::sym_csr::SymCsrMatrix;
 use scirs2_core::ndarray::Array1;
 use scirs2_core::numeric::Float;
+use scirs2_core::SparseElement;
 use std::fmt::Debug;
 use std::ops::{Add, Div, Mul, Sub};
 
@@ -59,6 +60,8 @@ where
         + Div<Output = T>
         + std::iter::Sum
         + scirs2_core::simd_ops::SimdUnifiedOps
+        + SparseElement
+        + PartialOrd
         + Send
         + Sync
         + 'static,
@@ -130,6 +133,8 @@ where
         + Div<Output = T>
         + std::iter::Sum
         + scirs2_core::simd_ops::SimdUnifiedOps
+        + SparseElement
+        + PartialOrd
         + Send
         + Sync
         + 'static,
@@ -175,8 +180,8 @@ where
     // Transform eigenvalues back: λ = σ + 1/μ (simplified)
     let mut transformed_eigenvalues = Array1::zeros(result.eigenvalues.len());
     for (i, &mu) in result.eigenvalues.iter().enumerate() {
-        if !mu.is_zero() {
-            transformed_eigenvalues[i] = sigma + T::one() / mu;
+        if !SparseElement::is_zero(&mu) {
+            transformed_eigenvalues[i] = sigma + T::sparse_one() / mu;
         } else {
             transformed_eigenvalues[i] = sigma;
         }
@@ -230,6 +235,8 @@ where
         + Div<Output = T>
         + std::iter::Sum
         + scirs2_core::simd_ops::SimdUnifiedOps
+        + SparseElement
+        + PartialOrd
         + Send
         + Sync
         + 'static,
@@ -261,6 +268,8 @@ where
         + Div<Output = T>
         + std::iter::Sum
         + scirs2_core::simd_ops::SimdUnifiedOps
+        + SparseElement
+        + PartialOrd
         + Send
         + Sync
         + 'static,

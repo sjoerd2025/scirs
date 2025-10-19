@@ -9,7 +9,7 @@
 use crate::gpu_ops::{GpuBackend, GpuBuffer, GpuBufferExt, GpuDevice, GpuError, GpuKernelHandle};
 #[cfg(feature = "gpu")]
 use scirs2_core::gpu::GpuContext;
-use scirs2_core::numeric::Float;
+use scirs2_core::numeric::{Float, SparseElement};
 use scirs2_core::GpuDataType;
 use std::fmt::Debug;
 
@@ -66,7 +66,7 @@ pub fn execute_spmv_kernel<T>(
     config: &GpuKernelConfig,
 ) -> Result<(), GpuError>
 where
-    T: Float + Debug + Copy + 'static + GpuDataType,
+    T: Float + SparseElement + Debug + Copy + 'static + GpuDataType,
 {
     // Calculate optimal grid dimensions based on backend
     let (global_size, local_size) = calculate_optimal_dimensions(
@@ -155,7 +155,7 @@ pub fn execute_symmetric_spmv_kernel<T>(
     config: &GpuKernelConfig,
 ) -> Result<(), GpuError>
 where
-    T: Float + Debug + Copy + 'static + GpuDataType,
+    T: Float + SparseElement + Debug + Copy + 'static + GpuDataType,
 {
     // Use optimized symmetric SpMV with memory-aware scheduling
     let (global_size, local_size) = calculate_optimal_dimensions(
@@ -294,7 +294,7 @@ fn execute_cuda_spmv<T>(
     config: &GpuKernelConfig,
 ) -> Result<(), GpuError>
 where
-    T: Float + Debug + Copy + 'static + GpuDataType,
+    T: Float + SparseElement + Debug + Copy + 'static + GpuDataType,
 {
     // CUDA-specific optimizations:
     // - Calculate optimal grid dimensions based on compute capability
@@ -351,7 +351,7 @@ fn execute_opencl_spmv<T>(
     config: &GpuKernelConfig,
 ) -> Result<(), GpuError>
 where
-    T: Float + Debug + Copy + 'static + GpuDataType,
+    T: Float + SparseElement + Debug + Copy + 'static + GpuDataType,
 {
     // OpenCL-specific optimizations:
     // - Calculate optimal work-group dimensions for the device
@@ -410,7 +410,7 @@ fn execute_metal_spmv<T>(
     config: &GpuKernelConfig,
 ) -> Result<(), GpuError>
 where
-    T: Float + Debug + Copy + 'static + GpuDataType,
+    T: Float + SparseElement + Debug + Copy + 'static + GpuDataType,
 {
     // Metal-specific optimizations:
     // - Calculate optimal threadgroup dimensions for Apple GPUs
@@ -469,7 +469,7 @@ fn execute_cpu_spmv_fallback<T>(
     y_buffer: &GpuBuffer<T>,
 ) -> Result<(), GpuError>
 where
-    T: Float + Debug + Copy + 'static + GpuDataType,
+    T: Float + SparseElement + Debug + Copy + 'static + GpuDataType,
 {
     // Convert GPU buffers to host slices
     let indptr = indptr_buffer.to_host()?;
@@ -482,7 +482,7 @@ where
     for i in 0..rows {
         let start = indptr[i] as usize;
         let end = indptr[i + 1] as usize;
-        let mut sum = T::zero();
+        let mut sum = T::sparse_zero();
 
         for j in start..end {
             sum = sum + data[j] * x[indices[j] as usize];
@@ -513,7 +513,7 @@ fn execute_cuda_symmetric_spmv<T>(
     config: &GpuKernelConfig,
 ) -> Result<(), GpuError>
 where
-    T: Float + Debug + Copy + 'static + GpuDataType,
+    T: Float + SparseElement + Debug + Copy + 'static + GpuDataType,
 {
     // This function requires GpuDevice methods that don't exist in the current API
     // Return error indicating this needs proper implementation with GpuContext
@@ -537,7 +537,7 @@ fn execute_opencl_symmetric_spmv<T>(
     config: &GpuKernelConfig,
 ) -> Result<(), GpuError>
 where
-    T: Float + Debug + Copy + 'static + GpuDataType,
+    T: Float + SparseElement + Debug + Copy + 'static + GpuDataType,
 {
     // This function requires GpuDevice methods that don't exist in the current API
     // Return error indicating this needs proper implementation with GpuContext
@@ -561,7 +561,7 @@ fn execute_metal_symmetric_spmv<T>(
     config: &GpuKernelConfig,
 ) -> Result<(), GpuError>
 where
-    T: Float + Debug + Copy + 'static + GpuDataType,
+    T: Float + SparseElement + Debug + Copy + 'static + GpuDataType,
 {
     // This function requires GpuDevice methods that don't exist in the current API
     // Return error indicating this needs proper implementation with GpuContext
@@ -579,7 +579,7 @@ fn execute_cpu_symmetric_spmv_fallback<T>(
     y_buffer: &GpuBuffer<T>,
 ) -> Result<(), GpuError>
 where
-    T: Float + Debug + Copy + 'static + GpuDataType,
+    T: Float + SparseElement + Debug + Copy + 'static + GpuDataType,
 {
     let indptr = indptr_buffer.to_host()?;
     let indices = indices_buffer.to_host()?;
@@ -591,7 +591,7 @@ where
     for i in 0..rows {
         let start = indptr[i] as usize;
         let end = indptr[i + 1] as usize;
-        let mut sum = T::zero();
+        let mut sum = T::sparse_zero();
 
         for j in start..end {
             let col_idx = indices[j] as usize;
@@ -630,7 +630,7 @@ pub fn execute_triangular_solve_kernel<T>(
     _config: &GpuKernelConfig,
 ) -> Result<(), GpuError>
 where
-    T: Float + Debug + Copy + 'static + GpuDataType,
+    T: Float + SparseElement + Debug + Copy + 'static + GpuDataType,
 {
     // Triangular solve is inherently sequential, but we can parallelize at the warp/wavefront level
     let (global_size, local_size) = match device.backend() {
@@ -685,7 +685,7 @@ fn execute_cpu_triangular_solve_fallback<T>(
     x_buffer: &GpuBuffer<T>,
 ) -> Result<(), GpuError>
 where
-    T: Float + Debug + Copy + 'static + GpuDataType,
+    T: Float + SparseElement + Debug + Copy + 'static + GpuDataType,
 {
     let indptr = indptr_buffer.to_host()?;
     let indices = indices_buffer.to_host()?;
@@ -697,8 +697,8 @@ where
     for i in 0..n {
         let start = indptr[i] as usize;
         let end = indptr[i + 1] as usize;
-        let mut sum = T::zero();
-        let mut diag_val = T::zero();
+        let mut sum = T::sparse_zero();
+        let mut diag_val = T::sparse_zero();
 
         for j in start..end {
             let col_idx = indices[j] as usize;
@@ -715,7 +715,7 @@ where
             }
         }
 
-        if diag_val != T::zero() {
+        if diag_val != T::sparse_zero() {
             x[i] = (b[i] - sum) / diag_val;
         } else {
             #[cfg(feature = "gpu")]
@@ -1346,7 +1346,7 @@ pub fn execute_spmv_kernel<T>(
     _config: &GpuKernelConfig,
 ) -> Result<(), GpuError>
 where
-    T: Float + Debug + Copy + 'static + GpuDataType,
+    T: Float + SparseElement + Debug + Copy + 'static + GpuDataType,
 {
     // Use CPU fallback when GPU feature is not available
     execute_cpu_spmv_fallback(
@@ -1375,7 +1375,7 @@ pub fn execute_symmetric_spmv_kernel<T>(
     _config: &GpuKernelConfig,
 ) -> Result<(), GpuError>
 where
-    T: Float + Debug + Copy + 'static + GpuDataType,
+    T: Float + SparseElement + Debug + Copy + 'static + GpuDataType,
 {
     // Use CPU symmetric fallback when GPU feature is not available
     execute_cpu_symmetric_spmv_fallback(
@@ -1404,7 +1404,7 @@ pub fn execute_triangular_solve_kernel<T>(
     _config: &GpuKernelConfig,
 ) -> Result<(), GpuError>
 where
-    T: Float + Debug + Copy + 'static + GpuDataType,
+    T: Float + SparseElement + Debug + Copy + 'static + GpuDataType,
 {
     // Use CPU triangular solve fallback when GPU feature is not available
     execute_cpu_triangular_solve_fallback(

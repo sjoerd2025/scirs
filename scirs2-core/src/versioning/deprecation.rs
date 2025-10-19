@@ -7,10 +7,12 @@ use super::Version;
 use crate::error::CoreError;
 use std::collections::HashMap;
 
+#[cfg(feature = "serialization")]
 use serde::{Deserialize, Serialize};
 
 /// Deprecation policy configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone)]
 pub struct DeprecationPolicy {
     /// Default deprecation period in days
     pub default_deprecation_period: u32,
@@ -45,7 +47,8 @@ impl Default for DeprecationPolicy {
 }
 
 /// Support levels during deprecation
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SupportLevel {
     /// Full support continues
     Full,
@@ -58,7 +61,8 @@ pub enum SupportLevel {
 }
 
 /// Automatic deprecation rules
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone)]
 pub enum AutoDeprecationRule {
     /// Deprecate when superseded by newer major versions
     MajorVersionSuperseded { versions_to_keep: u32 },
@@ -71,7 +75,8 @@ pub enum AutoDeprecationRule {
 }
 
 /// Deprecation status for a version
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone)]
 pub struct DeprecationStatus {
     /// Version being deprecated
     pub version: Version,
@@ -96,7 +101,8 @@ pub struct DeprecationStatus {
 }
 
 /// Phases of deprecation lifecycle
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum DeprecationPhase {
     /// Actively supported
     Active,
@@ -132,7 +138,8 @@ impl DeprecationPhase {
 }
 
 /// Reasons for deprecation
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone)]
 pub enum DeprecationReason {
     /// Superseded by newer version
     SupersededBy(Version),
@@ -153,7 +160,8 @@ pub enum DeprecationReason {
 }
 
 /// Usage metrics for deprecation decisions
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone)]
 pub struct UsageMetrics {
     /// Number of active users/clients
     pub active_users: u64,
@@ -168,7 +176,8 @@ pub struct UsageMetrics {
 }
 
 /// Usage trend indicators
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum UsageTrend {
     /// Usage is increasing
     Increasing,
@@ -181,7 +190,8 @@ pub enum UsageTrend {
 }
 
 /// Deprecation announcement
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone)]
 pub struct DeprecationAnnouncement {
     /// Version being deprecated
     pub version: Version,
@@ -200,7 +210,8 @@ pub struct DeprecationAnnouncement {
 }
 
 /// Deprecation timeline
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone)]
 pub struct DeprecationTimeline {
     /// When deprecation was announced
     pub announced: chrono::DateTime<chrono::Utc>,
@@ -215,7 +226,8 @@ pub struct DeprecationTimeline {
 }
 
 /// Deprecation milestone
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone)]
 pub struct DeprecationMilestone {
     /// Milestone date
     pub date: chrono::DateTime<chrono::Utc>,
@@ -226,7 +238,8 @@ pub struct DeprecationMilestone {
 }
 
 /// Communication channels for deprecation announcements
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone)]
 pub enum CommunicationChannel {
     /// Email notification
     Email,

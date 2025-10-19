@@ -8,9 +8,7 @@ mod implicit;
 mod local_extrapolation;
 mod lsoda;
 pub mod radau_mass;
-// Temporarily disabled SIMD module due to implementation complexity
-// #[cfg(feature = "simd")]
-// mod simd_explicit;
+mod simd_explicit;
 
 /// Re-exports
 pub use adaptive::{dop853_method, rk23_method, rk45_method};
@@ -24,7 +22,4 @@ pub use local_extrapolation::{
 };
 pub use lsoda::lsoda_method;
 pub use radau_mass::radau_method_with_mass;
-
-// Temporarily disabled SIMD methods due to implementation complexity
-// #[cfg(feature = "simd")]
-// pub use simd_explicit::{simd_rk45_method, simd_rk4_method};
+pub use simd_explicit::{simd_rk45_method, simd_rk4_method};

@@ -9,7 +9,7 @@ use crate::csr_array::CsrArray;
 use crate::error::{SparseError, SparseResult};
 use crate::sparray::SparseArray;
 use scirs2_core::ndarray::Array1;
-use scirs2_core::numeric::Float;
+use scirs2_core::numeric::{Float, SparseElement};
 use std::fmt::Debug;
 
 /// Laplacian matrix types
@@ -75,7 +75,7 @@ pub fn laplacian<T, S>(
     use_outdegree: bool,
 ) -> SparseResult<(CsrArray<T>, Option<Array1<T>>)>
 where
-    T: Float + Debug + Copy + 'static,
+    T: Float + SparseElement + Debug + Copy + 'static,
     S: SparseArray<T>,
 {
     validate_graph(graph, true)?; // Allow both directed and undirected
@@ -109,7 +109,7 @@ pub fn compute_laplacianmatrix<T, S>(
     use_outdegree: bool,
 ) -> SparseResult<(CsrArray<T>, Option<Array1<T>>)>
 where
-    T: Float + Debug + Copy + 'static,
+    T: Float + SparseElement + Debug + Copy + 'static,
     S: SparseArray<T>,
 {
     let n = num_vertices(graph);
@@ -157,7 +157,7 @@ where
 #[allow(dead_code)]
 fn compute_out_degrees<T, S>(graph: &S) -> SparseResult<Array1<T>>
 where
-    T: Float + Debug + Copy + 'static,
+    T: Float + SparseElement + Debug + Copy + 'static,
     S: SparseArray<T>,
 {
     let n = num_vertices(graph);
@@ -176,7 +176,7 @@ where
 #[allow(dead_code)]
 fn compute_in_degrees<T, S>(graph: &S) -> SparseResult<Array1<T>>
 where
-    T: Float + Debug + Copy + 'static,
+    T: Float + SparseElement + Debug + Copy + 'static,
     S: SparseArray<T>,
 {
     let n = num_vertices(graph);
@@ -201,7 +201,7 @@ fn compute_standard_laplacian<T>(
     n: usize,
 ) -> SparseResult<CsrArray<T>>
 where
-    T: Float + Debug + Copy + 'static,
+    T: Float + SparseElement + Debug + Copy + 'static,
 {
     let mut laplacianrows = Vec::new();
     let mut laplaciancols = Vec::new();
@@ -209,7 +209,7 @@ where
 
     // Add diagonal elements (degrees)
     for (i, &degree) in degrees.iter().enumerate() {
-        if !degree.is_zero() {
+        if !SparseElement::is_zero(&degree) {
             laplacianrows.push(i);
             laplaciancols.push(i);
             laplacianvalues.push(degree);
@@ -218,7 +218,7 @@ where
 
     // Subtract off-diagonal elements (negative adjacency matrix entries)
     for (i, (&row, &col)) in row_indices.iter().zip(col_indices.iter()).enumerate() {
-        if row != col && !values[i].is_zero() {
+        if row != col && !SparseElement::is_zero(&values[i]) {
             laplacianrows.push(row);
             laplaciancols.push(col);
             laplacianvalues.push(-values[i]);
@@ -244,13 +244,13 @@ fn compute_normalized_laplacian<T>(
     n: usize,
 ) -> SparseResult<CsrArray<T>>
 where
-    T: Float + Debug + Copy + 'static,
+    T: Float + SparseElement + Debug + Copy + 'static,
 {
     // Compute D^(-1/2)
     let mut sqrt_inv_degrees = Array1::zeros(n);
     for (i, &degree) in degrees.iter().enumerate() {
-        if degree > T::zero() {
-            sqrt_inv_degrees[i] = T::one() / degree.sqrt();
+        if degree > T::sparse_zero() {
+            sqrt_inv_degrees[i] = T::sparse_one() / degree.sqrt();
         }
     }
 
@@ -260,18 +260,18 @@ where
 
     // Add diagonal elements (1 for vertices with positive degree, 0 for isolated vertices)
     for (i, &degree) in degrees.iter().enumerate() {
-        if degree > T::zero() {
+        if degree > T::sparse_zero() {
             laplacianrows.push(i);
             laplaciancols.push(i);
-            laplacianvalues.push(T::one());
+            laplacianvalues.push(T::sparse_one());
         }
     }
 
     // Add off-diagonal elements: -A_{ij} / sqrt(d_i * d_j)
     for (k, (&i, &j)) in row_indices.iter().zip(col_indices.iter()).enumerate() {
-        if i != j && !values[k].is_zero() {
+        if i != j && !SparseElement::is_zero(&values[k]) {
             let normalization = sqrt_inv_degrees[i] * sqrt_inv_degrees[j];
-            if !normalization.is_zero() {
+            if !SparseElement::is_zero(&normalization) {
                 laplacianrows.push(i);
                 laplaciancols.push(j);
                 laplacianvalues.push(-values[k] * normalization);
@@ -298,13 +298,13 @@ fn compute_random_walk_laplacian<T>(
     n: usize,
 ) -> SparseResult<CsrArray<T>>
 where
-    T: Float + Debug + Copy + 'static,
+    T: Float + SparseElement + Debug + Copy + 'static,
 {
     // Compute D^(-1)
     let mut inv_degrees = Array1::zeros(n);
     for (i, &degree) in degrees.iter().enumerate() {
-        if degree > T::zero() {
-            inv_degrees[i] = T::one() / degree;
+        if degree > T::sparse_zero() {
+            inv_degrees[i] = T::sparse_one() / degree;
         }
     }
 
@@ -314,16 +314,16 @@ where
 
     // Add diagonal elements (1 for vertices with positive degree, 0 for isolated vertices)
     for (i, &degree) in degrees.iter().enumerate() {
-        if degree > T::zero() {
+        if degree > T::sparse_zero() {
             laplacianrows.push(i);
             laplaciancols.push(i);
-            laplacianvalues.push(T::one());
+            laplacianvalues.push(T::sparse_one());
         }
     }
 
     // Add off-diagonal elements: -A_{ij} / d_i
     for (k, (&i, &j)) in row_indices.iter().zip(col_indices.iter()).enumerate() {
-        if i != j && !values[k].is_zero() && inv_degrees[i] > T::zero() {
+        if i != j && !SparseElement::is_zero(&values[k]) && inv_degrees[i] > T::sparse_zero() {
             laplacianrows.push(i);
             laplaciancols.push(j);
             laplacianvalues.push(-values[k] * inv_degrees[i]);
@@ -366,7 +366,7 @@ where
 #[allow(dead_code)]
 pub fn degree_matrix<T, S>(graph: &S, use_outdegree: bool) -> SparseResult<Array1<T>>
 where
-    T: Float + Debug + Copy + 'static,
+    T: Float + SparseElement + Debug + Copy + 'static,
     S: SparseArray<T>,
 {
     if use_outdegree {
@@ -399,6 +399,7 @@ where
 pub fn algebraic_connectivity<T, S>(graph: &S, normalized: bool) -> SparseResult<T>
 where
     T: Float
+        + SparseElement
         + Debug
         + Copy
         + 'static
@@ -526,7 +527,7 @@ where
 #[allow(dead_code)]
 pub fn is_laplacian<T, S>(matrix: &S, tol: T) -> SparseResult<bool>
 where
-    T: Float + Debug + Copy + 'static,
+    T: Float + SparseElement + Debug + Copy + 'static,
     S: SparseArray<T>,
 {
     let (n, m) = matrix.shape();
@@ -539,7 +540,7 @@ where
     let (row_indices, col_indices, values) = matrix.find();
 
     // Check row sums are approximately zero
-    let mut row_sums = vec![T::zero(); n];
+    let mut row_sums = vec![T::sparse_zero(); n];
     for (i, (&row, &_col)) in row_indices.iter().zip(col_indices.iter()).enumerate() {
         row_sums[row] = row_sums[row] + values[i];
     }

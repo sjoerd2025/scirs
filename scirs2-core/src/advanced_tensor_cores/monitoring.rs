@@ -15,6 +15,7 @@ use std::time::{Duration, Instant};
 use crate::gpu::{auto_tuning::PerformanceMetrics, GpuBackend};
 
 #[cfg(all(feature = "serde", feature = "gpu"))]
+#[cfg(feature = "serialization")]
 use serde::{Deserialize, Serialize};
 
 /// Real-time analytics engine

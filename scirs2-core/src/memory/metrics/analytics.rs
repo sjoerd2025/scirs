@@ -9,6 +9,7 @@ use std::time::{Duration, Instant};
 use crate::memory::metrics::{MemoryEvent, MemoryEventType};
 
 #[cfg(feature = "memory_metrics")]
+#[cfg(feature = "serialization")]
 use serde::{Deserialize, Serialize};
 
 /// Memory leak detection configuration

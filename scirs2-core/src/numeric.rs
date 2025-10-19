@@ -295,6 +295,221 @@ pub trait ScientificInteger: ScientificNumber + Eq {
     fn binomial(self, k: Self) -> Self;
 }
 
+/// Trait for types that can be used as sparse matrix elements
+///
+/// This trait captures the minimal requirements for sparse matrix element types,
+/// supporting both integer and floating-point types. It provides the basic
+/// arithmetic operations and identity elements needed for sparse matrix operations.
+///
+/// # Design Philosophy
+///
+/// Unlike `Float` or `ScientificNumber`, this trait is intentionally minimal to support
+/// the widest range of numeric types in sparse matrices, including:
+/// - Integer types (u8, i32, u64, etc.) for graph adjacency matrices, binary operators, etc.
+/// - Floating-point types (f32, f64) for numerical computation
+///
+/// # Examples
+///
+/// ```
+/// use scirs2_core::numeric::SparseElement;
+///
+/// // Integer sparse matrix element
+/// let a: u8 = 1;
+/// let b: u8 = 2;
+/// assert_eq!(a + b, 3);
+/// assert_eq!(u8::sparse_zero(), 0);
+/// assert_eq!(u8::sparse_one(), 1);
+/// assert!(u8::sparse_zero().is_zero());
+///
+/// // Float sparse matrix element
+/// let x: f64 = 1.0;
+/// let y: f64 = 2.0;
+/// assert_eq!(x + y, 3.0);
+/// assert_eq!(f64::sparse_zero(), 0.0);
+/// assert_eq!(f64::sparse_one(), 1.0);
+/// assert!(f64::sparse_zero().is_zero());
+/// ```
+pub trait SparseElement:
+    Copy + PartialEq + Add<Output = Self> + Sub<Output = Self> + Mul<Output = Self> + Default + Debug
+{
+    /// The zero element (additive identity) for sparse matrix operations
+    ///
+    /// This method is prefixed with `sparse_` to avoid ambiguity with `num_traits::Zero::zero()`.
+    #[must_use]
+    fn sparse_zero() -> Self;
+
+    /// The one element (multiplicative identity) for sparse matrix operations
+    ///
+    /// This method is prefixed with `sparse_` to avoid ambiguity with `num_traits::One::one()`.
+    #[must_use]
+    fn sparse_one() -> Self;
+
+    /// The zero element (additive identity)
+    ///
+    /// # Deprecation Notice
+    ///
+    /// This method is deprecated to avoid ambiguity with `num_traits::Zero::zero()`.
+    /// Use `sparse_zero()` instead.
+    #[deprecated(
+        since = "0.1.0-rc.2",
+        note = "Use `sparse_zero()` instead to avoid ambiguity with num_traits::Zero"
+    )]
+    #[must_use]
+    fn zero() -> Self {
+        Self::sparse_zero()
+    }
+
+    /// The one element (multiplicative identity)
+    ///
+    /// # Deprecation Notice
+    ///
+    /// This method is deprecated to avoid ambiguity with `num_traits::One::one()`.
+    /// Use `sparse_one()` instead.
+    #[deprecated(
+        since = "0.1.0-rc.2",
+        note = "Use `sparse_one()` instead to avoid ambiguity with num_traits::One"
+    )]
+    #[must_use]
+    fn one() -> Self {
+        Self::sparse_one()
+    }
+
+    /// Check if value is zero
+    #[must_use]
+    fn is_zero(&self) -> bool {
+        *self == Self::sparse_zero()
+    }
+}
+
+// Implement SparseElement for unsigned integer types
+impl SparseElement for u8 {
+    fn sparse_zero() -> Self {
+        0
+    }
+    fn sparse_one() -> Self {
+        1
+    }
+}
+
+impl SparseElement for u16 {
+    fn sparse_zero() -> Self {
+        0
+    }
+    fn sparse_one() -> Self {
+        1
+    }
+}
+
+impl SparseElement for u32 {
+    fn sparse_zero() -> Self {
+        0
+    }
+    fn sparse_one() -> Self {
+        1
+    }
+}
+
+impl SparseElement for u64 {
+    fn sparse_zero() -> Self {
+        0
+    }
+    fn sparse_one() -> Self {
+        1
+    }
+}
+
+impl SparseElement for u128 {
+    fn sparse_zero() -> Self {
+        0
+    }
+    fn sparse_one() -> Self {
+        1
+    }
+}
+
+impl SparseElement for usize {
+    fn sparse_zero() -> Self {
+        0
+    }
+    fn sparse_one() -> Self {
+        1
+    }
+}
+
+// Implement SparseElement for signed integer types
+impl SparseElement for i8 {
+    fn sparse_zero() -> Self {
+        0
+    }
+    fn sparse_one() -> Self {
+        1
+    }
+}
+
+impl SparseElement for i16 {
+    fn sparse_zero() -> Self {
+        0
+    }
+    fn sparse_one() -> Self {
+        1
+    }
+}
+
+impl SparseElement for i32 {
+    fn sparse_zero() -> Self {
+        0
+    }
+    fn sparse_one() -> Self {
+        1
+    }
+}
+
+impl SparseElement for i64 {
+    fn sparse_zero() -> Self {
+        0
+    }
+    fn sparse_one() -> Self {
+        1
+    }
+}
+
+impl SparseElement for i128 {
+    fn sparse_zero() -> Self {
+        0
+    }
+    fn sparse_one() -> Self {
+        1
+    }
+}
+
+impl SparseElement for isize {
+    fn sparse_zero() -> Self {
+        0
+    }
+    fn sparse_one() -> Self {
+        1
+    }
+}
+
+// Implement SparseElement for floating-point types
+impl SparseElement for f32 {
+    fn sparse_zero() -> Self {
+        0.0
+    }
+    fn sparse_one() -> Self {
+        1.0
+    }
+}
+
+impl SparseElement for f64 {
+    fn sparse_zero() -> Self {
+        0.0
+    }
+    fn sparse_one() -> Self {
+        1.0
+    }
+}
+
 // Implement ScientificNumber for f32
 impl ScientificNumber for f32 {
     fn abs(self) -> Self {

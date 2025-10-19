@@ -12,7 +12,6 @@ use std::collections::BinaryHeap;
 use std::f64;
 
 use crate::error::{Result, TransformError};
-// use statrs::statistics::Statistics; // TODO: Add statrs dependency - needs generic type fixes
 
 /// Isomap (Isometric Feature Mapping) dimensionality reduction
 ///

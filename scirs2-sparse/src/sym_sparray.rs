@@ -10,7 +10,7 @@ use crate::error::{SparseError, SparseResult};
 use crate::sparray::{SparseArray, SparseSum};
 use crate::sym_coo::SymCooArray;
 use crate::sym_csr::SymCsrArray;
-use scirs2_core::numeric::Float;
+use scirs2_core::numeric::{Float, SparseElement};
 use std::fmt::Debug;
 use std::ops::{Add, Div, Mul, Sub};
 
@@ -21,7 +21,7 @@ use std::ops::{Add, Div, Mul, Sub};
 /// is kept symmetric throughout all operations.
 pub trait SymSparseArray<T>: SparseArray<T>
 where
-    T: Float + Debug + Copy + 'static,
+    T: SparseElement + Div<Output = T> + Float + PartialOrd + 'static,
 {
     /// Get the number of stored non-zero elements
     ///
@@ -78,6 +78,7 @@ where
 impl<T> SymSparseArray<T> for SymCsrArray<T>
 where
     T: Float
+        + SparseElement
         + Debug
         + Copy
         + 'static
@@ -86,6 +87,7 @@ where
         + Mul<Output = T>
         + Div<Output = T>
         + scirs2_core::simd_ops::SimdUnifiedOps
+        + SparseElement
         + Send
         + Sync,
 {
@@ -132,7 +134,7 @@ where
 
     fn to_sym_csr(&self) -> SparseResult<SymCsrArray<T>> {
         // Already a SymCsrArray, return a clone
-        Ok(self.clone())
+        Ok(Clone::clone(self))
     }
 
     fn to_sym_coo(&self) -> SparseResult<SymCooArray<T>> {
@@ -166,6 +168,7 @@ where
 impl<T> SymSparseArray<T> for SymCooArray<T>
 where
     T: Float
+        + SparseElement
         + Debug
         + Copy
         + 'static
@@ -174,6 +177,7 @@ where
         + Mul<Output = T>
         + Div<Output = T>
         + scirs2_core::simd_ops::SimdUnifiedOps
+        + SparseElement
         + Send
         + Sync,
 {
@@ -247,7 +251,7 @@ where
 
     fn to_sym_coo(&self) -> SparseResult<SymCooArray<T>> {
         // Already a SymCooArray, return a clone
-        Ok(self.clone())
+        Ok(Clone::clone(self))
     }
 }
 
@@ -255,6 +259,7 @@ where
 impl<T> SparseArray<T> for SymCsrArray<T>
 where
     T: Float
+        + SparseElement
         + Debug
         + Copy
         + 'static
@@ -263,6 +268,7 @@ where
         + Mul<Output = T>
         + Div<Output = T>
         + scirs2_core::simd_ops::SimdUnifiedOps
+        + SparseElement
         + Send
         + Sync,
 {
@@ -329,7 +335,7 @@ where
     }
 
     fn copy(&self) -> Box<dyn SparseArray<T>> {
-        Box::new(self.clone())
+        Box::new(Clone::clone(self))
     }
 
     fn sub(&self, other: &dyn SparseArray<T>) -> SparseResult<Box<dyn SparseArray<T>>> {
@@ -358,7 +364,7 @@ where
 
     fn sorted_indices(&self) -> Box<dyn SparseArray<T>> {
         // CSR format typically maintains sorted indices, so return a clone
-        Box::new(self.clone())
+        Box::new(Clone::clone(self))
     }
 
     fn has_sorted_indices(&self) -> bool {
@@ -483,7 +489,7 @@ where
                 for i in 0..selfshape.0 {
                     for j in 0..selfshape.1 {
                         let val = result_dense[[i, j]];
-                        if val != T::zero() {
+                        if val != T::sparse_zero() {
                             rows.push(i);
                             cols.push(j);
                             values.push(val);
@@ -560,7 +566,7 @@ where
                 for i in 0..selfshape.0 {
                     for j in 0..selfshape.1 {
                         let val = result_dense[[i, j]];
-                        if val != T::zero() {
+                        if val != T::sparse_zero() {
                             rows.push(i);
                             cols.push(j);
                             values.push(val);
@@ -589,7 +595,7 @@ where
 
     fn transpose(&self) -> SparseResult<Box<dyn SparseArray<T>>> {
         // For symmetric matrices, transpose is the same as the original
-        Ok(Box::new(self.clone()))
+        Ok(Box::new(Clone::clone(self)))
     }
 
     fn to_csc(&self) -> SparseResult<Box<dyn SparseArray<T>>> {
@@ -632,6 +638,7 @@ where
 impl<T> SparseArray<T> for SymCooArray<T>
 where
     T: Float
+        + SparseElement
         + Debug
         + Copy
         + 'static
@@ -640,6 +647,7 @@ where
         + Mul<Output = T>
         + Div<Output = T>
         + scirs2_core::simd_ops::SimdUnifiedOps
+        + SparseElement
         + Send
         + Sync,
 {
@@ -706,7 +714,7 @@ where
     }
 
     fn copy(&self) -> Box<dyn SparseArray<T>> {
-        Box::new(self.clone())
+        Box::new(Clone::clone(self))
     }
 
     fn sub(&self, other: &dyn SparseArray<T>) -> SparseResult<Box<dyn SparseArray<T>>> {
@@ -735,7 +743,7 @@ where
         // Convert to SymCsrArray which has sorted indices
         match self.to_sym_csr() {
             Ok(csr) => Box::new(csr),
-            Err(_) => Box::new(self.clone()), // Return self if conversion fails
+            Err(_) => Box::new(Clone::clone(self)), // Return self if conversion fails
         }
     }
 
@@ -814,7 +822,7 @@ where
 
     fn transpose(&self) -> SparseResult<Box<dyn SparseArray<T>>> {
         // For symmetric matrices, transpose is the same as the original
-        Ok(Box::new(self.clone()))
+        Ok(Box::new(Clone::clone(self)))
     }
 
     fn to_csc(&self) -> SparseResult<Box<dyn SparseArray<T>>> {

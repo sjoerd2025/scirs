@@ -13,7 +13,7 @@ use super::out_of_core::OutOfCoreManager;
 use super::stats::AccessPatternType;
 use super::stats::{CompressionMetadata, CompressionStats, MemoryStats};
 use crate::error::{SparseError, SparseResult};
-use scirs2_core::numeric::{Float, NumAssign};
+use scirs2_core::numeric::{Float, NumAssign, SparseElement};
 use std::marker::PhantomData;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
@@ -154,7 +154,7 @@ impl AdaptiveMemoryCompressor {
         data: &[T],
     ) -> SparseResult<CompressedMatrix<T>>
     where
-        T: Float + NumAssign + Send + Sync + Copy + std::fmt::Debug,
+        T: Float + SparseElement + NumAssign + Send + Sync + Copy + std::fmt::Debug,
     {
         let total_size = std::mem::size_of_val(indptr)
             + std::mem::size_of_val(indices)
@@ -228,6 +228,7 @@ impl AdaptiveMemoryCompressor {
     ) -> SparseResult<(Vec<usize>, Vec<usize>, Vec<T>)>
     where
         T: Float
+            + SparseElement
             + NumAssign
             + Send
             + Sync
@@ -406,7 +407,7 @@ impl AdaptiveMemoryCompressor {
         data: &[T],
     ) -> SparseResult<Vec<CompressedBlock>>
     where
-        T: Float + NumAssign + Send + Sync + Copy + std::fmt::Debug,
+        T: Float + SparseElement + NumAssign + Send + Sync + Copy + std::fmt::Debug,
     {
         // Serialize matrix components
         let indptr_data = self.serialize_indptr(indptr)?;
@@ -714,7 +715,7 @@ impl AdaptiveMemoryCompressor {
         data: &[T],
     ) -> SparseResult<CompressedMatrix<T>>
     where
-        T: Float + NumAssign + Send + Sync + Copy + std::fmt::Debug,
+        T: Float + SparseElement + NumAssign + Send + Sync + Copy + std::fmt::Debug,
     {
         let mut matrix = CompressedMatrix::new(
             matrix_id,
@@ -818,7 +819,7 @@ impl AdaptiveMemoryCompressor {
 
     fn serialize_data<T>(&self, data: &[T]) -> SparseResult<Vec<u8>>
     where
-        T: Float + NumAssign + Send + Sync + Copy,
+        T: Float + SparseElement + NumAssign + Send + Sync + Copy,
     {
         let mut serialized = Vec::new();
         serialized.extend_from_slice(&data.len().to_le_bytes());
@@ -867,7 +868,13 @@ impl AdaptiveMemoryCompressor {
 
     fn parse_data_values<T>(&self, data: &[u8]) -> SparseResult<Vec<T>>
     where
-        T: Float + NumAssign + Send + Sync + Copy + scirs2_core::numeric::FromPrimitive,
+        T: Float
+            + SparseElement
+            + NumAssign
+            + Send
+            + Sync
+            + Copy
+            + scirs2_core::numeric::FromPrimitive,
     {
         if data.len() < 8 {
             return Ok(Vec::new());
@@ -903,7 +910,7 @@ impl AdaptiveMemoryCompressor {
 
     fn parse_combined_data<T>(&self, _data: &[u8]) -> SparseResult<(Vec<usize>, Vec<usize>, Vec<T>)>
     where
-        T: Float + NumAssign + Send + Sync + Copy,
+        T: Float + SparseElement + NumAssign + Send + Sync + Copy,
     {
         // Placeholder for combined data parsing
         Ok((Vec::new(), Vec::new(), Vec::new()))

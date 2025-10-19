@@ -33,17 +33,61 @@
 
 use std::fmt;
 
-use friedrich::gaussian_process::GaussianProcess;
-use friedrich::kernel::SquaredExp;
-use friedrich::prior::ConstantPrior;
-use scirs2_core::ndarray::{Array1, ArrayView1};
+use scirs2_core::ndarray::{Array1, Array2, ArrayView1};
 use scirs2_core::random::rngs::StdRng;
 use scirs2_core::random::Rng;
 use scirs2_core::random::SeedableRng;
+use scirs2_stats::gaussian_process::{GaussianProcessRegressor, SquaredExponential};
 
 use crate::error::OptimizeError;
 use crate::parallel::ParallelOptions;
 use crate::unconstrained::{minimize, Method, OptimizeResult, Options};
+
+/// Wrapper for GaussianProcessRegressor to provide friedrich-compatible API
+struct GaussianProcess {
+    regressor: GaussianProcessRegressor<SquaredExponential>,
+    n_features: usize,
+}
+
+impl GaussianProcess {
+    /// Create a new GP from training data (friedrich-compatible API)
+    fn default(x_data: Vec<Vec<f64>>, y_data: Vec<f64>) -> Self {
+        let n_samples = x_data.len();
+        let n_features = if n_samples > 0 { x_data[0].len() } else { 0 };
+
+        // Convert Vec<Vec<f64>> to Array2
+        let mut x_flat = Vec::with_capacity(n_samples * n_features);
+        for row in &x_data {
+            x_flat.extend_from_slice(row);
+        }
+        let x_array = Array2::from_shape_vec((n_samples, n_features), x_flat).unwrap();
+        let y_array = Array1::from_vec(y_data);
+
+        // Create and fit the regressor
+        let kernel = SquaredExponential::default();
+        let mut regressor = GaussianProcessRegressor::new(kernel);
+        regressor.fit(&x_array, &y_array).unwrap();
+
+        Self {
+            regressor,
+            n_features,
+        }
+    }
+
+    /// Predict mean at a single point (friedrich-compatible API)
+    fn predict(&self, x: &Vec<f64>) -> f64 {
+        let x_array = Array2::from_shape_vec((1, self.n_features), x.clone()).unwrap();
+        let predictions = self.regressor.predict(&x_array).unwrap();
+        predictions[0]
+    }
+
+    /// Predict variance at a single point (friedrich-compatible API)
+    fn predict_variance(&self, x: &Vec<f64>) -> f64 {
+        let x_array = Array2::from_shape_vec((1, self.n_features), x.clone()).unwrap();
+        let (_mean, std) = self.regressor.predict_with_std(&x_array).unwrap();
+        std[0] * std[0] // return variance (std²)
+    }
+}
 
 /// Parameter types for search space
 #[derive(Debug, Clone)]
@@ -241,14 +285,14 @@ pub trait AcquisitionFunction: Send + Sync {
 
 /// Expected Improvement acquisition function
 pub struct ExpectedImprovement {
-    model: GaussianProcess<SquaredExp, ConstantPrior>,
+    model: GaussianProcess,
     y_best: f64,
     xi: f64,
 }
 
 impl ExpectedImprovement {
     /// Create a new Expected Improvement acquisition function
-    pub fn new(model: GaussianProcess<SquaredExp, ConstantPrior>, y_best: f64, xi: f64) -> Self {
+    pub fn new(model: GaussianProcess, y_best: f64, xi: f64) -> Self {
         Self { model, y_best, xi }
     }
 }
@@ -284,13 +328,13 @@ impl AcquisitionFunction for ExpectedImprovement {
 
 /// Lower Confidence Bound acquisition function
 pub struct LowerConfidenceBound {
-    model: GaussianProcess<SquaredExp, ConstantPrior>,
+    model: GaussianProcess,
     kappa: f64,
 }
 
 impl LowerConfidenceBound {
     /// Create a new Lower Confidence Bound acquisition function
-    pub fn new(model: GaussianProcess<SquaredExp, ConstantPrior>, kappa: f64) -> Self {
+    pub fn new(model: GaussianProcess, kappa: f64) -> Self {
         Self { model, kappa }
     }
 }
@@ -311,14 +355,14 @@ impl AcquisitionFunction for LowerConfidenceBound {
 
 /// Probability of Improvement acquisition function
 pub struct ProbabilityOfImprovement {
-    model: GaussianProcess<SquaredExp, ConstantPrior>,
+    model: GaussianProcess,
     y_best: f64,
     xi: f64,
 }
 
 impl ProbabilityOfImprovement {
     /// Create a new Probability of Improvement acquisition function
-    pub fn new(model: GaussianProcess<SquaredExp, ConstantPrior>, y_best: f64, xi: f64) -> Self {
+    pub fn new(model: GaussianProcess, y_best: f64, xi: f64) -> Self {
         Self { model, y_best, xi }
     }
 }
@@ -636,7 +680,7 @@ impl BayesianOptimizer {
     }
 
     /// Build a Gaussian Process model from observations
-    fn build_model(&self) -> GaussianProcess<SquaredExp, ConstantPrior> {
+    fn build_model(&self) -> GaussianProcess {
         // Prepare data
         let mut x_data = Vec::with_capacity(self.observations.len());
         let mut y_data = Vec::with_capacity(self.observations.len());

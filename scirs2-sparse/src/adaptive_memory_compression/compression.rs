@@ -8,7 +8,7 @@ use super::compressed_data::{BlockType, CompressedBlock};
 use super::config::CompressionAlgorithm;
 use super::stats::SparsityPatternAnalysis;
 use crate::error::{SparseError, SparseResult};
-use scirs2_core::numeric::{Float, NumAssign};
+use scirs2_core::numeric::{Float, NumAssign, SparseElement};
 use std::collections::HashMap;
 
 /// Compression engine that handles all compression algorithms

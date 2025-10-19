@@ -4,7 +4,7 @@
 // which is efficient for row-wise operations and is one of the most common formats.
 
 use scirs2_core::ndarray::{Array1, Array2, ArrayView1};
-use scirs2_core::numeric::Float;
+use scirs2_core::numeric::{Float, SparseElement, Zero};
 use std::fmt::{self, Debug};
 use std::ops::{Add, Div, Mul, Sub};
 
@@ -105,14 +105,7 @@ use crate::sparray::{SparseArray, SparseSum};
 #[derive(Clone)]
 pub struct CsrArray<T>
 where
-    T: Float
-        + Add<Output = T>
-        + Sub<Output = T>
-        + Mul<Output = T>
-        + Div<Output = T>
-        + Debug
-        + Copy
-        + 'static,
+    T: SparseElement + Div<Output = T> + 'static,
 {
     /// Non-zero values
     data: Array1<T>,
@@ -128,14 +121,7 @@ where
 
 impl<T> CsrArray<T>
 where
-    T: Float
-        + Add<Output = T>
-        + Sub<Output = T>
-        + Mul<Output = T>
-        + Div<Output = T>
-        + Debug
-        + Copy
-        + 'static,
+    T: SparseElement + Div<Output = T> + Zero + 'static,
 {
     /// Creates a new CSR array from raw components
     ///
@@ -400,14 +386,7 @@ where
 
 impl<T> SparseArray<T> for CsrArray<T>
 where
-    T: Float
-        + Add<Output = T>
-        + Sub<Output = T>
-        + Mul<Output = T>
-        + Div<Output = T>
-        + Debug
-        + Copy
-        + 'static,
+    T: SparseElement + Div<Output = T> + PartialOrd + Zero + 'static,
 {
     fn shape(&self) -> (usize, usize) {
         self.shape
@@ -506,7 +485,7 @@ where
         for row in 0..rows {
             for col in 0..cols {
                 let val = result[[row, col]];
-                if !val.is_zero() {
+                if val != T::sparse_zero() {
                     data.push(val);
                     indices.push(col);
                 }
@@ -546,7 +525,7 @@ where
         for row in 0..rows {
             for col in 0..cols {
                 let val = result[[row, col]];
-                if !val.is_zero() {
+                if val != T::sparse_zero() {
                     data.push(val);
                     indices.push(col);
                 }
@@ -587,7 +566,7 @@ where
         for row in 0..rows {
             for col in 0..cols {
                 let val = result[[row, col]];
-                if !val.is_zero() {
+                if val != T::sparse_zero() {
                     data.push(val);
                     indices.push(col);
                 }
@@ -627,7 +606,7 @@ where
         for row in 0..rows {
             for col in 0..cols {
                 let val = result[[row, col]];
-                if !val.is_zero() {
+                if val != T::sparse_zero() {
                     data.push(val);
                     indices.push(col);
                 }
@@ -665,12 +644,12 @@ where
             let end = self.indptr[row + 1];
 
             for j in 0..q {
-                let mut sum = T::zero();
+                let mut sum = T::sparse_zero();
                 for idx in start..end {
                     let col = self.indices[idx];
                     sum = sum + self.data[idx] * other_array[[col, j]];
                 }
-                if !sum.is_zero() {
+                if sum != T::sparse_zero() {
                     result[[row, j]] = sum;
                 }
             }
@@ -684,7 +663,7 @@ where
         for row in 0..m {
             for col in 0..q {
                 let val = result[[row, col]];
-                if !val.is_zero() {
+                if val != T::sparse_zero() {
                     data.push(val);
                     indices.push(col);
                 }
@@ -716,7 +695,7 @@ where
             let start = self.indptr[row];
             let end = self.indptr[row + 1];
 
-            let mut sum = T::zero();
+            let mut sum = T::sparse_zero();
             for idx in start..end {
                 let col = self.indices[idx];
                 sum = sum + self.data[idx] * other[col];
@@ -765,7 +744,7 @@ where
 
     fn get(&self, i: usize, j: usize) -> T {
         if i >= self.shape.0 || j >= self.shape.1 {
-            return T::zero();
+            return T::sparse_zero();
         }
 
         let start = self.indptr[i];
@@ -781,7 +760,7 @@ where
             }
         }
 
-        T::zero()
+        T::sparse_zero()
     }
 
     fn set(&mut self, i: usize, j: usize, value: T) -> SparseResult<()> {
@@ -834,7 +813,7 @@ where
             let end = self.indptr[row + 1];
 
             for idx in start..end {
-                if !self.data[idx].is_zero() {
+                if !SparseElement::is_zero(&self.data[idx]) {
                     new_data.push(self.data[idx]);
                     new_indices.push(self.indices[idx]);
                 }
@@ -900,7 +879,7 @@ where
         match axis {
             None => {
                 // Sum all elements
-                let mut sum = T::zero();
+                let mut sum = T::sparse_zero();
                 for &val in self.data.iter() {
                     sum = sum + val;
                 }
@@ -909,7 +888,7 @@ where
             Some(0) => {
                 // Sum along rows (result is a row vector)
                 let (_, cols) = self.shape();
-                let mut result = vec![T::zero(); cols];
+                let mut result = vec![T::sparse_zero(); cols];
 
                 for row in 0..self.shape.0 {
                     let start = self.indptr[row];
@@ -927,7 +906,7 @@ where
                 let mut indptr = vec![0];
 
                 for (col, &val) in result.iter().enumerate() {
-                    if !val.is_zero() {
+                    if val != T::sparse_zero() {
                         data.push(val);
                         indices.push(col);
                     }
@@ -951,7 +930,7 @@ where
                     let start = self.indptr[row];
                     let end = self.indptr[row + 1];
 
-                    let mut row_sum = T::zero();
+                    let mut row_sum = T::sparse_zero();
                     for idx in start..end {
                         row_sum = row_sum + self.data[idx];
                     }
@@ -964,7 +943,7 @@ where
                 let mut indptr = vec![0];
 
                 for &val in result.iter() {
-                    if !val.is_zero() {
+                    if val != T::sparse_zero() {
                         data.push(val);
                         indices.push(0);
                         indptr.push(data.len());
@@ -988,7 +967,8 @@ where
 
     fn max(&self) -> T {
         if self.data.is_empty() {
-            return T::neg_infinity();
+            // Empty sparse matrix - all elements are implicitly zero
+            return T::sparse_zero();
         }
 
         let mut max_val = self.data[0];
@@ -999,8 +979,10 @@ where
         }
 
         // Check if max_val is less than zero, as zeros aren't explicitly stored
-        if max_val < T::zero() && self.nnz() < self.shape.0 * self.shape.1 {
-            max_val = T::zero();
+        // If the matrix has implicit zeros and max_val < 0, then max is 0
+        let zero = T::sparse_zero();
+        if max_val < zero && self.nnz() < self.shape.0 * self.shape.1 {
+            max_val = zero;
         }
 
         max_val
@@ -1008,7 +990,8 @@ where
 
     fn min(&self) -> T {
         if self.data.is_empty() {
-            return T::infinity();
+            // Empty sparse matrix - all elements are implicitly zero
+            return T::sparse_zero();
         }
 
         let mut min_val = self.data[0];
@@ -1019,8 +1002,10 @@ where
         }
 
         // Check if min_val is greater than zero, as zeros aren't explicitly stored
-        if min_val > T::zero() && self.nnz() < self.shape.0 * self.shape.1 {
-            min_val = T::zero();
+        // If the matrix has implicit zeros and min_val > 0, then min is 0
+        let zero = T::sparse_zero();
+        if min_val > zero && self.nnz() < self.shape.0 * self.shape.1 {
+            min_val = zero;
         }
 
         min_val
@@ -1113,14 +1098,7 @@ where
 
 impl<T> fmt::Debug for CsrArray<T>
 where
-    T: Float
-        + Add<Output = T>
-        + Sub<Output = T>
-        + Mul<Output = T>
-        + Div<Output = T>
-        + Debug
-        + Copy
-        + 'static,
+    T: SparseElement + Div<Output = T> + PartialOrd + Zero + 'static,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(

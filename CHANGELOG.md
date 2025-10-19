@@ -5,6 +5,57 @@ All notable changes to the SciRS2 project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.0-RC.2] - 2025-10-18
+
+### 🚀 Release Candidate 2 - Performance & Quality Refinements
+
+This release focuses on performance optimizations, code quality improvements, and completing deferred high-priority features from RC.1.
+
+### Added
+
+#### scirs2-integrate
+- **SIMD-Accelerated ODE Solvers**: Implemented high-performance SIMD methods
+  - `simd_rk4_method`: 4th-order Runge-Kutta with SIMD acceleration
+  - `simd_rk45_method`: Adaptive RK45 with full Dormand-Prince SIMD implementation
+  - Uses `scirs2-core::simd_ops::SimdUnifiedOps` trait for portable SIMD operations
+  - Feature-gated fallbacks for non-SIMD builds
+  - Updated `simd_optimization_example.rs` to demonstrate SIMD performance
+
+### Fixed
+
+#### Code Quality (Clippy Warnings)
+- **scirs2-integrate**: Removed unused enumerate index in tolerance calculation
+- **scirs2-series**: Replaced `vec!` with array literal for static data
+- **scirs2-special**:
+  - Used `.is_multiple_of()` for clearer even/odd checks
+  - Removed unnecessary type cast in Hermite recurrence test
+
+#### Examples
+- **scirs2-core**: Restored 80 gutted examples that were stripped in previous refactoring
+- **scirs2-series**: Fixed examples to use updated API
+  - `financial_analysis_demo.rs`: Updated for current function-based API
+  - `series_comprehensive_analysis.rs`: Fixed ARIMA forecast signature
+
+### Changed
+
+#### Documentation
+- Updated inline documentation for SIMD ODE methods
+- Added performance notes for SIMD acceleration benefits
+- Clarified feature requirements for SIMD functionality
+
+### Technical Details
+
+#### SIMD Implementation
+- Vector operations: `F::simd_add`, `F::simd_sub`, `F::simd_scalar_mul`
+- Error estimation: `SimdOdeOps::simd_norm_inf`
+- Initial step estimation: Fixed 6-parameter signature for all ODE methods
+- Corrected `ODEOptions` field names (`atol`/`rtol` instead of `abs_tol`/`rel_tol`)
+
+#### Test Coverage
+- All 9,303 tests passing (334 skipped)
+- Zero compilation warnings across entire workspace
+- Full clippy compliance
+
 ## [0.1.0-RC.1] - 2025-10-03
 
 ### 🎯 Release Candidate 1 - Major Architectural Milestone

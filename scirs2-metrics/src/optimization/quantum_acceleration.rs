@@ -1312,10 +1312,12 @@ impl<F: Float> QuantumProcessor<F> {
             let flipped_state = i ^ (1 << qubit);
 
             if bit == 0 {
+                // new[i0] = (old[i0] + old[i1]) / √2
                 new_state[i] = (self.state_vector[i] + self.state_vector[flipped_state])
                     / Complex::new(2.0_f64.sqrt(), 0.0);
             } else {
-                new_state[i] = (self.state_vector[i] - self.state_vector[flipped_state])
+                // new[i1] = (old[i0] - old[i1]) / √2 (note: i0 - i1, not i1 - i0)
+                new_state[i] = (self.state_vector[flipped_state] - self.state_vector[i])
                     / Complex::new(2.0_f64.sqrt(), 0.0);
             }
         }
@@ -1390,11 +1392,14 @@ impl<F: Float> QuantumProcessor<F> {
             let flipped_state = i ^ (1 << qubit);
 
             if bit == 0 {
+                // R_y(θ) = [[cos(θ/2), -sin(θ/2)], [sin(θ/2), cos(θ/2)]]
+                // new[i0] = cos(θ/2)*old[i0] - sin(θ/2)*old[i1]
                 new_state[i] = Complex::new(cos_half, 0.0) * self.state_vector[i]
                     - Complex::new(sin_half, 0.0) * self.state_vector[flipped_state];
             } else {
-                new_state[i] = Complex::new(sin_half, 0.0) * self.state_vector[i]
-                    + Complex::new(cos_half, 0.0) * self.state_vector[flipped_state];
+                // new[i1] = sin(θ/2)*old[i0] + cos(θ/2)*old[i1]
+                new_state[i] = Complex::new(sin_half, 0.0) * self.state_vector[flipped_state]
+                    + Complex::new(cos_half, 0.0) * self.state_vector[i];
             }
         }
 
@@ -1650,23 +1655,30 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Quantum gate implementation has incorrect state vector calculations
     fn test_quantum_gates() {
         let mut processor = QuantumProcessor::<f64>::new(2).unwrap();
 
-        // Apply Hadamard to first qubit
+        // Apply Hadamard to qubit 0 (LSB)
         processor.apply_hadamard(0).unwrap();
 
         // State should be (|00⟩ + |01⟩)/√2
+        // In binary: |00⟩ = index 0, |01⟩ = index 1
         let sqrt2 = 2.0_f64.sqrt();
         assert!((processor.state_vector[0].re - 1.0 / sqrt2).abs() < 1e-10);
-        assert!((processor.state_vector[2].re - 1.0 / sqrt2).abs() < 1e-10);
+        assert!((processor.state_vector[1].re - 1.0 / sqrt2).abs() < 1e-10);
+        assert!(processor.state_vector[2].re.abs() < 1e-10);
+        assert!(processor.state_vector[3].re.abs() < 1e-10);
 
-        // Apply CNOT
+        // Apply CNOT(0, 1) - control=0, target=1
+        // Flips qubit 1 when qubit 0 is 1
         processor.apply_cnot(0, 1).unwrap();
 
         // State should be (|00⟩ + |11⟩)/√2 (Bell state)
+        // |00⟩ → |00⟩ (qubit 0 is 0, no flip)
+        // |01⟩ → |11⟩ (qubit 0 is 1, flip qubit 1)
         assert!((processor.state_vector[0].re - 1.0 / sqrt2).abs() < 1e-10);
+        assert!(processor.state_vector[1].re.abs() < 1e-10);
+        assert!(processor.state_vector[2].re.abs() < 1e-10);
         assert!((processor.state_vector[3].re - 1.0 / sqrt2).abs() < 1e-10);
     }
 

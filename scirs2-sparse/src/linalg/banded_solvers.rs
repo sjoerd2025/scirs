@@ -104,7 +104,7 @@ where
         // Cholesky decomposition: A = L * L^T
         for i in 0..n {
             // Compute L[i,i]
-            let mut sum = T::zero();
+            let mut sum = T::sparse_zero();
             let start_k = i.saturating_sub(bandwidth);
             
             for k in start_k..i {
@@ -115,7 +115,7 @@ where
             let a_ii = self.matrix.get(i, i);
             let l_ii_squared = a_ii - sum;
             
-            if l_ii_squared <= T::zero() {
+            if l_ii_squared <= T::sparse_zero() {
                 return Err(SparseError::ValueError(
                     "Matrix is not positive definite".to_string(),
                 ));
@@ -127,7 +127,7 @@ where
             // Compute L[j,i] for j > i within band
             let end_j = (i + bandwidth + 1).min(n);
             for j in (i + 1)..end_j {
-                let mut sum = T::zero();
+                let mut sum = T::sparse_zero();
                 
                 for k in start_k..i {
                     sum = sum + l.get(i, k) * l.get(j, k);
@@ -165,7 +165,7 @@ where
         // LDLT decomposition
         for i in 0..n {
             // Compute D[i]
-            let mut sum = T::zero();
+            let mut sum = T::sparse_zero();
             let start_k = i.saturating_sub(bandwidth);
             
             for k in start_k..i {
@@ -179,7 +179,7 @@ where
             if !d[i].is_zero() {
                 let end_j = (i + bandwidth + 1).min(n);
                 for j in (i + 1)..end_j {
-                    let mut sum = T::zero();
+                    let mut sum = T::sparse_zero();
                     
                     for k in start_k..i {
                         sum = sum + l.get(i, k) * l.get(j, k) * d[k];
@@ -334,7 +334,7 @@ where
         // Back substitution
         let mut x = Array1::zeros(n);
         for i in (0..n).rev() {
-            let mut sum = T::zero();
+            let mut sum = T::sparse_zero();
             if i < n - 1 {
                 sum = sum + c1[i] * x[i + 1];
             }
@@ -372,7 +372,7 @@ where
             }
             
             // Check convergence
-            let residual_norm = residual._iter().map(|&r| r * r).fold(T::zero(), |a, b| a + b).sqrt();
+            let residual_norm = residual._iter().map(|&r| r * r).fold(T::sparse_zero(), |a, b| a + b).sqrt();
             if residual_norm < tolerance {
                 break;
             }

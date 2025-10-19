@@ -10,6 +10,7 @@ use crate::memory::metrics::event::{MemoryEvent, MemoryEventType};
 use rand::prelude::*;
 use rand::Rng;
 #[cfg(feature = "memory_metrics")]
+#[cfg(feature = "serialization")]
 use serde::{Deserialize, Serialize};
 
 // Define a simple Random struct for sampling when the random feature is not enabled

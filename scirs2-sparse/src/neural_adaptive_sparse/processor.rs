@@ -9,7 +9,7 @@ use super::pattern_memory::{MatrixFingerprint, OptimizationStrategy, PatternMemo
 use super::reinforcement_learning::{Experience, ExperienceBuffer, PerformanceMetrics, RLAgent};
 use super::transformer::TransformerModel;
 use crate::error::SparseResult;
-use scirs2_core::numeric::{Float, NumAssign};
+use scirs2_core::numeric::{Float, NumAssign, SparseElement};
 use scirs2_core::simd_ops::SimdUnifiedOps;
 use std::collections::VecDeque;
 use std::sync::atomic::{AtomicUsize, Ordering};
@@ -123,7 +123,15 @@ impl NeuralAdaptiveSparseProcessor {
         operation_context: &OperationContext,
     ) -> SparseResult<OptimizationStrategy>
     where
-        T: Float + NumAssign + SimdUnifiedOps + std::fmt::Debug + Copy + Send + Sync + 'static,
+        T: Float
+            + SparseElement
+            + NumAssign
+            + SimdUnifiedOps
+            + std::fmt::Debug
+            + Copy
+            + Send
+            + Sync
+            + 'static,
     {
         // Extract matrix fingerprint
         let fingerprint = self.extract_matrix_fingerprint(matrix_features, operation_context);
@@ -420,7 +428,15 @@ impl NeuralAdaptiveSparseProcessor {
         y: &mut [T],
     ) -> SparseResult<()>
     where
-        T: Float + NumAssign + SimdUnifiedOps + std::fmt::Debug + Copy + Send + Sync + 'static,
+        T: Float
+            + SparseElement
+            + NumAssign
+            + SimdUnifiedOps
+            + std::fmt::Debug
+            + Copy
+            + Send
+            + Sync
+            + 'static,
     {
         // Extract matrix features for optimization decision
         let matrix_features = self.extract_matrix_features(rows, cols, data);
@@ -534,7 +550,14 @@ impl NeuralAdaptiveSparseProcessor {
         y: &mut [T],
     ) -> SparseResult<()>
     where
-        T: Float + NumAssign + SimdUnifiedOps + std::fmt::Debug + Copy + Send + Sync,
+        T: Float
+            + SparseElement
+            + NumAssign
+            + SimdUnifiedOps
+            + std::fmt::Debug
+            + Copy
+            + Send
+            + Sync,
     {
         match strategy {
             OptimizationStrategy::RowWiseCache => {
@@ -563,10 +586,10 @@ impl NeuralAdaptiveSparseProcessor {
         y: &mut [T],
     ) -> SparseResult<()>
     where
-        T: Float + NumAssign + std::fmt::Debug + Copy,
+        T: Float + SparseElement + NumAssign + std::fmt::Debug + Copy,
     {
         for (i, y_val) in y.iter_mut().enumerate() {
-            *y_val = T::zero();
+            *y_val = T::sparse_zero();
             if i + 1 < indptr.len() {
                 for j in indptr[i]..indptr[i + 1] {
                     if j < indices.len() && j < data.len() {
@@ -591,7 +614,7 @@ impl NeuralAdaptiveSparseProcessor {
         y: &mut [T],
     ) -> SparseResult<()>
     where
-        T: Float + NumAssign + std::fmt::Debug + Copy,
+        T: Float + SparseElement + NumAssign + std::fmt::Debug + Copy,
     {
         // Same as basic for now - could be optimized with better cache blocking
         self.execute_basic_spmv(indptr, indices, data, x, y)
@@ -607,11 +630,11 @@ impl NeuralAdaptiveSparseProcessor {
         y: &mut [T],
     ) -> SparseResult<()>
     where
-        T: Float + NumAssign + SimdUnifiedOps + std::fmt::Debug + Copy,
+        T: Float + SparseElement + NumAssign + SimdUnifiedOps + std::fmt::Debug + Copy,
     {
         // Use SIMD operations from scirs2-core
         for (i, y_val) in y.iter_mut().enumerate() {
-            *y_val = T::zero();
+            *y_val = T::sparse_zero();
             if i + 1 < indptr.len() {
                 let start = indptr[i];
                 let end = indptr[i + 1];
@@ -620,7 +643,7 @@ impl NeuralAdaptiveSparseProcessor {
                     let row_indices = &indices[start..end];
 
                     // SIMD dot product
-                    let mut sum = T::zero();
+                    let mut sum = T::sparse_zero();
                     for (&data_val, &col_idx) in row_data.iter().zip(row_indices.iter()) {
                         if col_idx < x.len() {
                             sum += data_val * x[col_idx];
@@ -643,14 +666,21 @@ impl NeuralAdaptiveSparseProcessor {
         y: &mut [T],
     ) -> SparseResult<()>
     where
-        T: Float + NumAssign + SimdUnifiedOps + std::fmt::Debug + Copy + Send + Sync,
+        T: Float
+            + SparseElement
+            + NumAssign
+            + SimdUnifiedOps
+            + std::fmt::Debug
+            + Copy
+            + Send
+            + Sync,
     {
         // Use parallel operations from scirs2-core
         use scirs2_core::parallel_ops::*;
 
         // Sequential implementation for now
         for i in 0..y.len() {
-            y[i] = T::zero();
+            y[i] = T::sparse_zero();
             if i + 1 < indptr.len() {
                 for j in indptr[i]..indptr[i + 1] {
                     if j < indices.len() && j < data.len() {

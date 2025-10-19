@@ -8,7 +8,7 @@
 #![allow(unused_mut)]
 
 use scirs2_core::ndarray::Array1;
-use scirs2_core::numeric::Float;
+use scirs2_core::numeric::{Float, SparseElement};
 use scirs2_core::random::seq::SliceRandom;
 use scirs2_core::random::{Rng, SeedableRng};
 use std::fmt::Debug;
@@ -49,14 +49,7 @@ use scirs2_core::parallel_ops::*;
 #[allow(dead_code)]
 pub fn eye_array<T>(n: usize, format: &str) -> SparseResult<Box<dyn SparseArray<T>>>
 where
-    T: Float
-        + Add<Output = T>
-        + Sub<Output = T>
-        + Mul<Output = T>
-        + Div<Output = T>
-        + Debug
-        + Copy
-        + 'static,
+    T: SparseElement + Div<Output = T> + Float + 'static,
 {
     if n == 0 {
         return Err(SparseError::ValueError(
@@ -71,7 +64,7 @@ where
     for i in 0..n {
         rows.push(i);
         cols.push(i);
-        data.push(T::one());
+        data.push(T::sparse_one());
     }
 
     match format.to_lowercase().as_str() {
@@ -131,14 +124,7 @@ pub fn eye_array_k<T>(
     format: &str,
 ) -> SparseResult<Box<dyn SparseArray<T>>>
 where
-    T: Float
-        + Add<Output = T>
-        + Sub<Output = T>
-        + Mul<Output = T>
-        + Div<Output = T>
-        + Debug
-        + Copy
-        + 'static,
+    T: SparseElement + Div<Output = T> + Float + 'static,
 {
     if m == 0 || n == 0 {
         return Err(SparseError::ValueError(
@@ -158,7 +144,7 @@ where
         for i in 0..len {
             rows.push(i);
             cols.push(i + k_usize);
-            data.push(T::one());
+            data.push(T::sparse_one());
         }
     } else {
         let k_abs = (-k) as usize;
@@ -167,7 +153,7 @@ where
         for i in 0..len {
             rows.push(i + k_abs);
             cols.push(i);
-            data.push(T::one());
+            data.push(T::sparse_one());
         }
     }
 
@@ -226,14 +212,7 @@ pub fn diags_array<T>(
     format: &str,
 ) -> SparseResult<Box<dyn SparseArray<T>>>
 where
-    T: Float
-        + Add<Output = T>
-        + Sub<Output = T>
-        + Mul<Output = T>
-        + Div<Output = T>
-        + Debug
-        + Copy
-        + 'static,
+    T: SparseElement + Div<Output = T> + Float + 'static,
 {
     if diagonals.len() != offsets.len() {
         return Err(SparseError::InconsistentData {
@@ -264,7 +243,7 @@ where
             }
 
             for (j, &value) in diag.iter().enumerate() {
-                if !value.is_zero() {
+                if !SparseElement::is_zero(&value) {
                     rows.push(j);
                     cols.push(j + offset_usize);
                     data.push(value);
@@ -281,7 +260,7 @@ where
             }
 
             for (j, &value) in diag.iter().enumerate() {
-                if !value.is_zero() {
+                if !SparseElement::is_zero(&value) {
                     rows.push(j + offset_abs);
                     cols.push(j);
                     data.push(value);
@@ -337,14 +316,7 @@ pub fn random_array<T>(
     format: &str,
 ) -> SparseResult<Box<dyn SparseArray<T>>>
 where
-    T: Float
-        + Add<Output = T>
-        + Sub<Output = T>
-        + Mul<Output = T>
-        + Div<Output = T>
-        + Debug
-        + Copy
-        + 'static,
+    T: Float + SparseElement + Div<Output = T> + 'static,
 {
     let (m, n) = shape;
 
@@ -476,16 +448,7 @@ pub fn random_array_parallel<T>(
     parallel_threshold: usize,
 ) -> SparseResult<Box<dyn SparseArray<T>>>
 where
-    T: Float
-        + Add<Output = T>
-        + Sub<Output = T>
-        + Mul<Output = T>
-        + Div<Output = T>
-        + Debug
-        + Copy
-        + Send
-        + Sync
-        + 'static,
+    T: Float + SparseElement + Div<Output = T> + Send + Sync + 'static,
 {
     if !(0.0..=1.0).contains(&density) {
         return Err(SparseError::ValueError(
@@ -521,16 +484,7 @@ fn parallel_random_construction<T>(
     format: &str,
 ) -> SparseResult<Box<dyn SparseArray<T>>>
 where
-    T: Float
-        + Add<Output = T>
-        + Sub<Output = T>
-        + Mul<Output = T>
-        + Div<Output = T>
-        + Debug
-        + Copy
-        + Send
-        + Sync
-        + 'static,
+    T: Float + SparseElement + Div<Output = T> + Send + Sync + 'static,
 {
     let (rows, cols) = shape;
     let total_elements = rows * cols;

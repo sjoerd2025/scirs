@@ -3,7 +3,7 @@
 use crate::csr::CsrMatrix;
 use crate::error::{SparseError, SparseResult};
 use crate::linalg::interface::LinearOperator;
-use scirs2_core::numeric::{Float, NumAssign};
+use scirs2_core::numeric::{Float, NumAssign, SparseElement};
 use std::fmt::Debug;
 use std::iter::Sum;
 
@@ -16,14 +16,14 @@ pub struct JacobiPreconditioner<F> {
     size: usize,
 }
 
-impl<F: Float> JacobiPreconditioner<F> {
+impl<F: Float + SparseElement> JacobiPreconditioner<F> {
     /// Create a new Jacobi preconditioner from a sparse matrix
     pub fn new(matrix: &CsrMatrix<F>) -> SparseResult<Self>
     where
         F: Debug,
     {
         let n = matrix.rows();
-        let mut inv_diagonal = vec![F::zero(); n];
+        let mut inv_diagonal = vec![F::sparse_zero(); n];
 
         // Extract diagonal elements
         for (i, diag_inv) in inv_diagonal.iter_mut().enumerate().take(n) {
@@ -33,7 +33,7 @@ impl<F: Float> JacobiPreconditioner<F> {
                     "Zero diagonal element at position {i}"
                 )));
             }
-            *diag_inv = F::one() / diag_val;
+            *diag_inv = F::sparse_one() / diag_val;
         }
 
         Ok(Self {
@@ -45,7 +45,7 @@ impl<F: Float> JacobiPreconditioner<F> {
     /// Create from diagonal values directly
     pub fn from_diagonal(diagonal: Vec<F>) -> SparseResult<Self> {
         let size = diagonal.len();
-        let mut inv_diagonal = vec![F::zero(); size];
+        let mut inv_diagonal = vec![F::sparse_zero(); size];
 
         for (i, &d) in diagonal.iter().enumerate() {
             if d.abs() < F::epsilon() {
@@ -53,14 +53,14 @@ impl<F: Float> JacobiPreconditioner<F> {
                     "Zero _diagonal element at position {i}"
                 )));
             }
-            inv_diagonal[i] = F::one() / d;
+            inv_diagonal[i] = F::sparse_one() / d;
         }
 
         Ok(Self { inv_diagonal, size })
     }
 }
 
-impl<F: Float + NumAssign> LinearOperator<F> for JacobiPreconditioner<F> {
+impl<F: Float + NumAssign + SparseElement> LinearOperator<F> for JacobiPreconditioner<F> {
     fn shape(&self) -> (usize, usize) {
         (self.size, self.size)
     }
@@ -99,17 +99,17 @@ pub struct SSORPreconditioner<F> {
     diagonal: Vec<F>,
 }
 
-impl<F: Float + NumAssign + Sum + Debug + 'static> SSORPreconditioner<F> {
+impl<F: Float + NumAssign + Sum + Debug + SparseElement + 'static> SSORPreconditioner<F> {
     /// Create a new SSOR preconditioner
     pub fn new(matrix: CsrMatrix<F>, omega: F) -> SparseResult<Self> {
-        if omega <= F::zero() || omega >= F::from(2.0).unwrap() {
+        if omega <= F::sparse_zero() || omega >= F::from(2.0).unwrap() {
             return Err(SparseError::ValueError(
                 "Relaxation parameter omega must be in (0, 2)".to_string(),
             ));
         }
 
         let n = matrix.rows();
-        let mut diagonal = vec![F::zero(); n];
+        let mut diagonal = vec![F::sparse_zero(); n];
 
         // Extract diagonal elements
         for (i, diag) in diagonal.iter_mut().enumerate().take(n) {
@@ -129,7 +129,9 @@ impl<F: Float + NumAssign + Sum + Debug + 'static> SSORPreconditioner<F> {
     }
 }
 
-impl<F: Float + NumAssign + Sum + Debug + 'static> LinearOperator<F> for SSORPreconditioner<F> {
+impl<F: Float + NumAssign + Sum + Debug + SparseElement + 'static> LinearOperator<F>
+    for SSORPreconditioner<F>
+{
     fn shape(&self) -> (usize, usize) {
         self.matrix.shape()
     }
@@ -144,7 +146,7 @@ impl<F: Float + NumAssign + Sum + Debug + 'static> LinearOperator<F> for SSORPre
         }
 
         // Forward sweep: solve (D + ωL)y = x
-        let mut y = vec![F::zero(); n];
+        let mut y = vec![F::sparse_zero(); n];
         for i in 0..n {
             let mut sum = x[i];
             let row_range = self.matrix.row_range(i);
@@ -160,13 +162,13 @@ impl<F: Float + NumAssign + Sum + Debug + 'static> LinearOperator<F> for SSORPre
         }
 
         // Diagonal scaling: z = D^(-1) * y
-        let mut z = vec![F::zero(); n];
+        let mut z = vec![F::sparse_zero(); n];
         for i in 0..n {
             z[i] = y[i] * self.diagonal[i];
         }
 
         // Backward sweep: solve (D + ωU)w = z
-        let mut w = vec![F::zero(); n];
+        let mut w = vec![F::sparse_zero(); n];
         for i in (0..n).rev() {
             let mut sum = z[i];
             let row_range = self.matrix.row_range(i);
@@ -203,7 +205,7 @@ pub struct ILU0Preconditioner<F> {
     n: usize,
 }
 
-impl<F: Float + NumAssign + Sum + Debug + 'static> ILU0Preconditioner<F> {
+impl<F: Float + NumAssign + Sum + Debug + SparseElement + 'static> ILU0Preconditioner<F> {
     /// Create a new ILU(0) preconditioner
     pub fn new(matrix: &CsrMatrix<F>) -> SparseResult<Self> {
         let n = matrix.rows();
@@ -319,7 +321,9 @@ impl<F: Float + NumAssign + Sum + Debug + 'static> ILU0Preconditioner<F> {
     }
 }
 
-impl<F: Float + NumAssign + Sum + Debug + 'static> LinearOperator<F> for ILU0Preconditioner<F> {
+impl<F: Float + NumAssign + Sum + Debug + SparseElement + 'static> LinearOperator<F>
+    for ILU0Preconditioner<F>
+{
     fn shape(&self) -> (usize, usize) {
         (self.n, self.n)
     }
@@ -333,7 +337,7 @@ impl<F: Float + NumAssign + Sum + Debug + 'static> LinearOperator<F> for ILU0Pre
         }
 
         // Solve Ly = x (forward substitution)
-        let mut y = vec![F::zero(); self.n];
+        let mut y = vec![F::sparse_zero(); self.n];
         for i in 0..self.n {
             y[i] = x[i];
             let row_start = self.l_indptr[i];
@@ -346,13 +350,13 @@ impl<F: Float + NumAssign + Sum + Debug + 'static> LinearOperator<F> for ILU0Pre
         }
 
         // Solve Uz = y (backward substitution)
-        let mut z = vec![F::zero(); self.n];
+        let mut z = vec![F::sparse_zero(); self.n];
         for i in (0..self.n).rev() {
             z[i] = y[i];
             let row_start = self.u_indptr[i];
             let row_end = self.u_indptr[i + 1];
 
-            let mut diag_val = F::one();
+            let mut diag_val = F::sparse_one();
             for j in row_start..row_end {
                 let col = self.u_indices[j];
                 match col.cmp(&i) {

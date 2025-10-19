@@ -1,6 +1,6 @@
 # TODO List for scirs2-transform
 
-**Version: 0.1.0-rc.1 (Release Candidate 1 - Platform Testing)**
+**Version: 0.1.0-rc.2 (Release Candidate 2 - Platform Testing)**
 
 Following the [SciRS2 POLICY](../SCIRS2_POLICY.md), this module features ecosystem consistency and comprehensive platform testing through scirs2-core abstractions.
 
@@ -54,7 +54,7 @@ Following the [SciRS2 POLICY](../SCIRS2_POLICY.md), this module features ecosyst
 
 ## Release Roadmap 🚀
 
-### Version 0.1.0 (Beta) - Enhanced Performance & Usability
+### Version 0.1.0 (RC.2) - Enhanced Performance & Usability
 - [x] **Pipeline API**: Sequential transformation chains and ColumnTransformer
 - [x] **SIMD Acceleration**: Vectorized operations using scirs2-core::simd
 - [x] **Benchmarking Suite**: Performance comparison with scikit-learn
@@ -80,7 +80,7 @@ Following the [SciRS2 POLICY](../SCIRS2_POLICY.md), this module features ecosyst
 
 ## API Stability Commitment 📝
 
-For the 0.1.0-rc.1 release, the following APIs are **stable** and backwards compatible:
+For the 0.1.0-rc.2 release, the following APIs are **stable** and backwards compatible:
 - All normalization and scaling transformers
 - Feature engineering utilities (polynomial, power transforms, discretization)
 - Dimensionality reduction algorithms (PCA, SVD, LDA, t-SNE)  

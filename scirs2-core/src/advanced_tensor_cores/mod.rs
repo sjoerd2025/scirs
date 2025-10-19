@@ -36,6 +36,7 @@ use crate::gpu::{
 use std::sync::{Arc, Mutex, RwLock};
 
 #[cfg(all(feature = "serde", feature = "gpu"))]
+#[cfg(feature = "serialization")]
 use serde::{Deserialize, Serialize};
 
 // Module declarations
@@ -290,7 +291,8 @@ mod gpu_implementation {
 
     /// Configuration for advanced tensor core operations
     #[allow(dead_code)]
-    #[derive(Debug, Clone, Serialize, Deserialize)]
+    #[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+    #[derive(Debug, Clone)]
     pub struct AdvancedTensorConfig {
         /// Enable AI-driven optimization
         pub enable_ai_optimization: bool,

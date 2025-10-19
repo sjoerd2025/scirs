@@ -5,6 +5,7 @@ use crate::error::SparseResult;
 use crate::sparray::SparseArray;
 use scirs2_core::ndarray::Array2;
 use scirs2_core::numeric::{Float, One, Zero};
+use scirs2_core::SparseElement;
 use std::fmt::Debug;
 
 /// Legacy banded matrix wrapper around BandedArray
@@ -12,10 +13,9 @@ pub type BandedMatrix<T> = BandedArray<T>;
 
 impl<T> BandedMatrix<T>
 where
-    T: Float
-        + Debug
+    T: SparseElement
         + std::fmt::Display
-        + Copy
+        + Float
         + Zero
         + One
         + Send
@@ -54,7 +54,7 @@ where
             for j in 0..cols {
                 if result.is_in_band(i, j) {
                     let val = dense[[i, j]];
-                    if !val.is_zero() {
+                    if !SparseElement::is_zero(&val) {
                         result.set_unchecked(i, j, val);
                     }
                 }
@@ -87,7 +87,7 @@ where
     /// Set element (legacy API)
     pub fn set(&mut self, row: usize, col: usize, value: T) -> SparseResult<()> {
         if !self.is_in_band(row, col) {
-            if !value.is_zero() {
+            if !SparseElement::is_zero(&value) {
                 return Err(crate::error::SparseError::ValueError(format!(
                     "Cannot set non-zero element at ({row}, {col}) outside band structure"
                 )));

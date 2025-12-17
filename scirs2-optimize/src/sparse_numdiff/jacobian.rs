@@ -24,7 +24,7 @@ fn update_sparse_value(matrix: &mut CsrArray<f64>, row: usize, col: usize, value
 ///
 /// # Arguments
 ///
-/// * `func` - Function to differentiate, takes ArrayView1<f64> and returns Array1<f64>
+/// * `func` - Function to differentiate, takes `ArrayView1<f64>` and returns `Array1<f64>`
 /// * `x` - Point at which to compute the Jacobian
 /// * `f0` - Function value at `x` (if None, computed internally)
 /// * `sparsity_pattern` - Sparse matrix indicating the known sparsity pattern (if None, dense Jacobian)

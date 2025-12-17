@@ -357,7 +357,7 @@ impl ResultSet {
         self.columns.len()
     }
 
-    /// Convert to Array2<f64> if all values are numeric
+    /// Convert to `Array2<f64>` if all values are numeric
     pub fn to_array(&self) -> Result<Array2<f64>> {
         let mut data = Vec::new();
 

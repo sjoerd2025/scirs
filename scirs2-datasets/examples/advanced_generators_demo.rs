@@ -7,6 +7,7 @@
 //! Usage:
 //!   cargo run --example advanced_generators_demo --release
 
+use scirs2_core::ndarray::compat::ArrayStatCompat;
 use scirs2_datasets::{
     make_adversarial_examples, make_anomaly_dataset, make_classification,
     make_continual_learning_dataset, make_domain_adaptation_dataset, make_few_shot_dataset,
@@ -527,7 +528,7 @@ fn analyze_classification_target(target: &scirs2_core::ndarray::Array1<f64>) -> 
 
 #[allow(dead_code)]
 fn analyze_regression_target(target: &scirs2_core::ndarray::Array1<f64>) -> (f64, f64) {
-    let mean = target.mean().unwrap_or(0.0);
+    let mean = target.mean_or(0.0);
     let std = target.std(0.0);
     (mean, std)
 }
@@ -571,7 +572,7 @@ fn analyze_class_distribution(target: &scirs2_core::ndarray::Array1<f64>) -> Has
 
 #[allow(dead_code)]
 fn calculate_domain_statistics(data: &scirs2_core::ndarray::Array2<f64>) -> (f64, f64) {
-    let mean = data.mean().unwrap_or(0.0);
+    let mean = data.mean_or(0.0);
     let std = data.std(0.0);
     (mean, std)
 }

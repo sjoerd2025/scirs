@@ -1,0 +1,71 @@
+[package]
+name = "scirs2-python"
+version = "0.2.0"
+authors = ["KitaSan <info@kitasan.io>"]
+edition = "2021"
+rust-version = "1.70"
+description = "Python bindings for SciRS2 - A comprehensive scientific computing library in Rust (SciPy alternative)"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/cool-japan/scirs"
+homepage = "https://github.com/cool-japan/scirs"
+documentation = "https://docs.rs/scirs2-python"
+readme = "README.md"
+keywords = ["scientific", "python", "numpy", "scipy", "machine-learning"]
+categories = ["science", "mathematics", "algorithms"]
+
+# Standalone crate (not part of main workspace for v0.1.0)
+[workspace]
+
+[lib]
+name = "scirs2"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+# Core SciRS2 dependencies with Python feature (path-based for standalone build)
+scirs2-core = { path = "../scirs2-core", features = ["python", "array", "random"] }
+scirs2-cluster = { path = "../scirs2-cluster", features = ["python"] }
+scirs2-series = { path = "../scirs2-series", features = ["python"] }
+scirs2-linalg = { path = "../scirs2-linalg", features = ["python"] }
+scirs2-stats = { path = "../scirs2-stats", features = ["python"] }
+scirs2-fft = { path = "../scirs2-fft", features = ["python", "fftw"] }
+scirs2-optimize = { path = "../scirs2-optimize", features = ["python"] }
+scirs2-special = { path = "../scirs2-special" }
+scirs2-integrate = { path = "../scirs2-integrate" }
+scirs2-interpolate = { path = "../scirs2-interpolate" }
+scirs2-signal = { path = "../scirs2-signal" }
+scirs2-spatial = { path = "../scirs2-spatial" }
+
+# Python bindings
+pyo3 = { version = "0.27.1", features = ["extension-module"] }
+scirs2-numpy = { path = "../scirs2-numpy" }  # SciRS2 fork with ndarray 0.17 support
+
+# Error handling
+thiserror = "2.0.16"
+
+[features]
+default = ["cluster", "series", "linalg", "stats", "fft", "optimize", "special", "integrate", "interpolate", "signal", "spatial", "fftw"]
+
+# Module features
+cluster = []
+series = []
+linalg = []
+stats = []
+fft = []
+optimize = []
+special = []
+integrate = []
+interpolate = []
+signal = []
+spatial = []
+
+# Performance optimization features
+fftw = ["scirs2-fft/fftw"]  # Enable FFTW for 62x FFT speedup
+# blas-lapack = ["scirs2-linalg/blas-lapack"]  # BLAS/LAPACK now always enabled
+
+# Acceleration features (passed through to subcrates)
+simd = ["scirs2-core/simd"]
+parallel = ["scirs2-core/parallel"]
+gpu = ["scirs2-core/gpu"]
+
+# All modules
+full = ["cluster", "series", "linalg", "stats", "fft", "optimize", "special", "integrate", "interpolate", "signal"]

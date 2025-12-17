@@ -66,7 +66,7 @@ impl SimdWindowGenerator {
     /// * `sym` - If true, generates a symmetric window, otherwise a periodic window
     ///
     /// # Returns
-    /// A Vec<f64> of window values computed using SIMD
+    /// A `Vec<f64>` of window values computed using SIMD
     pub fn hann_simd(&self, m: usize, sym: bool) -> SignalResult<Vec<f64>> {
         if m <= 1 {
             return Ok(vec![1.0; m]);

@@ -4,7 +4,7 @@
 //! masking, fancy indexing, and advanced slicing operations similar to
 //! `NumPy`'s advanced indexing functionality.
 
-use ndarray::{Array, ArrayView, Ix1, Ix2};
+use ::ndarray::{Array, ArrayView, Ix1, Ix2};
 
 /// Result type for coordinating indices
 pub type IndicesResult = Result<(Array<usize, Ix1>, Array<usize, Ix1>), &'static str>;
@@ -24,7 +24,7 @@ pub type IndicesResult = Result<(Array<usize, Ix1>, Array<usize, Ix1>), &'static
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use ::ndarray::array;
 /// use scirs2_core::ndarray_ext::indexing::take_2d;
 ///
 /// let a = array![[1, 2, 3], [4, 5, 6]];
@@ -100,7 +100,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use ::ndarray::array;
 /// use scirs2_core::ndarray_ext::indexing::boolean_mask_2d;
 ///
 /// let a = array![[1, 2, 3], [4, 5, 6]];
@@ -156,7 +156,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use ::ndarray::array;
 /// use scirs2_core::ndarray_ext::indexing::boolean_mask_1d;
 ///
 /// let a = array![1, 2, 3, 4, 5];
@@ -212,7 +212,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use ::ndarray::array;
 /// use scirs2_core::ndarray_ext::indexing::take_1d;
 ///
 /// let a = array![10, 20, 30, 40, 50];
@@ -266,7 +266,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use ::ndarray::array;
 /// use scirs2_core::ndarray_ext::indexing::fancy_index_2d;
 ///
 /// let a = array![[1, 2, 3], [4, 5, 6], [7, 8, 9]];
@@ -335,7 +335,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use ::ndarray::array;
 /// use scirs2_core::ndarray_ext::indexing::diagonal;
 ///
 /// let a = array![[1, 2, 3], [4, 5, 6], [7, 8, 9]];
@@ -410,7 +410,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use ::ndarray::array;
 /// use scirs2_core::ndarray_ext::indexing::where_1d;
 ///
 /// let a = array![1, 2, 3, 4, 5];
@@ -446,7 +446,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use ::ndarray::array;
 /// use scirs2_core::ndarray_ext::indexing::where_2d;
 ///
 /// let a = array![[1, 2, 3], [4, 5, 6]];
@@ -483,7 +483,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use ::ndarray::array;
 /// use scirs2_core::ndarray_ext::indexing::indices_where_1d;
 ///
 /// let a = array![10, 20, 30, 40, 50];
@@ -528,7 +528,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use ::ndarray::array;
 /// use scirs2_core::ndarray_ext::indexing::indices_where_2d;
 ///
 /// let a = array![[1, 2, 3], [4, 5, 6], [7, 8, 9]];
@@ -577,7 +577,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use ::ndarray::array;
 /// use scirs2_core::ndarray_ext::indexing::take_along_axis;
 ///
 /// let a = array![[1, 2, 3], [4, 5, 6], [7, 8, 9]];
@@ -608,7 +608,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::array;
+    use ::ndarray::array;
 
     #[test]
     fn test_boolean_mask_1d() {

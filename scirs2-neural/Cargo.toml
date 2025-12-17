@@ -14,7 +14,8 @@ workspace = true
 
 [dependencies]
 # Core dependencies - ALL numeric/array/random functionality from scirs2-core (SciRS2 POLICY)
-scirs2-core = { workspace = true, features = ["random", "array", "parallel"] }
+scirs2-core = { workspace = true, features = ["random", "array", "parallel", "simd"] }
+scirs2-linalg = { workspace = true }
 thiserror = { workspace = true }
 approx = { workspace = true }
 statrs = { workspace = true }

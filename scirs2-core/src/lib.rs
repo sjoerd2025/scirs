@@ -76,38 +76,38 @@
 //!
 //! | Module | Description |
 //! |--------|-------------|
-//! | [`simd_ops`] | SIMD-accelerated operations with platform detection |
-//! | [`parallel_ops`] | Parallel processing primitives |
-//! | [`gpu`] | GPU acceleration abstractions |
-//! | [`memory`] | Memory management (buffer pools, zero-copy views) |
-//! | [`memory_efficient`] | Memory-mapped arrays and lazy evaluation |
+//! | `simd_ops` | SIMD-accelerated operations with platform detection |
+//! | `parallel_ops` | Parallel processing primitives |
+//! | `gpu` | GPU acceleration abstractions |
+//! | `memory` | Memory management (buffer pools, zero-copy views) |
+//! | `memory_efficient` | Memory-mapped arrays and lazy evaluation |
 //!
 //! ### Error Handling & Diagnostics
 //!
 //! | Module | Description |
 //! |--------|-------------|
-//! | [`error`] | Error types and traits |
-//! | [`validation`] | Input validation utilities |
-//! | [`logging`] | Structured logging for diagnostics |
-//! | [`profiling`] | Performance profiling tools |
+//! | `error` | Error types and traits |
+//! | `validation` | Input validation utilities |
+//! | `logging` | Structured logging for diagnostics |
+//! | `profiling` | Performance profiling tools |
 //!
 //! ### Scientific Computing Basics
 //!
 //! | Module | Description |
 //! |--------|-------------|
-//! | [`ndarray`] | Unified ndarray interface (re-exports with SciRS2 extensions) |
-//! | [`numeric`] | Generic numerical operations |
-//! | [`random`] | Random number generation |
-//! | [`constants`] | Mathematical and physical constants |
+//! | `ndarray` | Unified ndarray interface (re-exports with SciRS2 extensions) |
+//! | `numeric` | Generic numerical operations |
+//! | `random` | Random number generation |
+//! | `constants` | Mathematical and physical constants |
 //!
 //! ### Infrastructure
 //!
 //! | Module | Description |
 //! |--------|-------------|
-//! | [`config`] | Configuration management |
-//! | [`cache`] | Result caching and memoization |
-//! | [`io`] | I/O utilities |
-//! | [`cloud`] | Cloud storage integration (S3, GCS, Azure) |
+//! | `config` | Configuration management |
+//! | `cache` | Result caching and memoization |
+//! | `io` | I/O utilities |
+//! | `cloud` | Cloud storage integration (S3, GCS, Azure) |
 //!
 //! ## 🚀 Quick Start
 //!
@@ -115,14 +115,14 @@
 //!
 //! ```toml
 //! [dependencies]
-//! scirs2-core = { version = "0.1.0-rc.2", features = ["simd", "parallel"] }
+//! scirs2-core = { version = "0.1.0-rc.3", features = ["simd", "parallel"] }
 //! ```
 //!
 //! ### SIMD Operations
 //!
 //! ```rust
 //! use scirs2_core::simd_ops::SimdUnifiedOps;
-//! use ndarray::array;
+//! use ::ndarray::array;
 //!
 //! // Automatic SIMD acceleration based on CPU capabilities
 //! let a = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
@@ -154,7 +154,7 @@
 //! ```rust
 //! use scirs2_core::validation::*;
 //! use scirs2_core::error::CoreResult;
-//! use ndarray::Array2;
+//! use ::ndarray::Array2;
 //!
 //! fn process_matrix(data: &Array2<f64>, k: usize) -> CoreResult<()> {
 //!     // Validate inputs
@@ -212,7 +212,7 @@
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! use scirs2_core::memory_efficient::*;
 //! use std::path::Path;
-//! use ndarray::Array2;
+//! use ::ndarray::Array2;
 //!
 //! // Memory-mapped array for large datasets
 //! let data = Array2::<f64>::zeros((1000, 1000));
@@ -308,12 +308,12 @@
 //!
 //! ```rust,ignore
 //! // ✅ CORRECT: Use scirs2-core abstractions
-//! use scirs2_core::ndarray::Array2;
+//! use scirs2_core::crate::ndarray::Array2;
 //! use scirs2_core::random::Normal;
 //! use scirs2_core::parallel_ops::*;
 //!
 //! // ❌ WRONG: Don't import external deps directly in other crates
-//! // use ndarray::Array2;       // NO!
+//! // use ::ndarray::Array2;       // NO!
 //! // use rand_distr::Normal;    // NO!
 //! // use rayon::prelude::*;     // NO!
 //! ```
@@ -359,7 +359,7 @@
 //!
 //! ## 🔒 Version
 //!
-//! Current version: **0.1.0-rc.2** (Released October 19, 2025)
+//! Current version: **0.1.0-rc.3** (Released December 17, 2025)
 //!
 //! ## 📚 Examples
 //!
@@ -411,6 +411,8 @@ pub mod performance;
 pub mod performance_optimization;
 #[cfg(feature = "profiling")]
 pub mod profiling;
+#[cfg(feature = "python")]
+pub mod python;
 #[cfg(feature = "random")]
 pub mod random;
 pub mod resource;
@@ -418,6 +420,8 @@ pub mod resource;
 pub mod simd;
 pub mod simd_aligned;
 pub mod simd_ops;
+#[cfg(feature = "simd")]
+pub mod simd_ops_polynomial;
 #[cfg(feature = "testing")]
 pub mod testing;
 // Universal Functions (ufuncs) module
@@ -514,7 +518,8 @@ pub use crate::memory::{
 pub use crate::ndarray_ext::array as array_legacy;
 
 // Complete ndarray functionality through the unified module
-pub use crate::ndarray::{
+// Use ndarray_ext which has the correct re-exports from ::ndarray
+pub use crate::ndarray_ext::{
     arr1,
     arr2,
     // Essential macros - now available at crate root

@@ -80,7 +80,12 @@ where
 #[allow(dead_code)]
 pub fn weighted_mean<F>(x: &ArrayView1<F>, weights: &ArrayView1<F>) -> StatsResult<F>
 where
-    F: Float + std::iter::Sum<F> + std::ops::Div<Output = F> + Signed + std::fmt::Display,
+    F: Float
+        + std::iter::Sum<F>
+        + std::ops::Div<Output = F>
+        + Signed
+        + std::fmt::Display
+        + SimdUnifiedOps,
 {
     // Use standardized validation
     if x.is_empty() {
@@ -100,18 +105,31 @@ where
         ));
     }
 
-    // Calculate weighted sum
-    let mut weighted_sum = F::zero();
-    let mut sum_of_weights = F::zero();
-
-    for (val, weight) in x.iter().zip(weights.iter()) {
+    // Validate non-negative weights (need to check before SIMD path)
+    for weight in weights.iter() {
         if weight.is_negative() {
             return Err(ErrorMessages::non_positive_value(
                 "weight",
                 weight.to_f64().unwrap_or(0.0),
             ));
         }
+    }
 
+    // Fast path: Use SIMD weighted mean for large arrays
+    let optimizer = AutoOptimizer::new();
+    if optimizer.should_use_simd(x.len()) {
+        let result = F::simd_weighted_mean(x, weights);
+        if !result.is_nan() {
+            return Ok(result);
+        }
+        // Fall through to scalar path if SIMD returned NaN (e.g., zero weights)
+    }
+
+    // Calculate weighted sum (scalar fallback)
+    let mut weighted_sum = F::zero();
+    let mut sum_of_weights = F::zero();
+
+    for (val, weight) in x.iter().zip(weights.iter()) {
         weighted_sum = weighted_sum + (*val * *weight);
         sum_of_weights = sum_of_weights + *weight;
     }
@@ -235,6 +253,16 @@ where
     // Calculate the mean
     let mean_val = mean(x)?;
 
+    // Fast path: Use direct SIMD variance for ddof=1 (sample variance - most common case)
+    // This avoids temporary array allocations and uses optimized SIMD horizontal operations
+    if ddof == 1 {
+        let optimizer = AutoOptimizer::new();
+        if optimizer.should_use_simd(x.len()) {
+            // Use highly optimized SIMD variance (ddof=1 built-in)
+            return Ok(F::simd_variance(x));
+        }
+    }
+
     // Calculate sum of squared differences from mean with optimization
     let n = x.len();
     let optimizer = AutoOptimizer::new();
@@ -316,7 +344,30 @@ where
         + Sync
         + SimdUnifiedOps,
 {
-    // Get the variance and take the square root
+    // Parameter validation
+    if x.is_empty() {
+        return Err(ErrorMessages::empty_array("x"));
+    }
+
+    if x.len() <= ddof {
+        return Err(ErrorMessages::insufficientdata(
+            "standard deviation calculation",
+            ddof + 1,
+            x.len(),
+        ));
+    }
+
+    // Fast path: Use direct SIMD std for ddof=1 (sample std - most common case)
+    // This avoids temporary array allocations and is highly optimized
+    if ddof == 1 {
+        let optimizer = AutoOptimizer::new();
+        if optimizer.should_use_simd(x.len()) {
+            // Use highly optimized SIMD std (ddof=1 built-in)
+            return Ok(F::simd_std(x));
+        }
+    }
+
+    // Get the variance and take the square root for other ddof values
     let variance = var(x, ddof, workers)?;
     Ok(variance.sqrt())
 }

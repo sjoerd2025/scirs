@@ -67,7 +67,7 @@ pub use reporter::ChartFormat;
 pub use gpu::{setup_gpu_memory_tracking, TrackedGpuBuffer, TrackedGpuContext};
 
 use crate::memory::{BufferPool, ChunkProcessor, ChunkProcessor2D};
-use ndarray::{ArrayBase, Data, Dimension, IxDyn, ViewRepr};
+use ::ndarray::{ArrayBase, Data, Dimension, IxDyn, ViewRepr};
 use once_cell::sync::Lazy;
 use std::marker::PhantomData;
 use std::mem;
@@ -167,7 +167,7 @@ impl<T: Clone + Default> TrackedBufferPool<T> {
     }
 
     /// Acquire an ndarray from the pool, tracking the allocation
-    pub fn acquire_array(&mut self, size: usize) -> ndarray::Array1<T> {
+    pub fn acquire_array(&mut self, size: usize) -> crate::ndarray::Array1<T> {
         let array = self.inner.acquire_array(size);
         let mem_size = size * mem::size_of::<T>();
 
@@ -178,7 +178,7 @@ impl<T: Clone + Default> TrackedBufferPool<T> {
     }
 
     /// Release an ndarray back to the pool, tracking the deallocation
-    pub fn release_array(&mut self, array: ndarray::Array1<T>) {
+    pub fn release_array(&mut self, array: crate::ndarray::Array1<T>) {
         let size = array.len() * mem::size_of::<T>();
 
         // Track deallocation
@@ -267,7 +267,7 @@ where
 {
     /// Create a new tracked 2D chunk processor
     pub fn new(
-        array: &'a ArrayBase<S, ndarray::Ix2>,
+        array: &'a ArrayBase<S, crate::ndarray::Ix2>,
         chunkshape: (usize, usize),
         component_name: impl Into<String>,
     ) -> Self {
@@ -280,11 +280,11 @@ where
     /// Process the 2D array in chunks, tracking memory usage for each chunk
     pub fn process_chunks<F>(&mut self, mut f: F)
     where
-        F: FnMut(&ArrayBase<ViewRepr<&A>, ndarray::Ix2>, (usize, usize)),
+        F: FnMut(&ArrayBase<ViewRepr<&A>, crate::ndarray::Ix2>, (usize, usize)),
     {
         // Create a wrapper function that tracks memory
         let component_name = self.component_name.clone();
-        let tracked_f = move |chunk: &ArrayBase<ViewRepr<&A>, ndarray::Ix2>,
+        let tracked_f = move |chunk: &ArrayBase<ViewRepr<&A>, crate::ndarray::Ix2>,
                               coords: (usize, usize)| {
             // Calculate memory size (approximate)
             let size = chunk.len() * mem::size_of::<A>();

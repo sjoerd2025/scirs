@@ -44,7 +44,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! scirs2-optimize = "0.1.0-rc.2"
+//! scirs2-optimize = "0.1.0-rc.3"
 //! ```
 //!
 //! ### Unconstrained Minimization (Rosenbrock Function)
@@ -364,7 +364,12 @@
 pub mod error;
 pub use error::{OptimizeError, OptimizeResult};
 
-// Module structure
+// Python API wrappers
+// Note: python_api module not yet implemented
+// #[cfg(feature = "python")]
+// pub mod python_api;
+
+// Module structure (used by other modules, must be unconditional)
 pub mod advanced_coordinator;
 #[cfg(feature = "async")]
 pub mod async_parallel;

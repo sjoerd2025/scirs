@@ -140,7 +140,12 @@ impl NodeClassificationMetrics {
                     (true, true) => tp += 1,
                     (true, false) => fp += 1,
                     (false, true) => fn_count += 1,
-                    (false, false) => tn += 1,
+                    (false, false) => {
+                        #[allow(unused_assignments)]
+                        {
+                            tn += 1
+                        }
+                    }
                 }
             }
 

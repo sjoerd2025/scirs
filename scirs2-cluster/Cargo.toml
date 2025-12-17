@@ -84,8 +84,8 @@ metal = ["gpu"]
 oneapi = ["gpu"]
 gpu_all = ["cuda", "opencl", "rocm", "metal", "oneapi"]
 
-# Python bindings feature
-pyo3 = ["dep:pyo3", "dep:numpy"]
+# Python interoperability via scirs2-core conversion utilities
+python = ["scirs2-core/python"]
 
 # Visualization features
 plotters = ["dep:plotters"]

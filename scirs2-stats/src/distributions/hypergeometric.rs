@@ -45,8 +45,8 @@
 //! - k is the number of observed successes
 //! - C(n, k) is the binomial coefficient "n choose k"
 //!
-//! The mean of the distribution is E[X] = n * (K/N)
-//! The variance is Var[X] = n * (K/N) * (1 - K/N) * (N - n)/(N - 1)
+//! The mean of the distribution is `E[X] = n * (K/N)`
+//! The variance is `Var[X] = n * (K/N) * (1 - K/N) * (N - n)/(N - 1)`
 
 use crate::error::{StatsError, StatsResult};
 use scirs2_core::ndarray::Array1;

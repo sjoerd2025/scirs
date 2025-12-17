@@ -19,6 +19,8 @@ thiserror = { workspace = true }
 approx = { workspace = true }
 half = { workspace = true }
 scirs2-autograd = { workspace = true, optional = true }
+# Direct ndarray-linalg for BLAS/LAPACK operations (REQUIRED for performance)
+ndarray-linalg = { workspace = true, features = ["openblas-system"] }
 # Dependencies for distributed computing
 serde = { workspace = true, features = ["derive"] }
 bincode = { workspace = true }
@@ -43,6 +45,9 @@ criterion = { workspace = true }
 # Default features use platform-appropriate BLAS backend (configured at workspace level)
 default = ["linalg", "simd"]
 
+# BLAS/LAPACK backend feature (TEMPORARY: Always enabled, no longer optional)
+# blas-lapack = ["dep:ndarray-linalg"]
+
 # BLAS backend features - these delegate to workspace-level platform configuration
 # Note: macOS automatically uses Accelerate framework when linalg feature is enabled
 openblas-backend = ["scirs2-core/openblas"]  # OpenBLAS (Linux/Windows via system)
@@ -57,6 +62,7 @@ simd = ["scirs2-core/simd"] # SIMD-accelerated operations
 autograd = ["dep:scirs2-autograd"] # Automatic differentiation support
 parallel = ["scirs2-core/parallel"] # Parallel processing support
 extended-test = [] # For extended precision tests
+python = ["scirs2-core/python"] # Python bindings support
 
 # GPU acceleration features (experimental)
 cuda = [] # NVIDIA CUDA support
@@ -64,7 +70,7 @@ opencl = [] # OpenCL support
 cpu-fallback = [] # CPU fallback when no GPU backend available
 rocm = [] # AMD ROCm support
 metal = [] # Apple Metal support
-gpu = ["cuda"] # Default GPU feature uses CUDA
+gpu = [] # GPU abstraction layer - does NOT auto-enable specific backends
 
 [[bench]]
 name = "linalg_bench"

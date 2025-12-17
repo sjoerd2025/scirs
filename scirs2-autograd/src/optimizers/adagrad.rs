@@ -8,7 +8,7 @@ use crate::{Context, Float, VariableEnvironment};
 
 /// Adagrad optimizer
 ///
-/// https://www.jmlr.org/papers/volume12/duchi11a/duchi11a.pdf
+/// <https://www.jmlr.org/papers/volume12/duchi11a/duchi11a.pdf>
 pub struct AdaGrad<F: Float> {
     /// default: 0.01
     pub lr: F,

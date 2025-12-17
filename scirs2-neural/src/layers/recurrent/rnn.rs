@@ -2,11 +2,15 @@
 
 use crate::error::{NeuralError, Result};
 use crate::layers::{Layer, ParamLayer};
-use scirs2_core::ndarray::{Array, ArrayView, Ix2, IxDyn, ScalarOperand};
+use scirs2_core::ndarray::{Array, ArrayView, ArrayView1, Ix2, IxDyn, ScalarOperand};
 use scirs2_core::numeric::Float;
 use scirs2_core::random::Rng;
+use scirs2_core::simd_ops::SimdUnifiedOps;
 use std::fmt::Debug;
 use std::sync::{Arc, RwLock};
+
+/// Threshold for using SIMD-accelerated RNN step
+const RNN_SIMD_THRESHOLD: usize = 32;
 /// Activation function types for recurrent layers
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum RecurrentActivation {
@@ -102,7 +106,7 @@ pub struct RNN<F: Float + Debug + Send + Sync> {
     hidden_states_cache: Arc<RwLock<Option<Array<F, IxDyn>>>>,
 }
 
-impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> RNN<F> {
+impl<F: Float + Debug + ScalarOperand + Send + Sync + SimdUnifiedOps + 'static> RNN<F> {
     /// Create a new RNN layer
     ///
     /// # Arguments
@@ -181,15 +185,33 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> RNN<F> {
             hidden_states_cache: Arc::new(RwLock::new(None)),
         })
     }
+    /// Check if SIMD path should be used
+    fn should_use_simd(&self) -> bool {
+        self.input_size + self.hidden_size >= RNN_SIMD_THRESHOLD
+    }
+
     /// Helper method to compute one step of the RNN
     /// * `x` - Input tensor of shape [batch_size, input_size]
     /// * `h` - Previous hidden state of shape [batch_size, hidden_size]
     /// * New hidden state of shape [batch_size, hidden_size]
     fn step(&self, x: &ArrayView<F, IxDyn>, h: &ArrayView<F, IxDyn>) -> Result<Array<F, IxDyn>> {
+        if self.should_use_simd() {
+            self.step_simd(x, h)
+        } else {
+            self.step_naive(x, h)
+        }
+    }
+
+    /// SIMD-accelerated step using simd_dot for weight-vector products
+    fn step_simd(
+        &self,
+        x: &ArrayView<F, IxDyn>,
+        h: &ArrayView<F, IxDyn>,
+    ) -> Result<Array<F, IxDyn>> {
         let xshape = x.shape();
         let hshape = h.shape();
         let batch_size = xshape[0];
-        // Validate shapes
+
         if xshape[1] != self.input_size {
             return Err(NeuralError::InferenceError(format!(
                 "Input feature dimension mismatch: expected {}, got {}",
@@ -208,32 +230,84 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> RNN<F> {
                 xshape[0], hshape[0]
             )));
         }
-        // Initialize output
+
         let mut new_h = Array::zeros((batch_size, self.hidden_size));
-        // Compute h_t = activation(W_ih * x_t + b_ih + W_hh * h_(t-1) + b_hh)
+
+        for b in 0..batch_size {
+            let x_b = x.slice(scirs2_core::ndarray::s![b, ..]);
+            let x_view: ArrayView1<F> = x_b.into_dimensionality().unwrap();
+            let h_b = h.slice(scirs2_core::ndarray::s![b, ..]);
+            let h_view: ArrayView1<F> = h_b.into_dimensionality().unwrap();
+
+            for i in 0..self.hidden_size {
+                let wih_row = self.weight_ih.slice(scirs2_core::ndarray::s![i, ..]);
+                let wih_view: ArrayView1<F> = wih_row.into_dimensionality().unwrap();
+                let whh_row = self.weight_hh.slice(scirs2_core::ndarray::s![i, ..]);
+                let whh_view: ArrayView1<F> = whh_row.into_dimensionality().unwrap();
+
+                // SIMD dot products for weight-vector multiplication
+                let ih_sum = self.bias_ih[i] + F::simd_dot(&wih_view, &x_view);
+                let hh_sum = self.bias_hh[i] + F::simd_dot(&whh_view, &h_view);
+
+                new_h[[b, i]] = self.activation.apply(ih_sum + hh_sum);
+            }
+        }
+
+        Ok(new_h.into_dyn())
+    }
+
+    /// Naive (scalar) step implementation for small dimensions
+    fn step_naive(
+        &self,
+        x: &ArrayView<F, IxDyn>,
+        h: &ArrayView<F, IxDyn>,
+    ) -> Result<Array<F, IxDyn>> {
+        let xshape = x.shape();
+        let hshape = h.shape();
+        let batch_size = xshape[0];
+
+        if xshape[1] != self.input_size {
+            return Err(NeuralError::InferenceError(format!(
+                "Input feature dimension mismatch: expected {}, got {}",
+                self.input_size, xshape[1]
+            )));
+        }
+        if hshape[1] != self.hidden_size {
+            return Err(NeuralError::InferenceError(format!(
+                "Hidden state dimension mismatch: expected {}, got {}",
+                self.hidden_size, hshape[1]
+            )));
+        }
+        if xshape[0] != hshape[0] {
+            return Err(NeuralError::InferenceError(format!(
+                "Batch size mismatch: input has {}, hidden state has {}",
+                xshape[0], hshape[0]
+            )));
+        }
+
+        let mut new_h = Array::zeros((batch_size, self.hidden_size));
+
         for b in 0..batch_size {
             for i in 0..self.hidden_size {
-                // Input-to-hidden contribution: W_ih * x_t + b_ih
                 let mut ih_sum = self.bias_ih[i];
                 for j in 0..self.input_size {
                     ih_sum = ih_sum + self.weight_ih[[i, j]] * x[[b, j]];
                 }
-                // Hidden-to-hidden contribution: W_hh * h_(t-1) + b_hh
                 let mut hh_sum = self.bias_hh[i];
                 for j in 0..self.hidden_size {
                     hh_sum = hh_sum + self.weight_hh[[i, j]] * h[[b, j]];
                 }
-                // Apply activation
                 new_h[[b, i]] = self.activation.apply(ih_sum + hh_sum);
             }
         }
-        // Convert to IxDyn dimension
-        let new_h_dyn = new_h.into_dyn();
-        Ok(new_h_dyn)
+
+        Ok(new_h.into_dyn())
     }
 }
 
-impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for RNN<F> {
+impl<F: Float + Debug + ScalarOperand + Send + Sync + SimdUnifiedOps + 'static> Layer<F>
+    for RNN<F>
+{
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
@@ -356,7 +430,9 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for RNN<
     }
 }
 
-impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> ParamLayer<F> for RNN<F> {
+impl<F: Float + Debug + ScalarOperand + Send + Sync + SimdUnifiedOps + 'static> ParamLayer<F>
+    for RNN<F>
+{
     fn get_parameters(&self) -> Vec<Array<F, scirs2_core::ndarray::IxDyn>> {
         vec![
             self.weight_ih.clone(),

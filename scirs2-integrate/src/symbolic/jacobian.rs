@@ -102,7 +102,7 @@ impl<F: IntegrateFloat> SymbolicJacobian<F> {
 /// * `time_var` - Optional time variable
 ///
 /// # Returns
-/// A symbolic Jacobian matrix where J[i,j] = ∂f[i]/∂y[j]
+/// A symbolic Jacobian matrix where `J[i,j]` = `∂f[i]/∂y[j]`
 #[allow(dead_code)]
 pub fn generate_jacobian<F: IntegrateFloat>(
     expressions: &[SymbolicExpression<F>],

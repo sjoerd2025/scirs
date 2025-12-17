@@ -49,6 +49,8 @@ netlib = ["scirs2-core/netlib"]  # System Netlib BLAS
 # NOTE: intel-mkl removed due to conflicts with system BLAS
 # Memory mapping support for large files
 memmap = []
+# Python bindings support
+python = ["scirs2-core/python"]
 
 [[bench]]
 name = "distributions"

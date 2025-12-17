@@ -10,10 +10,10 @@
 //! - [`incompressible`]: Incompressible Navier-Stokes solvers and utilities
 //! - [`compressible`]: Compressible flow solvers with SIMD optimizations
 //! - [`turbulence`]: Turbulence modeling including LES, RANS, and advanced models
-//! - [`multiphase`]: Multi-phase flow simulations (future implementation)
+//! - `multiphase`: Multi-phase flow simulations (future implementation)
 //! - [`spectral`]: Spectral methods for fluid dynamics using FFT-based approaches
-//! - [`gpu_acceleration`]: GPU-accelerated fluid dynamics solvers (future implementation)
-//! - [`optimization`]: Performance optimization utilities (future implementation)
+//! - `gpu_acceleration`: GPU-accelerated fluid dynamics solvers (future implementation)
+//! - `optimization`: Performance optimization utilities (future implementation)
 
 pub mod compressible;
 pub mod core;

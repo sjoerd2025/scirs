@@ -8,7 +8,7 @@
 //!
 //! ```rust
 //! use scirs2_core::random::prelude::*;
-//! use ndarray::Ix2;
+//! use ::ndarray::Ix2;
 //!
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! // Now you have access to the most common random functionality

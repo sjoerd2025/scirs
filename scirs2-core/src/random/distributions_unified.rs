@@ -26,7 +26,7 @@
 //! ```
 
 use crate::random::core::Random;
-use ndarray::{Array1, ArrayD, Dimension, IxDyn};
+use ::ndarray::{Array1, ArrayD, Dimension, IxDyn};
 use rand::Rng;
 use rand_distr::Distribution;
 use std::fmt;
@@ -394,8 +394,8 @@ impl UnifiedPoisson {
 
 /// Unified Dirichlet distribution
 ///
-/// Uses scirs2_core::random::distributions::Dirichlet which supports Vec<f64>
-/// instead of rand_distr::Dirichlet which requires fixed-size arrays [f64; N]
+/// Uses `scirs2_core::random::distributions::Dirichlet` which supports `Vec<f64>`
+/// instead of `rand_distr::Dirichlet` which requires fixed-size arrays `[f64; N]`
 #[derive(Debug, Clone)]
 pub struct UnifiedDirichlet {
     inner: crate::random::distributions::Dirichlet,

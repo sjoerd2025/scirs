@@ -1,5 +1,5 @@
 use crate::error::{CoreError, CoreResult, ErrorContext, ErrorLocation};
-use ndarray::{ArrayBase, Dimension};
+use ::ndarray::{ArrayBase, Dimension};
 
 /// Checks if an array is not empty
 ///
@@ -14,7 +14,7 @@ use ndarray::{ArrayBase, Dimension};
 #[allow(dead_code)]
 pub fn check_not_empty<S, D>(array: &ArrayBase<S, D>) -> CoreResult<()>
 where
-    S: ndarray::Data,
+    S: crate::ndarray::Data,
     D: Dimension,
 {
     if array.is_empty() {
@@ -68,7 +68,7 @@ where
 #[allow(dead_code)]
 pub fn check_square<S, D>(array: &ArrayBase<S, D>) -> CoreResult<()>
 where
-    S: ndarray::Data,
+    S: crate::ndarray::Data,
     D: Dimension,
 {
     let shape = array.shape();

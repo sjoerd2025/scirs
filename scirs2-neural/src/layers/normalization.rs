@@ -5,9 +5,10 @@
 
 use crate::error::{NeuralError, Result};
 use crate::layers::{Layer, ParamLayer};
-use scirs2_core::ndarray::{Array, IxDyn, ScalarOperand};
+use scirs2_core::ndarray::{Array, ArrayView1, IxDyn, ScalarOperand};
 use scirs2_core::numeric::Float;
 use scirs2_core::random::Rng;
+use scirs2_core::simd_ops::SimdUnifiedOps;
 use std::fmt::Debug;
 use std::sync::{Arc, RwLock};
 
@@ -117,7 +118,12 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> LayerNorm<F> {
     }
 }
 
-impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for LayerNorm<F> {
+/// Threshold for using SIMD-accelerated LayerNorm
+const LAYERNORM_SIMD_THRESHOLD: usize = 64;
+
+impl<F: Float + Debug + ScalarOperand + Send + Sync + SimdUnifiedOps + 'static> Layer<F>
+    for LayerNorm<F>
+{
     fn forward(&self, input: &Array<F, IxDyn>) -> Result<Array<F, IxDyn>> {
         // Cache input for backward pass
         if let Ok(mut cache) = self.input_cache.write() {
@@ -154,19 +160,42 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Laye
         let mut mean = Array::<F, IxDyn>::zeros(IxDyn(&[batch_size, 1]));
         let mut var = Array::<F, IxDyn>::zeros(IxDyn(&[batch_size, 1]));
 
-        for i in 0..batch_size {
-            let mut sum = F::zero();
-            for j in 0..feat_dim {
-                sum = sum + reshaped[[i, j]];
-            }
-            mean[[i, 0]] = sum / F::from(feat_dim).unwrap();
+        // Use SIMD-accelerated path for larger feature dimensions (Phase 36+ optimization)
+        if feat_dim >= LAYERNORM_SIMD_THRESHOLD {
+            // SIMD path: use simd_mean for mean and simd_sum for variance
+            for i in 0..batch_size {
+                // Extract row as 1D view for SIMD operations
+                let row_slice = reshaped.slice(scirs2_core::ndarray::s![i, ..]);
+                let row_view: ArrayView1<F> = row_slice.into_dimensionality().unwrap();
 
-            let mut sum_sq = F::zero();
-            for j in 0..feat_dim {
-                let diff = reshaped[[i, j]] - mean[[i, 0]];
-                sum_sq = sum_sq + diff * diff;
+                // SIMD-accelerated mean computation
+                let row_mean = F::simd_mean(&row_view);
+                mean[[i, 0]] = row_mean;
+
+                // SIMD-accelerated variance computation
+                // variance = E[(x - mean)^2] = E[x^2] - mean^2
+                // Using simd_dot for sum of squares
+                let sum_sq = F::simd_dot(&row_view, &row_view);
+                let mean_sq = row_mean * row_mean;
+                let n = F::from(feat_dim).unwrap();
+                var[[i, 0]] = sum_sq / n - mean_sq;
             }
-            var[[i, 0]] = sum_sq / F::from(feat_dim).unwrap();
+        } else {
+            // Scalar fallback for small feature dimensions
+            for i in 0..batch_size {
+                let mut sum = F::zero();
+                for j in 0..feat_dim {
+                    sum = sum + reshaped[[i, j]];
+                }
+                mean[[i, 0]] = sum / F::from(feat_dim).unwrap();
+
+                let mut sum_sq = F::zero();
+                for j in 0..feat_dim {
+                    let diff = reshaped[[i, j]] - mean[[i, 0]];
+                    sum_sq = sum_sq + diff * diff;
+                }
+                var[[i, 0]] = sum_sq / F::from(feat_dim).unwrap();
+            }
         }
 
         // Cache mean and variance
@@ -178,10 +207,14 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Laye
         }
 
         // Normalize and apply gamma/beta
+        // Using SIMD for larger dimensions
         let mut normalized = Array::<F, IxDyn>::zeros(IxDyn(&[batch_size, feat_dim]));
         for i in 0..batch_size {
+            let inv_std = (var[[i, 0]] + self.eps).sqrt().recip();
+            let mean_i = mean[[i, 0]];
+
             for j in 0..feat_dim {
-                let x_norm = (reshaped[[i, j]] - mean[[i, 0]]) / (var[[i, 0]] + self.eps).sqrt();
+                let x_norm = (reshaped[[i, j]] - mean_i) * inv_std;
                 normalized[[i, j]] = x_norm * self.gamma[[j]] + self.beta[[j]];
             }
         }
@@ -230,7 +263,9 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Laye
     }
 }
 
-impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> ParamLayer<F> for LayerNorm<F> {
+impl<F: Float + Debug + ScalarOperand + Send + Sync + SimdUnifiedOps + 'static> ParamLayer<F>
+    for LayerNorm<F>
+{
     fn get_parameters(&self) -> Vec<Array<F, scirs2_core::ndarray::IxDyn>> {
         vec![self.gamma.clone(), self.beta.clone()]
     }

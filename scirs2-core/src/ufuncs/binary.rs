@@ -4,7 +4,7 @@
 //! (addition, subtraction, etc.) as universal functions for efficient
 //! vectorized operations with broadcasting support.
 
-use ndarray::{Array, ArrayView, Dimension, IxDyn, ShapeBuilder};
+use ::ndarray::{Array, ArrayView, Dimension, IxDyn, ShapeBuilder};
 use crate::ufuncs::core::{UFunc, UFuncKind, apply_binary, register_ufunc};
 use crate::ndarray_ext::broadcasting::{broadcast_arrays, broadcast_apply};
 use std::sync::Once;
@@ -38,7 +38,7 @@ impl UFunc for AddUFunc {
         UFuncKind::Binary
     }
 
-    fn apply<D>(&self, inputs: &[&ndarray::ArrayBase<ndarray::Data, D>], output: &mut ndarray::ArrayBase<ndarray::Data, D>) -> Result<(), &'static str>
+    fn apply<D>(&self, inputs: &[&crate::ndarray::ArrayBase<crate::ndarray::Data, D>], output: &mut crate::ndarray::ArrayBase<crate::ndarray::Data, D>) -> Result<(), &'static str>
     where
         D: Dimension,
     {
@@ -63,7 +63,7 @@ impl UFunc for SubtractUFunc {
         UFuncKind::Binary
     }
 
-    fn apply<D>(&self, inputs: &[&ndarray::ArrayBase<ndarray::Data, D>], output: &mut ndarray::ArrayBase<ndarray::Data, D>) -> Result<(), &'static str>
+    fn apply<D>(&self, inputs: &[&crate::ndarray::ArrayBase<crate::ndarray::Data, D>], output: &mut crate::ndarray::ArrayBase<crate::ndarray::Data, D>) -> Result<(), &'static str>
     where
         D: Dimension,
     {
@@ -88,7 +88,7 @@ impl UFunc for MultiplyUFunc {
         UFuncKind::Binary
     }
 
-    fn apply<D>(&self, inputs: &[&ndarray::ArrayBase<ndarray::Data, D>], output: &mut ndarray::ArrayBase<ndarray::Data, D>) -> Result<(), &'static str>
+    fn apply<D>(&self, inputs: &[&crate::ndarray::ArrayBase<crate::ndarray::Data, D>], output: &mut crate::ndarray::ArrayBase<crate::ndarray::Data, D>) -> Result<(), &'static str>
     where
         D: Dimension,
     {
@@ -113,7 +113,7 @@ impl UFunc for DivideUFunc {
         UFuncKind::Binary
     }
 
-    fn apply<D>(&self, inputs: &[&ndarray::ArrayBase<ndarray::Data, D>], output: &mut ndarray::ArrayBase<ndarray::Data, D>) -> Result<(), &'static str>
+    fn apply<D>(&self, inputs: &[&crate::ndarray::ArrayBase<crate::ndarray::Data, D>], output: &mut crate::ndarray::ArrayBase<crate::ndarray::Data, D>) -> Result<(), &'static str>
     where
         D: Dimension,
     {
@@ -144,7 +144,7 @@ impl UFunc for PowerUFunc {
         UFuncKind::Binary
     }
 
-    fn apply<D>(&self, inputs: &[&ndarray::ArrayBase<ndarray::Data, D>], output: &mut ndarray::ArrayBase<ndarray::Data, D>) -> Result<(), &'static str>
+    fn apply<D>(&self, inputs: &[&crate::ndarray::ArrayBase<crate::ndarray::Data, D>], output: &mut crate::ndarray::ArrayBase<crate::ndarray::Data, D>) -> Result<(), &'static str>
     where
         D: Dimension,
     {
@@ -173,7 +173,7 @@ impl UFunc for PowerUFunc {
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use ::ndarray::array;
 /// use scirs2_core::ufuncs::add;
 ///
 /// let a = array![1.0, 2.0, 3.0];
@@ -188,12 +188,12 @@ impl UFunc for PowerUFunc {
 /// assert_eq!(result, array![[11.0, 22.0, 33.0], [14.0, 25.0, 36.0]]);
 /// ```
 #[allow(dead_code)]
-pub fn add<D1, D2, S1, S2>(a: &ndarray::ArrayBase<S1, D1>, b: &ndarray::ArrayBase<S2, D2>) -> Array<f64, IxDyn>
+pub fn add<D1, D2, S1, S2>(a: &crate::ndarray::ArrayBase<S1, D1>, b: &crate::ndarray::ArrayBase<S2, D2>) -> Array<f64, IxDyn>
 where
     D1: Dimension,
     D2: Dimension,
-    S1: ndarray::Data<Elem = f64>,
-    S2: ndarray::Data<Elem = f64>,
+    S1: crate::ndarray::Data<Elem = f64>,
+    S2: crate::ndarray::Data<Elem = f64>,
 {
     // Initialize the ufuncs registry if needed
     init_binary_ufuncs();
@@ -232,7 +232,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use ::ndarray::array;
 /// use scirs2_core::ufuncs::subtract;
 ///
 /// let a = array![5.0, 7.0, 9.0];
@@ -247,12 +247,12 @@ where
 /// assert_eq!(result, array![[9.0, 18.0, 27.0], [39.0, 48.0, 57.0]]);
 /// ```
 #[allow(dead_code)]
-pub fn subtract<D1, D2, S1, S2>(a: &ndarray::ArrayBase<S1, D1>, b: &ndarray::ArrayBase<S2, D2>) -> Array<f64, IxDyn>
+pub fn subtract<D1, D2, S1, S2>(a: &crate::ndarray::ArrayBase<S1, D1>, b: &crate::ndarray::ArrayBase<S2, D2>) -> Array<f64, IxDyn>
 where
     D1: Dimension,
     D2: Dimension,
-    S1: ndarray::Data<Elem = f64>,
-    S2: ndarray::Data<Elem = f64>,
+    S1: crate::ndarray::Data<Elem = f64>,
+    S2: crate::ndarray::Data<Elem = f64>,
 {
     // Initialize the ufuncs registry if needed
     init_binary_ufuncs();
@@ -290,7 +290,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use ::ndarray::array;
 /// use scirs2_core::ufuncs::multiply;
 ///
 /// let a = array![1.0, 2.0, 3.0];
@@ -305,12 +305,12 @@ where
 /// assert_eq!(result, array![[10.0, 40.0, 90.0], [40.0, 100.0, 180.0]]);
 /// ```
 #[allow(dead_code)]
-pub fn multiply<D1, D2, S1, S2>(a: &ndarray::ArrayBase<S1, D1>, b: &ndarray::ArrayBase<S2, D2>) -> Array<f64, IxDyn>
+pub fn multiply<D1, D2, S1, S2>(a: &crate::ndarray::ArrayBase<S1, D1>, b: &crate::ndarray::ArrayBase<S2, D2>) -> Array<f64, IxDyn>
 where
     D1: Dimension,
     D2: Dimension,
-    S1: ndarray::Data<Elem = f64>,
-    S2: ndarray::Data<Elem = f64>,
+    S1: crate::ndarray::Data<Elem = f64>,
+    S2: crate::ndarray::Data<Elem = f64>,
 {
     // Initialize the ufuncs registry if needed
     init_binary_ufuncs();
@@ -348,7 +348,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use ::ndarray::array;
 /// use scirs2_core::ufuncs::divide;
 ///
 /// let a = array![4.0, 10.0, 18.0];
@@ -363,12 +363,12 @@ where
 /// assert_eq!(result, array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]]);
 /// ```
 #[allow(dead_code)]
-pub fn divide<D1, D2, S1, S2>(a: &ndarray::ArrayBase<S1, D1>, b: &ndarray::ArrayBase<S2, D2>) -> Array<f64, IxDyn>
+pub fn divide<D1, D2, S1, S2>(a: &crate::ndarray::ArrayBase<S1, D1>, b: &crate::ndarray::ArrayBase<S2, D2>) -> Array<f64, IxDyn>
 where
     D1: Dimension,
     D2: Dimension,
-    S1: ndarray::Data<Elem = f64>,
-    S2: ndarray::Data<Elem = f64>,
+    S1: crate::ndarray::Data<Elem = f64>,
+    S2: crate::ndarray::Data<Elem = f64>,
 {
     // Initialize the ufuncs registry if needed
     init_binary_ufuncs();
@@ -412,7 +412,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use ::ndarray::array;
 /// use scirs2_core::ufuncs::power;
 ///
 /// let a = array![2.0, 3.0, 4.0];
@@ -427,12 +427,12 @@ where
 /// assert_eq!(result, array![[4.0, 27.0, 16.0], [25.0, 216.0, 49.0]]);
 /// ```
 #[allow(dead_code)]
-pub fn power<D1, D2, S1, S2>(a: &ndarray::ArrayBase<S1, D1>, b: &ndarray::ArrayBase<S2, D2>) -> Array<f64, IxDyn>
+pub fn power<D1, D2, S1, S2>(a: &crate::ndarray::ArrayBase<S1, D1>, b: &crate::ndarray::ArrayBase<S2, D2>) -> Array<f64, IxDyn>
 where
     D1: Dimension,
     D2: Dimension,
-    S1: ndarray::Data<Elem = f64>,
-    S2: ndarray::Data<Elem = f64>,
+    S1: crate::ndarray::Data<Elem = f64>,
+    S2: crate::ndarray::Data<Elem = f64>,
 {
     // Initialize the ufuncs registry if needed
     init_binary_ufuncs();
@@ -459,7 +459,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::array;
+    use ::ndarray::array;
 
     #[test]
     fn test_add() {

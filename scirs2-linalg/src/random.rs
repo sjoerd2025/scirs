@@ -754,7 +754,7 @@ where
 
 /// Generate a Hilbert matrix, which is famously ill-conditioned
 ///
-/// The Hilbert matrix is defined as H[i,j] = 1/(i+j+1).
+/// The Hilbert matrix is defined as `H[i,j] = 1/(i+j+1)`.
 /// These matrices are symmetric positive definite but become increasingly
 /// ill-conditioned as the size increases, making them useful for testing
 /// numerical stability of algorithms.
@@ -800,7 +800,7 @@ where
 
 /// Generate a Vandermonde matrix from a set of points
 ///
-/// A Vandermonde matrix is defined as V[i,j] = x_i^j, where x_i is the
+/// A Vandermonde matrix is defined as `V[i,j] = x_i^j`, where x_i is the
 /// i-th point. These matrices are commonly used in polynomial interpolation
 /// and fitting.
 ///

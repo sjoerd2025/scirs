@@ -35,7 +35,7 @@
 
 use crate::random::core::Random;
 use crate::random::distributions::{Beta, Dirichlet, MultivariateNormal, VonMises, WeightedChoice};
-use ndarray::{
+use ::ndarray::{
     Array, Array1, Array2, Array3, ArrayBase, Data, DataMut, DataOwned, Dimension, Ix1, Ix2, Ix3,
     ShapeBuilder,
 };
@@ -282,7 +282,7 @@ pub trait ScientificRandomExt<A, D: Dimension> {
         covariance: Vec<Vec<f64>>,
         n_samples: usize,
         rng: &mut Random<R>,
-    ) -> Array<A, ndarray::Ix2>
+    ) -> Array<A, crate::ndarray::Ix2>
     where
         A: From<f64>,
         R: Rng;
@@ -301,7 +301,7 @@ pub trait ScientificRandomExt<A, D: Dimension> {
     /// Generate correlated random arrays using Cholesky decomposition
     fn correlated_normal<R>(
         shape: D,
-        correlation_matrix: &Array<f64, ndarray::Ix2>,
+        correlation_matrix: &Array<f64, crate::ndarray::Ix2>,
         rng: &mut Random<R>,
     ) -> Self
     where
@@ -359,7 +359,7 @@ where
         covariance: Vec<Vec<f64>>,
         n_samples: usize,
         rng: &mut Random<R>,
-    ) -> Array<A, ndarray::Ix2>
+    ) -> Array<A, crate::ndarray::Ix2>
     where
         A: From<f64>,
         R: Rng,
@@ -389,7 +389,7 @@ where
 
     fn correlated_normal<R>(
         shape: D,
-        correlation_matrix: &Array<f64, ndarray::Ix2>,
+        correlation_matrix: &Array<f64, crate::ndarray::Ix2>,
         rng: &mut Random<R>,
     ) -> Self
     where
@@ -426,7 +426,7 @@ where
 pub mod convenience {
     use super::*;
     use crate::random::thread_rng;
-    use ndarray::{Array1, Array2, Array3, Ix1, Ix2, Ix3};
+    use ::ndarray::{Array1, Array2, Array3, Ix1, Ix2, Ix3};
 
     /// Generate 1D random array with standard normal distribution
     pub fn randn(size: usize) -> Array1<f64> {
@@ -484,7 +484,7 @@ pub mod optimized {
     pub fn parallel_randn<R: Rng + Send + Sync + Clone>(
         shape: (usize, usize),
         rng: &mut Random<R>,
-    ) -> Array<f64, ndarray::Ix2> {
+    ) -> Array<f64, crate::ndarray::Ix2> {
         // This would use ParallelRng for large arrays
         Array::standard_normal(Ix2(shape.0, shape.1), rng)
     }

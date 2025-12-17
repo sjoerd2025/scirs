@@ -4,9 +4,9 @@
 //! It supports various compression algorithms optimized for scientific data patterns.
 
 use crate::error::CoreError;
+use ::ndarray::{Array, ArrayBase, Data, Dimension};
 use flate2::{read::GzDecoder, write::GzEncoder, Compression};
 use lz4::{Decoder as Lz4Decoder, EncoderBuilder as Lz4EncoderBuilder};
-use ndarray::{Array, ArrayBase, Data, Dimension};
 use std::io::Result as IoResult;
 use std::io::{Read, Write};
 use std::marker::PhantomData;
@@ -412,7 +412,7 @@ impl AdaptiveCompression {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::Array2;
+    use ::ndarray::Array2;
 
     #[test]
     fn test_compressed_buffer_basic() {

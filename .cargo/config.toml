@@ -25,9 +25,14 @@ rustflags = [
     "-C", "link-arg=-Wl,-rpath,/opt/homebrew/opt/openblas/lib"
 ]
 
-# Linux: Use system OpenBLAS/LAPACK
+# Linux: Use system OpenBLAS/LAPACK and CUDA
 [target.x86_64-unknown-linux-gnu]
-rustflags = ["-C", "link-arg=-lopenblas", "-C", "link-arg=-llapack"]
+rustflags = [
+    "-C", "link-arg=-lopenblas",
+    "-C", "link-arg=-llapack",
+    "-L", "/usr/local/cuda/targets/x86_64-linux/lib",
+    "-L", "/usr/local/cuda/lib64"
+]
 
 # Environment variables for BLAS/LAPACK backend selection
 # Force lapack-sys and all dependent crates to use system OpenBLAS

@@ -622,19 +622,19 @@ impl JITFactoryRegistry {
 
 /// A wrapper for ndarray to implement the ArrayProtocol trait.
 #[derive(Debug, Clone)]
-pub struct NdarrayWrapper<T, D: ndarray::Dimension> {
-    array: ndarray::Array<T, D>,
+pub struct NdarrayWrapper<T, D: crate::ndarray::Dimension> {
+    array: crate::ndarray::Array<T, D>,
     phantom: PhantomData<(T, D)>,
 }
 
 impl<T, D> NdarrayWrapper<T, D>
 where
     T: Clone + 'static,
-    D: ndarray::Dimension + 'static,
+    D: crate::ndarray::Dimension + 'static,
 {
     /// Create a new ndarray wrapper.
     #[must_use]
-    pub fn new(array: ndarray::Array<T, D>) -> Self {
+    pub fn new(array: crate::ndarray::Array<T, D>) -> Self {
         Self {
             array,
             phantom: PhantomData,
@@ -643,18 +643,18 @@ where
 
     /// Get the underlying ndarray.
     #[must_use]
-    pub const fn as_array(&self) -> &ndarray::Array<T, D> {
+    pub const fn as_array(&self) -> &crate::ndarray::Array<T, D> {
         &self.array
     }
 
     /// Convert into the underlying ndarray.
     #[must_use]
-    pub fn into_array(self) -> ndarray::Array<T, D> {
+    pub fn into_array(self) -> crate::ndarray::Array<T, D> {
         self.array
     }
 
     /// Update the underlying array with a new one.
-    pub fn array_2(&mut self, newarray: ndarray::Array<T, D>) {
+    pub fn array_2(&mut self, newarray: crate::ndarray::Array<T, D>) {
         self.array = newarray;
     }
 }
@@ -662,7 +662,7 @@ where
 impl<T, D> ArrayProtocol for NdarrayWrapper<T, D>
 where
     T: Clone + Send + Sync + 'static,
-    D: ndarray::Dimension + Send + Sync + 'static,
+    D: crate::ndarray::Dimension + Send + Sync + 'static,
 {
     fn array_function(
         &self,
@@ -711,22 +711,22 @@ where
 
                 // We can only handle matrix multiplication for 2D arrays
                 // Check for 2D array using TypeId
-                if TypeId::of::<D>() != TypeId::of::<ndarray::Ix2>() {
+                if TypeId::of::<D>() != TypeId::of::<crate::ndarray::Ix2>() {
                     return Err(NotImplemented);
                 }
 
                 if let Some(other) = args[1].downcast_ref::<NdarrayWrapper<T, D>>() {
-                    // Since we've already checked TypeId::of::<D>() == TypeId::of::<ndarray::Ix2>()
+                    // Since we've already checked TypeId::of::<D>() == TypeId::of::<crate::ndarray::Ix2>()
                     // We can safely specialize for Ix2 matrices
 
                     // Handle the case for f64 matrices
                     if TypeId::of::<T>() == TypeId::of::<f64>() {
                         // Cast to concrete _types we know how to handle
                         let a_f64 = unsafe {
-                            &*(self as *const _ as *const NdarrayWrapper<f64, ndarray::Ix2>)
+                            &*(self as *const _ as *const NdarrayWrapper<f64, crate::ndarray::Ix2>)
                         };
                         let b_f64 = unsafe {
-                            &*(other as *const _ as *const NdarrayWrapper<f64, ndarray::Ix2>)
+                            &*(other as *const _ as *const NdarrayWrapper<f64, crate::ndarray::Ix2>)
                         };
 
                         // Get dimensions
@@ -746,10 +746,10 @@ where
                     else if TypeId::of::<T>() == TypeId::of::<f32>() {
                         // Cast to concrete _types we know how to handle
                         let a_f32 = unsafe {
-                            &*(self as *const _ as *const NdarrayWrapper<f32, ndarray::Ix2>)
+                            &*(self as *const _ as *const NdarrayWrapper<f32, crate::ndarray::Ix2>)
                         };
                         let b_f32 = unsafe {
-                            &*(other as *const _ as *const NdarrayWrapper<f32, ndarray::Ix2>)
+                            &*(other as *const _ as *const NdarrayWrapper<f32, crate::ndarray::Ix2>)
                         };
 
                         // Get dimensions
@@ -1095,7 +1095,7 @@ where
 ///     let implementation = Arc::new(
 ///         move |args: &[Box<dyn Any>], kwargs: &HashMap<String, Box<dyn Any>>| {
 ///             if let Some(array) = args.get(0)
-///                 .and_then(|arg| arg.downcast_ref::<ndarray::Array<f64, ndarray::Ix2>>()) {
+///                 .and_then(|arg| arg.downcast_ref::<crate::ndarray::Array<f64, crate::ndarray::Ix2>>()) {
 ///                 let sum = array.sum();
 ///                 Ok(Box::new(sum) as Box<dyn Any>)
 ///             } else {
@@ -1295,7 +1295,7 @@ mod tests {
     #[test]
     fn test_box_clone() {
         // Test Box<dyn ArrayProtocol> cloning for NdarrayWrapper
-        let array = ndarray::Array2::<f64>::ones((3, 3));
+        let array = crate::ndarray::Array2::<f64>::ones((3, 3));
         let wrapped = NdarrayWrapper::new(array);
         let boxed: Box<dyn ArrayProtocol> = Box::new(wrapped);
         let cloned = boxed.clone();
@@ -1317,7 +1317,7 @@ mod tests {
 #[cfg(test)]
 mod examples {
     use super::*;
-    use ndarray::Array2;
+    use ::ndarray::Array2;
     use std::any::Any;
     use std::collections::HashMap;
 
@@ -1396,7 +1396,7 @@ mod examples {
         let wrapped = NdarrayWrapper::new(array);
 
         // Create a JIT-enabled array
-        let jitarray: JITEnabledArray<f64, NdarrayWrapper<f64, ndarray::Ix2>> =
+        let jitarray: JITEnabledArray<f64, NdarrayWrapper<f64, crate::ndarray::Ix2>> =
             JITEnabledArray::new(wrapped);
 
         // Check if JIT is supported

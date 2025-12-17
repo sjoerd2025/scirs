@@ -313,17 +313,21 @@ pub mod dropout;
 pub mod normalization;
 pub mod recurrent;
 
-// Temporarily comment out layer modules that need fixing
-// mod attention;
-// mod embedding;
-// mod regularization;
+// Additional layer modules
+mod attention;
+mod embedding;
+mod flash_attention;
+mod regularization;
 
-// Re-export fixed modules
-pub use conv::Conv2D;
+// Re-export all modules
+pub use attention::{AttentionConfig, AttentionMask, MultiHeadAttention, SelfAttention};
+pub use conv::{AvgPool2D, Conv2D, GlobalAvgPool2D, MaxPool2D};
 pub use dense::Dense;
 pub use dropout::Dropout;
+pub use embedding::{Embedding, EmbeddingConfig, PositionalEmbedding};
+pub use flash_attention::{flash_attention_compute, FlashAttention, FlashAttentionConfig};
 pub use normalization::{BatchNorm, LayerNorm};
 pub use recurrent::LSTM;
-
-// Re-export will be added as modules are fixed
-// pub use attention::{AttentionConfig, AttentionMask, MultiHeadAttention, SelfAttention};
+pub use regularization::{
+    ActivityRegularization, L1ActivityRegularization, L2ActivityRegularization,
+};

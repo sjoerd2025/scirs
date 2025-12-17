@@ -404,7 +404,7 @@ impl<'graph, 'env, F: Float> Context<'env, F> {
     /// You can designate the `shape` of the placeholder and `shape[i]` can be a positive
     /// value or -1 which means an dim of arbitrary size.
     ///
-    /// Use [Evaluator::feed] and [Feeder::push] in order to assign ArrayViews to placeholders.
+    /// Use `Evaluator::feed` and `Feeder::push` in order to assign ArrayViews to placeholders.
     ///    ```
     /// use scirs2_autograd as ag;
     /// use scirs2_core::ndarray::array;
@@ -428,7 +428,7 @@ impl<'graph, 'env, F: Float> Context<'env, F> {
     /// });
     ///    ```
     ///
-    /// See also [tensor_ops::convert_to_tensor].
+    /// See also `tensor_ops::convert_to_tensor`.
     #[inline]
     pub fn placeholder(&'graph self, name: &'static str, shape: &[isize]) -> Tensor<'graph, F> {
         // Check if a placeholder with this name already exists

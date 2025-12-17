@@ -9,8 +9,12 @@ mod encoder;
 mod model;
 // Re-export from layers to provide compatibility
 pub use crate::layers::{MultiHeadAttention, SelfAttention};
-// Re-export from utils to provide compatibility
-// pub use crate::utils::positional_encoding::PositionalEncoding; // Disabled - module is broken
+// Re-export positional encoding from utils
+pub use crate::utils::positional_encoding::{
+    LearnedPositionalEncoding, PositionalEncoding, PositionalEncodingFactory,
+    PositionalEncodingType, RelativePositionalEncoding, RotaryPositionalEncoding,
+    SinusoidalPositionalEncoding,
+};
 // Re-export transformer components
 pub use decoder::{TransformerDecoder, TransformerDecoderLayer};
 pub use encoder::{FeedForward, TransformerEncoder, TransformerEncoderLayer};

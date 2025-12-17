@@ -20,7 +20,7 @@ use std::any::{Any, TypeId};
 use std::collections::HashMap;
 use std::sync::RwLock;
 
-use ndarray::{Array, Dim, Dimension, SliceArg, SliceInfo, SliceInfoElem};
+use ::ndarray::{Array, Dim, Dimension, SliceArg, SliceInfo, SliceInfoElem};
 use num_traits;
 
 use crate::array_protocol::{
@@ -109,7 +109,7 @@ pub fn get_auto_device_config() -> AutoDeviceConfig {
 pub fn determine_best_device<T, D>(array: &Array<T, D>) -> DeviceType
 where
     T: Clone + Send + Sync + 'static + num_traits::Zero + std::ops::Div<f64, Output = T>,
-    D: Dimension + ndarray::RemoveAxis,
+    D: Dimension + crate::ndarray::RemoveAxis,
 {
     let config = get_auto_device_config();
     let size = array.len();
@@ -134,7 +134,7 @@ pub fn determine_best_device_for_operation<T, D>(
 ) -> DeviceType
 where
     T: Clone + Send + Sync + 'static + num_traits::Zero + std::ops::Div<f64, Output = T>,
-    D: Dimension + ndarray::RemoveAxis,
+    D: Dimension + crate::ndarray::RemoveAxis,
 {
     let config = get_auto_device_config();
 
@@ -195,7 +195,7 @@ where
         + Default
         + std::ops::Mul<Output = T>
         + std::ops::Add<Output = T>,
-    D: Dimension + ndarray::RemoveAxis + 'static,
+    D: Dimension + crate::ndarray::RemoveAxis + 'static,
     SliceInfo<[SliceInfoElem; 1], Dim<[usize; 1]>, Dim<[usize; 1]>>: SliceArg<D>,
     SliceInfo<[SliceInfoElem; 2], Dim<[usize; 2]>, Dim<[usize; 2]>>: SliceArg<D>,
 {
@@ -241,7 +241,7 @@ where
         + Default
         + std::ops::Mul<Output = T>
         + std::ops::Add<Output = T>,
-    D: Dimension + ndarray::RemoveAxis,
+    D: Dimension + crate::ndarray::RemoveAxis,
     SliceInfo<[SliceInfoElem; 1], Dim<[usize; 1]>, Dim<[usize; 1]>>: SliceArg<D>,
     SliceInfo<[SliceInfoElem; 2], Dim<[usize; 2]>, Dim<[usize; 2]>>: SliceArg<D>,
 {
@@ -268,7 +268,7 @@ where
         + Default
         + std::ops::Mul<Output = T>
         + std::ops::Add<Output = T>,
-    D: Dimension + ndarray::RemoveAxis + std::fmt::Debug + 'static,
+    D: Dimension + crate::ndarray::RemoveAxis + std::fmt::Debug + 'static,
     SliceInfo<[SliceInfoElem; 1], Dim<[usize; 1]>, Dim<[usize; 1]>>: SliceArg<D>,
     SliceInfo<[SliceInfoElem; 2], Dim<[usize; 2]>, Dim<[usize; 2]>>: SliceArg<D>,
 {
@@ -292,7 +292,7 @@ where
         + Default
         + std::ops::Mul<Output = T>
         + std::ops::Add<Output = T>,
-    D: Dimension + ndarray::RemoveAxis + 'static,
+    D: Dimension + crate::ndarray::RemoveAxis + 'static,
     SliceInfo<[SliceInfoElem; 1], Dim<[usize; 1]>, Dim<[usize; 1]>>: SliceArg<D>,
     SliceInfo<[SliceInfoElem; 2], Dim<[usize; 2]>, Dim<[usize; 2]>>: SliceArg<D>,
 {
@@ -341,7 +341,7 @@ where
         + Default
         + std::ops::Mul<Output = T>
         + std::ops::Add<Output = T>,
-    D: Dimension + ndarray::RemoveAxis + 'static,
+    D: Dimension + crate::ndarray::RemoveAxis + 'static,
     SliceInfo<[SliceInfoElem; 1], Dim<[usize; 1]>, Dim<[usize; 1]>>: SliceArg<D>,
     SliceInfo<[SliceInfoElem; 2], Dim<[usize; 2]>, Dim<[usize; 2]>>: SliceArg<D>,
 {
@@ -365,7 +365,7 @@ where
         + Default
         + std::ops::Mul<Output = T>
         + std::ops::Add<Output = T>,
-    D: Dimension + ndarray::RemoveAxis + 'static,
+    D: Dimension + crate::ndarray::RemoveAxis + 'static,
     SliceInfo<[SliceInfoElem; 1], Dim<[usize; 1]>, Dim<[usize; 1]>>: SliceArg<D>,
     SliceInfo<[SliceInfoElem; 2], Dim<[usize; 2]>, Dim<[usize; 2]>>: SliceArg<D>,
 {
@@ -424,7 +424,7 @@ where
         + Default
         + std::ops::Mul<Output = T>
         + std::ops::Add<Output = T>,
-    D: Dimension + ndarray::RemoveAxis + 'static,
+    D: Dimension + crate::ndarray::RemoveAxis + 'static,
     SliceInfo<[SliceInfoElem; 1], Dim<[usize; 1]>, Dim<[usize; 1]>>: SliceArg<D>,
     SliceInfo<[SliceInfoElem; 2], Dim<[usize; 2]>, Dim<[usize; 2]>>: SliceArg<D>,
     F: FnOnce(&[&dyn ArrayProtocol]) -> CoreResult<R>,
@@ -467,7 +467,7 @@ pub mod ops {
             + Default
             + std::ops::Mul<Output = T>
             + std::ops::Add<Output = T>,
-        D: Dimension + ndarray::RemoveAxis + 'static,
+        D: Dimension + crate::ndarray::RemoveAxis + 'static,
         SliceInfo<[SliceInfoElem; 1], Dim<[usize; 1]>, Dim<[usize; 1]>>: SliceArg<D>,
         SliceInfo<[SliceInfoElem; 2], Dim<[usize; 2]>, Dim<[usize; 2]>>: SliceArg<D>,
     {
@@ -497,7 +497,7 @@ pub mod ops {
             + Default
             + std::ops::Mul<Output = T>
             + std::ops::Add<Output = T>,
-        D: Dimension + ndarray::RemoveAxis + 'static,
+        D: Dimension + crate::ndarray::RemoveAxis + 'static,
         SliceInfo<[SliceInfoElem; 1], Dim<[usize; 1]>, Dim<[usize; 1]>>: SliceArg<D>,
         SliceInfo<[SliceInfoElem; 2], Dim<[usize; 2]>, Dim<[usize; 2]>>: SliceArg<D>,
     {
@@ -527,7 +527,7 @@ pub mod ops {
             + Default
             + std::ops::Mul<Output = T>
             + std::ops::Add<Output = T>,
-        D: Dimension + ndarray::RemoveAxis + 'static,
+        D: Dimension + crate::ndarray::RemoveAxis + 'static,
         SliceInfo<[SliceInfoElem; 1], Dim<[usize; 1]>, Dim<[usize; 1]>>: SliceArg<D>,
         SliceInfo<[SliceInfoElem; 2], Dim<[usize; 2]>, Dim<[usize; 2]>>: SliceArg<D>,
     {
@@ -546,7 +546,7 @@ pub mod ops {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::{arr2, Array2};
+    use ::ndarray::{arr2, Array2};
 
     #[test]
     fn test_auto_device_selection() {
@@ -588,7 +588,7 @@ mod tests {
         let gpu_array = auto_array.on_device(DeviceType::GPU);
         assert!(gpu_array
             .as_any()
-            .downcast_ref::<GPUNdarray<f64, ndarray::IxDyn>>()
+            .downcast_ref::<GPUNdarray<f64, crate::ndarray::IxDyn>>()
             .is_some());
 
         // Check that device was updated

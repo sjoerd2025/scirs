@@ -37,7 +37,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! scirs2-series = "0.1.0-rc.2"
+//! scirs2-series = "0.1.0-rc.3"
 //! ```
 //!
 //! ```rust,no_run
@@ -51,7 +51,7 @@
 //! // result.trend, result.seasonal, result.residual
 //! ```
 //!
-//! ## 🔒 Version: 0.1.0-rc.2 (October 03, 2025)
+//! ## 🔒 Version: 0.1.0-rc.3 (October 03, 2025)
 //! - Change point detection
 //!   - PELT (Pruned Exact Linear Time) algorithm
 //!   - Binary segmentation
@@ -240,10 +240,9 @@ pub mod visualization;
 #[cfg(feature = "wasm")]
 pub mod wasm_bindings;
 
-// Optional Python bindings for seamless pandas/statsmodels integration
+// Python API wrappers that use scirs2-core conversion utilities
+// These provide ndarray16-compatible interfaces to internal ndarray17 functions
 #[cfg(feature = "python")]
-pub mod python_bindings;
-
 // Optional R integration for R ecosystem compatibility
 #[cfg(feature = "r")]
 pub mod r_integration;

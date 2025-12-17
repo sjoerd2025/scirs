@@ -33,7 +33,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! scirs2-neural = "0.1.0-rc.2"
+//! scirs2-neural = "0.1.0-rc.3"
 //! ```
 //!
 //! ### Building a Simple Neural Network
@@ -306,12 +306,13 @@
 //!
 //! ## 🔒 Version
 //!
-//! Current version: **0.1.0-rc.2** (Released October 03, 2025)
+//! Current version: **0.1.0-rc.3** (Released October 03, 2025)
 
 pub mod activations_minimal;
 pub mod autograd;
 pub mod error;
 // pub mod gpu; // Disabled in minimal version - has syntax errors
+// pub mod linalg; // Disabled - has syntax errors in attention.rs
 pub mod layers;
 pub mod losses;
 pub mod training;

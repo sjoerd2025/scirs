@@ -5,6 +5,7 @@ use crate::error::{NeuralError, Result};
 use crate::layers::Layer;
 use scirs2_core::ndarray::{Array, Axis, IxDyn, ScalarOperand};
 use scirs2_core::numeric::Float;
+use scirs2_core::simd_ops::SimdUnifiedOps;
 use std::fmt::Debug;
 
 /// Softmax activation function.
@@ -34,7 +35,7 @@ impl Softmax {
     /// # Arguments
     /// * `axis` - The axis along which to apply softmax
     pub fn new(axis: usize) -> Self {
-        Self { _axis }
+        Self { axis }
     }
 }
 
@@ -56,6 +57,59 @@ impl<F: Float + Debug> Activation<F> for Softmax {
 
         // Special case for 1D arrays
         if input.ndim() == 1 && self.axis == 0 {
+            // SIMD-accelerated softmax for 1D arrays
+            // Try f64 SIMD path
+            if std::mem::size_of::<F>() == 8 {
+                // Safety: We know F is f64 from size check
+                let input_slice = input.as_slice().unwrap();
+                let input_f64: Vec<f64> = input_slice
+                    .iter()
+                    .map(|&v| {
+                        let bytes = unsafe { std::mem::transmute::<F, [u8; 8]>(v) };
+                        f64::from_ne_bytes(bytes)
+                    })
+                    .collect();
+
+                let input_view = scirs2_core::ndarray::ArrayView1::from(&input_f64);
+                let result_f64 = f64::simd_softmax(&input_view);
+
+                let result_vec: Vec<F> = result_f64
+                    .iter()
+                    .map(|&v| {
+                        let bytes = v.to_ne_bytes();
+                        unsafe { std::mem::transmute::<[u8; 8], F>(bytes) }
+                    })
+                    .collect();
+
+                return Ok(Array::from_vec(result_vec).into_dyn());
+            }
+            // Try f32 SIMD path
+            else if std::mem::size_of::<F>() == 4 {
+                // Safety: We know F is f32 from size check
+                let input_slice = input.as_slice().unwrap();
+                let input_f32: Vec<f32> = input_slice
+                    .iter()
+                    .map(|&v| {
+                        let bytes = unsafe { std::mem::transmute::<F, [u8; 4]>(v) };
+                        f32::from_ne_bytes(bytes)
+                    })
+                    .collect();
+
+                let input_view = scirs2_core::ndarray::ArrayView1::from(&input_f32);
+                let result_f32 = f32::simd_softmax(&input_view);
+
+                let result_vec: Vec<F> = result_f32
+                    .iter()
+                    .map(|&v| {
+                        let bytes = v.to_ne_bytes();
+                        unsafe { std::mem::transmute::<[u8; 4], F>(bytes) }
+                    })
+                    .collect();
+
+                return Ok(Array::from_vec(result_vec).into_dyn());
+            }
+
+            // Generic fallback for other types
             // Find max for numerical stability
             let max_val = input.fold(F::neg_infinity(), |a, &b| a.max(b));
             // Compute exp(x - max)
@@ -111,17 +165,17 @@ impl<F: Float + Debug> Activation<F> for Softmax {
     ) -> Result<Array<F, scirs2_core::ndarray::IxDyn>> {
         // Softmax backward pass: grad_input = softmax * (grad_output - sum(grad_output * softmax))
         // This implements the full Jacobian-vector product for softmax
-        
+
         if output.ndim() == 1 && self.axis == 0 {
-            // Compute dot product of grad_output and _output (softmax values)
+            // Compute dot product of grad_output and output (softmax values)
             let dot_product = grad_output
                 .iter()
-                .zip(_output.iter())
+                .zip(output.iter())
                 .map(|(&g, &s)| g * s)
                 .fold(F::zero(), |a, b| a + b);
 
             // Compute gradient: s * (grad_output - dot_product)
-            let grad_input = _output
+            let grad_input = output
                 .iter()
                 .zip(grad_output.iter())
                 .map(|(&s, &g)| s * (g - dot_product))
@@ -138,10 +192,10 @@ impl<F: Float + Debug> Activation<F> for Softmax {
         let mut sumshape = output.shape().to_vec();
         sumshape[self.axis] = 1;
         let weighted_sum_reshaped = weighted_sum.into_shape_with_order(sumshape)?;
-        let weighted_sum_broadcast = weighted_sum_reshaped.broadcast(_output.shape()).unwrap();
+        let weighted_sum_broadcast = weighted_sum_reshaped.broadcast(output.shape()).unwrap();
 
         // Compute gradient: softmax * (grad_output - weighted_sum)
-        let grad_input = _output * (grad_output - &weighted_sum_broadcast);
+        let grad_input = output * (grad_output - &weighted_sum_broadcast);
         
         Ok(grad_input)
     }

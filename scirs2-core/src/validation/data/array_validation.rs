@@ -8,7 +8,8 @@ use std::collections::HashMap;
 use std::fmt;
 
 // Core dependencies for array/matrix validation
-use ndarray::{ArrayBase, Data, Dimension, ScalarOperand};
+use crate::ndarray::compat::ArrayStatCompat;
+use ::ndarray::{ArrayBase, Data, Dimension, ScalarOperand};
 use num_traits::{Float, FromPrimitive, ToPrimitive, Zero};
 
 #[cfg(feature = "parallel")]
@@ -258,7 +259,7 @@ impl ArrayValidator {
         }
 
         // Calculate basic statistics
-        let mean = array.mean().unwrap_or(S::Elem::zero());
+        let mean = array.mean_or(S::Elem::zero());
         let std_dev = array.std(num_traits::cast(1.0).unwrap());
 
         // Validate mean constraints
@@ -457,7 +458,7 @@ impl Default for ArrayValidator {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::Array1;
+    use ::ndarray::Array1;
 
     #[test]
     fn test_array_validator() {

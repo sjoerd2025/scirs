@@ -6,7 +6,7 @@
 
 use super::memmap::MemoryMappedArray;
 use crate::error::{CoreError, CoreResult, ErrorContext};
-use ndarray::{ArrayBase, Dimension, IxDyn, SliceInfo, SliceInfoElem};
+use ::ndarray::{ArrayBase, Dimension, IxDyn, SliceInfo, SliceInfoElem};
 use std::marker::PhantomData;
 use std::ops::RangeBounds;
 
@@ -143,28 +143,28 @@ where
             match target_ndim {
                 1 => {
                     if resultdims.len() == 1 {
-                        let dim1 = ndarray::Ix1(resultdims[0]);
+                        let dim1 = crate::ndarray::Ix1(resultdims[0]);
                         let converted_dim = unsafe { std::mem::transmute_copy(&dim1) };
                         return Ok(converted_dim);
                     }
                 }
                 2 => {
                     if resultdims.len() == 2 {
-                        let dim2 = ndarray::Ix2(resultdims[0], resultdims[1]);
+                        let dim2 = crate::ndarray::Ix2(resultdims[0], resultdims[1]);
                         let converted_dim = unsafe { std::mem::transmute_copy(&dim2) };
                         return Ok(converted_dim);
                     }
                 }
                 3 => {
                     if resultdims.len() == 3 {
-                        let dim3 = ndarray::Ix3(resultdims[0], resultdims[1], resultdims[2]);
+                        let dim3 = crate::ndarray::Ix3(resultdims[0], resultdims[1], resultdims[2]);
                         let converted_dim = unsafe { std::mem::transmute_copy(&dim3) };
                         return Ok(converted_dim);
                     }
                 }
                 4 => {
                     if resultdims.len() == 4 {
-                        let dim4 = ndarray::Ix4(
+                        let dim4 = crate::ndarray::Ix4(
                             resultdims[0],
                             resultdims[1],
                             resultdims[2],
@@ -191,7 +191,7 @@ where
             match target_ndim {
                 1 => {
                     if expanded_dims.len() == 1 {
-                        let dim1 = ndarray::Ix1(expanded_dims[0]);
+                        let dim1 = crate::ndarray::Ix1(expanded_dims[0]);
                         let converted_dim = unsafe { std::mem::transmute_copy(&dim1) };
                         Ok(converted_dim)
                     } else {
@@ -202,7 +202,7 @@ where
                 }
                 2 => {
                     if expanded_dims.len() == 2 {
-                        let dim2 = ndarray::Ix2(expanded_dims[0], expanded_dims[1]);
+                        let dim2 = crate::ndarray::Ix2(expanded_dims[0], expanded_dims[1]);
                         let converted_dim = unsafe { std::mem::transmute_copy(&dim2) };
                         Ok(converted_dim)
                     } else {
@@ -213,8 +213,11 @@ where
                 }
                 3 => {
                     if expanded_dims.len() == 3 {
-                        let dim3 =
-                            ndarray::Ix3(expanded_dims[0], expanded_dims[1], expanded_dims[2]);
+                        let dim3 = crate::ndarray::Ix3(
+                            expanded_dims[0],
+                            expanded_dims[1],
+                            expanded_dims[2],
+                        );
                         let converted_dim = unsafe { std::mem::transmute_copy(&dim3) };
                         Ok(converted_dim)
                     } else {
@@ -225,7 +228,7 @@ where
                 }
                 4 => {
                     if expanded_dims.len() == 4 {
-                        let dim4 = ndarray::Ix4(
+                        let dim4 = crate::ndarray::Ix4(
                             expanded_dims[0],
                             expanded_dims[1],
                             expanded_dims[2],
@@ -272,7 +275,7 @@ where
             match target_ndim {
                 1 => {
                     if squeezed_dims.len() == 1 {
-                        let dim1 = ndarray::Ix1(squeezed_dims[0]);
+                        let dim1 = crate::ndarray::Ix1(squeezed_dims[0]);
                         let converted_dim = unsafe { std::mem::transmute_copy(&dim1) };
                         Ok(converted_dim)
                     } else {
@@ -283,7 +286,7 @@ where
                 }
                 2 => {
                     if squeezed_dims.len() == 2 {
-                        let dim2 = ndarray::Ix2(squeezed_dims[0], squeezed_dims[1]);
+                        let dim2 = crate::ndarray::Ix2(squeezed_dims[0], squeezed_dims[1]);
                         let converted_dim = unsafe { std::mem::transmute_copy(&dim2) };
                         Ok(converted_dim)
                     } else {
@@ -294,8 +297,11 @@ where
                 }
                 3 => {
                     if squeezed_dims.len() == 3 {
-                        let dim3 =
-                            ndarray::Ix3(squeezed_dims[0], squeezed_dims[1], squeezed_dims[2]);
+                        let dim3 = crate::ndarray::Ix3(
+                            squeezed_dims[0],
+                            squeezed_dims[1],
+                            squeezed_dims[2],
+                        );
                         let converted_dim = unsafe { std::mem::transmute_copy(&dim3) };
                         Ok(converted_dim)
                     } else {
@@ -306,7 +312,7 @@ where
                 }
                 4 => {
                     if squeezed_dims.len() == 4 {
-                        let dim4 = ndarray::Ix4(
+                        let dim4 = crate::ndarray::Ix4(
                             squeezed_dims[0],
                             squeezed_dims[1],
                             squeezed_dims[2],
@@ -339,9 +345,9 @@ where
 
     /// Safely convert an array to the target dimension type with detailed error reporting.
     fn safe_dimensionality_conversion(
-        array: ndarray::ArrayBase<ndarray::OwnedRepr<A>, ndarray::IxDyn>,
+        array: crate::ndarray::ArrayBase<crate::ndarray::OwnedRepr<A>, crate::ndarray::IxDyn>,
         context: &str,
-    ) -> CoreResult<ArrayBase<ndarray::OwnedRepr<A>, D>> {
+    ) -> CoreResult<ArrayBase<crate::ndarray::OwnedRepr<A>, D>> {
         let sourceshape = array.shape().to_vec();
         let source_ndim = sourceshape.len();
         let target_ndim = D::NDIM;
@@ -390,11 +396,11 @@ where
 
     /// Try to expand dimensions by adding singleton dimensions.
     fn try_expand_dimensions(
-        array: ndarray::ArrayBase<ndarray::OwnedRepr<A>, ndarray::IxDyn>,
+        array: crate::ndarray::ArrayBase<crate::ndarray::OwnedRepr<A>, crate::ndarray::IxDyn>,
         context: &str,
         source_dims: usize,
         target_dims: usize,
-    ) -> CoreResult<ArrayBase<ndarray::OwnedRepr<A>, D>> {
+    ) -> CoreResult<ArrayBase<crate::ndarray::OwnedRepr<A>, D>> {
         let sourceshape = array.shape().to_vec();
         let dims_to_add = target_dims - source_dims;
 
@@ -413,7 +419,7 @@ where
         // Try to reshape to expanded shape
         match array
             .clone()
-            .into_shape_with_order(ndarray::IxDyn(&expandedshape))
+            .into_shape_with_order(crate::ndarray::IxDyn(&expandedshape))
         {
             Ok(reshaped) => reshaped.into_dimensionality::<D>().map_err(|_| {
                 CoreError::DimensionError(ErrorContext::new(format!(
@@ -426,7 +432,7 @@ where
                 altshape.extend_from_slice(&sourceshape);
 
                 array
-                    .into_shape_with_order(ndarray::IxDyn(&altshape))
+                    .into_shape_with_order(crate::ndarray::IxDyn(&altshape))
                     .map_err(|_| {
                         CoreError::DimensionError(ErrorContext::new(format!(
                             "Cannot reshape {context} array from shape {sourceshape:?} to any expanded shape"
@@ -444,11 +450,11 @@ where
 
     /// Try to squeeze singleton dimensions.
     fn try_squeeze_dimensions(
-        array: ndarray::ArrayBase<ndarray::OwnedRepr<A>, ndarray::IxDyn>,
+        array: crate::ndarray::ArrayBase<crate::ndarray::OwnedRepr<A>, crate::ndarray::IxDyn>,
         context: &str,
         source_dims: usize,
         target_dims: usize,
-    ) -> CoreResult<ArrayBase<ndarray::OwnedRepr<A>, D>> {
+    ) -> CoreResult<ArrayBase<crate::ndarray::OwnedRepr<A>, D>> {
         let sourceshape = array.shape().to_vec();
 
         // Find and remove singleton dimensions
@@ -475,7 +481,7 @@ where
 
         // Reshape to squeezed shape and convert
         array
-            .into_shape_with_order(ndarray::IxDyn(&squeezedshape))
+            .into_shape_with_order(crate::ndarray::IxDyn(&squeezedshape))
             .map_err(|_| {
                 CoreError::DimensionError(ErrorContext::new(format!(
                     "Cannot reshape {context} array from shape {sourceshape:?} to squeezed shape {squeezedshape:?}"
@@ -493,7 +499,7 @@ where
     ///
     /// This method materializes the slice by loading only the necessary data
     /// from the memory-mapped file.
-    pub fn load(&self) -> CoreResult<ArrayBase<ndarray::OwnedRepr<A>, D>> {
+    pub fn load(&self) -> CoreResult<ArrayBase<crate::ndarray::OwnedRepr<A>, D>> {
         // Get the raw data slice
         let data_slice = self.source.as_slice();
 
@@ -505,8 +511,8 @@ where
     fn load_slice_generic(
         &self,
         data_slice: &[A],
-    ) -> CoreResult<ArrayBase<ndarray::OwnedRepr<A>, D>> {
-        use ndarray::IxDyn;
+    ) -> CoreResult<ArrayBase<crate::ndarray::OwnedRepr<A>, D>> {
+        use ::ndarray::IxDyn;
 
         // Validate dimension compatibility first
         self.validate_dimension_compatibility()?;
@@ -514,7 +520,7 @@ where
         // Create dynamic array view from source
         let sourceshape = IxDyn(&self.source.shape);
         let source_array =
-            ndarray::ArrayView::from_shape(sourceshape, data_slice).map_err(|e| {
+            crate::ndarray::ArrayView::from_shape(sourceshape, data_slice).map_err(|e| {
                 CoreError::ShapeError(ErrorContext::new(format!(
                     "Failed to create array view from source shape {:?}: {}",
                     self.source.shape, e
@@ -586,9 +592,9 @@ where
     /// Safely apply slice to array view with proper error handling, returning owned array
     fn apply_slice_safely_owned(
         &self,
-        source_array: ndarray::ArrayView<A, IxDyn>,
+        source_array: crate::ndarray::ArrayView<A, IxDyn>,
         slice_elements: &[SliceInfoElem],
-    ) -> CoreResult<ndarray::Array<A, IxDyn>> {
+    ) -> CoreResult<crate::ndarray::Array<A, IxDyn>> {
         if slice_elements.is_empty() {
             return Ok(source_array.to_owned());
         }
@@ -614,7 +620,7 @@ where
                         // Validate step
                         let safe_step = step.max(&1).unsigned_abs();
 
-                        ndarray::Slice::new(
+                        crate::ndarray::Slice::new(
                             clamped_start as isize,
                             Some(clamped_end as isize),
                             safe_step as isize,
@@ -624,16 +630,16 @@ where
                         let dim_size = ax.len as isize;
                         let safe_idx = self.handle_negative_index(*idx, dim_size);
                         let clamped_idx = safe_idx.max(0).min(dim_size - 1) as usize;
-                        ndarray::Slice::new(
+                        crate::ndarray::Slice::new(
                             clamped_idx as isize,
                             Some((clamped_idx + 1) as isize),
                             1,
                         )
                     }
-                    _ => ndarray::Slice::new(0, None, 1),
+                    _ => crate::ndarray::Slice::new(0, None, 1),
                 }
             } else {
-                ndarray::Slice::new(0, None, 1)
+                crate::ndarray::Slice::new(0, None, 1)
             }
         });
 
@@ -655,27 +661,27 @@ pub trait MemoryMappedSlicing<A: Clone + Copy + 'static + Send + Sync> {
     /// Creates a slice of the memory-mapped array using standard slice syntax.
     fn slice<I, E>(&self, sliceinfo: I) -> CoreResult<MemoryMappedSlice<A, E>>
     where
-        I: ndarray::SliceArg<E>,
+        I: crate::ndarray::SliceArg<E>,
         E: Dimension;
 
     /// Creates a 1D slice using a range.
     fn slice_1d(
         &self,
         range: impl RangeBounds<usize>,
-    ) -> CoreResult<MemoryMappedSlice<A, ndarray::Ix1>>;
+    ) -> CoreResult<MemoryMappedSlice<A, crate::ndarray::Ix1>>;
 
     /// Creates a 2D slice using ranges for each dimension.
     fn slice_2d(
         &self,
         row_range: impl RangeBounds<usize>,
         col_range: impl RangeBounds<usize>,
-    ) -> CoreResult<MemoryMappedSlice<A, ndarray::Ix2>>;
+    ) -> CoreResult<MemoryMappedSlice<A, crate::ndarray::Ix2>>;
 }
 
 impl<A: Clone + Copy + 'static + Send + Sync> MemoryMappedSlicing<A> for MemoryMappedArray<A> {
     fn slice<I, E>(&self, sliceinfo: I) -> CoreResult<MemoryMappedSlice<A, E>>
     where
-        I: ndarray::SliceArg<E>,
+        I: crate::ndarray::SliceArg<E>,
         E: Dimension,
     {
         // For now, we'll implement specific cases and improve later
@@ -702,7 +708,7 @@ impl<A: Clone + Copy + 'static + Send + Sync> MemoryMappedSlicing<A> for MemoryM
 
         // Create a slice that references the original memory-mapped array
         // This is an identity slice for now
-        let source = MemoryMappedArray::new::<ndarray::OwnedRepr<A>, E>(
+        let source = MemoryMappedArray::new::<crate::ndarray::OwnedRepr<A>, E>(
             None,
             &self.file_path,
             self.mode,
@@ -715,7 +721,7 @@ impl<A: Clone + Copy + 'static + Send + Sync> MemoryMappedSlicing<A> for MemoryM
     fn slice_1d(
         &self,
         range: impl RangeBounds<usize>,
-    ) -> CoreResult<MemoryMappedSlice<A, ndarray::Ix1>> {
+    ) -> CoreResult<MemoryMappedSlice<A, crate::ndarray::Ix1>> {
         // Convert to explicit range
         let start = match range.start_bound() {
             std::ops::Bound::Included(&n) => n,
@@ -738,7 +744,7 @@ impl<A: Clone + Copy + 'static + Send + Sync> MemoryMappedSlicing<A> for MemoryM
 
         // Create SliceInfo for 1D array
         let slice_info = unsafe {
-            SliceInfo::<Vec<SliceInfoElem>, ndarray::Ix1, ndarray::Ix1>::new(vec![
+            SliceInfo::<Vec<SliceInfoElem>, crate::ndarray::Ix1, crate::ndarray::Ix1>::new(vec![
                 SliceInfoElem::Slice {
                     start: start as isize,
                     end: Some(end as isize),
@@ -761,7 +767,7 @@ impl<A: Clone + Copy + 'static + Send + Sync> MemoryMappedSlicing<A> for MemoryM
         &self,
         row_range: impl RangeBounds<usize>,
         col_range: impl RangeBounds<usize>,
-    ) -> CoreResult<MemoryMappedSlice<A, ndarray::Ix2>> {
+    ) -> CoreResult<MemoryMappedSlice<A, crate::ndarray::Ix2>> {
         // Ensure we're working with a 2D array
         if self.shape.len() != 2 {
             return Err(CoreError::ShapeError(ErrorContext::new(format!(
@@ -813,7 +819,7 @@ impl<A: Clone + Copy + 'static + Send + Sync> MemoryMappedSlicing<A> for MemoryM
 
         // Create SliceInfo for 2D array
         let slice_info = unsafe {
-            SliceInfo::<Vec<SliceInfoElem>, ndarray::Ix2, ndarray::Ix2>::new(vec![
+            SliceInfo::<Vec<SliceInfoElem>, crate::ndarray::Ix2, crate::ndarray::Ix2>::new(vec![
                 SliceInfoElem::Slice {
                     start: row_start as isize,
                     end: Some(row_end as isize),

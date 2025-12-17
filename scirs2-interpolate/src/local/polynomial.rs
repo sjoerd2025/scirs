@@ -8,6 +8,7 @@
 //! The main difference from Moving Least Squares is the additional focus on
 //! regression diagnostics, bandwidth selection, and statistical properties.
 
+use scirs2_core::ndarray::ArrayStatCompat;
 use scirs2_core::ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use scirs2_core::numeric::{Float, FromPrimitive};
 use std::fmt::Debug;
@@ -579,7 +580,7 @@ where
                     if sum_weights > F::zero() {
                         mean = mean / sum_weights;
                     } else {
-                        mean = local_values.mean().unwrap_or(F::zero());
+                        mean = local_values.mean_or(F::zero());
                     }
 
                     let mut result = Array1::zeros(n_basis);
@@ -606,7 +607,7 @@ where
             if sum_weights > F::zero() {
                 mean = mean / sum_weights;
             } else {
-                mean = local_values.mean().unwrap_or(F::zero());
+                mean = local_values.mean_or(F::zero());
             }
 
             result[0] = mean;

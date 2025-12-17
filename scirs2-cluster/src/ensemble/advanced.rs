@@ -7,6 +7,7 @@ use super::algorithms::EnsembleClusterer;
 use super::core::*;
 use crate::error::{ClusteringError, Result};
 use crate::metrics::silhouette_score;
+use scirs2_core::ndarray::ArrayStatCompat;
 use scirs2_core::ndarray::{s, Array1, Array2, Array3, ArrayView1, ArrayView2, Axis};
 use scirs2_core::numeric::{Float, FromPrimitive};
 use scirs2_core::random::prelude::*;
@@ -944,7 +945,7 @@ fn calculate_clustering_tendency(data: &Array2<f64>) -> f64 {
 fn calculate_advanced_meta_feature(data: &Array2<f64>, feature_index: usize) -> f64 {
     // Placeholder for advanced meta-features
     match feature_index {
-        0 => data.mean().unwrap_or(0.0),
+        0 => data.mean_or(0.0),
         1 => data.std(0.0),
         2 => data.len() as f64,
         _ => 0.5, // Default value

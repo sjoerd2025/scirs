@@ -49,9 +49,9 @@
 //! Add to your `Cargo.toml`:
 //! ```toml
 //! [dependencies]
-//! scirs2-linalg = "0.1.0-rc.2"
+//! scirs2-linalg = "0.1.0-rc.3"
 //! # Optional features
-//! scirs2-linalg = { version = "0.1.0-rc.2", features = ["simd", "parallel", "gpu"] }
+//! scirs2-linalg = { version = "0.1.0-rc.3", features = ["simd", "parallel", "gpu"] }
 //! ```
 //!
 //! ### Basic Matrix Operations
@@ -210,7 +210,7 @@
 //!
 //! ## 🔒 Version Information
 //!
-//! - **Version**: 0.1.0-rc.2
+//! - **Version**: 0.1.0-rc.3
 //! - **Release Date**: October 03, 2025
 //! - **MSRV** (Minimum Supported Rust Version): 1.70.0
 //! - **Documentation**: [docs.rs/scirs2-linalg](https://docs.rs/scirs2-linalg)
@@ -331,10 +331,18 @@ pub mod accelerated {
 
 // Re-exports for user convenience
 pub use self::basic::{det, inv, matrix_power, trace as basic_trace};
+
+// BLAS/LAPACK optimized functions for f64 (Always available for Python bindings)
+pub use self::basic::{det_f64_lapack, inv_f64_lapack};
+pub use self::decomposition::{
+    cholesky_f64_lapack, eig_f64_lapack, eigh_f64_lapack, lu_f64_lapack, qr_f64_lapack,
+    svd_f64_lapack,
+};
 pub use self::eigen_specialized::{
     banded_eigen, banded_eigh, banded_eigvalsh, circulant_eigenvalues, largest_k_eigh,
     partial_eigen, smallest_k_eigh, tridiagonal_eigen, tridiagonal_eigh, tridiagonal_eigvalsh,
 };
+pub use self::solve::solve_f64_lapack;
 // Re-export complex module functions explicitly to avoid conflicts
 pub use self::complex::enhanced_ops::{
     det as complex_det, frobenius_norm, hermitian_part, inner_product, is_hermitian, is_unitary,

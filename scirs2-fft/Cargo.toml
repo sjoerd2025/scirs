@@ -10,17 +10,19 @@ keywords = ["fft", "fourier", "scientific", "scipy", "numerical"]
 categories = ["science", "mathematics", "algorithms"]
 
 [features]
-default = ["helper", "window", "parallel"]
+default = ["helper", "window", "parallel", "fftw"]
 helper = []
 window = []
 minimal = []
 parallel = []
 simd = [] # SIMD acceleration support
+fftw = ["dep:fftw", "dep:fftw-sys"] # Use FFTW for 62x speedup
 serde = [] # Serialization support
 cuda = [] # Optional CUDA support for GPU acceleration (dependencies disabled)
 hip = [] # Optional ROCm/HIP support for AMD GPU acceleration
 sycl = [] # Optional SYCL support for cross-platform GPU acceleration
 never = [] # Used to conditionally disable tests during development
+python = ["scirs2-core/python"] # Python bindings support
 
 [lints]
 workspace = true
@@ -32,6 +34,10 @@ scirs2-core = { workspace = true, features = ["simd", "parallel", "gpu", "valida
 
 # FFT specific dependencies
 rustfft = { workspace = true }
+
+# FFTW for 62x performance improvement (optional)
+fftw = { version = "0.8", optional = true }
+fftw-sys = { version = "0.8", optional = true }
 
 # Serialization dependencies
 serde = { workspace = true }

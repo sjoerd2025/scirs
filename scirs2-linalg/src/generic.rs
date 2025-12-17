@@ -1,7 +1,7 @@
 //! Type-generic linear algebra operations
 //!
 //! This module provides unified interfaces for linear algebra operations
-//! that work with different numeric types (f32, f64, Complex<f32>, Complex<f64>).
+//! that work with different numeric types (`f32`, `f64`, `Complex<f32>`, `Complex<f64>`).
 
 use crate::error::{LinalgError, LinalgResult};
 use scirs2_core::ndarray::{Array2, ArrayView2};

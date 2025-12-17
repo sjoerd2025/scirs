@@ -780,7 +780,7 @@ pub fn watts_strogatz_graph<R: Rng>(
 ///
 /// # Returns
 /// * `Result<Graph<usize, f64>>` - The generated graph with node IDs 0..n-1
-///   where nodes 0..block_sizes[0]-1 are in block 0, etc.
+///   where nodes 0..block_sizes\[0\]-1 are in block 0, etc.
 #[allow(dead_code)]
 pub fn stochastic_block_model<R: Rng>(
     block_sizes: &[usize],

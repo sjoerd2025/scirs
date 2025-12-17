@@ -7,18 +7,18 @@
 //! ## Available Methods
 //!
 //! ### Scattered Data Interpolation
-//! - **[`RBFInterpolator`]** - Radial Basis Function interpolation for irregular data
-//! - **[`EnhancedRBFInterpolator`]** - RBF with automatic parameter selection
-//! - **[`ThinPlateSpline`]** - Smooth interpolation minimizing bending energy
+//! - **`RBFInterpolator`** - Radial Basis Function interpolation for irregular data
+//! - **`EnhancedRBFInterpolator`** - RBF with automatic parameter selection
+//! - **`ThinPlateSpline`** - Smooth interpolation minimizing bending energy
 //!
 //! ### Uncertainty Quantification
-//! - **[`KrigingInterpolator`]** - Gaussian process regression with error estimates
-//! - **[`EnhancedKriging`]** - Advanced kriging with directional correlations
-//! - **[`FastKriging`]** - Scalable kriging for large datasets
+//! - **`KrigingInterpolator`** - Gaussian process regression with error estimates
+//! - **`EnhancedKriging`** - Advanced kriging with directional correlations
+//! - **`FastKriging`** - Scalable kriging for large datasets
 //!
 //! ### Robust Methods
-//! - **[`AkimaSpline`]** - Robust spline interpolation with outlier resistance
-//! - **[`BarycentricInterpolator`]** - Numerically stable polynomial interpolation
+//! - **`AkimaSpline`** - Robust spline interpolation with outlier resistance
+//! - **`BarycentricInterpolator`** - Numerically stable polynomial interpolation
 //!
 //! ## Choosing the Right Method
 //!

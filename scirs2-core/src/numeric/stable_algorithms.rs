@@ -9,7 +9,7 @@ use crate::{
     numeric::stability::{stable_norm_2, StableComputation},
     validation::check_finite,
 };
-use ndarray::{s, Array1, Array2, ArrayView1, ArrayView2};
+use ::ndarray::{s, Array1, Array2, ArrayView1, ArrayView2};
 use num_traits::{cast, Float};
 use std::fmt::Debug;
 
@@ -793,8 +793,8 @@ pub fn matrix_exp_stable<T: Float + StableComputation>(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use ::ndarray::array;
     use approx::assert_relative_eq;
-    use ndarray::array;
 
     #[test]
     fn test_gaussian_elimination() {

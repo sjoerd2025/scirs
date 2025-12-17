@@ -44,7 +44,7 @@ impl<F: IntegrateFloat> BoundaryConditionType<F> {
         }
     }
 
-    /// Get derivative of residual with respect to y[component]
+    /// Get derivative of residual with respect to `y[component]`
     pub fn derivative_y(&self, component: usize) -> F {
         match self {
             BoundaryConditionType::Dirichlet { .. } => F::one(),
@@ -54,7 +54,7 @@ impl<F: IntegrateFloat> BoundaryConditionType<F> {
         }
     }
 
-    /// Get derivative of residual with respect to dydt[component]  
+    /// Get derivative of residual with respect to `dydt[component]`  
     pub fn derivative_dydt(&self, component: usize) -> F {
         match self {
             BoundaryConditionType::Dirichlet { .. } => F::zero(),

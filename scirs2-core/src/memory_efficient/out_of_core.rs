@@ -1,9 +1,9 @@
 use super::chunked::{ChunkedArray, ChunkingStrategy, OPTIMAL_CHUNK_SIZE};
 use super::validation;
 use crate::error::{CoreError, ErrorContext, ErrorLocation};
+use ::ndarray::{Array, ArrayBase, Data, Dimension};
 use ::serde::{Deserialize, Serialize};
 use bincode::{config, serde};
-use ndarray::{Array, ArrayBase, Data, Dimension};
 use std::fs::{File, OpenOptions};
 use std::io::{Read, Write};
 use std::marker::PhantomData;
@@ -213,7 +213,7 @@ where
 
     /// Safely convert an array to the target dimension type with detailed error reporting.
     fn safe_dimensionality_conversion(
-        array: Array<A, ndarray::IxDyn>,
+        array: Array<A, crate::ndarray::IxDyn>,
         context: &str,
     ) -> Result<Array<A, D>, CoreError> {
         let sourceshape = array.shape().to_vec();
@@ -275,7 +275,7 @@ where
 
     /// Try to squeeze singleton dimensions.
     fn try_squeeze_dimensions(
-        array: Array<A, ndarray::IxDyn>,
+        array: Array<A, crate::ndarray::IxDyn>,
         context: &str,
         source_dims: usize,
         target_dims: usize,
@@ -308,7 +308,7 @@ where
 
         // Reshape to squeezed shape and convert
         array
-            .into_shape_with_order(ndarray::IxDyn(&squeezedshape))
+            .into_shape_with_order(crate::ndarray::IxDyn(&squeezedshape))
             .map_err(|_| {
                 CoreError::DimensionError(
                     ErrorContext::new(format!(
@@ -330,7 +330,7 @@ where
 
     /// Try to expand dimensions by adding singleton dimensions.
     fn try_expand_dimensions(
-        array: Array<A, ndarray::IxDyn>,
+        array: Array<A, crate::ndarray::IxDyn>,
         context: &str,
         source_dims: usize,
         target_dims: usize,
@@ -356,7 +356,7 @@ where
         // Try to reshape to expanded shape
         match array
             .clone()
-            .into_shape_with_order(ndarray::IxDyn(&expandedshape))
+            .into_shape_with_order(crate::ndarray::IxDyn(&expandedshape))
         {
             Ok(reshaped) => reshaped.into_dimensionality::<D>().map_err(|_| {
                 CoreError::DimensionError(
@@ -372,7 +372,7 @@ where
                 altshape.extend_from_slice(&sourceshape);
 
                 array
-                    .into_shape_with_order(ndarray::IxDyn(&altshape))
+                    .into_shape_with_order(crate::ndarray::IxDyn(&altshape))
                     .map_err(|_| {
                         CoreError::DimensionError(
                             ErrorContext::new(format!(

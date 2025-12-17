@@ -1,6 +1,6 @@
 # scirs2-sparse TODO
 
-## Release Status: 0.1.0-rc.2 (Release Candidate 2)
+## Release Status: 0.1.0-rc.3 (Release Candidate 2)
 
 This Release Candidate 2 continues the production-ready sparse matrix library with comprehensive platform testing and zero-warning code quality. Following the [SciRS2 POLICY](../SCIRS2_POLICY.md), the module provides comprehensive sparse matrix functionality with feature parity to SciPy's sparse module in key areas, enhanced GPU operations (from beta.4), and ecosystem consistency.
 

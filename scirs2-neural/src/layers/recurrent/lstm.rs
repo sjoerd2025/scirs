@@ -3,11 +3,16 @@
 use crate::error::{NeuralError, Result};
 use crate::layers::recurrent::{LstmGateCache, LstmStepOutput};
 use crate::layers::{Layer, ParamLayer};
-use scirs2_core::ndarray::{Array, ArrayView, Ix2, IxDyn, ScalarOperand};
+use scirs2_core::ndarray::{Array, ArrayView, ArrayView1, Ix2, IxDyn, ScalarOperand};
 use scirs2_core::numeric::Float;
 use scirs2_core::random::{Distribution, Uniform};
+use scirs2_core::simd_ops::SimdUnifiedOps;
 use std::fmt::Debug;
 use std::sync::{Arc, RwLock};
+
+/// Threshold for using SIMD-accelerated LSTM step
+/// When input_size + hidden_size >= threshold, use SIMD path
+const LSTM_SIMD_THRESHOLD: usize = 32;
 /// Configuration for LSTM layers
 #[derive(Debug, Clone)]
 pub struct LSTMConfig {
@@ -93,7 +98,7 @@ pub struct LSTM<F: Float + Debug + Send + Sync> {
     gate_cache: LstmGateCache<F>,
 }
 
-impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> LSTM<F> {
+impl<F: Float + Debug + ScalarOperand + Send + Sync + SimdUnifiedOps + 'static> LSTM<F> {
     /// Create a new LSTM layer
     ///
     /// # Arguments
@@ -212,6 +217,12 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> LSTM<F> {
             gate_cache: Arc::new(RwLock::new(None)),
         })
     }
+
+    /// Check if SIMD path should be used
+    fn should_use_simd(&self) -> bool {
+        self.input_size + self.hidden_size >= LSTM_SIMD_THRESHOLD
+    }
+
     /// Helper method to compute one step of the LSTM
     /// * `x` - Input tensor of shape [batch_size, input_size]
     /// * `h` - Previous hidden state of shape [batch_size, hidden_size]
@@ -226,10 +237,26 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> LSTM<F> {
         h: &ArrayView<F, IxDyn>,
         c: &ArrayView<F, IxDyn>,
     ) -> Result<LstmStepOutput<F>> {
+        // Route to SIMD or naive implementation
+        if self.should_use_simd() {
+            self.step_simd(x, h, c)
+        } else {
+            self.step_naive(x, h, c)
+        }
+    }
+
+    /// SIMD-accelerated step using simd_dot for gate computations
+    fn step_simd(
+        &self,
+        x: &ArrayView<F, IxDyn>,
+        h: &ArrayView<F, IxDyn>,
+        c: &ArrayView<F, IxDyn>,
+    ) -> Result<LstmStepOutput<F>> {
         let xshape = x.shape();
         let hshape = h.shape();
         let cshape = c.shape();
         let batch_size = xshape[0];
+
         // Validate shapes
         if xshape[1] != self.input_size {
             return Err(NeuralError::InferenceError(format!(
@@ -249,18 +276,130 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> LSTM<F> {
                 xshape[0], hshape[0], cshape[0]
             )));
         }
+
         // Initialize gates
         let mut i_gate: Array<F, IxDyn> = Array::zeros(IxDyn(&[batch_size, self.hidden_size]));
         let mut f_gate: Array<F, IxDyn> = Array::zeros(IxDyn(&[batch_size, self.hidden_size]));
         let mut g_gate: Array<F, IxDyn> = Array::zeros(IxDyn(&[batch_size, self.hidden_size]));
         let mut o_gate: Array<F, IxDyn> = Array::zeros(IxDyn(&[batch_size, self.hidden_size]));
-        // Initialize new states
         let mut new_c: Array<F, IxDyn> = Array::zeros(IxDyn(&[batch_size, self.hidden_size]));
         let mut new_h: Array<F, IxDyn> = Array::zeros(IxDyn(&[batch_size, self.hidden_size]));
-        // Compute gates for each batch item
+
+        // SIMD-accelerated gate computation using simd_dot
+        for b in 0..batch_size {
+            let x_b = x.slice(scirs2_core::ndarray::s![b, ..]);
+            let x_view: ArrayView1<F> = x_b.into_dimensionality().unwrap();
+            let h_b = h.slice(scirs2_core::ndarray::s![b, ..]);
+            let h_view: ArrayView1<F> = h_b.into_dimensionality().unwrap();
+
+            for i in 0..self.hidden_size {
+                // Get weight rows for SIMD dot products
+                let wii_row = self.weight_ii.slice(scirs2_core::ndarray::s![i, ..]);
+                let wii_view: ArrayView1<F> = wii_row.into_dimensionality().unwrap();
+                let whi_row = self.weight_hi.slice(scirs2_core::ndarray::s![i, ..]);
+                let whi_view: ArrayView1<F> = whi_row.into_dimensionality().unwrap();
+
+                let wif_row = self.weight_if.slice(scirs2_core::ndarray::s![i, ..]);
+                let wif_view: ArrayView1<F> = wif_row.into_dimensionality().unwrap();
+                let whf_row = self.weight_hf.slice(scirs2_core::ndarray::s![i, ..]);
+                let whf_view: ArrayView1<F> = whf_row.into_dimensionality().unwrap();
+
+                let wig_row = self.weight_ig.slice(scirs2_core::ndarray::s![i, ..]);
+                let wig_view: ArrayView1<F> = wig_row.into_dimensionality().unwrap();
+                let whg_row = self.weight_hg.slice(scirs2_core::ndarray::s![i, ..]);
+                let whg_view: ArrayView1<F> = whg_row.into_dimensionality().unwrap();
+
+                let wio_row = self.weight_io.slice(scirs2_core::ndarray::s![i, ..]);
+                let wio_view: ArrayView1<F> = wio_row.into_dimensionality().unwrap();
+                let who_row = self.weight_ho.slice(scirs2_core::ndarray::s![i, ..]);
+                let who_view: ArrayView1<F> = who_row.into_dimensionality().unwrap();
+
+                // Input gate with simd_dot
+                let i_sum = self.bias_ii[i]
+                    + self.bias_hi[i]
+                    + F::simd_dot(&wii_view, &x_view)
+                    + F::simd_dot(&whi_view, &h_view);
+                i_gate[[b, i]] = F::one() / (F::one() + (-i_sum).exp());
+
+                // Forget gate
+                let f_sum = self.bias_if[i]
+                    + self.bias_hf[i]
+                    + F::simd_dot(&wif_view, &x_view)
+                    + F::simd_dot(&whf_view, &h_view);
+                f_gate[[b, i]] = F::one() / (F::one() + (-f_sum).exp());
+
+                // Cell gate
+                let g_sum = self.bias_ig[i]
+                    + self.bias_hg[i]
+                    + F::simd_dot(&wig_view, &x_view)
+                    + F::simd_dot(&whg_view, &h_view);
+                g_gate[[b, i]] = g_sum.tanh();
+
+                // Output gate
+                let o_sum = self.bias_io[i]
+                    + self.bias_ho[i]
+                    + F::simd_dot(&wio_view, &x_view)
+                    + F::simd_dot(&who_view, &h_view);
+                o_gate[[b, i]] = F::one() / (F::one() + (-o_sum).exp());
+
+                // Cell and hidden state updates
+                new_c[[b, i]] = f_gate[[b, i]] * c[[b, i]] + i_gate[[b, i]] * g_gate[[b, i]];
+                new_h[[b, i]] = o_gate[[b, i]] * new_c[[b, i]].tanh();
+            }
+        }
+
+        Ok((
+            new_h.into_dyn(),
+            new_c.into_dyn(),
+            (
+                i_gate.into_dyn(),
+                f_gate.into_dyn(),
+                g_gate.into_dyn(),
+                o_gate.into_dyn(),
+            ),
+        ))
+    }
+
+    /// Naive (scalar) step implementation for small dimensions
+    fn step_naive(
+        &self,
+        x: &ArrayView<F, IxDyn>,
+        h: &ArrayView<F, IxDyn>,
+        c: &ArrayView<F, IxDyn>,
+    ) -> Result<LstmStepOutput<F>> {
+        let xshape = x.shape();
+        let hshape = h.shape();
+        let cshape = c.shape();
+        let batch_size = xshape[0];
+
+        if xshape[1] != self.input_size {
+            return Err(NeuralError::InferenceError(format!(
+                "Input feature dimension mismatch: expected {}, got {}",
+                self.input_size, xshape[1]
+            )));
+        }
+        if hshape[1] != self.hidden_size || cshape[1] != self.hidden_size {
+            return Err(NeuralError::InferenceError(format!(
+                "Hidden/cell state dimension mismatch: expected {}, got {}/{}",
+                self.hidden_size, hshape[1], cshape[1]
+            )));
+        }
+        if xshape[0] != hshape[0] || xshape[0] != cshape[0] {
+            return Err(NeuralError::InferenceError(format!(
+                "Batch size mismatch: input has {}, hidden state has {}, cell state has {}",
+                xshape[0], hshape[0], cshape[0]
+            )));
+        }
+
+        let mut i_gate: Array<F, IxDyn> = Array::zeros(IxDyn(&[batch_size, self.hidden_size]));
+        let mut f_gate: Array<F, IxDyn> = Array::zeros(IxDyn(&[batch_size, self.hidden_size]));
+        let mut g_gate: Array<F, IxDyn> = Array::zeros(IxDyn(&[batch_size, self.hidden_size]));
+        let mut o_gate: Array<F, IxDyn> = Array::zeros(IxDyn(&[batch_size, self.hidden_size]));
+        let mut new_c: Array<F, IxDyn> = Array::zeros(IxDyn(&[batch_size, self.hidden_size]));
+        let mut new_h: Array<F, IxDyn> = Array::zeros(IxDyn(&[batch_size, self.hidden_size]));
+
         for b in 0..batch_size {
             for i in 0..self.hidden_size {
-                // Input gate (i_t)
                 let mut i_sum = self.bias_ii[i] + self.bias_hi[i];
                 for j in 0..self.input_size {
                     i_sum = i_sum + self.weight_ii[[i, j]] * x[[b, j]];
@@ -268,9 +407,8 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> LSTM<F> {
                 for j in 0..self.hidden_size {
                     i_sum = i_sum + self.weight_hi[[i, j]] * h[[b, j]];
                 }
-                i_gate[[b, i]] = F::one() / (F::one() + (-i_sum).exp()); // sigmoid
+                i_gate[[b, i]] = F::one() / (F::one() + (-i_sum).exp());
 
-                // Forget gate (f_t)
                 let mut f_sum = self.bias_if[i] + self.bias_hf[i];
                 for j in 0..self.input_size {
                     f_sum = f_sum + self.weight_if[[i, j]] * x[[b, j]];
@@ -278,9 +416,8 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> LSTM<F> {
                 for j in 0..self.hidden_size {
                     f_sum = f_sum + self.weight_hf[[i, j]] * h[[b, j]];
                 }
-                f_gate[[b, i]] = F::one() / (F::one() + (-f_sum).exp()); // sigmoid
+                f_gate[[b, i]] = F::one() / (F::one() + (-f_sum).exp());
 
-                // Cell gate (g_t)
                 let mut g_sum = self.bias_ig[i] + self.bias_hg[i];
                 for j in 0..self.input_size {
                     g_sum = g_sum + self.weight_ig[[i, j]] * x[[b, j]];
@@ -288,9 +425,8 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> LSTM<F> {
                 for j in 0..self.hidden_size {
                     g_sum = g_sum + self.weight_hg[[i, j]] * h[[b, j]];
                 }
-                g_gate[[b, i]] = g_sum.tanh(); // tanh
+                g_gate[[b, i]] = g_sum.tanh();
 
-                // Output gate (o_t)
                 let mut o_sum = self.bias_io[i] + self.bias_ho[i];
                 for j in 0..self.input_size {
                     o_sum = o_sum + self.weight_io[[i, j]] * x[[b, j]];
@@ -298,30 +434,29 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> LSTM<F> {
                 for j in 0..self.hidden_size {
                     o_sum = o_sum + self.weight_ho[[i, j]] * h[[b, j]];
                 }
-                o_gate[[b, i]] = F::one() / (F::one() + (-o_sum).exp()); // sigmoid
-                                                                         // New cell state (c_t)
+                o_gate[[b, i]] = F::one() / (F::one() + (-o_sum).exp());
+
                 new_c[[b, i]] = f_gate[[b, i]] * c[[b, i]] + i_gate[[b, i]] * g_gate[[b, i]];
-                // New hidden state (h_t)
                 new_h[[b, i]] = o_gate[[b, i]] * new_c[[b, i]].tanh();
             }
         }
 
-        // Convert all to dynamic dimension
-        let new_h_dyn = new_h.into_dyn();
-        let new_c_dyn = new_c.into_dyn();
-        let i_gate_dyn = i_gate.into_dyn();
-        let f_gate_dyn = f_gate.into_dyn();
-        let g_gate_dyn = g_gate.into_dyn();
-        let o_gate_dyn = o_gate.into_dyn();
         Ok((
-            new_h_dyn,
-            new_c_dyn,
-            (i_gate_dyn, f_gate_dyn, g_gate_dyn, o_gate_dyn),
+            new_h.into_dyn(),
+            new_c.into_dyn(),
+            (
+                i_gate.into_dyn(),
+                f_gate.into_dyn(),
+                g_gate.into_dyn(),
+                o_gate.into_dyn(),
+            ),
         ))
     }
 }
 
-impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for LSTM<F> {
+impl<F: Float + Debug + ScalarOperand + Send + Sync + SimdUnifiedOps + 'static> Layer<F>
+    for LSTM<F>
+{
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
@@ -451,7 +586,9 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for LSTM
     }
 }
 
-impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> ParamLayer<F> for LSTM<F> {
+impl<F: Float + Debug + ScalarOperand + Send + Sync + SimdUnifiedOps + 'static> ParamLayer<F>
+    for LSTM<F>
+{
     fn get_parameters(&self) -> Vec<Array<F, scirs2_core::ndarray::IxDyn>> {
         vec![
             self.weight_ii.clone(),

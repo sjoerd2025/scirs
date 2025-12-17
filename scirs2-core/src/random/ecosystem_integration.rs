@@ -51,7 +51,7 @@ use crate::random::{
     parallel::{ParallelRng, ThreadLocalRngPool},
     scientific::*,
 };
-use ndarray::{Array1, Array2, Array3, ArrayD, Dimension, Ix2};
+use ::ndarray::{Array1, Array2, Array3, ArrayD, Dimension, Ix2};
 use rand::Rng;
 use rand_distr::{Distribution, Normal, Uniform};
 use std::collections::HashMap;

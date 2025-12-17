@@ -23,7 +23,7 @@ pub struct WeightStatistics<E: EdgeWeight> {
 /// Weight normalization methods
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum NormalizationMethod {
-    /// Min-max normalization to [0,1]
+    /// Min-max normalization to `[0,1]`
     MinMax,
     /// Z-score normalization (standardization)
     ZScore,

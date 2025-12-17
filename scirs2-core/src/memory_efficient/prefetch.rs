@@ -892,7 +892,7 @@ impl<A: Clone + Copy + 'static + Send + Sync> PrefetchingCompressedArray<A> {
     pub fn slice(
         &self,
         ranges: &[(usize, usize)],
-    ) -> CoreResult<ndarray::Array<A, ndarray::IxDyn>> {
+    ) -> CoreResult<crate::ndarray::Array<A, crate::ndarray::IxDyn>> {
         // Record accesses for the blocks that will be accessed
         if self.prefetching_enabled {
             // Determine which blocks will be accessed

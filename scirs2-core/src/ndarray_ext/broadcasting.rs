@@ -4,7 +4,7 @@
 //! similar to `NumPy`'s broadcasting rules, allowing operations between arrays
 //! of different but compatible shapes.
 
-use ndarray::{Array, ArrayView, Dimension, IxDyn};
+use ::ndarray::{Array, ArrayView, Dimension, IxDyn};
 
 /// Check if two shapes are broadcast compatible
 ///
@@ -121,7 +121,7 @@ pub fn shape1(&[usize]: &[usize], shape2: &[usize]) -> Option<Vec<usize>> {
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use ::ndarray::array;
 /// use scirs2_core::ndarray_ext::broadcast_arrays;
 ///
 /// let a = array![[1, 2, 3], [4, 5, 6]];
@@ -219,7 +219,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use ::ndarray::array;
 /// use scirs2_core::ndarray_ext::broadcast_apply;
 ///
 /// let a = array![[1, 2, 3], [4, 5, 6]];

@@ -3,7 +3,7 @@
 //! This module provides the foundational Random struct and traits that serve as the
 //! basis for all random number generation across the SCIRS2 scientific computing ecosystem.
 
-use ndarray::{Array, Dimension, Ix2, IxDyn};
+use ::ndarray::{Array, Dimension, Ix2, IxDyn};
 use rand::prelude::*;
 use rand::rngs::StdRng;
 use rand::{Rng, RngCore, SeedableRng};

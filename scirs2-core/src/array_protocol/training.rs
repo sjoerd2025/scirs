@@ -19,7 +19,7 @@
 use std::fmt;
 use std::time::Instant;
 
-use ndarray::{Array, Array0, Dimension};
+use ::ndarray::{Array, Array0, Dimension};
 use rand::seq::SliceRandom;
 use rand::Rng;
 use rand::SeedableRng;
@@ -117,11 +117,11 @@ impl InMemoryDataset {
 
         for i in 0..num_samples {
             // Use index_axis instead of slice for better compatibility with different dimensions
-            let input_view = to_dyn_inputs.index_axis(ndarray::Axis(0), i);
+            let input_view = to_dyn_inputs.index_axis(crate::ndarray::Axis(0), i);
             let inputarray = input_view.to_owned();
             input_samples.push(Box::new(NdarrayWrapper::new(inputarray)) as Box<dyn ArrayProtocol>);
 
-            let target_view = to_dyn_targets.index_axis(ndarray::Axis(0), i);
+            let target_view = to_dyn_targets.index_axis(crate::ndarray::Axis(0), i);
             let target_array = target_view.to_owned();
             target_samples
                 .push(Box::new(NdarrayWrapper::new(target_array)) as Box<dyn ArrayProtocol>);
@@ -322,7 +322,7 @@ impl Loss for MSELoss {
                 // Compute mean of all elements
                 if let Some(array) = squared
                     .as_any()
-                    .downcast_ref::<NdarrayWrapper<f64, ndarray::IxDyn>>()
+                    .downcast_ref::<NdarrayWrapper<f64, crate::ndarray::IxDyn>>()
                 {
                     let mean = array.as_array().mean().unwrap();
                     let result = Array0::<f64>::from_elem((), mean);
@@ -337,7 +337,7 @@ impl Loss for MSELoss {
                 // Compute sum of all elements
                 if let Some(array) = squared
                     .as_any()
-                    .downcast_ref::<NdarrayWrapper<f64, ndarray::IxDyn>>()
+                    .downcast_ref::<NdarrayWrapper<f64, crate::ndarray::IxDyn>>()
                 {
                     let sum = array.as_array().sum();
                     let result = Array0::<f64>::from_elem((), sum);
@@ -362,10 +362,9 @@ impl Loss for MSELoss {
     ) -> CoreResult<Box<dyn ArrayProtocol>> {
         // Gradient of MSE loss: 2 * (predictions - targets)
         let diff = subtract(predictions, targets)?;
-        let factor = Box::new(NdarrayWrapper::new(ndarray::Array0::<f64>::from_elem(
-            (),
-            2.0,
-        )));
+        let factor = Box::new(NdarrayWrapper::new(
+            crate::ndarray::Array0::<f64>::from_elem((), 2.0),
+        ));
         let grad = multiply(factor.as_ref(), diff.as_ref())?;
 
         // Apply reduction scaling if needed
@@ -375,11 +374,11 @@ impl Loss for MSELoss {
                 // For mean reduction, scale by 1/N
                 if let Some(array) = grad
                     .as_any()
-                    .downcast_ref::<NdarrayWrapper<f64, ndarray::IxDyn>>()
+                    .downcast_ref::<NdarrayWrapper<f64, crate::ndarray::IxDyn>>()
                 {
                     let n = array.as_array().len() as f64;
                     let scale_factor = Box::new(NdarrayWrapper::new(
-                        ndarray::Array0::<f64>::from_elem((), 1.0 / n),
+                        crate::ndarray::Array0::<f64>::from_elem((), 1.0 / n),
                     ));
                     Ok(multiply(scale_factor.as_ref(), grad.as_ref())?)
                 } else {
@@ -431,10 +430,10 @@ impl Loss for CrossEntropyLoss {
         if let (Some(preds_array), Some(targets_array)) = (
             softmax_preds
                 .as_any()
-                .downcast_ref::<NdarrayWrapper<f64, ndarray::IxDyn>>(),
+                .downcast_ref::<NdarrayWrapper<f64, crate::ndarray::IxDyn>>(),
             targets
                 .as_any()
-                .downcast_ref::<NdarrayWrapper<f64, ndarray::IxDyn>>(),
+                .downcast_ref::<NdarrayWrapper<f64, crate::ndarray::IxDyn>>(),
         ) {
             let preds = preds_array.as_array();
             let targets = targets_array.as_array();
@@ -487,11 +486,11 @@ impl Loss for CrossEntropyLoss {
                 // For mean reduction, scale by 1/N
                 if let Some(array) = grad
                     .as_any()
-                    .downcast_ref::<NdarrayWrapper<f64, ndarray::IxDyn>>()
+                    .downcast_ref::<NdarrayWrapper<f64, crate::ndarray::IxDyn>>()
                 {
                     let n = array.as_array().len() as f64;
                     let scale_factor = Box::new(NdarrayWrapper::new(
-                        ndarray::Array0::<f64>::from_elem((), 1.0 / n),
+                        crate::ndarray::Array0::<f64>::from_elem((), 1.0 / n),
                     ));
                     Ok(multiply(scale_factor.as_ref(), grad.as_ref())?)
                 } else {
@@ -673,7 +672,7 @@ impl TrainingCallback for ProgressCallback {
     }
 
     fn on_batch_end(&mut self, batch: usize, numbatches: usize, loss: f64) {
-        if self.verbose && (batch + 1).is_multiple_of((numbatches / 10).max(1)) {
+        if self.verbose && (batch + 1) % (numbatches / 10).max(1) == 0 {
             print!("\rBatch {}/{} - loss: {:.4}", batch + 1, numbatches, loss);
             if batch + 1 == numbatches {
                 println!();
@@ -863,7 +862,7 @@ impl Trainer {
             // Get loss value
             if let Some(loss_array) = loss
                 .as_any()
-                .downcast_ref::<NdarrayWrapper<f64, ndarray::IxDyn>>()
+                .downcast_ref::<NdarrayWrapper<f64, crate::ndarray::IxDyn>>()
             {
                 let loss_value = loss_array.as_array().sum();
                 batch_loss += loss_value;
@@ -885,7 +884,7 @@ impl Trainer {
                 .forward(current_output.as_ref(), target.as_ref())?;
             let _current_loss_value = if let Some(loss_array) = current_loss
                 .as_any()
-                .downcast_ref::<NdarrayWrapper<f64, ndarray::IxDyn>>()
+                .downcast_ref::<NdarrayWrapper<f64, crate::ndarray::IxDyn>>()
             {
                 loss_array.as_array().sum()
             } else {
@@ -985,7 +984,7 @@ impl Trainer {
                 // Get loss value
                 if let Some(loss_array) = loss
                     .as_any()
-                    .downcast_ref::<NdarrayWrapper<f64, ndarray::IxDyn>>()
+                    .downcast_ref::<NdarrayWrapper<f64, crate::ndarray::IxDyn>>()
                 {
                     let loss_value = loss_array.as_array().sum();
                     batch_loss += loss_value;
@@ -995,10 +994,10 @@ impl Trainer {
                 if let (Some(output_array), Some(target_array)) = (
                     output
                         .as_any()
-                        .downcast_ref::<NdarrayWrapper<f64, ndarray::Ix2>>(),
+                        .downcast_ref::<NdarrayWrapper<f64, crate::ndarray::Ix2>>(),
                     target
                         .as_any()
-                        .downcast_ref::<NdarrayWrapper<f64, ndarray::Ix2>>(),
+                        .downcast_ref::<NdarrayWrapper<f64, crate::ndarray::Ix2>>(),
                 ) {
                     // Get predictions (argmax)
                     let output_vec = output_array.as_array();
@@ -1068,7 +1067,7 @@ impl Trainer {
 mod tests {
     use super::*;
     use crate::array_protocol::{self, NdarrayWrapper};
-    use ndarray::Array2;
+    use ::ndarray::Array2;
 
     #[test]
     fn test_in_memory_dataset() {
@@ -1088,11 +1087,11 @@ mod tests {
         let (input, target) = dataset.get(0).unwrap();
         assert!(input
             .as_any()
-            .downcast_ref::<NdarrayWrapper<f64, ndarray::IxDyn>>()
+            .downcast_ref::<NdarrayWrapper<f64, crate::ndarray::IxDyn>>()
             .is_some());
         assert!(target
             .as_any()
-            .downcast_ref::<NdarrayWrapper<f64, ndarray::IxDyn>>()
+            .downcast_ref::<NdarrayWrapper<f64, crate::ndarray::IxDyn>>()
             .is_some());
     }
 
@@ -1149,7 +1148,7 @@ mod tests {
             Ok(loss) => {
                 if let Some(loss_array) = loss
                     .as_any()
-                    .downcast_ref::<NdarrayWrapper<f64, ndarray::Ix0>>()
+                    .downcast_ref::<NdarrayWrapper<f64, crate::ndarray::Ix0>>()
                 {
                     // Expected: mean((1 - 0)^2) = 1.0
                     assert_eq!(loss_array.as_array()[()], 1.0);

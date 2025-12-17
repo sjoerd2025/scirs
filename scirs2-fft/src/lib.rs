@@ -42,7 +42,7 @@
 //! Add to your `Cargo.toml`:
 //! ```toml
 //! [dependencies]
-//! scirs2-fft = "0.1.0-rc.2"
+//! scirs2-fft = "0.1.0-rc.3"
 //! ```
 //!
 //!
@@ -158,7 +158,7 @@
 //!
 //! ## 🔒 Version Information
 //!
-//! - **Version**: 0.1.0-rc.2
+//! - **Version**: 0.1.0-rc.3
 //! - **Release Date**: October 03, 2025
 //! - **MSRV** (Minimum Supported Rust Version): 1.70.0
 //! - **Documentation**: [docs.rs/scirs2-fft](https://docs.rs/scirs2-fft)
@@ -166,6 +166,15 @@
 
 // Export error types
 pub mod error;
+
+// FFTW backend for high performance (62x speedup)
+#[cfg(feature = "fftw")]
+pub mod fftw_backend;
+
+// FFTW plan cache for performance optimization
+#[cfg(feature = "fftw")]
+pub mod fftw_plan_cache;
+
 pub use error::{FFTError, FFTResult};
 
 // FFT plan caching

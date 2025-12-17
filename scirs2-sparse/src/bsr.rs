@@ -224,7 +224,7 @@ where
     /// Get mutable access to the block data array
     ///
     /// The data array contains the non-zero blocks of the matrix, stored in
-    /// row-major order. Each block is a 2D array (Vec<Vec<T>>) with dimensions
+    /// row-major order. Each block is a 2D array (`Vec<Vec<T>>`) with dimensions
     /// matching the block size of the matrix.
     pub fn data_mut(&mut self) -> &mut [Vec<Vec<T>>] {
         &mut self.data
@@ -253,7 +253,7 @@ where
         count
     }
 
-    /// Convert to dense matrix (as Vec<Vec<T>>)
+    /// Convert to dense matrix (as `Vec<Vec<T>>`)
     pub fn to_dense(&self) -> Vec<Vec<T>>
     where
         T: Zero + Copy + SparseElement,

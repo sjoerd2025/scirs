@@ -40,7 +40,7 @@ parallel = ["scirs2-core/parallel"]
 cuda = ["scirs2-core/cuda"]
 opencl = []
 metal = []
-gpu = ["cuda"]
+gpu = []  # GPU abstraction layer - does NOT auto-enable specific backends
 compression = ["flate2", "zstd", "lz4"]
 
 [dev-dependencies]
@@ -67,6 +67,7 @@ name = "streaming_processing"
 
 [[example]]
 name = "gpu_backend"
+required-features = ["gpu"]
 
 # [[example]]
 # name = "ndimage_comprehensive_analysis"

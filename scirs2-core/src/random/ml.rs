@@ -26,7 +26,7 @@ use crate::random::{
     arrays::OptimizedArrayRandom, random_he_weights, random_xavier_weights, seeded_rng, thread_rng,
     ParallelRng, Random, ThreadLocalRngPool,
 };
-use ndarray::{Array, Array1, Array2, Array3, Ix2};
+use ::ndarray::{Array, Array1, Array2, Array3, Ix2};
 use rand::Rng;
 use rand_distr::{Normal, Uniform};
 use std::collections::HashMap;

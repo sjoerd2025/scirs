@@ -3,11 +3,15 @@
 use crate::error::{NeuralError, Result};
 use crate::layers::recurrent::{GruForwardOutput, GruGateCache};
 use crate::layers::{Layer, ParamLayer};
-use scirs2_core::ndarray::{Array, ArrayView, Ix2, IxDyn, ScalarOperand};
+use scirs2_core::ndarray::{Array, ArrayView, ArrayView1, Ix2, IxDyn, ScalarOperand};
 use scirs2_core::numeric::Float;
 use scirs2_core::random::{Distribution, Uniform};
+use scirs2_core::simd_ops::SimdUnifiedOps;
 use std::fmt::Debug;
 use std::sync::{Arc, RwLock};
+
+/// Threshold for using SIMD-accelerated GRU step
+const GRU_SIMD_THRESHOLD: usize = 32;
 /// Configuration for GRU layers
 #[derive(Debug, Clone)]
 pub struct GRUConfig {
@@ -81,7 +85,7 @@ pub struct GRU<F: Float + Debug> {
     gate_cache: GruGateCache<F>,
 }
 
-impl<F: Float + Debug + ScalarOperand + 'static> GRU<F> {
+impl<F: Float + Debug + ScalarOperand + SimdUnifiedOps + 'static> GRU<F> {
     /// Create a new GRU layer
     ///
     /// # Arguments
@@ -180,6 +184,11 @@ impl<F: Float + Debug + ScalarOperand + 'static> GRU<F> {
             gate_cache: Arc::new(RwLock::new(None)),
         })
     }
+    /// Check if SIMD path should be used
+    fn should_use_simd(&self) -> bool {
+        self.input_size + self.hidden_size >= GRU_SIMD_THRESHOLD
+    }
+
     /// Helper method to compute one step of the GRU
     /// * `x` - Input tensor of shape [batch_size, input_size]
     /// * `h` - Previous hidden state of shape [batch_size, hidden_size]
@@ -191,10 +200,23 @@ impl<F: Float + Debug + ScalarOperand + 'static> GRU<F> {
         x: &ArrayView<F, IxDyn>,
         h: &ArrayView<F, IxDyn>,
     ) -> Result<GruForwardOutput<F>> {
+        if self.should_use_simd() {
+            self.step_simd(x, h)
+        } else {
+            self.step_naive(x, h)
+        }
+    }
+
+    /// SIMD-accelerated step using simd_dot for gate computations
+    fn step_simd(
+        &self,
+        x: &ArrayView<F, IxDyn>,
+        h: &ArrayView<F, IxDyn>,
+    ) -> Result<GruForwardOutput<F>> {
         let xshape = x.shape();
         let hshape = h.shape();
         let batch_size = xshape[0];
-        // Validate shapes
+
         if xshape[1] != self.input_size {
             return Err(NeuralError::InferenceError(format!(
                 "Input feature dimension mismatch: expected {}, got {}",
@@ -213,16 +235,102 @@ impl<F: Float + Debug + ScalarOperand + 'static> GRU<F> {
                 xshape[0], hshape[0]
             )));
         }
-        // Initialize gates
+
         let mut r_gate: Array<F, IxDyn> = Array::zeros(IxDyn(&[batch_size, self.hidden_size]));
         let mut z_gate: Array<F, IxDyn> = Array::zeros(IxDyn(&[batch_size, self.hidden_size]));
         let mut n_gate: Array<F, IxDyn> = Array::zeros(IxDyn(&[batch_size, self.hidden_size]));
-        // Initialize new hidden state
         let mut new_h: Array<F, IxDyn> = Array::zeros(IxDyn(&[batch_size, self.hidden_size]));
-        // Compute gates for each batch item
+
+        for b in 0..batch_size {
+            let x_b = x.slice(scirs2_core::ndarray::s![b, ..]);
+            let x_view: ArrayView1<F> = x_b.into_dimensionality().unwrap();
+            let h_b = h.slice(scirs2_core::ndarray::s![b, ..]);
+            let h_view: ArrayView1<F> = h_b.into_dimensionality().unwrap();
+
+            for i in 0..self.hidden_size {
+                // Get weight rows for SIMD dot products
+                let wir_row = self.weight_ir.slice(scirs2_core::ndarray::s![i, ..]);
+                let wir_view: ArrayView1<F> = wir_row.into_dimensionality().unwrap();
+                let whr_row = self.weight_hr.slice(scirs2_core::ndarray::s![i, ..]);
+                let whr_view: ArrayView1<F> = whr_row.into_dimensionality().unwrap();
+
+                let wiz_row = self.weight_iz.slice(scirs2_core::ndarray::s![i, ..]);
+                let wiz_view: ArrayView1<F> = wiz_row.into_dimensionality().unwrap();
+                let whz_row = self.weight_hz.slice(scirs2_core::ndarray::s![i, ..]);
+                let whz_view: ArrayView1<F> = whz_row.into_dimensionality().unwrap();
+
+                let win_row = self.weight_in.slice(scirs2_core::ndarray::s![i, ..]);
+                let win_view: ArrayView1<F> = win_row.into_dimensionality().unwrap();
+                let whn_row = self.weight_hn.slice(scirs2_core::ndarray::s![i, ..]);
+                let whn_view: ArrayView1<F> = whn_row.into_dimensionality().unwrap();
+
+                // Reset gate with simd_dot
+                let r_sum = self.bias_ir[i]
+                    + self.bias_hr[i]
+                    + F::simd_dot(&wir_view, &x_view)
+                    + F::simd_dot(&whr_view, &h_view);
+                r_gate[[b, i]] = F::one() / (F::one() + (-r_sum).exp());
+
+                // Update gate
+                let z_sum = self.bias_iz[i]
+                    + self.bias_hz[i]
+                    + F::simd_dot(&wiz_view, &x_view)
+                    + F::simd_dot(&whz_view, &h_view);
+                z_gate[[b, i]] = F::one() / (F::one() + (-z_sum).exp());
+
+                // New gate
+                let n_sum = self.bias_in[i] + F::simd_dot(&win_view, &x_view);
+                let hn_sum = self.bias_hn[i] + F::simd_dot(&whn_view, &h_view);
+                n_gate[[b, i]] = (n_sum + r_gate[[b, i]] * hn_sum).tanh();
+
+                // New hidden state
+                new_h[[b, i]] =
+                    (F::one() - z_gate[[b, i]]) * n_gate[[b, i]] + z_gate[[b, i]] * h[[b, i]];
+            }
+        }
+
+        Ok((
+            new_h.into_dyn(),
+            (r_gate.into_dyn(), z_gate.into_dyn(), n_gate.into_dyn()),
+        ))
+    }
+
+    /// Naive (scalar) step implementation for small dimensions
+    fn step_naive(
+        &self,
+        x: &ArrayView<F, IxDyn>,
+        h: &ArrayView<F, IxDyn>,
+    ) -> Result<GruForwardOutput<F>> {
+        let xshape = x.shape();
+        let hshape = h.shape();
+        let batch_size = xshape[0];
+
+        if xshape[1] != self.input_size {
+            return Err(NeuralError::InferenceError(format!(
+                "Input feature dimension mismatch: expected {}, got {}",
+                self.input_size, xshape[1]
+            )));
+        }
+        if hshape[1] != self.hidden_size {
+            return Err(NeuralError::InferenceError(format!(
+                "Hidden state dimension mismatch: expected {}, got {}",
+                self.hidden_size, hshape[1]
+            )));
+        }
+        if xshape[0] != hshape[0] {
+            return Err(NeuralError::InferenceError(format!(
+                "Batch size mismatch: input has {}, hidden state has {}",
+                xshape[0], hshape[0]
+            )));
+        }
+
+        let mut r_gate: Array<F, IxDyn> = Array::zeros(IxDyn(&[batch_size, self.hidden_size]));
+        let mut z_gate: Array<F, IxDyn> = Array::zeros(IxDyn(&[batch_size, self.hidden_size]));
+        let mut n_gate: Array<F, IxDyn> = Array::zeros(IxDyn(&[batch_size, self.hidden_size]));
+        let mut new_h: Array<F, IxDyn> = Array::zeros(IxDyn(&[batch_size, self.hidden_size]));
+
         for b in 0..batch_size {
             for i in 0..self.hidden_size {
-                // Reset gate (r_t)
                 let mut r_sum = self.bias_ir[i] + self.bias_hr[i];
                 for j in 0..self.input_size {
                     r_sum = r_sum + self.weight_ir[[i, j]] * x[[b, j]];
@@ -230,9 +338,8 @@ impl<F: Float + Debug + ScalarOperand + 'static> GRU<F> {
                 for j in 0..self.hidden_size {
                     r_sum = r_sum + self.weight_hr[[i, j]] * h[[b, j]];
                 }
-                r_gate[[b, i]] = F::one() / (F::one() + (-r_sum).exp()); // sigmoid
+                r_gate[[b, i]] = F::one() / (F::one() + (-r_sum).exp());
 
-                // Update gate (z_t)
                 let mut z_sum = self.bias_iz[i] + self.bias_hz[i];
                 for j in 0..self.input_size {
                     z_sum = z_sum + self.weight_iz[[i, j]] * x[[b, j]];
@@ -240,35 +347,33 @@ impl<F: Float + Debug + ScalarOperand + 'static> GRU<F> {
                 for j in 0..self.hidden_size {
                     z_sum = z_sum + self.weight_hz[[i, j]] * h[[b, j]];
                 }
-                z_gate[[b, i]] = F::one() / (F::one() + (-z_sum).exp()); // sigmoid
+                z_gate[[b, i]] = F::one() / (F::one() + (-z_sum).exp());
 
-                // New gate (n_t)
                 let mut n_sum = self.bias_in[i];
                 for j in 0..self.input_size {
                     n_sum = n_sum + self.weight_in[[i, j]] * x[[b, j]];
                 }
-                // Reset gate applied to hidden state
                 let mut hn_sum = self.bias_hn[i];
                 for j in 0..self.hidden_size {
                     hn_sum = hn_sum + self.weight_hn[[i, j]] * h[[b, j]];
                 }
-                n_gate[[b, i]] = (n_sum + r_gate[[b, i]] * hn_sum).tanh(); // tanh
+                n_gate[[b, i]] = (n_sum + r_gate[[b, i]] * hn_sum).tanh();
 
-                // New hidden state (h_t)
                 new_h[[b, i]] =
                     (F::one() - z_gate[[b, i]]) * n_gate[[b, i]] + z_gate[[b, i]] * h[[b, i]];
             }
         }
-        // Convert all to dynamic dimension
-        let new_h_dyn = new_h.into_dyn();
-        let r_gate_dyn = r_gate.into_dyn();
-        let z_gate_dyn = z_gate.into_dyn();
-        let n_gate_dyn = n_gate.into_dyn();
-        Ok((new_h_dyn, (r_gate_dyn, z_gate_dyn, n_gate_dyn)))
+
+        Ok((
+            new_h.into_dyn(),
+            (r_gate.into_dyn(), z_gate.into_dyn(), n_gate.into_dyn()),
+        ))
     }
 }
 
-impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for GRU<F> {
+impl<F: Float + Debug + ScalarOperand + Send + Sync + SimdUnifiedOps + 'static> Layer<F>
+    for GRU<F>
+{
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
@@ -381,7 +486,9 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for GRU<
     }
 }
 
-impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> ParamLayer<F> for GRU<F> {
+impl<F: Float + Debug + ScalarOperand + Send + Sync + SimdUnifiedOps + 'static> ParamLayer<F>
+    for GRU<F>
+{
     fn get_parameters(&self) -> Vec<Array<F, scirs2_core::ndarray::IxDyn>> {
         vec![
             self.weight_ir.clone(),

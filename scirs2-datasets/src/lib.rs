@@ -28,7 +28,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! scirs2-datasets = "0.1.0-rc.2"
+//! scirs2-datasets = "0.1.0-rc.3"
 //! ```
 //!
 //! ```rust
@@ -42,7 +42,7 @@
 //! let data = make_classification(100, 5, 3, 2, 4, Some(42)).unwrap();
 //! ```
 //!
-//! ## 🔒 Version: 0.1.0-rc.2 (October 03, 2025)
+//! ## 🔒 Version: 0.1.0-rc.3 (October 03, 2025)
 //!
 //! # Examples
 //!

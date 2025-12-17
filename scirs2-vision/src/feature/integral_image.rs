@@ -18,7 +18,7 @@ use scirs2_core::ndarray::Array2;
 ///
 /// # Returns
 ///
-/// * Result containing integral image as Array2<u64>
+/// * Result containing integral image as `Array2<u64>`
 ///
 /// # Example
 ///
@@ -74,7 +74,7 @@ pub fn compute_integral_image(img: &DynamicImage) -> Result<Array2<u64>> {
 ///
 /// # Returns
 ///
-/// * Result containing squared integral image as Array2<u64>
+/// * Result containing squared integral image as `Array2<u64>`
 #[allow(dead_code)]
 pub fn compute_squared_integral_image(img: &DynamicImage) -> Result<Array2<u64>> {
     let gray = img.to_luma8();
@@ -118,7 +118,7 @@ pub fn compute_squared_integral_image(img: &DynamicImage) -> Result<Array2<u64>>
 ///
 /// # Returns
 ///
-/// * Result containing tilted integral image as Array2<u64>
+/// * Result containing tilted integral image as `Array2<u64>`
 #[allow(dead_code)]
 pub fn compute_tilted_integral_image(img: &DynamicImage) -> Result<Array2<u64>> {
     let gray = img.to_luma8();

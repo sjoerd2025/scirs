@@ -47,7 +47,7 @@
 //! Add to your `Cargo.toml`:
 //! ```toml
 //! [dependencies]
-//! scirs2-stats = "0.1.0-rc.2"
+//! scirs2-stats = "0.1.0-rc.3"
 //! ```
 //!
 //! ```rust
@@ -205,7 +205,7 @@
 //!
 //! ## 🔒 Version Information
 //!
-//! - **Version**: 0.1.0-rc.2
+//! - **Version**: 0.1.0-rc.3
 //! - **Release Date**: October 03, 2025
 //! - **MSRV** (Minimum Supported Rust Version): 1.70.0
 //! - **Documentation**: [docs.rs/scirs2-stats](https://docs.rs/scirs2-stats)
@@ -415,7 +415,12 @@
 //! ```
 // Linear algebra operations provided by scirs2-linalg
 
-// Export error types
+// Python API wrappers
+// Note: python_api module not yet implemented
+// #[cfg(feature = "python")]
+// pub mod python_api;
+
+// Export error types (MUST be unconditional - used by all modules)
 pub mod error;
 pub mod error_context;
 pub mod error_diagnostics;
@@ -609,13 +614,14 @@ pub mod bayesian; // Bayesian statistics
 pub mod contingency; // Contingency table functions
 pub mod distributions; // Statistical distributions
 pub mod gaussian_process; // Gaussian Process regression
+pub mod math_utils;
 pub mod mcmc; // Markov Chain Monte Carlo methods
 pub mod mstats; // Masked array statistics
 pub mod multivariate; // Multivariate analysis (PCA, etc.)
 pub mod qmc; // Quasi-Monte Carlo
 pub mod sampling; // Sampling utilities
 pub mod survival; // Survival analysis
-pub mod traits; // Trait definitions for distributions and statistical objects
+pub mod traits; // Trait definitions for distributions and statistical objects // Mathematical utility functions with SIMD acceleration (abs, sign)
 
 // Comprehensive validation and testing frameworks for v1.0.0
 // pub mod comprehensive_validation_suite;

@@ -22,7 +22,7 @@
 //!
 //! ## Mathematical Foundation
 //!
-//! The Discrete Fourier Transform (DFT) of a sequence x[n] is defined as:
+//! The Discrete Fourier Transform (DFT) of a sequence `x[n]` is defined as:
 //!
 //! ```text
 //! X[k] = Σ(n=0 to N-1) x[n] * exp(-j * 2π * k * n / N)
@@ -422,7 +422,7 @@ fn ifft_power_of_2(input: &ArrayView1<Complex64>) -> LinalgResult<Array1<Complex
 ///
 /// For real input of size N, produces N/2+1 complex output coefficients.
 /// This is twice as efficient as complex FFT since we leverage the symmetry
-/// property: X[N-k] = X*[k] for real input.
+/// property: `X[N-k] = X*[k]` for real input.
 ///
 /// # Arguments
 ///

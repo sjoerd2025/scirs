@@ -166,7 +166,7 @@ where
     ///
     /// # Returns
     ///
-    /// An array where result[i] is the i-th derivative at x
+    /// An array where `result[i]` is the i-th derivative at x
     pub fn evaluate_derivatives(&self, x: T, n: usize) -> InterpolateResult<Array1<T>> {
         let max_order = std::cmp::min(n, self.k);
         let mut derivatives = Array1::zeros(max_order + 1);
@@ -279,7 +279,7 @@ where
     ///
     /// # Returns
     ///
-    /// A tuple of (starting_index, derivatives) where derivatives[i][j] is the
+    /// A tuple of (starting_index, derivatives) where `derivatives[i][j]` is the
     /// j-th derivative of the (starting_index + i)-th basis function
     pub fn evaluate_basis_derivatives(
         &self,

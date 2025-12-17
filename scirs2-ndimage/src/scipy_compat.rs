@@ -17,11 +17,14 @@ use crate::measurements;
 use crate::morphology;
 
 /// Trait for ndarray types that can be used with SciPy-compatible functions
+///
+/// Note: This trait is currently unused but kept for potential future compatibility needs.
+/// The methods delegate to ndarray's inherent methods.
 pub trait NdimageArray<T>: Sized {
     type Dim: Dimension;
 
-    fn view(&self) -> ArrayView<T, Self::Dim>;
-    fn view_mut(&mut self) -> ArrayViewMut<T, Self::Dim>;
+    fn as_view(&self) -> ArrayView<T, Self::Dim>;
+    fn as_view_mut(&mut self) -> ArrayViewMut<T, Self::Dim>;
 }
 
 impl<T, S, D> NdimageArray<T> for ArrayBase<S, D>
@@ -31,11 +34,13 @@ where
 {
     type Dim = D;
 
-    fn view(&self) -> ArrayView<T, Self::Dim> {
+    fn as_view(&self) -> ArrayView<T, Self::Dim> {
+        // Call ndarray's inherent view() method
         self.view()
     }
 
-    fn view_mut(&mut self) -> ArrayViewMut<T, Self::Dim> {
+    fn as_view_mut(&mut self) -> ArrayViewMut<T, Self::Dim> {
+        // Call ndarray's inherent view_mut() method
         self.view_mut()
     }
 }

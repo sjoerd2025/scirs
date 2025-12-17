@@ -5,7 +5,7 @@
 //! a single RNG instance for bulk operations instead of creating RNG-per-element.
 
 use crate::random::core::Random;
-use ndarray::{Array, Dimension, Ix1, Ix2, IxDyn};
+use ::ndarray::{Array, Dimension, Ix1, Ix2, IxDyn};
 use rand::Rng;
 use rand_distr::{Distribution, Exp, Gamma, Normal, Uniform};
 
@@ -122,7 +122,7 @@ pub fn random_xavier_weights(
 ) -> Array<f64, Ix2> {
     let limit = (6.0 / (fan_in + fan_out) as f64).sqrt();
     Array::random_bulk(
-        ndarray::Ix2(fan_out, fan_in),
+        crate::ndarray::Ix2(fan_out, fan_in),
         Uniform::new(-limit, limit).unwrap(),
         rng,
     )
@@ -136,7 +136,7 @@ pub fn random_he_weights(
 ) -> Array<f64, Ix2> {
     let std_dev = (2.0 / fan_in as f64).sqrt();
     Array::random_bulk(
-        ndarray::Ix2(fan_out, fan_in),
+        crate::ndarray::Ix2(fan_out, fan_in),
         Normal::new(0.0, std_dev).unwrap(),
         rng,
     )
@@ -146,7 +146,7 @@ pub fn random_he_weights(
 mod tests {
     use super::*;
     use crate::random::core::seeded_rng;
-    use ndarray::Ix2;
+    use ::ndarray::Ix2;
 
     #[test]
     fn test_optimized_array_random_bulk() {

@@ -6,7 +6,7 @@
 
 use crate::error::{CoreError, CoreResult, ErrorContext};
 use crate::gpu::{GpuContext, GpuKernelHandle};
-use ndarray::{Array, IxDyn};
+use ::ndarray::{Array, IxDyn};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
@@ -575,7 +575,7 @@ impl GpuRandomGenerator {
     }
 
     /// Generate random array with specified shape
-    pub fn generate_array<D: ndarray::Dimension>(
+    pub fn generate_array<D: crate::ndarray::Dimension>(
         &self,
         distribution: &GpuDistribution,
         shape: D,

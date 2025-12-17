@@ -124,7 +124,12 @@ impl ClassificationMetrics {
             match (true_label, pred_label) {
                 (1, 1) => tp += 1,
                 (0, 1) => fp += 1,
-                (0, 0) => tn += 1,
+                (0, 0) => {
+                    #[allow(unused_assignments)]
+                    {
+                        tn += 1
+                    }
+                }
                 (1, 0) => fn_count += 1,
                 _ => {} // Handle multi-class case
             }

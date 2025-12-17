@@ -6,7 +6,8 @@
 //! base ndarray crate.
 
 /// Re-export essential ndarray types and macros for convenience
-pub use ndarray::{
+/// Use ::ndarray to refer to the external crate directly
+pub use ::ndarray::{
     s, Array, ArrayBase, ArrayView, ArrayViewMut, Axis, Data, DataMut, Dim, Dimension, Ix1, Ix2,
     Ix3, Ix4, Ix5, Ix6, IxDyn, OwnedRepr, RemoveAxis, ScalarOperand, ShapeBuilder, ShapeError,
     SliceInfo, ViewRepr, Zip,
@@ -15,15 +16,15 @@ pub use ndarray::{
 // Re-export the array! macro for convenient array creation
 // This addresses the common issue where users expect array! to be available in scirs2-core
 // instead of requiring import from scirs2_autograd::ndarray
-pub use ndarray::{arr1, arr2, array};
+pub use ::ndarray::{arr1, arr2, array};
 
 // Re-export type aliases for common array sizes
-pub use ndarray::{ArcArray1, ArcArray2};
-pub use ndarray::{Array0, Array1, Array2, Array3, Array4, Array5, Array6, ArrayD};
-pub use ndarray::{
+pub use ::ndarray::{ArcArray1, ArcArray2};
+pub use ::ndarray::{Array0, Array1, Array2, Array3, Array4, Array5, Array6, ArrayD};
+pub use ::ndarray::{
     ArrayView0, ArrayView1, ArrayView2, ArrayView3, ArrayView4, ArrayView5, ArrayView6, ArrayViewD,
 };
-pub use ndarray::{
+pub use ::ndarray::{
     ArrayViewMut0, ArrayViewMut1, ArrayViewMut2, ArrayViewMut3, ArrayViewMut4, ArrayViewMut5,
     ArrayViewMut6, ArrayViewMutD,
 };
@@ -39,6 +40,15 @@ pub mod matrix;
 
 /// Array manipulation operations (flip, roll, tile, repeat, etc.)
 pub mod manipulation;
+
+/// Array reduction operations with SIMD acceleration (argmin, argmax, etc.)
+pub mod reduction;
+
+/// Data preprocessing operations with SIMD acceleration (normalization, standardization)
+pub mod preprocessing;
+
+/// Element-wise mathematical operations with SIMD acceleration (abs, sqrt, etc.)
+pub mod elementwise;
 
 /// Random array generation with full ndarray-rand compatibility and scientific computing extensions
 #[cfg(feature = "random")]
@@ -58,7 +68,7 @@ pub mod random;
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use scirs2_core::ndarray::array;
 /// use scirs2_core::ndarray_ext::reshape_2d;
 ///
 /// let a = array![[1, 2], [3, 4]];
@@ -191,7 +201,7 @@ where
 /// # Examples
 ///
 /// ```ignore
-/// use ndarray::array;
+/// use crate::ndarray::array;
 /// use scirs2_core::ndarray_ext::transpose_2d;
 ///
 /// let a = array![[1, 2, 3], [4, 5, 6]];
@@ -223,7 +233,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use scirs2_core::ndarray::array;
 /// use scirs2_core::ndarray_ext::split_2d;
 ///
 /// let a = array![[1, 2, 3, 4], [5, 6, 7, 8]];
@@ -321,11 +331,11 @@ where
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use scirs2_core::ndarray::array;
 /// use scirs2_core::ndarray_ext::take_2d;
 ///
 /// let a = array![[1, 2, 3], [4, 5, 6]];
-/// let indices = array![0, 2];
+/// let indices = array![0_usize, 2];
 /// let result = take_2d(a.view(), indices.view(), 1).unwrap();
 /// assert_eq!(result.shape(), &[2, 2]);
 /// assert_eq!(result[[0, 0]], 1);
@@ -397,7 +407,7 @@ where
 /// # Examples
 ///
 /// ```ignore
-/// use ndarray::array;
+/// use crate::ndarray::array;
 /// use scirs2_core::ndarray_ext::mask_select;
 ///
 /// let a = array![[1, 2, 3], [4, 5, 6]];
@@ -454,7 +464,7 @@ where
 /// # Examples
 ///
 /// ```ignore
-/// use ndarray::array;
+/// use crate::ndarray::array;
 /// use scirs2_core::ndarray_ext::fancy_index_2d;
 ///
 /// let a = array![[1, 2, 3], [4, 5, 6], [7, 8, 9]];
@@ -522,7 +532,7 @@ where
 /// # Examples
 ///
 /// ```ignore
-/// use ndarray::array;
+/// use crate::ndarray::array;
 /// use scirs2_core::ndarray_ext::where_condition;
 ///
 /// let a = array![[1, 2, 3], [4, 5, 6]];
@@ -656,7 +666,7 @@ pub fn broadcastshape(shape1: &[usize], shape2: &[usize]) -> Option<Vec<usize>> 
 /// # Examples
 ///
 /// ```ignore
-/// use ndarray::array;
+/// use crate::ndarray::array;
 /// use scirs2_core::ndarray_ext::broadcast_1d_to_2d;
 ///
 /// let a = array![1, 2, 3];
@@ -724,7 +734,7 @@ where
 /// # Examples
 ///
 /// ```ignore
-/// use ndarray::array;
+/// use crate::ndarray::array;
 /// use scirs2_core::ndarray_ext::broadcast_apply;
 ///
 /// let a = array![[1, 2, 3], [4, 5, 6]];
@@ -769,7 +779,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::array;
+    use crate::ndarray::array;
 
     #[test]
     fn test_reshape_2d() {

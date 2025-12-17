@@ -35,6 +35,7 @@
 //! println!("Explained variance ratio: {:?}", result.explained_variance_ratio);
 //! ```
 
+use scirs2_core::ndarray::ArrayStatCompat;
 use scirs2_core::ndarray::{s, Array1, Array2, Axis, ScalarOperand};
 use scirs2_core::numeric::{Float, FromPrimitive};
 use std::fmt::Debug;
@@ -1291,7 +1292,7 @@ fn apply_persist(
 
 #[allow(dead_code)]
 fn normalize_timeseries(_timeseries: &Array1<f64>) -> Result<Array1<f64>> {
-    let mean = _timeseries.mean().unwrap_or(0.0);
+    let mean = _timeseries.mean_or(0.0);
     let std = _timeseries.std(0.0);
 
     if std == 0.0 {

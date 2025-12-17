@@ -22,19 +22,19 @@ use scirs2_core::ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use scirs2_core::numeric::{Float, FromPrimitive};
 use std::collections::HashMap;
 
-#[cfg(feature = "pyo3")]
-use numpy::{PyArray1, PyArray2, PyArrayMethods, ToPyArray};
-#[cfg(feature = "pyo3")]
+#[cfg(feature = "python")]
+use scirs2_core::python::numpy_compat::*;
+#[cfg(feature = "python")]
 use pyo3::exceptions::{PyRuntimeError, PyValueError};
-#[cfg(feature = "pyo3")]
+#[cfg(feature = "python")]
 use pyo3::prelude::*;
-#[cfg(feature = "pyo3")]
+#[cfg(feature = "python")]
 use pyo3::types::PyDict;
-#[cfg(feature = "pyo3")]
+#[cfg(feature = "python")]
 use pyo3::wrap_pymodule;
 
 /// Python-compatible K-means clustering implementation
-#[cfg(feature = "pyo3")]
+#[cfg(feature = "python")]
 #[pyclass(name = "KMeans")]
 pub struct PyKMeans {
     /// Number of clusters
@@ -59,7 +59,7 @@ pub struct PyKMeans {
     n_iter_: Option<usize>,
 }
 
-#[cfg(feature = "pyo3")]
+#[cfg(feature = "python")]
 #[pymethods]
 impl PyKMeans {
     /// Create new K-means clustering instance
@@ -150,14 +150,14 @@ impl PyKMeans {
         }
 
         let labels_i32: Array1<i32> = labels.mapv(|x| x as i32);
-        Ok(labels_i32.to_pyarray(py).into())
+        scirs_to_numpy_array1(labels_i32, py)
     }
 
     /// Get cluster centers
     #[getter]
     fn cluster_centers_(&self, py: Python) -> PyResult<Option<Py<PyArray2<f64>>>> {
         match &self.cluster_centers_ {
-            Some(centers) => Ok(Some(centers.to_pyarray(py).into())),
+            Some(centers) => Ok(Some(scirs_to_numpy_array2(centers.clone(), py)?)),
             None => Ok(None),
         }
     }
@@ -168,7 +168,7 @@ impl PyKMeans {
         match &self.labels_ {
             Some(labels) => {
                 let labels_i32: Array1<i32> = labels.mapv(|x| x as i32);
-                Ok(labels_i32.to_pyarray(py).into())
+                scirs_to_numpy_array1(labels_i32, py)
             }
             None => Err(PyRuntimeError::new_err("Model not fitted yet")),
         }
@@ -221,7 +221,7 @@ impl PyKMeans {
     }
 }
 
-#[cfg(feature = "pyo3")]
+#[cfg(feature = "python")]
 impl PyKMeans {
     /// Internal fitting logic
     fn fit_internal(
@@ -280,7 +280,7 @@ impl PyKMeans {
 }
 
 /// Python-compatible DBSCAN clustering implementation
-#[cfg(feature = "pyo3")]
+#[cfg(feature = "python")]
 #[pyclass(name = "DBSCAN")]
 pub struct PyDBSCAN {
     /// Epsilon neighborhood radius
@@ -295,7 +295,7 @@ pub struct PyDBSCAN {
     core_sample_indices_: Option<Array1<usize>>,
 }
 
-#[cfg(feature = "pyo3")]
+#[cfg(feature = "python")]
 #[pymethods]
 impl PyDBSCAN {
     /// Create new DBSCAN clustering instance
@@ -346,7 +346,7 @@ impl PyDBSCAN {
     #[getter]
     fn labels(&self, py: Python) -> PyResult<Py<PyArray1<i32>>> {
         match &self.labels_ {
-            Some(labels) => Ok(labels.to_pyarray(py).into()),
+            Some(labels) => scirs_to_numpy_array1(labels.clone(), py),
             None => Err(PyRuntimeError::new_err("Model not fitted yet")),
         }
     }
@@ -355,14 +355,14 @@ impl PyDBSCAN {
     #[getter]
     fn core_sample_indices_(&self, py: Python) -> PyResult<Option<Py<PyArray1<usize>>>> {
         match &self.core_sample_indices_ {
-            Some(indices) => Ok(Some(indices.to_pyarray(py).into())),
+            Some(indices) => Ok(Some(scirs_to_numpy_array1(indices.clone(), py)?)),
             None => Ok(None),
         }
     }
 }
 
 /// Python-compatible hierarchical clustering
-#[cfg(feature = "pyo3")]
+#[cfg(feature = "python")]
 #[pyclass(name = "AgglomerativeClustering")]
 pub struct PyAgglomerativeClustering {
     /// Number of clusters
@@ -379,7 +379,7 @@ pub struct PyAgglomerativeClustering {
     n_connected_components_: Option<usize>,
 }
 
-#[cfg(feature = "pyo3")]
+#[cfg(feature = "python")]
 #[pymethods]
 impl PyAgglomerativeClustering {
     /// Create new agglomerative clustering instance
@@ -464,7 +464,7 @@ impl PyAgglomerativeClustering {
     #[getter]
     fn labels(&self, py: Python) -> PyResult<Py<PyArray1<i32>>> {
         match &self.labels_ {
-            Some(labels) => Ok(labels.to_pyarray(py).into()),
+            Some(labels) => scirs_to_numpy_array1(labels.clone(), py),
             None => Err(PyRuntimeError::new_err("Model not fitted yet")),
         }
     }
@@ -483,7 +483,7 @@ impl PyAgglomerativeClustering {
 }
 
 /// Python-compatible BIRCH clustering implementation
-#[cfg(feature = "pyo3")]
+#[cfg(feature = "python")]
 #[pyclass(name = "Birch")]
 pub struct PyBirch {
     /// Number of clusters
@@ -500,7 +500,7 @@ pub struct PyBirch {
     n_features_in_: Option<usize>,
 }
 
-#[cfg(feature = "pyo3")]
+#[cfg(feature = "python")]
 #[pymethods]
 impl PyBirch {
     /// Create new BIRCH clustering instance
@@ -557,7 +557,7 @@ impl PyBirch {
     #[getter]
     fn labels(&self, py: Python) -> PyResult<Py<PyArray1<i32>>> {
         match &self.labels_ {
-            Some(labels) => Ok(labels.to_pyarray(py).into()),
+            Some(labels) => scirs_to_numpy_array1(labels.clone(), py),
             None => Err(PyRuntimeError::new_err("Model not fitted yet")),
         }
     }
@@ -566,14 +566,14 @@ impl PyBirch {
     #[getter]
     fn subcluster_centers_(&self, py: Python) -> PyResult<Option<Py<PyArray2<f64>>>> {
         match &self.subcluster_centers_ {
-            Some(centers) => Ok(Some(centers.to_pyarray(py).into())),
+            Some(centers) => Ok(Some(scirs_to_numpy_array2(centers.clone(), py)?)),
             None => Ok(None),
         }
     }
 }
 
 /// Python-compatible Spectral clustering implementation
-#[cfg(feature = "pyo3")]
+#[cfg(feature = "python")]
 #[pyclass(name = "SpectralClustering")]
 pub struct PySpectralClustering {
     /// Number of clusters
@@ -592,7 +592,7 @@ pub struct PySpectralClustering {
     affinity_matrix_: Option<Array2<f64>>,
 }
 
-#[cfg(feature = "pyo3")]
+#[cfg(feature = "python")]
 #[pymethods]
 impl PySpectralClustering {
     /// Create new spectral clustering instance
@@ -675,7 +675,7 @@ impl PySpectralClustering {
     #[getter]
     fn labels(&self, py: Python) -> PyResult<Py<PyArray1<i32>>> {
         match &self.labels_ {
-            Some(labels) => Ok(labels.to_pyarray(py).into()),
+            Some(labels) => scirs_to_numpy_array1(labels.clone(), py),
             None => Err(PyRuntimeError::new_err("Model not fitted yet")),
         }
     }
@@ -684,14 +684,14 @@ impl PySpectralClustering {
     #[getter]
     fn affinity_matrix_(&self, py: Python) -> PyResult<Option<Py<PyArray2<f64>>>> {
         match &self.affinity_matrix_ {
-            Some(matrix) => Ok(Some(matrix.to_pyarray(py).into())),
+            Some(matrix) => Ok(Some(scirs_to_numpy_array2(matrix.clone(), py)?)),
             None => Ok(None),
         }
     }
 }
 
 /// Python-compatible Mean Shift clustering implementation
-#[cfg(feature = "pyo3")]
+#[cfg(feature = "python")]
 #[pyclass(name = "MeanShift")]
 pub struct PyMeanShift {
     /// Bandwidth parameter
@@ -708,7 +708,7 @@ pub struct PyMeanShift {
     n_iter_: Option<usize>,
 }
 
-#[cfg(feature = "pyo3")]
+#[cfg(feature = "python")]
 #[pymethods]
 impl PyMeanShift {
     /// Create new Mean Shift clustering instance
@@ -785,7 +785,7 @@ impl PyMeanShift {
     #[getter]
     fn labels(&self, py: Python) -> PyResult<Py<PyArray1<i32>>> {
         match &self.labels_ {
-            Some(labels) => Ok(labels.to_pyarray(py).into()),
+            Some(labels) => scirs_to_numpy_array1(labels.clone(), py),
             None => Err(PyRuntimeError::new_err("Model not fitted yet")),
         }
     }
@@ -794,7 +794,7 @@ impl PyMeanShift {
     #[getter]
     fn cluster_centers_(&self, py: Python) -> PyResult<Option<Py<PyArray2<f64>>>> {
         match &self.cluster_centers_ {
-            Some(centers) => Ok(Some(centers.to_pyarray(py).into())),
+            Some(centers) => Ok(Some(scirs_to_numpy_array2(centers.clone(), py)?)),
             None => Ok(None),
         }
     }
@@ -807,7 +807,7 @@ impl PyMeanShift {
 }
 
 /// Python-compatible Gaussian Mixture Model implementation
-#[cfg(feature = "pyo3")]
+#[cfg(feature = "python")]
 #[pyclass(name = "GaussianMixture")]
 pub struct PyGaussianMixture {
     /// Number of components
@@ -834,7 +834,7 @@ pub struct PyGaussianMixture {
     n_iter_: Option<usize>,
 }
 
-#[cfg(feature = "pyo3")]
+#[cfg(feature = "python")]
 #[pymethods]
 impl PyGaussianMixture {
     /// Create new Gaussian Mixture Model instance
@@ -925,7 +925,7 @@ impl PyGaussianMixture {
     #[getter]
     fn labels(&self, py: Python) -> PyResult<Py<PyArray1<i32>>> {
         match &self.labels_ {
-            Some(labels) => Ok(labels.to_pyarray(py).into()),
+            Some(labels) => scirs_to_numpy_array1(labels.clone(), py),
             None => Err(PyRuntimeError::new_err("Model not fitted yet")),
         }
     }
@@ -934,7 +934,7 @@ impl PyGaussianMixture {
     #[getter]
     fn means_(&self, py: Python) -> PyResult<Option<Py<PyArray2<f64>>>> {
         match &self.means_ {
-            Some(means) => Ok(Some(means.to_pyarray(py).into())),
+            Some(means) => Ok(Some(scirs_to_numpy_array2(means.clone(), py)?)),
             None => Ok(None),
         }
     }
@@ -943,7 +943,7 @@ impl PyGaussianMixture {
     #[getter]
     fn weights_(&self, py: Python) -> PyResult<Option<Py<PyArray1<f64>>>> {
         match &self.weights_ {
-            Some(weights) => Ok(Some(weights.to_pyarray(py).into())),
+            Some(weights) => Ok(Some(scirs_to_numpy_array1(weights.clone(), py)?)),
             None => Ok(None),
         }
     }
@@ -968,7 +968,7 @@ impl PyGaussianMixture {
 }
 
 /// Python-compatible clustering metrics
-#[cfg(feature = "pyo3")]
+#[cfg(feature = "python")]
 #[pymodule]
 #[allow(dead_code)]
 fn metrics(m: &Bound<'_, PyModule>) -> PyResult<()> {
@@ -1115,7 +1115,7 @@ fn metrics(m: &Bound<'_, PyModule>) -> PyResult<()> {
 }
 
 /// Main Python module
-#[cfg(feature = "pyo3")]
+#[cfg(feature = "python")]
 #[pymodule]
 #[allow(dead_code)]
 fn scirs2_cluster(m: &Bound<'_, PyModule>) -> PyResult<()> {

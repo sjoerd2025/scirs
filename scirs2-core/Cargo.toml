@@ -14,7 +14,7 @@ workspace = true
 
 [dependencies]
 # Core dependencies
-ndarray = { workspace = true }
+ndarray = { workspace = true }  # ndarray 0.17.1 - REQUIRED (not optional)
 num-traits = { workspace = true }
 num-complex = { workspace = true }
 num-integer = { workspace = true }
@@ -98,6 +98,10 @@ num-rational = { workspace = true, optional = true }  # Exact rational arithmeti
 rug = { workspace = true, optional = true }  # High-performance arbitrary precision
 gmp-mpfr-sys = { workspace = true, optional = true }  # Low-level GMP/MPFR bindings
 
+# Python integration dependencies (PyO3)
+pyo3 = { workspace = true, optional = true }  # Python bindings
+scirs2-numpy = { workspace = true, optional = true }  # NumPy integration for Python (SciRS2 fork with ndarray 0.17)
+
 # Platform-specific BLAS backend configuration
 # macOS: Use Accelerate framework ONLY (system BLAS, no source build)
 [target.'cfg(target_os = "macos")'.dependencies]
@@ -108,6 +112,7 @@ objc2 = { workspace = true, optional = true }  # Objective-C runtime for Metal
 objc2-foundation = { workspace = true, optional = true }  # Foundation framework for Metal
 objc2-metal = { workspace = true, optional = true }  # Metal bindings for objc2
 objc2-metal-performance-shaders = { workspace = true, optional = true }  # MPS integration for Metal
+objc2-metal-performance-shaders-graph = { workspace = true, optional = true }  # MPSGraph for high-performance operations
 
 # Linux: Use system OpenBLAS ONLY (no source build via openblas-src)
 [target.'cfg(target_os = "linux")'.dependencies]
@@ -133,7 +138,7 @@ tempfile = { workspace = true }
 [features]
 default = ["array", "serialization"]  # Enable array module by default
 simd = ["wide"]  # SIMD operations
-parallel = ["rayon", "ndarray/rayon", "crossbeam", "crossbeam-utils", "crossbeam-deque", "num_cpus"]  # Parallel processing with rayon
+parallel = ["rayon", "crossbeam", "crossbeam-utils", "crossbeam-deque", "num_cpus"]  # Parallel processing with rayon
 cache = ["cached"]  # Caching and memoization functionality
 validation = ["regex", "statrs"]  # Validation utilities
 cross_platform = ["libc", "sysinfo"]  # Cross-platform validation and compatibility
@@ -142,6 +147,7 @@ async = ["tokio", "async-trait"]  # Async error handling and recovery mechanisms
 gpu = []  # GPU acceleration abstractions
 opencl = ["gpu", "dep:opencl3"]  # OpenCL-specific GPU acceleration
 metal = ["gpu", "dep:metal", "dep:objc2", "dep:objc2-foundation", "dep:objc2-metal", "dep:objc2-metal-performance-shaders"]  # Metal-specific GPU acceleration (Apple)
+mpsgraph = ["metal", "dep:objc2-metal-performance-shaders-graph"]  # MPSGraph high-performance operations (Apple, requires metal)
 wgpu_backend = ["gpu", "dep:wgpu", "dep:pollster"]  # WebGPU-specific GPU acceleration
 rocm = ["gpu"]  # ROCm-specific GPU acceleration (AMD)
 # CUDA feature is platform-conditional - only works on x86_64 Linux and Windows
@@ -206,14 +212,14 @@ jit = ["cranelift-jit", "cranelift-module", "cranelift-frontend"]  # Just-in-tim
 ml_pipeline = []  # ML pipeline integration and real-time processing
 production = ["observability", "versioning", "leak_detection", "data_validation"]  # All production features
 arbitrary-precision = ["num-bigint", "num-rational", "rug", "gmp-mpfr-sys"]  # Arbitrary precision arithmetic
+python = ["dep:pyo3", "dep:scirs2-numpy", "serialization"]  # Python bindings with NumPy integration (uses scirs2-numpy with ndarray 0.17)
 all = [
     "simd", "parallel", "cache", "validation", "logging",
     "gpu", "cuda", "memory_management", "memory_efficient", "memory_compression",
     "array", "array_stats", "array_io", "linalg", "profiling", "random", "types", "ufuncs", "testing", "benchmarking",
     "array_protocol_all", "production", "arbitrary-precision"
-]  # Enable all features except mutually exclusive BLAS backends
-# NOTE: BLAS backends (openblas, netlib) are mutually exclusive
-# Use --features openblas (default) or --features netlib
+    # Note: "python" can now be used with all other features (uses scirs2-numpy with ndarray 0.17)
+]  # Enable all features except mutually exclusive BLAS backends (openblas, netlib)
 
 [[example]]
 name = "gpu_example"
@@ -376,6 +382,7 @@ path = "examples/ndarray_advanced_operations.rs"
 [[example]]
 name = "ndarray_statistical_operations"
 path = "examples/ndarray_statistical_operations.rs"
+required-features = ["random"]
 
 [[example]]
 name = "ndarray_correlation_binning"
@@ -404,7 +411,7 @@ required-features = ["array_protocol"]
 [[example]]
 name = "array_protocol_backpropagation"
 path = "examples/array_protocol_backpropagation.rs"
-required-features = ["array_protocol"]
+required-features = ["array_protocol", "random"]
 
 [[example]]
 name = "array_protocol_distributed_training"
@@ -454,7 +461,7 @@ required-features = ["memory_efficient"]
 [[example]]
 name = "advanced_error_handling"
 path = "examples/advanced_error_handling.rs"
-required-features = []
+required-features = ["random"]
 
 [[example]]
 name = "leak_detection_demo"
@@ -479,7 +486,7 @@ required-features = ["profiling"]
 [[example]]
 name = "adaptive_optimization_demo"
 path = "examples/adaptive_optimization_demo.rs"
-required-features = ["profiling"]
+required-features = ["profiling", "random"]
 
 [[example]]
 name = "performance_dashboards_demo"
@@ -542,3 +549,8 @@ required-features = ["testing", "parallel", "random"]
 name = "security_test_verification"
 path = "examples/security_test_verification.rs"
 required-features = ["testing"]
+
+[[example]]
+name = "rng_patterns"
+path = "examples/rng_patterns.rs"
+required-features = ["random"]

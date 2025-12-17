@@ -40,7 +40,7 @@ impl<T: fmt::Display> fmt::Display for QMCQuadResult<T> {
 
 /// Trait for quasi-random number generators
 pub trait QRNGEngine: Send + Sync {
-    /// Generate n points in d dimensions in the unit hypercube [0,1]^d
+    /// Generate n points in d dimensions in the unit hypercube `[0,1]^d`
     fn random(&mut self, n: usize) -> Array2<f64>;
 
     /// Dimensionality of the generator

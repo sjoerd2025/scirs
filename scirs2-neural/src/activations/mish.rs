@@ -55,34 +55,35 @@ impl<F: Float + Debug> Activation<F> for Mish {
     fn backward(
         &self,
         grad_output: &Array<F, scirs2_core::ndarray::IxDyn>,
-        output: &Array<F, scirs2_core::ndarray::IxDyn>,
+        input: &Array<F, scirs2_core::ndarray::IxDyn>,
     ) -> Result<Array<F, scirs2_core::ndarray::IxDyn>> {
         // We need to compute the derivative of Mish: d(mish)/dx
+        // Note: Like GELU and Swish, we treat the second parameter as input
+        // for gradient computation accuracy
         let mut grad_input = Array::zeros(grad_output.raw_dim());
-        // We need the original x to compute the derivative accurately
-        // For simplicity, we'll approximate it from the _output
-        // In practice, you'd want to cache the input in the forward pass
+
+        // Mish(x) = x * tanh(softplus(x))
+        // d(mish)/dx = tanh(sp) + x * sech²(sp) * sigmoid(x)
+        // where sp = softplus(x) = ln(1 + e^x) and sigmoid(x) = e^x / (1 + e^x)
         Zip::from(&mut grad_input)
             .and(grad_output)
-            .and(_output)
-            .for_each(|grad_in, &grad_out, &out| {
-                // Approximate the input value from _output
-                // This is NOT accurate in general - a real implementation would cache the inputs
-                let x = out; // This is just a placeholder - not correct
-                // Compute the derivative components
-                // For numerical stability with large values
+            .and(input)
+            .for_each(|grad_in, &grad_out, &x| {
+                // Compute softplus(x) = ln(1 + e^x) with numerical stability
                 let sp = if x > F::from(20.0).unwrap() {
-                    x
+                    x // For large x, softplus(x) ≈ x
                 } else {
                     (F::one() + x.exp()).ln()
                 };
                 let tanh_sp = sp.tanh();
                 let sech_sp_sq = F::one() - tanh_sp * tanh_sp; // sech²(sp)
-                // delta is the derivative of softplus: e^x / (1 + e^x)
-                let delta = F::one() / (F::one() + (-x).exp());
-                // By the chain rule:
-                // d(mish)/dx = tanh(sp) + x * sech²(sp) * delta
-                let dmish_dx = tanh_sp + x * sech_sp_sq * delta;
+
+                // sigmoid(x) = e^x / (1 + e^x) = 1 / (1 + e^(-x))
+                let sigmoid_x = F::one() / (F::one() + (-x).exp());
+
+                // d(mish)/dx = tanh(sp) + x * sech²(sp) * sigmoid(x)
+                let dmish_dx = tanh_sp + x * sech_sp_sq * sigmoid_x;
+
                 // Multiply by the gradient from the next layer
                 *grad_in = grad_out * dmish_dx;
             });

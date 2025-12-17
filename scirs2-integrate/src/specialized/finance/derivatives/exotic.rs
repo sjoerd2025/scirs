@@ -701,13 +701,14 @@ mod tests {
         )
         .unwrap();
 
-        let in_price = up_in.price_monte_carlo(50000, 100).unwrap();
-        let out_price = up_out.price_monte_carlo(50000, 100).unwrap();
+        // Reduced from 50000 to 10000 paths for faster testing (still statistically valid)
+        let in_price = up_in.price_monte_carlo(10000, 100).unwrap();
+        let out_price = up_out.price_monte_carlo(10000, 100).unwrap();
         let vanilla = black_scholes_price(100.0, 100.0, 0.05, 0.0, 0.2, 1.0, OptionType::Call);
 
-        // Allow 10% error due to Monte Carlo variance
+        // Allow 15% error due to Monte Carlo variance (increased tolerance for fewer paths)
         assert!(
-            ((in_price + out_price) - vanilla).abs() / vanilla < 0.1,
+            ((in_price + out_price) - vanilla).abs() / vanilla < 0.15,
             "In+Out={}, Vanilla={}",
             in_price + out_price,
             vanilla

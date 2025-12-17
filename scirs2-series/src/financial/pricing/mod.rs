@@ -255,16 +255,9 @@
 //!
 //! The module provides a foundation for implementing additional pricing models:
 //!
-//! ```rust
-//! // Future: American option pricing with binomial trees
-//! // pub fn american_option_binomial(params...) -> Result<f64>;
-//!
-//! // Future: Exotic option pricing
-//! // pub fn barrier_option_pricing(params...) -> Result<f64>;
-//!
-//! // Future: Interest rate derivatives
-//! // pub fn bond_option_pricing(params...) -> Result<f64>;
-//! ```
+//! - Future: American option pricing with binomial trees
+//! - Future: Exotic option pricing (barrier options)
+//! - Future: Interest rate derivatives (bond options)
 
 pub mod options;
 pub mod utils;

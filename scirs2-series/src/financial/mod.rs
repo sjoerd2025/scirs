@@ -221,28 +221,20 @@
 //! The financial module seamlessly integrates with other SciRS2 modules:
 //!
 //! ## Time Series Analysis
-//! ```rust,no_run
-//! // Integration with scirs2-series for time series modeling
-//! // Combined ARIMA-GARCH modeling for returns and volatility
-//! ```
+//! - Integration with scirs2-series for time series modeling
+//! - Combined ARIMA-GARCH modeling for returns and volatility
 //!
-//! ## Statistical Analysis  
-//! ```rust,no_run
-//! // Integration with scirs2-stats for hypothesis testing
-//! // Statistical tests for model validation and backtesting
-//! ```
+//! ## Statistical Analysis
+//! - Integration with scirs2-stats for hypothesis testing
+//! - Statistical tests for model validation and backtesting
 //!
 //! ## Optimization
-//! ```rust,no_run
-//! // Integration with scirs2-optimize for advanced portfolio optimization
-//! // Constrained optimization with transaction costs and constraints
-//! ```
+//! - Integration with scirs2-optimize for advanced portfolio optimization
+//! - Constrained optimization with transaction costs and constraints
 //!
 //! ## Machine Learning
-//! ```rust,no_run
-//! // Integration with scirs2-neural for predictive modeling
-//! // Neural network-based volatility and return forecasting
-//! ```
+//! - Integration with scirs2-neural for predictive modeling
+//! - Neural network-based volatility and return forecasting
 //!
 //! # Performance and Scalability
 //!

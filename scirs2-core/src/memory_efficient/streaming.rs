@@ -11,7 +11,7 @@
 use crate::error::{CoreError, ErrorContext, ErrorLocation};
 use crate::memory_efficient::chunked::{ChunkedArray, ChunkingStrategy};
 use crate::memory_efficient::prefetch::PrefetchConfig;
-use ndarray::{ArrayBase, Dimension, OwnedRepr, RemoveAxis};
+use ::ndarray::{ArrayBase, Dimension, OwnedRepr, RemoveAxis};
 use std::collections::{BTreeMap, VecDeque};
 use std::sync::{Arc, Condvar, Mutex, RwLock};
 use std::thread::{self, JoinHandle};
@@ -1499,8 +1499,8 @@ where
                 // Combine chunk results by concatenating along the flattened dimension
                 let combined = if !chunk_results.is_empty() {
                     // For 1D arrays, concatenate directly
-                    if let Ok(combined_1d) = ndarray::concatenate(
-                        ndarray::Axis(0),
+                    if let Ok(combined_1d) = crate::ndarray::concatenate(
+                        crate::ndarray::Axis(0),
                         &chunk_results
                             .iter()
                             .map(|arr| arr.view())

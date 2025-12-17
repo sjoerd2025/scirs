@@ -1,13 +1,13 @@
 # scirs2-linalg TODO
 
-**Current Version**: 0.1.0-rc.2 (Released October 19, 2025)
+**Current Version**: 0.1.0-rc.3 (Released December 17, 2025)
 **Status**: Production Ready - Comprehensive linear algebra for scientific computing
 
 This module provides comprehensive linear algebra functionality comparable to NumPy/SciPy's linalg module. Following the [SciRS2 POLICY](../SCIRS2_POLICY.md), this module uses scirs2-core abstractions for consistent ecosystem integration.
 
 ---
 
-## 🎯 Current Release: rc.2 (October 2025)
+## 🎯 Current Release: rc.2 (December 2025)
 
 ### ✅ Production Status: COMPLETE
 
@@ -240,7 +240,7 @@ This module provides comprehensive linear algebra functionality comparable to Nu
 
 ## 🎯 Production Release Summary
 
-**v0.1.0-rc.2 delivers:**
+**v0.1.0-rc.3 delivers:**
 - ✅ **Enterprise-Grade Performance**: Comparable to NumPy/SciPy with native BLAS/LAPACK
 - ✅ **ML/AI Ready**: Complete attention mechanisms, quantization, mixed-precision
 - ✅ **Comprehensive API**: 500+ functions with SciPy compatibility layer
@@ -261,7 +261,7 @@ This release is suitable for:
 
 ## 🗺️ Roadmap
 
-- **✅ 0.1.0-rc.2** (2025-10-19): **CURRENT** - Production-ready with ultra-precision solvers
+- **✅ 0.1.0-rc.3** (2025-12-17): **CURRENT** - Production-ready with ultra-precision solvers
 - **🎯 0.1.0** (2026-Q4): First stable release with full SciPy feature parity and API guarantees
 - **🎯 0.2.0** (2027+): Performance optimization, GPU acceleration, and hardware acceleration
 
@@ -269,4 +269,4 @@ This release is suitable for:
 
 **Built with ❤️ for the scientific computing community**
 
-*Version: 0.1.0-rc.2 | Released: October 19, 2025 | Next: 0.1.0 (Q4 2026)*
+*Version: 0.1.0-rc.3 | Released: December 17, 2025 | Next: 0.1.0 (Q4 2026)*

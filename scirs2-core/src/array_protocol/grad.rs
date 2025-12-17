@@ -16,11 +16,12 @@
 //! using the array protocol. It enables gradient computation for any array
 //! type that implements the `ArrayProtocol` trait.
 
+use crate::ndarray::compat::ArrayStatCompat;
+use ::ndarray::{Array, ArrayD, Dimension, IxDyn};
+
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
 use std::rc::Rc;
-
-use ndarray::{Array, ArrayD, Dimension, IxDyn};
 
 use crate::array_protocol::operations::matmul;
 use crate::array_protocol::{ArrayProtocol, NdarrayWrapper};
@@ -279,8 +280,9 @@ impl Node {
     /// Create a new leaf node.
     fn leaf(requiresgrad: bool) -> Self {
         Self {
-            value: Rc::new(NdarrayWrapper::new(ndarray::Array0::<f64>::zeros(())))
-                as Rc<dyn ArrayProtocol>,
+            value: Rc::new(NdarrayWrapper::new(
+                crate::ndarray::Array0::<f64>::zeros(()),
+            )) as Rc<dyn ArrayProtocol>,
             grad: None,
             op: None,
             inputs: Vec::new(),
@@ -379,7 +381,7 @@ impl GradientTensor {
             array.as_array().raw_dim()
         } else {
             // If we can't determine the shape, just create a scalar gradient
-            ndarray::IxDyn(&[1])
+            crate::ndarray::IxDyn(&[1])
         };
 
         let grad_array = Array::<f64, IxDyn>::ones(gradshape);
@@ -987,7 +989,7 @@ pub fn grad_mean(a: &GradientTensor) -> CoreResult<GradientTensor> {
         .downcast_ref::<NdarrayWrapper<f64, IxDyn>>()
     {
         let array = a_array.as_array();
-        let mean_value = array.mean().unwrap_or(0.0);
+        let mean_value = array.mean_or(0.0);
         let result = ArrayD::<f64>::from_elem(IxDyn(&[1]), mean_value);
         let result_wrapped = NdarrayWrapper::new(result);
         let result_rc: Rc<dyn ArrayProtocol> = Rc::new(result_wrapped);
@@ -1001,7 +1003,7 @@ pub fn grad_mean(a: &GradientTensor) -> CoreResult<GradientTensor> {
         .downcast_ref::<NdarrayWrapper<f32, IxDyn>>()
     {
         let array = a_array.as_array();
-        let mean_value = array.mean().unwrap_or(0.0f32);
+        let mean_value = array.mean_or(0.0f32);
         let result = ArrayD::<f32>::from_elem(IxDyn(&[1]), mean_value);
         let result_wrapped = NdarrayWrapper::new(result);
         let result_rc: Rc<dyn ArrayProtocol> = Rc::new(result_wrapped);
@@ -1492,7 +1494,7 @@ fn divide(a: &dyn ArrayProtocol, b: &dyn ArrayProtocol) -> CoreResult<Box<dyn Ar
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::{array, Array2, Ix2};
+    use ::ndarray::{array, Array2, Ix2};
 
     #[test]
     fn test_gradient_tensor_creation() {
@@ -1510,7 +1512,7 @@ mod tests {
     fn test_gradient_computation_add() {
         // Import will be used when the test is enabled
         #[allow(unused_imports)]
-        use ndarray::array;
+        use ::ndarray::array;
 
         // Create gradient tensors
         let a_array = Array2::<f64>::ones((2, 2));
@@ -1585,7 +1587,7 @@ mod tests {
     fn test_gradient_computation_multiply() {
         // Import will be used when the test is enabled
         #[allow(unused_imports)]
-        use ndarray::array;
+        use ::ndarray::array;
 
         // Create gradient tensors
         let a_array = Array2::<f64>::ones((2, 2)) * 2.0;
@@ -1666,7 +1668,7 @@ mod tests {
     fn test_sgd_optimizer() {
         // Import will be used when the test is enabled
         #[allow(unused_imports)]
-        use ndarray::array;
+        use ::ndarray::array;
 
         // Create variables
         let weight_array = Array2::<f64>::ones((2, 2));

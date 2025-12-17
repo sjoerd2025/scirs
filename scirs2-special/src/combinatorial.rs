@@ -599,8 +599,8 @@ fn euler_number_improved_recurrence(n: i32) -> SpecialResult<f64> {
     // For moderate values, use a more memory-efficient approach
     // that doesn't store all intermediate values
 
-    let mut prev_eulr = [0.0; 2]; // Only store last two values
-    prev_eulr[0] = 1.0; // E_0 = 1
+    let mut _prev_eulr = [0.0; 2]; // Only store last two values (reserved for future optimization)
+    _prev_eulr[0] = 1.0; // E_0 = 1
 
     if n == 0 {
         return Ok(1.0);

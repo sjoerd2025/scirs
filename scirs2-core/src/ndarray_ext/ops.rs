@@ -4,7 +4,7 @@
 //! that correspond to `NumPy`'s core functionality, focusing on reshape,
 //! transpose, concatenate, split, and other basic array manipulations.
 
-use ndarray::{Array, ArrayView, Axis, Dimension, ShapeError};
+use ::ndarray::{Array, ArrayView, Axis, Dimension, ShapeError};
 
 /// Reshape an array to a new shape without copying data when possible
 ///
@@ -33,7 +33,7 @@ use ndarray::{Array, ArrayView, Axis, Dimension, ShapeError};
 pub fn reshape<D1, D2, T>(array: ArrayView<T, D1>, shape: D2) -> Result<Array<T, D2::Dim>, &'static str>
 where
     D1: Dimension,
-    D2: ndarray::ShapeBuilder,
+    D2: crate::ndarray::ShapeBuilder,
     T: Clone + Default,
 {
     // Check if the new shape is compatible with the original shape
@@ -150,7 +150,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use ::ndarray::array;
 /// use scirs2_core::ndarray_ext::swapaxes;
 ///
 /// let a = array![[1, 2, 3], [4, 5, 6]];
@@ -247,8 +247,8 @@ where
 
     for (&start, &end) in starts.iter().zip(ends.iter()) {
         // Create a slice specification for the current sub-array
-        let mut slice_spec = vec![ndarray::s![..]; array.ndim()];
-        slice_spec[axis_idx] = ndarray::s![start..end];
+        let mut slice_spec = vec![crate::s![..]; array.ndim()];
+        slice_spec[axis_idx] = crate::s![start..end];
 
         // Extract the sub-array by slicing the original array
         let sub_array = array.slice(slice_spec.as_slice());

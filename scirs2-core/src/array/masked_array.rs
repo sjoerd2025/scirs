@@ -9,7 +9,7 @@
 //! The implementation is inspired by ``NumPy``'s `MaskedArray` and provides similar functionality
 //! in a Rust-native way.
 
-use ndarray::{Array, ArrayBase, Data, Dimension, Ix1};
+use ::ndarray::{Array, ArrayBase, Data, Dimension, Ix1};
 use num_traits::{Float, Zero};
 use std::cmp::PartialEq;
 use std::fmt;
@@ -53,7 +53,7 @@ impl std::error::Error for ArrayError {}
 pub struct MaskedArray<A, S, D>
 where
     A: Clone,
-    S: Data<Elem = A> + Clone + ndarray::RawDataClone,
+    S: Data<Elem = A> + Clone + crate::ndarray::RawDataClone,
     D: Dimension,
 {
     /// The underlying data array
@@ -75,7 +75,7 @@ pub const NOMASK: NoMask = NoMask;
 impl<A, S, D> MaskedArray<A, S, D>
 where
     A: Clone + PartialEq,
-    S: Data<Elem = A> + Clone + ndarray::RawDataClone,
+    S: Data<Elem = A> + Clone + crate::ndarray::RawDataClone,
     D: Dimension,
 {
     /// Create a new `MaskedArray` from data and mask
@@ -103,7 +103,7 @@ where
         };
 
         // Use provided fill value or create a default
-        let fill_value = fill_value.map_or_else(|| default_fill_value(&data), |v| v);
+        let fill_value = fill_value.unwrap_or_else(|| default_fill_value(&data));
 
         Ok(Self {
             data,
@@ -115,9 +115,9 @@ where
     /// Get a view of the data with masked values replaced by `fill_value`
     pub fn value_2(&self, fillvalue: Option<A>) -> Array<A, D>
     where
-        <D as Dimension>::Pattern: ndarray::NdIndex<D>,
+        <D as Dimension>::Pattern: crate::ndarray::NdIndex<D>,
     {
-        let fill = fillvalue.map_or_else(|| self.fill_value.clone(), |v| v);
+        let fill = fillvalue.unwrap_or_else(|| self.fill_value.clone());
 
         // Create new array with same shape as data
         let mut result = Array::from_elem(self.data.raw_dim(), fill);
@@ -323,7 +323,7 @@ where
     pub fn reshape<E>(
         &self,
         shape: E,
-    ) -> Result<MaskedArray<A, ndarray::OwnedRepr<A>, E>, ArrayError>
+    ) -> Result<MaskedArray<A, crate::ndarray::OwnedRepr<A>, E>, ArrayError>
     where
         E: Dimension,
         D: Dimension,
@@ -358,7 +358,7 @@ where
     ///
     /// # Errors
     /// Currently this method doesn't return errors, but the signature is kept for future compatibility.
-    pub fn astype<B>(&self) -> Result<MaskedArray<B, ndarray::OwnedRepr<B>, D>, ArrayError>
+    pub fn astype<B>(&self) -> Result<MaskedArray<B, crate::ndarray::OwnedRepr<B>, D>, ArrayError>
     where
         A: Into<B> + Clone,
         B: Clone + PartialEq + 'static,
@@ -378,7 +378,7 @@ where
 impl<A, S, D> MaskedArray<A, S, D>
 where
     A: Clone + PartialEq + num_traits::NumAssign + num_traits::Zero + num_traits::One + PartialOrd,
-    S: Data<Elem = A> + Clone + ndarray::RawDataClone,
+    S: Data<Elem = A> + Clone + crate::ndarray::RawDataClone,
     D: Dimension,
 {
     /// Compute the sum of all unmasked elements
@@ -494,7 +494,7 @@ where
 impl<A, S, D> MaskedArray<A, S, D>
 where
     A: Clone + PartialEq + num_traits::Float + std::iter::Sum<A>,
-    S: Data<Elem = A> + Clone + ndarray::RawDataClone,
+    S: Data<Elem = A> + Clone + crate::ndarray::RawDataClone,
     D: Dimension,
 {
     /// Compute the mean of all unmasked elements
@@ -594,7 +594,7 @@ where
 pub fn masked_equal<A, S, D>(data: ArrayBase<S, D>, value: A) -> MaskedArray<A, S, D>
 where
     A: Clone + PartialEq,
-    S: Data<Elem = A> + Clone + ndarray::RawDataClone,
+    S: Data<Elem = A> + Clone + crate::ndarray::RawDataClone,
     D: Dimension,
 {
     // Create a mask indicating where elements equal the value
@@ -612,7 +612,7 @@ where
 pub fn masked_invalid<A, S, D>(data: ArrayBase<S, D>) -> MaskedArray<A, S, D>
 where
     A: Clone + PartialEq + Float,
-    S: Data<Elem = A> + Clone + ndarray::RawDataClone,
+    S: Data<Elem = A> + Clone + crate::ndarray::RawDataClone,
     D: Dimension,
 {
     // Create a mask indicating where elements are NaN or infinite
@@ -639,7 +639,7 @@ pub fn mask_array<A, S, D>(
 ) -> Result<MaskedArray<A, S, D>, ArrayError>
 where
     A: Clone + PartialEq,
-    S: Data<Elem = A> + Clone + ndarray::RawDataClone,
+    S: Data<Elem = A> + Clone + crate::ndarray::RawDataClone,
     D: Dimension,
 {
     MaskedArray::new(data, mask, fill_value)
@@ -654,7 +654,7 @@ pub fn masked_outside<A, S, D>(
 ) -> MaskedArray<A, S, D>
 where
     A: Clone + PartialEq + PartialOrd,
-    S: Data<Elem = A> + Clone + ndarray::RawDataClone,
+    S: Data<Elem = A> + Clone + crate::ndarray::RawDataClone,
     D: Dimension,
 {
     // Create a mask indicating where elements are outside the range
@@ -679,7 +679,7 @@ pub fn masked_inside<A, S, D>(
 ) -> MaskedArray<A, S, D>
 where
     A: Clone + PartialEq + PartialOrd,
-    S: Data<Elem = A> + Clone + ndarray::RawDataClone,
+    S: Data<Elem = A> + Clone + crate::ndarray::RawDataClone,
     D: Dimension,
 {
     // Create a mask indicating where elements are inside the range
@@ -700,7 +700,7 @@ where
 pub fn masked_greater<A, S, D>(data: ArrayBase<S, D>, value: &A) -> MaskedArray<A, S, D>
 where
     A: Clone + PartialEq + PartialOrd,
-    S: Data<Elem = A> + Clone + ndarray::RawDataClone,
+    S: Data<Elem = A> + Clone + crate::ndarray::RawDataClone,
     D: Dimension,
 {
     // Create a mask indicating where elements are greater than the value
@@ -721,7 +721,7 @@ where
 pub fn masked_less<A, S, D>(data: ArrayBase<S, D>, value: &A) -> MaskedArray<A, S, D>
 where
     A: Clone + PartialEq + PartialOrd,
-    S: Data<Elem = A> + Clone + ndarray::RawDataClone,
+    S: Data<Elem = A> + Clone + crate::ndarray::RawDataClone,
     D: Dimension,
 {
     // Create a mask indicating where elements are less than the value
@@ -746,7 +746,7 @@ pub fn masked_where<A, S, D, F>(
 ) -> MaskedArray<A, S, D>
 where
     A: Clone + PartialEq,
-    S: Data<Elem = A> + Clone + ndarray::RawDataClone,
+    S: Data<Elem = A> + Clone + crate::ndarray::RawDataClone,
     D: Dimension,
     F: Fn(&A) -> bool,
 {
@@ -754,7 +754,7 @@ where
     let mask = data.map(condition);
 
     // Use provided fill value or create a default
-    let fill_value = fill_value.map_or_else(|| default_fill_value(&data), |v| v);
+    let fill_value = fill_value.unwrap_or_else(|| default_fill_value(&data));
 
     MaskedArray {
         data,
@@ -767,7 +767,7 @@ where
 impl<A, S, D> fmt::Display for MaskedArray<A, S, D>
 where
     A: Clone + PartialEq + fmt::Display,
-    S: Data<Elem = A> + Clone + ndarray::RawDataClone,
+    S: Data<Elem = A> + Clone + crate::ndarray::RawDataClone,
     D: Dimension,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -804,7 +804,7 @@ where
 impl<A, S, D> fmt::Debug for MaskedArray<A, S, D>
 where
     A: Clone + PartialEq + fmt::Debug,
-    S: Data<Elem = A> + Clone + ndarray::RawDataClone,
+    S: Data<Elem = A> + Clone + crate::ndarray::RawDataClone,
     D: Dimension,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -822,11 +822,11 @@ where
 impl<A, S1, S2, D> Add<&MaskedArray<A, S2, D>> for &MaskedArray<A, S1, D>
 where
     A: Clone + Add<Output = A> + PartialEq,
-    S1: Data<Elem = A> + Clone + ndarray::RawDataClone,
-    S2: Data<Elem = A> + Clone + ndarray::RawDataClone,
+    S1: Data<Elem = A> + Clone + crate::ndarray::RawDataClone,
+    S2: Data<Elem = A> + Clone + crate::ndarray::RawDataClone,
     D: Dimension,
 {
-    type Output = MaskedArray<A, ndarray::OwnedRepr<A>, D>;
+    type Output = MaskedArray<A, crate::ndarray::OwnedRepr<A>, D>;
 
     fn add(self, rhs: &MaskedArray<A, S2, D>) -> Self::Output {
         // Create combined mask: true if either input is masked
@@ -846,11 +846,11 @@ where
 impl<A, S1, S2, D> Sub<&MaskedArray<A, S2, D>> for &MaskedArray<A, S1, D>
 where
     A: Clone + Sub<Output = A> + PartialEq,
-    S1: Data<Elem = A> + Clone + ndarray::RawDataClone,
-    S2: Data<Elem = A> + Clone + ndarray::RawDataClone,
+    S1: Data<Elem = A> + Clone + crate::ndarray::RawDataClone,
+    S2: Data<Elem = A> + Clone + crate::ndarray::RawDataClone,
     D: Dimension,
 {
-    type Output = MaskedArray<A, ndarray::OwnedRepr<A>, D>;
+    type Output = MaskedArray<A, crate::ndarray::OwnedRepr<A>, D>;
 
     fn sub(self, rhs: &MaskedArray<A, S2, D>) -> Self::Output {
         // Create combined mask: true if either input is masked
@@ -870,11 +870,11 @@ where
 impl<A, S1, S2, D> Mul<&MaskedArray<A, S2, D>> for &MaskedArray<A, S1, D>
 where
     A: Clone + Mul<Output = A> + PartialEq,
-    S1: Data<Elem = A> + Clone + ndarray::RawDataClone,
-    S2: Data<Elem = A> + Clone + ndarray::RawDataClone,
+    S1: Data<Elem = A> + Clone + crate::ndarray::RawDataClone,
+    S2: Data<Elem = A> + Clone + crate::ndarray::RawDataClone,
     D: Dimension,
 {
-    type Output = MaskedArray<A, ndarray::OwnedRepr<A>, D>;
+    type Output = MaskedArray<A, crate::ndarray::OwnedRepr<A>, D>;
 
     fn mul(self, rhs: &MaskedArray<A, S2, D>) -> Self::Output {
         // Create combined mask: true if either input is masked
@@ -894,11 +894,11 @@ where
 impl<A, S1, S2, D> Div<&MaskedArray<A, S2, D>> for &MaskedArray<A, S1, D>
 where
     A: Clone + Div<Output = A> + PartialEq + Zero,
-    S1: Data<Elem = A> + Clone + ndarray::RawDataClone,
-    S2: Data<Elem = A> + Clone + ndarray::RawDataClone,
+    S1: Data<Elem = A> + Clone + crate::ndarray::RawDataClone,
+    S2: Data<Elem = A> + Clone + crate::ndarray::RawDataClone,
     D: Dimension,
 {
-    type Output = MaskedArray<A, ndarray::OwnedRepr<A>, D>;
+    type Output = MaskedArray<A, crate::ndarray::OwnedRepr<A>, D>;
 
     fn div(self, rhs: &MaskedArray<A, S2, D>) -> Self::Output {
         // Create combined mask: true if either input is masked or rhs is zero
@@ -927,7 +927,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::array;
+    use ::ndarray::array;
 
     #[test]
     fn test_masked_array_creation() {

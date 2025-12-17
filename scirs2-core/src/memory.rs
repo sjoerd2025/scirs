@@ -14,7 +14,7 @@
 //!
 //! ```rust,no_run
 //! use scirs2_core::memory::{ChunkProcessor2D, BufferPool};
-//! use ndarray::Array2;
+//! use ::ndarray::Array2;
 //!
 //! // Process a large array in chunks
 //! let large_array = Array2::<f64>::zeros((10000, 10000));
@@ -52,7 +52,7 @@
 //! println!("{}", format_memory_report());
 //! ```
 
-use ndarray::{ArrayBase, Data, Dimension, Ix2, IxDyn, ViewRepr};
+use ::ndarray::{ArrayBase, Data, Dimension, Ix2, IxDyn, ViewRepr};
 use std::alloc::{alloc, dealloc, Layout};
 use std::any::TypeId;
 use std::collections::{HashMap, VecDeque};
@@ -99,7 +99,7 @@ where
     where
         F: FnMut(&ArrayBase<ViewRepr<&A>, IxDyn>, IxDyn),
     {
-        use ndarray::{IntoDimension, Slice};
+        use ::ndarray::{IntoDimension, Slice};
 
         // Get array shape and chunk shape as slices
         let arrayshape = self.array.shape();
@@ -231,7 +231,7 @@ where
                 // Get a view of the current chunk
                 let chunk = self
                     .array
-                    .slice(ndarray::s![row_start..row_end, col_start..col_end]);
+                    .slice(crate::s![row_start..row_end, col_start..col_end]);
 
                 // Call the processing function
                 f(&chunk, (row_start, col_start));
@@ -321,7 +321,7 @@ impl Default for MemoryConfig {
 /// Advanced memory buffer pool with multiple allocation strategies
 pub struct AdvancedBufferPool<T: Clone + Default> {
     vectors: Vec<Vec<T>>,
-    arrays: Vec<ndarray::Array1<T>>,
+    arrays: Vec<crate::ndarray::Array1<T>>,
     config: MemoryConfig,
     stats: PoolStatistics,
     size_classes: Vec<SizeClass<T>>,
@@ -698,8 +698,8 @@ impl<T: Clone + Default> BufferPool<T> {
         self.inner.release_vec_advanced(vec);
     }
 
-    /// Acquire an ndarray::Array1 from the pool, or create a new one if none are available
-    pub fn acquire_array(&mut self, size: usize) -> ndarray::Array1<T> {
+    /// Acquire an crate::ndarray::Array1 from the pool, or create a new one if none are available
+    pub fn acquire_array(&mut self, size: usize) -> crate::ndarray::Array1<T> {
         // Find a suitable array in the pool
         for i in 0..self.inner.arrays.len() {
             if self.inner.arrays[i].len() >= size {
@@ -707,18 +707,18 @@ impl<T: Clone + Default> BufferPool<T> {
                 let mut array = self.inner.arrays.swap_remove(i);
                 // Resize the array (this will truncate or extend)
                 if array.len() != size {
-                    array = ndarray::Array1::from_elem(size, T::default());
+                    array = crate::ndarray::Array1::from_elem(size, T::default());
                 }
                 return array;
             }
         }
 
         // No suitable array found, create a new one
-        ndarray::Array1::from_elem(size, T::default())
+        crate::ndarray::Array1::from_elem(size, T::default())
     }
 
-    /// Release an ndarray::Array1 back to the pool
-    pub fn release_array(&mut self, array: ndarray::Array1<T>) {
+    /// Release an crate::ndarray::Array1 back to the pool
+    pub fn release_array(&mut self, array: crate::ndarray::Array1<T>) {
         // Add the array back to the pool for reuse
         self.inner.arrays.push(array);
     }
@@ -818,7 +818,7 @@ where
     D: Dimension,
 {
     phantom: PhantomData<T>,
-    inner: ndarray::ArrayView<'a, T, D>,
+    inner: crate::ndarray::ArrayView<'a, T, D>,
 }
 
 impl<'a, T, D> ZeroCopyView<'a, T, D>
@@ -826,7 +826,7 @@ where
     D: Dimension,
 {
     /// Create a new zero-copy view from an array
-    pub fn new(array: &'a ndarray::Array<T, D>) -> Self {
+    pub fn new(array: &'a crate::ndarray::Array<T, D>) -> Self {
         Self {
             phantom: PhantomData,
             inner: array.view(),
@@ -834,12 +834,12 @@ where
     }
 
     /// Get the underlying array view
-    pub fn view(&self) -> ndarray::ArrayView<'a, T, D> {
+    pub fn view(&self) -> crate::ndarray::ArrayView<'a, T, D> {
         self.inner.clone()
     }
 
     /// Transform the view using a mapping function
-    pub fn transform<F, U>(&self, f: F) -> ndarray::Array<U, D>
+    pub fn transform<F, U>(&self, f: F) -> crate::ndarray::Array<U, D>
     where
         F: Fn(&T) -> U,
         U: Clone,

@@ -423,8 +423,7 @@ impl<X, Y> BatchEvaluator<X, Y> {
 ///
 /// # Examples
 ///
-/// ```
-/// # /*
+/// ```ignore
 /// use scirs2_core::ndarray::{Array1, Array2};
 /// use scirs2_metrics::evaluation::workflow::learning_curve;
 ///
@@ -446,7 +445,6 @@ impl<X, Y> BatchEvaluator<X, Y> {
 ///     5,
 ///     Some(42)
 /// ).unwrap();
-/// # */
 /// ```
 #[allow(clippy::too_many_arguments)]
 #[allow(dead_code)]

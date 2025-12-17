@@ -34,7 +34,7 @@ impl Swish {
     /// # Arguments
     /// * `beta` - The beta parameter for the swish function
     pub fn new(beta: f64) -> Self {
-        Self { _beta }
+        Self { beta }
     }
 }
 
@@ -77,7 +77,8 @@ impl<F: Float + Debug> Activation<F> for Swish {
         let mut grad_input = Array::zeros(grad_output.raw_dim());
 
         // Swish'(x) = β * swish(x) + sigmoid(β * x) * (1 - β * swish(x))
-        // This is computed as: sigmoid(β * x) * (β * x * (1 - sigmoid(β * x)) + 1), Zip::from(&mut grad_input)
+        // This is computed as: sigmoid(β * x) * (β * x * (1 - sigmoid(β * x)) + 1)
+        Zip::from(&mut grad_input)
             .and(grad_output)
             .and(input)
             .for_each(|grad_in, &grad_out, &x| {

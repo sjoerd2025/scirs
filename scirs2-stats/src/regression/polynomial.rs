@@ -10,7 +10,7 @@ use scirs2_linalg::lstsq;
 /// Fit a polynomial of specified degree to data.
 ///
 /// This function fits a polynomial of the form:
-/// p(x) = c[0] + c[1] * x + c[2] * x^2 + ... + c[deg] * x^deg
+/// `p(x) = c[0] + c[1] * x + c[2] * x^2 + ... + c[deg] * x^deg`
 ///
 /// # Arguments
 ///

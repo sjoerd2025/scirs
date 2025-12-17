@@ -37,7 +37,7 @@ use statrs::statistics::Statistics;
 ///
 /// # Returns
 ///
-/// Denoised 2D signal as Array2<f64>
+/// Denoised 2D signal as `Array2<f64>`
 ///
 /// # Examples
 ///

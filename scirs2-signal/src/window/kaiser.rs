@@ -24,7 +24,7 @@ use std::f64::consts::PI;
 ///
 /// # Returns
 ///
-/// A Vec<f64> of window values
+/// A `Vec<f64>` of window values
 ///
 /// # Examples
 ///
@@ -79,7 +79,7 @@ pub fn kaiser(m: usize, beta: f64, sym: bool) -> SignalResult<Vec<f64>> {
 ///
 /// # Returns
 ///
-/// A Vec<f64> of window values
+/// A `Vec<f64>` of window values
 ///
 /// # Examples
 ///

@@ -24,7 +24,7 @@
 //! ```
 
 use crate::random::{random_normal_array, random_uniform_array, thread_rng};
-use ndarray::{Array2, Ix2};
+use ::ndarray::{Array2, Ix2};
 use rand_distr::{Normal, Uniform};
 
 /// Generate a random f64 in [0, 1)

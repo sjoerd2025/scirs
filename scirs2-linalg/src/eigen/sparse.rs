@@ -478,13 +478,15 @@ where
 
     // Random initial vector
     let mut rng = scirs2_core::random::rng();
-    for i in 0..n {
-        v_vectors[0][i] = F::from(rng.random::<f64>()).unwrap();
+    for v_elem in &mut v_vectors[0] {
+        *v_elem = F::from(rng.random::<f64>()).unwrap();
     }
 
     // Normalize initial vector
     let norm = v_vectors[0].iter().map(|x| (*x) * (*x)).sum::<F>().sqrt();
-    v_vectors[0].mapv_inplace(|x| x / norm);
+    for v_elem in &mut v_vectors[0] {
+        *v_elem /= norm;
+    }
 
     // Main Arnoldi iteration
     let mut actual_m = 0;

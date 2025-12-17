@@ -1448,10 +1448,11 @@ pub fn create_default_benchmark_suite() -> CoreResult<CrossModuleBenchmarkRunner
 #[allow(dead_code)]
 pub fn run_quick_benchmarks() -> CoreResult<BenchmarkSuiteResult> {
     let config = CrossModuleBenchConfig {
-        iterations: 10,
-        warmup_iterations: 2,
-        datasizes: vec![1024, 1024 * 16], // Smaller sizes for quick testing
-        ns: vec![1, 2],
+        iterations: 2,         // Reduced from 10 for quick testing
+        warmup_iterations: 1,  // Reduced from 2
+        datasizes: vec![1024], // Single small size for quick testing
+        ns: vec![1],
+        memory_limits: vec![64 * 1024 * 1024], // Single memory limit
         enable_profiling: false,
         enable_regression_detection: false,
         timeout: Duration::from_secs(30),

@@ -21,7 +21,7 @@ use std::fmt::Debug;
 
 use crate::array_protocol::{ArrayFunction, ArrayProtocol, DistributedArray, NotImplemented};
 use crate::error::CoreResult;
-use ndarray::{Array, Dimension};
+use ::ndarray::{Array, Dimension};
 
 /// A configuration for distributed array operations
 #[derive(Debug, Clone, Default)]
@@ -134,7 +134,7 @@ where
 impl<T, D> DistributedNdarray<T, D>
 where
     T: Clone + Send + Sync + 'static + num_traits::Zero + std::ops::Div<f64, Output = T> + Default,
-    D: Dimension + Clone + Send + Sync + 'static + ndarray::RemoveAxis,
+    D: Dimension + Clone + Send + Sync + 'static + crate::ndarray::RemoveAxis,
 {
     /// Create a new distributed array from chunks.
     #[must_use]
@@ -211,12 +211,12 @@ where
     ///
     /// # Errors
     /// Returns `CoreError` if array conversion fails.
-    pub fn to_array(&self) -> CoreResult<Array<T, ndarray::IxDyn>>
+    pub fn to_array(&self) -> CoreResult<Array<T, crate::ndarray::IxDyn>>
     where
         T: Clone + Default + num_traits::One,
     {
         // Create a new array filled with ones (to match the original array in the test)
-        let result = Array::<T, ndarray::IxDyn>::ones(ndarray::IxDyn(&self.shape));
+        let result = Array::<T, crate::ndarray::IxDyn>::ones(crate::ndarray::IxDyn(&self.shape));
 
         // This is a simplified version that doesn't actually copy data
         // In a real implementation, we would need to properly handle copying data
@@ -270,7 +270,7 @@ where
         + Default
         + std::ops::Add<Output = T>
         + std::ops::Mul<Output = T>,
-    D: Dimension + Clone + Send + Sync + 'static + ndarray::RemoveAxis,
+    D: Dimension + Clone + Send + Sync + 'static + crate::ndarray::RemoveAxis,
 {
     fn array_function(
         &self,
@@ -288,7 +288,7 @@ where
                     // Sum along a specific axis - use map-reduce across chunks
                     // In a simplified implementation, we'll use a dummy array
                     let dummy_array = self.chunks[0].data.clone();
-                    let sum_array = dummy_array.sum_axis(ndarray::Axis(ax));
+                    let sum_array = dummy_array.sum_axis(crate::ndarray::Axis(ax));
 
                     // Create a new distributed array with the result
                     Ok(Box::new(super::NdarrayWrapper::new(sum_array)))
@@ -408,8 +408,8 @@ where
 
                     // Create a dummy result array
                     // Using a simpler approach with IxDyn directly
-                    let dummyshape = ndarray::IxDyn(&resultshape);
-                    let dummy_array = Array::<T, ndarray::IxDyn>::zeros(dummyshape);
+                    let dummyshape = crate::ndarray::IxDyn(&resultshape);
+                    let dummy_array = Array::<T, crate::ndarray::IxDyn>::zeros(dummyshape);
 
                     // Create a new distributed array with the dummy result
                     let chunk = ArrayChunk {
@@ -441,8 +441,8 @@ where
 
                 // Create a dummy result array
                 // Using a simpler approach with IxDyn directly
-                let dummyshape = ndarray::IxDyn(&transposedshape);
-                let dummy_array = Array::<T, ndarray::IxDyn>::zeros(dummyshape);
+                let dummyshape = crate::ndarray::IxDyn(&transposedshape);
+                let dummy_array = Array::<T, crate::ndarray::IxDyn>::zeros(dummyshape);
 
                 // Create a new distributed array with the dummy result
                 let chunk = ArrayChunk {
@@ -475,8 +475,8 @@ where
 
                     // Create a dummy result array
                     // Using a simpler approach with IxDyn directly
-                    let dummyshape = ndarray::IxDyn(shape);
-                    let dummy_array = Array::<T, ndarray::IxDyn>::zeros(dummyshape);
+                    let dummyshape = crate::ndarray::IxDyn(shape);
+                    let dummy_array = Array::<T, crate::ndarray::IxDyn>::zeros(dummyshape);
 
                     // Create a new distributed array with the dummy result
                     let chunk = ArrayChunk {
@@ -525,7 +525,7 @@ where
         + std::ops::Div<f64, Output = T>
         + Default
         + num_traits::One,
-    D: Dimension + Clone + Send + Sync + 'static + ndarray::RemoveAxis,
+    D: Dimension + Clone + Send + Sync + 'static + crate::ndarray::RemoveAxis,
 {
     fn distribution_info(&self) -> HashMap<String, String> {
         let mut info = HashMap::new();
@@ -545,7 +545,7 @@ where
     /// Returns `CoreError` if gathering fails.
     fn gather(&self) -> CoreResult<Box<dyn ArrayProtocol>>
     where
-        D: ndarray::RemoveAxis,
+        D: crate::ndarray::RemoveAxis,
         T: Default + Clone + num_traits::One,
     {
         // In a real implementation, this would gather data from all nodes
@@ -589,7 +589,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::Array2;
+    use ::ndarray::Array2;
 
     #[test]
     fn test_distributed_ndarray_creation() {

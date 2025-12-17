@@ -16,9 +16,11 @@ pub mod pooling;
 pub use common::PaddingMode;
 pub use conv2d::Conv2D;
 pub use pooling::{
+    AvgPool2D,
+    GlobalAvgPool2D,
     MaxPool2D,
     // AdaptiveAvgPool1D, AdaptiveAvgPool2D, AdaptiveAvgPool3D, AdaptiveMaxPool1D, AdaptiveMaxPool2D,
-    // AdaptiveMaxPool3D, GlobalAvgPool2D,
+    // AdaptiveMaxPool3D,
 };
 
 #[cfg(test)]
@@ -40,6 +42,20 @@ mod tests {
         assert_eq!(pool.parameter_count(), 0);
     }
 
+    #[test]
+    fn test_avgpool2d_basic() {
+        let pool = AvgPool2D::<f64>::new((2, 2), (2, 2), None).unwrap();
+        assert_eq!(pool.layer_type(), "AvgPool2D");
+        assert_eq!(pool.parameter_count(), 0);
+    }
+
+    #[test]
+    fn test_globalavgpool2d_basic() {
+        let pool = GlobalAvgPool2D::<f64>::new(None);
+        assert_eq!(pool.layer_type(), "GlobalAvgPool2D");
+        assert_eq!(pool.parameter_count(), 0);
+    }
+
     /*
     #[test]
     fn test_adaptive_pools() {
@@ -48,9 +64,6 @@ mod tests {
 
         let adaptive_max = AdaptiveMaxPool2D::<f64>::new((7, 7), None).unwrap();
         assert_eq!(adaptive_max.layer_type(), "AdaptiveMaxPool2D");
-
-        let global_pool = GlobalAvgPool2D::<f64>::new(None).unwrap();
-        assert_eq!(global_pool.layer_type(), "GlobalAvgPool2D");
     }
     */
 }

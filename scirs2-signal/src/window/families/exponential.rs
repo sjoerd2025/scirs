@@ -21,7 +21,7 @@ use std::f64::consts::PI;
 /// * `sym` - If true, generates a symmetric window, otherwise a periodic window
 ///
 /// # Returns
-/// A Vec<f64> of window values
+/// A `Vec<f64>` of window values
 ///
 /// # Examples
 /// ```
@@ -64,7 +64,7 @@ pub fn exponential(m: usize, tau: f64, sym: bool) -> SignalResult<Vec<f64>> {
 /// * `sym` - If true, generates a symmetric window, otherwise a periodic window
 ///
 /// # Returns
-/// A Vec<f64> of window values
+/// A `Vec<f64>` of window values
 ///
 /// # Examples
 /// ```
@@ -107,7 +107,7 @@ pub fn gaussian(m: usize, std: f64, sym: bool) -> SignalResult<Vec<f64>> {
 /// * `sym` - If true, generates a symmetric window, otherwise a periodic window
 ///
 /// # Returns
-/// A Vec<f64> of window values
+/// A `Vec<f64>` of window values
 pub fn kaiser(m: usize, beta: f64, sym: bool) -> SignalResult<Vec<f64>> {
     if beta < 0.0 {
         return Err(SignalError::ValueError(
@@ -146,7 +146,7 @@ pub fn kaiser(m: usize, beta: f64, sym: bool) -> SignalResult<Vec<f64>> {
 /// * `sym` - If true, generates a symmetric window, otherwise a periodic window
 ///
 /// # Returns
-/// A Vec<f64> of window values
+/// A `Vec<f64>` of window values
 pub fn tukey(m: usize, alpha: f64, sym: bool) -> SignalResult<Vec<f64>> {
     if !(0.0..=1.0).contains(&alpha) {
         return Err(SignalError::ValueError(
@@ -192,7 +192,7 @@ pub fn tukey(m: usize, alpha: f64, sym: bool) -> SignalResult<Vec<f64>> {
 /// * `sym` - If true, generates a symmetric window, otherwise a periodic window
 ///
 /// # Returns
-/// A Vec<f64> of window values
+/// A `Vec<f64>` of window values
 pub fn lanczos(m: usize, a: f64, sym: bool) -> SignalResult<Vec<f64>> {
     if a <= 0.0 {
         return Err(SignalError::ValueError(
@@ -239,7 +239,7 @@ pub fn lanczos(m: usize, a: f64, sym: bool) -> SignalResult<Vec<f64>> {
 /// * `sym` - If true, generates a symmetric window, otherwise a periodic window
 ///
 /// # Returns
-/// A Vec<f64> of window values
+/// A `Vec<f64>` of window values
 pub fn generalized_exponential(
     m: usize,
     decay_left: f64,

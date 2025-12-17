@@ -8,10 +8,10 @@
 
 use super::validation;
 use crate::error::{CoreError, CoreResult, ErrorContext, ErrorLocation};
+use ::ndarray::{Array, ArrayBase, Data, Dimension, IxDyn};
 use ::serde::{Deserialize, Serialize};
 use bincode::{config, serde};
 use memmap2::{Mmap, MmapMut, MmapOptions};
-use ndarray::{Array, ArrayBase, Data, Dimension, IxDyn};
 use std::fs::{File, OpenOptions};
 use std::io::{Read, Write};
 use std::marker::PhantomData;
@@ -107,8 +107,13 @@ where
     fn clone(&self) -> Self {
         // Create a new memory mapping with the same parameters
         // This is safe because we're creating a new mapping to the same file
-        Self::new::<ndarray::OwnedRepr<A>, IxDyn>(None, &self.file_path, self.mode, self.offset)
-            .expect("Failed to clone memory mapped array")
+        Self::new::<crate::ndarray::OwnedRepr<A>, IxDyn>(
+            None,
+            &self.file_path,
+            self.mode,
+            self.offset,
+        )
+        .expect("Failed to clone memory mapped array")
     }
 }
 
@@ -727,7 +732,7 @@ where
     /// # Errors
     ///
     /// Returns an error if the array is in read-only mode
-    pub fn as_array_mut<D>(&mut self) -> Result<ndarray::ArrayViewMut<A, D>, CoreError>
+    pub fn as_array_mut<D>(&mut self) -> Result<crate::ndarray::ArrayViewMut<A, D>, CoreError>
     where
         D: Dimension,
     {
@@ -811,13 +816,13 @@ where
         };
 
         // Create a mutable array view from the memory-mapped data
-        let array_view = ndarray::ArrayViewMut::from_shape(self.shape.clone(), data_slice)
+        let array_view = crate::ndarray::ArrayViewMut::from_shape(self.shape.clone(), data_slice)
             .map_err(|e| {
-                CoreError::ShapeError(
-                    ErrorContext::new(format!("error: {e}"))
-                        .with_location(ErrorLocation::new(file!(), line!())),
-                )
-            })?;
+            CoreError::ShapeError(
+                ErrorContext::new(format!("error: {e}"))
+                    .with_location(ErrorLocation::new(file!(), line!())),
+            )
+        })?;
 
         // Convert to the requested dimension type
         let array_view = array_view.into_dimensionality::<D>().map_err(|e| {
@@ -1182,7 +1187,12 @@ where
     let effective_offset = header_size + offset;
 
     // Create the array with the header info and effective offset
-    MemoryMappedArray::<A>::new::<ndarray::OwnedRepr<A>, D>(None, file_path, mode, effective_offset)
+    MemoryMappedArray::<A>::new::<crate::ndarray::OwnedRepr<A>, D>(
+        None,
+        file_path,
+        mode,
+        effective_offset,
+    )
 }
 
 /// Create a new memory-mapped array file

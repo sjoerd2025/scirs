@@ -434,7 +434,10 @@ where
         clusters.remove(second);
         clusters.push(new_cluster);
 
-        cluster_id += 1;
+        #[allow(unused_assignments)]
+        {
+            cluster_id += 1;
+        }
     }
 
     // Convert to ndarray

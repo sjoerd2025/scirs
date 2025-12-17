@@ -34,7 +34,7 @@ use crate::random::{
     variance_reduction::{AntitheticSampling, ControlVariate},
     ParallelRng, ThreadLocalRngPool,
 };
-use ndarray::{Array, Array1, Array2, Ix2};
+use ::ndarray::{Array, Array1, Array2, Ix2};
 use rand::Rng;
 use rand_distr::{Distribution, Normal, Uniform};
 use std::collections::HashMap;

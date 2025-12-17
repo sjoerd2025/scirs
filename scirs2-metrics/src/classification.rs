@@ -158,8 +158,8 @@ where
 ///
 /// # Returns
 ///
-/// * Confusion matrix (Array2<u64>)
-/// * Vector of classes in order (Array1<T>)
+/// * Confusion matrix (`Array2<u64>`)
+/// * Vector of classes in order (`Array1<T>`)
 ///
 /// # Examples
 ///

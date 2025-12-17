@@ -530,7 +530,7 @@ impl LargeScaleProcessor {
 
             // Access chunk data from memory-mapped array
             let chunk_data = {
-                let array = mmap_array.as_array::<ndarray::Ix1>().map_err(|e| {
+                let array = mmap_array.as_array::<crate::ndarray::Ix1>().map_err(|e| {
                     CoreError::ComputationError(ErrorContext::new(format!(
                         "Failed to access memory-mapped array: {:?}",
                         e
@@ -538,7 +538,7 @@ impl LargeScaleProcessor {
                 })?;
 
                 // Extract the chunk slice
-                let slice = array.slice(ndarray::s![chunk_start..chunk_end]);
+                let slice = array.slice(crate::s![chunk_start..chunk_end]);
                 slice.to_vec() // Convert to owned Vec for processing
             };
 

@@ -21,7 +21,7 @@ use crate::norm::matrix_norm;
 /// Compute the Kronecker product of two matrices
 ///
 /// The Kronecker product of matrices A (m×n) and B (p×q) is a matrix C (mp×nq) where
-/// C[i*p+k, j*q+l] = A[i,j] * B[k,l]
+/// `C[i*p+k, j*q+l] = A[i,j] * B[k,l]`
 ///
 /// This is particularly useful in neural network contexts for structured weight matrices
 /// in layers and for creating covariance factor approximations in second-order optimizers.

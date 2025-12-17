@@ -3,7 +3,7 @@
 //! This module provides common utility functions used throughout ``SciRS2``.
 
 use crate::error::{CoreError, CoreResult, ErrorContext};
-use ndarray::{Array, Array1, Array2, ArrayBase, Data, Dimension};
+use ::ndarray::{Array, Array1, Array2, ArrayBase, Data, Dimension};
 use num_traits::{Float, FromPrimitive, Num, NumCast};
 use std::fmt::Debug;
 
@@ -115,7 +115,7 @@ where
 ///
 /// ```
 /// use scirs2_core::utils::arrays_equal;
-/// use ndarray::array;
+/// use ::ndarray::array;
 ///
 /// let arr1 = array![[1.0, 2.0], [3.0, 4.0]];
 /// let arr2 = array![[1.0, 2.0], [3.0, 4.0]];
@@ -389,12 +389,12 @@ pub fn logspace<F: Float + std::iter::Sum + Send + Sync>(
 #[must_use]
 #[allow(dead_code)]
 pub fn maximum<S1, S2, D, T>(
-    a: &ndarray::ArrayBase<S1, D>,
-    b: &ndarray::ArrayBase<S2, D>,
+    a: &crate::ndarray::ArrayBase<S1, D>,
+    b: &crate::ndarray::ArrayBase<S2, D>,
 ) -> Array<T, D>
 where
-    S1: ndarray::Data<Elem = T>,
-    S2: ndarray::Data<Elem = T>,
+    S1: crate::ndarray::Data<Elem = T>,
+    S2: crate::ndarray::Data<Elem = T>,
     D: Dimension,
     T: Num + PartialOrd + Copy + Send + Sync,
 {
@@ -465,12 +465,12 @@ where
 #[must_use]
 #[allow(dead_code)]
 pub fn minimum<S1, S2, D, T>(
-    a: &ndarray::ArrayBase<S1, D>,
-    b: &ndarray::ArrayBase<S2, D>,
+    a: &crate::ndarray::ArrayBase<S1, D>,
+    b: &crate::ndarray::ArrayBase<S2, D>,
 ) -> Array<T, D>
 where
-    S1: ndarray::Data<Elem = T>,
-    S2: ndarray::Data<Elem = T>,
+    S1: crate::ndarray::Data<Elem = T>,
+    S2: crate::ndarray::Data<Elem = T>,
     D: Dimension,
     T: Num + PartialOrd + Copy + Send + Sync,
 {
@@ -690,7 +690,7 @@ where
     // Create output array with default constant value
     let const_val = constant_value.unwrap_or_else(|| T::zero());
     let mut output = Array::<T, D>::from_elem(
-        D::from_dimension(&ndarray::IxDyn(&newshape))
+        D::from_dimension(&crate::ndarray::IxDyn(&newshape))
             .expect("Could not create dimension from shape"),
         const_val,
     );
@@ -700,11 +700,11 @@ where
         // Convert to Array1 for easier manipulation
         let inputarray1 = input
             .view()
-            .into_dimensionality::<ndarray::Ix1>()
+            .into_dimensionality::<crate::ndarray::Ix1>()
             .map_err(|_| "Failed to convert to 1D array".to_string())?;
         let mut output_array1 = output
             .view_mut()
-            .into_dimensionality::<ndarray::Ix1>()
+            .into_dimensionality::<crate::ndarray::Ix1>()
             .map_err(|_| "Failed to convert output to 1D array".to_string())?;
 
         let input_len = inputarray1.len();
@@ -1027,7 +1027,7 @@ where
         return Err("number of intervals must be at least 2".to_string());
     }
 
-    if !n.is_multiple_of(2) {
+    if n % 2 != 0 {
         return Err("number of intervals must be even".to_string());
     }
 

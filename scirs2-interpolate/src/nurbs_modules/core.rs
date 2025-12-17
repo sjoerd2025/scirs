@@ -15,7 +15,7 @@ impl<T: NurbsFloat> NurbsCurve<T> {
     /// # Arguments
     ///
     /// * `control_points` - Control points in n-dimensional space
-    /// * `weights` - Weights for each control point (must have the same length as control_points.shape()[0])
+    /// * `weights` - Weights for each control point (must have the same length as `control_points.shape()[0]`)
     /// * `knots` - Knot vector
     /// * `degree` - Degree of the NURBS curve
     /// * `extrapolate` - Extrapolation mode

@@ -23,10 +23,10 @@ pub use irregular_domains::{
 /// Enum for different finite difference schemes
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum FiniteDifferenceScheme {
-    /// Forward difference: (u[i+1] - u[i]) / dx
+    /// Forward difference: `(u[i+1] - u[i]) / dx`
     ForwardDifference,
 
-    /// Backward difference: (u[i] - u[i-1]) / dx
+    /// Backward difference: `(u[i] - u[i-1]) / dx`
     BackwardDifference,
 
     /// Central difference: (u[i+1] - u[i-1]) / (2*dx)

@@ -4,7 +4,7 @@
 //! including lazy evaluation, GPU acceleration, and multidimensional support.
 
 #[cfg(feature = "gpu")]
-use scirs2_core::ndarray::{Array, Array1};
+use scirs2_core::ndarray::{compat::ArrayStatCompat, Array, Array1};
 #[cfg(feature = "gpu")]
 use scirs2_special::array_ops::{
     convenience::{self, ConfigBuilder},
@@ -294,7 +294,7 @@ async fn demo_batch_processing() -> Result<(), Box<dyn std::error::Error>> {
     println!("Batch processing completed in {:?}", duration);
     println!("Results summary:");
     for (i, result) in results.iter().enumerate() {
-        let mean = result.mean().unwrap();
+        let mean = result.mean_or(0.0);
         println!("  Array {}: mean = {:.6}", i + 1, mean);
     }
 

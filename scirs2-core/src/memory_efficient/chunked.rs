@@ -1,6 +1,6 @@
 use super::validation;
 use crate::error::{CoreError, ErrorContext, ErrorLocation};
-use ndarray::{Array, ArrayBase, Data, Dimension};
+use ::ndarray::{Array, ArrayBase, Data, Dimension};
 use std::marker::PhantomData;
 use std::mem;
 use std::sync::atomic::{AtomicUsize, Ordering};
@@ -441,7 +441,7 @@ where
     /// Apply a function to each chunk of the array and collect the results
     ///
     /// Returns a 1D array where each element is the result of applying the function to a chunk
-    pub fn map<F, B>(&self, f: F) -> Array<B, ndarray::Ix1>
+    pub fn map<F, B>(&self, f: F) -> Array<B, crate::ndarray::Ix1>
     where
         F: Fn(&Array<A, D>) -> B + Sync,
         B: Clone,
@@ -457,7 +457,7 @@ where
     /// Apply a function to each chunk of the array in parallel and collect the results
     ///
     /// Returns a 1D array where each element is the result of applying the function to a chunk
-    pub fn par_map<F, B>(&self, f: F) -> Array<B, ndarray::Ix1>
+    pub fn par_map<F, B>(&self, f: F) -> Array<B, crate::ndarray::Ix1>
     where
         F: Fn(&Array<A, D>) -> B + Sync + Send,
         B: Clone + Send + Sync,
@@ -494,7 +494,7 @@ where
     }
 
     /// Apply a function to each chunk with performance monitoring and adaptive optimization
-    pub fn map_withmonitoring<F, B>(&mut self, f: F) -> Array<B, ndarray::Ix1>
+    pub fn map_withmonitoring<F, B>(&mut self, f: F) -> Array<B, crate::ndarray::Ix1>
     where
         F: Fn(&Array<A, D>) -> B + Sync,
         B: Clone,
@@ -523,7 +523,7 @@ where
     }
 
     /// Apply a function to each chunk with NUMA-aware processing
-    pub fn map_numa_aware<F, B>(&self, f: F) -> Array<B, ndarray::Ix1>
+    pub fn map_numa_aware<F, B>(&self, f: F) -> Array<B, crate::ndarray::Ix1>
     where
         F: Fn(&Array<A, D>) -> B + Sync + Send,
         B: Clone + Send + Sync,
@@ -572,7 +572,7 @@ where
     }
 
     /// Apply a function to each chunk with cache-optimized processing
-    pub fn map_cache_optimized<F, B>(&self, f: F) -> Array<B, ndarray::Ix1>
+    pub fn map_cache_optimized<F, B>(&self, f: F) -> Array<B, crate::ndarray::Ix1>
     where
         F: Fn(&Array<A, D>) -> B + Sync,
         B: Clone,
@@ -617,7 +617,7 @@ where
     }
 
     /// Apply a function to each chunk with bandwidth-aware processing
-    pub fn mapbandwidth_aware<F, B>(&self, f: F) -> Array<B, ndarray::Ix1>
+    pub fn mapbandwidth_aware<F, B>(&self, f: F) -> Array<B, crate::ndarray::Ix1>
     where
         F: Fn(&Array<A, D>) -> B + Sync,
         B: Clone,
@@ -667,7 +667,7 @@ where
     }
 
     /// Apply a function to each chunk with power-aware processing (for mobile/embedded)
-    pub fn map_power_aware<F, B>(&self, f: F) -> Array<B, ndarray::Ix1>
+    pub fn map_power_aware<F, B>(&self, f: F) -> Array<B, crate::ndarray::Ix1>
     where
         F: Fn(&Array<A, D>) -> B + Sync,
         B: Clone,
@@ -724,7 +724,7 @@ where
     }
 
     /// Apply a function using the best available optimization strategy
-    pub fn map_optimized<F, B>(&mut self, f: F) -> Array<B, ndarray::Ix1>
+    pub fn map_optimized<F, B>(&mut self, f: F) -> Array<B, crate::ndarray::Ix1>
     where
         F: Fn(&Array<A, D>) -> B + Sync + Send,
         B: Clone + Send + Sync,

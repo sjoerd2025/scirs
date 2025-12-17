@@ -565,7 +565,7 @@ where
 /// # Related Functions
 ///
 /// - [`region_properties`]: Get detailed properties of each object
-/// - [`count_labels`]: Count pixels in each object
+/// - `count_labels`: Count pixels in each object
 /// - Label connectivity functions for segmentation preprocessing
 #[allow(dead_code)]
 pub fn find_objects<D>(input: &Array<usize, D>) -> NdimageResult<Vec<Vec<usize>>>

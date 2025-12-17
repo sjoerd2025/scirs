@@ -2,6 +2,7 @@
 //!
 //! Provides centralized validation functions for parameters and data
 
+use scirs2_core::ndarray::ArrayStatCompat;
 use scirs2_core::ndarray::{ArrayBase, Data, Ix1};
 use scirs2_core::numeric::{Float, FromPrimitive};
 use std::fmt::Display;
@@ -256,8 +257,8 @@ where
     let second_half = data.slice(scirs2_core::ndarray::s![mid..]);
 
     // Compare means and variances
-    let mean1 = first_half.mean().unwrap_or(F::zero());
-    let mean2 = second_half.mean().unwrap_or(F::zero());
+    let mean1 = first_half.mean_or(F::zero());
+    let mean2 = second_half.mean_or(F::zero());
 
     let var1 = first_half
         .mapv(|x| (x - mean1) * (x - mean1))

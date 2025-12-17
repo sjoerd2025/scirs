@@ -354,8 +354,8 @@ fn evaluate_rbf_kernel_scalar(r: f64, epsilon: f64, kernel: RBFKernel) -> f64 {
 ///
 /// # Returns
 ///
-/// Distance matrix with shape (n_a, n_b) where entry (i,j) contains the
-/// Euclidean distance between points_a[i] and points_b[j]
+/// Distance matrix with shape (n_a, n_b) where entry `(i,j)` contains the
+/// Euclidean distance between `points_a[i]` and `points_b[j]`
 #[allow(dead_code)]
 pub fn simd_distance_matrix<F>(
     points_a: &ArrayView2<F>,

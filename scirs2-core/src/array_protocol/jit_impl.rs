@@ -527,7 +527,7 @@ where
 mod tests {
     use super::*;
     use crate::array_protocol::NdarrayWrapper;
-    use ndarray::Array2;
+    use ::ndarray::Array2;
 
     #[test]
     fn test_jit_function_creation() {
@@ -542,7 +542,7 @@ mod tests {
         let expression = "x + y";
 
         // Compile the function
-        let array_typeid = TypeId::of::<NdarrayWrapper<f64, ndarray::Ix2>>();
+        let array_typeid = TypeId::of::<NdarrayWrapper<f64, crate::ndarray::Ix2>>();
         let jit_function = factory
             .create_jit_function(expression, array_typeid)
             .unwrap();
@@ -560,7 +560,7 @@ mod tests {
         jit_manager.initialize();
 
         // Check that the factories were registered
-        let array_typeid = TypeId::of::<NdarrayWrapper<f64, ndarray::Ix2>>();
+        let array_typeid = TypeId::of::<NdarrayWrapper<f64, crate::ndarray::Ix2>>();
         assert!(jit_manager
             .get_factory_for_array_type(array_typeid)
             .is_some());

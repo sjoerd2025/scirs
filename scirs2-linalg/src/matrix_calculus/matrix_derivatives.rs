@@ -478,7 +478,7 @@ where
 /// Compute the derivative of matrix multiplication.
 ///
 /// For matrices A and B, computes the directional derivatives:
-/// d(AB)/dA[V] = VB and d(AB)/dB[V] = AV
+/// `d(AB)/dA[V] = VB` and `d(AB)/dB[V] = AV`
 ///
 /// # Arguments
 ///

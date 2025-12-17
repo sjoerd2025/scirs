@@ -59,7 +59,7 @@ use crate::random::{
     distributions::MultivariateNormal,
     parallel::{ParallelRng, ThreadLocalRngPool},
 };
-use ndarray::{Array1, Array2, Axis};
+use ::ndarray::{Array1, Array2, Axis};
 use rand::Rng;
 use rand_distr::{Distribution, Normal, Uniform};
 use std::collections::VecDeque;

@@ -452,10 +452,10 @@ fn save_stability_results(results: &[StabilityTestResult]) {
     // println!("Success rate: {:.1}%", success_rate);
 
     // Identify problematic condition numbers
-    let mut failed_high_cond = 0;
+    let mut _failed_high_cond = 0;
     for result in results {
         if !result.success && result.condition_number > 1e10 {
-            failed_high_cond += 1;
+            _failed_high_cond += 1;
         }
     }
 

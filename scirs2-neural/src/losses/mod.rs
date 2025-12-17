@@ -169,10 +169,15 @@ pub trait Loss<F: Float + Debug> {
 mod contrastive;
 mod crossentropy;
 mod focal;
+mod huber;
+mod mae;
 mod mse;
 mod triplet;
+
 pub use contrastive::ContrastiveLoss;
 pub use crossentropy::CrossEntropyLoss;
 pub use focal::FocalLoss;
+pub use huber::{HuberLoss, SmoothL1Loss};
+pub use mae::MeanAbsoluteError;
 pub use mse::MeanSquaredError;
 pub use triplet::TripletLoss;

@@ -4,7 +4,7 @@
 //! those found in `NumPy`/SciPy, such as identity, diagonal, block, and other
 //! specialized matrix operations.
 
-use ndarray::{Array, ArrayView, Ix1, Ix2};
+use ::ndarray::{Array, ArrayView, Ix1, Ix2};
 use num_traits::{One, Zero};
 
 /// Create an identity matrix
@@ -107,7 +107,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use ::ndarray::array;
 /// use scirs2_core::ndarray_ext::matrix::_diag;
 ///
 /// let values = array![1, 2, 3];
@@ -147,7 +147,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use ::ndarray::array;
 /// use scirs2_core::ndarray_ext::matrix::diagonal;
 ///
 /// let a = array![[1, 2, 3], [4, 5, 6], [7, 8, 9]];
@@ -299,7 +299,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use ::ndarray::array;
 /// use scirs2_core::ndarray_ext::matrix::kron;
 ///
 /// let a = array![[1, 2], [3, 4]];
@@ -355,7 +355,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use ::ndarray::array;
 /// use scirs2_core::ndarray_ext::matrix::toeplitz;
 ///
 /// let first_row = array![1, 2, 3];
@@ -418,7 +418,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use ::ndarray::array;
 /// use scirs2_core::ndarray_ext::matrix::block_diag;
 ///
 /// let a = array![[1, 2], [3, 4]];
@@ -488,7 +488,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use ::ndarray::array;
 /// use scirs2_core::ndarray_ext::matrix::tridiagonal;
 ///
 /// let diag = array![1, 2, 3];
@@ -553,7 +553,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use ::ndarray::array;
 /// use scirs2_core::ndarray_ext::matrix::hankel;
 ///
 /// let first_col = array![1, 2, 3];
@@ -626,7 +626,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use ::ndarray::array;
 /// use scirs2_core::ndarray_ext::matrix::trace;
 ///
 /// let a = array![[1, 2, 3], [4, 5, 6], [7, 8, 9]];
@@ -668,7 +668,7 @@ where
 /// # Examples
 ///
 /// ```ignore
-/// use ndarray::array;
+/// use ::ndarray::array;
 /// use scirs2_core::ndarray_ext::matrix::vander;
 ///
 /// let x = array![1.0, 2.0, 3.0];
@@ -764,8 +764,8 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+    use ::ndarray::array;
     use approx::assert_abs_diff_eq;
-    use ndarray::array;
 
     #[test]
     fn test_eye() {

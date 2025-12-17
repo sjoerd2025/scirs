@@ -9,23 +9,10 @@ use crate::error::{NeuralError, Result};
 use crate::layers::{Dense, Dropout, Embedding, Layer, LayerNorm, MultiHeadAttention};
 use scirs2_core::ndarray::{Array, IxDyn, ScalarOperand};
 use scirs2_core::numeric::Float;
-// RNG imports removed due to version conflicts - using manual initialization
+use scirs2_core::random::SeedableRng;
+use scirs2_core::simd_ops::SimdUnifiedOps;
 use std::fmt::Debug;
-// Import the RngCore trait (use the version from layers/dropout.rs)
-use scirs2_core::random::RngCore;
-// Dummy RNG to work around version conflicts
-#[derive(Debug)]
-struct DummyRng;
-impl RngCore for DummyRng {
-    fn next_u32(&mut self) -> u32 {
-        42
-    }
-    fn next_u64(&mut self) -> u64 {
-    fn fill_bytes(&mut self, dest: &mut [u8]) {
-        dest.fill(42);
-}
-unsafe impl Send for DummyRng {}
-unsafe impl Sync for DummyRng {}
+
 /// Configuration for a BERT model
 #[derive(Debug, Clone)]
 pub struct BertConfig {
@@ -53,6 +40,8 @@ pub struct BertConfig {
     pub layer_norm_eps: f64,
     /// Initializer range
     pub initializer_range: f64,
+}
+
 impl BertConfig {
     /// Create a BERT-Base configuration
     pub fn bert_base_uncased() -> Self {
@@ -70,12 +59,26 @@ impl BertConfig {
             layer_norm_eps: 1e-12,
             initializer_range: 0.02,
         }
+    }
+
     /// Create a BERT-Large configuration
     pub fn bert_large_uncased() -> Self {
+        Self {
+            vocab_size: 30522,
+            max_position_embeddings: 512,
             hidden_size: 1024,
             num_hidden_layers: 24,
             num_attention_heads: 16,
             intermediate_size: 4096,
+            hidden_act: "gelu".to_string(),
+            hidden_dropout_prob: 0.1,
+            attention_probs_dropout_prob: 0.1,
+            type_vocab_size: 2,
+            layer_norm_eps: 1e-12,
+            initializer_range: 0.02,
+        }
+    }
+
     /// Create a custom BERT configuration
     pub fn custom(
         vocab_size: usize,
@@ -83,13 +86,25 @@ impl BertConfig {
         num_hidden_layers: usize,
         num_attention_heads: usize,
     ) -> Self {
+        Self {
             vocab_size,
+            max_position_embeddings: 512,
             hidden_size,
             num_hidden_layers,
             num_attention_heads,
             intermediate_size: hidden_size * 4,
+            hidden_act: "gelu".to_string(),
+            hidden_dropout_prob: 0.1,
+            attention_probs_dropout_prob: 0.1,
+            type_vocab_size: 2,
+            layer_norm_eps: 1e-12,
+            initializer_range: 0.02,
+        }
+    }
+}
+
 /// BERT embeddings combining token, position, and token type embeddings
-struct BertEmbeddings<F: Float + Debug + ScalarOperand + Send + Sync> {
+struct BertEmbeddings<F: Float + Debug + ScalarOperand + Send + Sync + 'static> {
     /// Token embeddings
     word_embeddings: Embedding<F>,
     /// Position embeddings
@@ -100,13 +115,56 @@ struct BertEmbeddings<F: Float + Debug + ScalarOperand + Send + Sync> {
     layer_norm: LayerNorm<F>,
     /// Dropout
     dropout: Dropout<F>,
-impl<F: Float + Debug + ScalarOperand + Send + Sync> BertEmbeddings<F> {
-    /// Create BERT embeddings - simplified stub implementation
+}
+
+impl<F: Float + Debug + ScalarOperand + Send + Sync + SimdUnifiedOps + 'static> Clone
+    for BertEmbeddings<F>
+{
+    fn clone(&self) -> Self {
+        Self {
+            word_embeddings: self.word_embeddings.clone(),
+            position_embeddings: self.position_embeddings.clone(),
+            token_type_embeddings: self.token_type_embeddings.clone(),
+            layer_norm: self.layer_norm.clone(),
+            dropout: self.dropout.clone(),
+        }
+    }
+}
+
+impl<F: Float + Debug + ScalarOperand + Send + Sync + SimdUnifiedOps + 'static> BertEmbeddings<F> {
+    /// Create BERT embeddings
     pub fn new(config: &BertConfig) -> Result<Self> {
-        Err(NeuralError::NotImplementedError(
-            "BERT layer temporarily disabled due to RNG version conflicts.".to_string(),
-        ))
-impl<F: Float + Debug + ScalarOperand + Send + Sync> Layer<F> for BertEmbeddings<F> {
+        let mut rng = scirs2_core::random::rngs::SmallRng::from_seed([42; 32]);
+
+        let word_embeddings = Embedding::new(config.vocab_size, config.hidden_size, &mut rng)?;
+
+        let mut rng2 = scirs2_core::random::rngs::SmallRng::from_seed([43; 32]);
+        let position_embeddings =
+            Embedding::new(config.max_position_embeddings, config.hidden_size, &mut rng2)?;
+
+        let mut rng3 = scirs2_core::random::rngs::SmallRng::from_seed([44; 32]);
+        let token_type_embeddings =
+            Embedding::new(config.type_vocab_size, config.hidden_size, &mut rng3)?;
+
+        let mut rng4 = scirs2_core::random::rngs::SmallRng::from_seed([45; 32]);
+        let layer_norm = LayerNorm::new(config.hidden_size, config.layer_norm_eps, &mut rng4)?;
+
+        let mut rng5 = scirs2_core::random::rngs::SmallRng::from_seed([46; 32]);
+        let dropout = Dropout::new(config.hidden_dropout_prob, &mut rng5)?;
+
+        Ok(Self {
+            word_embeddings,
+            position_embeddings,
+            token_type_embeddings,
+            layer_norm,
+            dropout,
+        })
+    }
+}
+
+impl<F: Float + Debug + ScalarOperand + Send + Sync + SimdUnifiedOps + 'static> Layer<F>
+    for BertEmbeddings<F>
+{
     fn forward(&self, input: &Array<F, IxDyn>) -> Result<Array<F, IxDyn>> {
         // Input should be of shape [batch_size, seq_len] and contain token IDs
         let shape = input.shape();
@@ -115,154 +173,467 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> Layer<F> for BertEmbeddings
                 "Expected input shape [batch_size, seq_len], got {:?}",
                 shape
             )));
+        }
+
         let batch_size = shape[0];
         let seq_len = shape[1];
+
         // Get word embeddings
         let inputs_embeds = self.word_embeddings.forward(input)?;
+
         // Create position IDs
         let mut position_ids = Array::zeros(IxDyn(&[batch_size, seq_len]));
         for b in 0..batch_size {
             for s in 0..seq_len {
                 position_ids[[b, s]] = F::from(s).unwrap();
             }
+        }
+
         // Get position embeddings
-        let position_embeddings = self.position_embeddings.forward(&position_ids)?;
-        // Create token type IDs (all zeros for now, in real implementation this would be input)
+        let position_embeds = self.position_embeddings.forward(&position_ids)?;
+
+        // Create token type IDs (all zeros for single sequence)
         let token_type_ids = Array::zeros(IxDyn(&[batch_size, seq_len]));
+
         // Get token type embeddings
-        let token_type_embeddings = self.token_type_embeddings.forward(&token_type_ids)?;
+        let token_type_embeds = self.token_type_embeddings.forward(&token_type_ids)?;
+
         // Combine embeddings
-        let mut embeddings = inputs_embeds.clone();
-        // Add position embeddings
-        for i in 0..embeddings.len() {
-            embeddings[i] = embeddings[i] + position_embeddings[i];
-        // Add token type embeddings
-            embeddings[i] = embeddings[i] + token_type_embeddings[i];
+        let embeddings = &inputs_embeds + &position_embeds + &token_type_embeds;
+
         // Apply layer normalization
         let embeddings = self.layer_norm.forward(&embeddings)?;
+
         // Apply dropout
         let embeddings = self.dropout.forward(&embeddings)?;
+
         Ok(embeddings)
+    }
+
     fn backward(
-        &mut self,
+        &self,
         _input: &Array<F, IxDyn>,
         grad_output: &Array<F, IxDyn>,
     ) -> Result<Array<F, IxDyn>> {
         Ok(grad_output.clone())
-    fn update(&mut self, learningrate: F) -> Result<()> {
+    }
+
+    fn update(&mut self, learning_rate: F) -> Result<()> {
         self.word_embeddings.update(learning_rate)?;
         self.position_embeddings.update(learning_rate)?;
         self.token_type_embeddings.update(learning_rate)?;
         self.layer_norm.update(learning_rate)?;
         Ok(())
+    }
+
     fn as_any(&self) -> &dyn std::any::Any {
         self
+    }
+
     fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+        self
+    }
+}
+
 /// BERT self-attention layer
-struct BertSelfAttention<
-    F: Float + Debug + ScalarOperand + Send + Sync + scirs2_core::simd_ops::SimdUnifiedOps,
-> {
-    #[allow(dead_code)]
-    num_attention_heads: usize,
-    /// Size of each attention head
-    attention_head_size: usize,
+struct BertSelfAttention<F: Float + Debug + ScalarOperand + Send + Sync + SimdUnifiedOps> {
     /// Multi-head attention layer
     attention: MultiHeadAttention<F>,
     /// Output dropout
-impl<F: Float + Debug + ScalarOperand + Send + Sync + scirs2_core::simd_ops::SimdUnifiedOps>
+    dropout: Dropout<F>,
+}
+
+impl<F: Float + Debug + ScalarOperand + Send + Sync + SimdUnifiedOps + 'static> Clone
+    for BertSelfAttention<F>
+{
+    fn clone(&self) -> Self {
+        Self {
+            attention: self.attention.clone(),
+            dropout: self.dropout.clone(),
+        }
+    }
+}
+
+impl<F: Float + Debug + ScalarOperand + Send + Sync + SimdUnifiedOps + 'static>
     BertSelfAttention<F>
 {
     /// Create BERT self-attention layer
-    Layer<F> for BertSelfAttention<F>
-        // Use multi-head attention component
+    pub fn new(config: &BertConfig) -> Result<Self> {
+        let head_dim = config.hidden_size / config.num_attention_heads;
+        let attn_config = crate::layers::AttentionConfig {
+            num_heads: config.num_attention_heads,
+            head_dim,
+            dropout_prob: config.attention_probs_dropout_prob,
+            causal: false,
+            scale: None,
+        };
+
+        let mut rng = scirs2_core::random::rngs::SmallRng::from_seed([47; 32]);
+        let attention = MultiHeadAttention::new(config.hidden_size, attn_config, &mut rng)?;
+
+        let mut rng2 = scirs2_core::random::rngs::SmallRng::from_seed([48; 32]);
+        let dropout = Dropout::new(config.hidden_dropout_prob, &mut rng2)?;
+
+        Ok(Self { attention, dropout })
+    }
+}
+
+impl<F: Float + Debug + ScalarOperand + Send + Sync + SimdUnifiedOps + 'static> Layer<F>
+    for BertSelfAttention<F>
+{
+    fn forward(&self, input: &Array<F, IxDyn>) -> Result<Array<F, IxDyn>> {
         let attention_output = self.attention.forward(input)?;
         let attention_output = self.dropout.forward(&attention_output)?;
         Ok(attention_output)
+    }
+
+    fn backward(
+        &self,
+        _input: &Array<F, IxDyn>,
+        grad_output: &Array<F, IxDyn>,
+    ) -> Result<Array<F, IxDyn>> {
+        Ok(grad_output.clone())
+    }
+
+    fn update(&mut self, learning_rate: F) -> Result<()> {
         self.attention.update(learning_rate)?;
-/// BERT feed-forward network
-struct BertIntermediate<F: Float + Debug + ScalarOperand + Send + Sync> {
-    /// Dense layer
-    dense: Dense<F>,
-    /// Activation function
-    activation_fn: Box<dyn Fn(F) -> F + Send + Sync>,
-impl<F: Float + Debug + ScalarOperand + Send + Sync> BertIntermediate<F> {
-    /// Create BERT intermediate layer
-            "BertIntermediate temporarily disabled due to RNG version conflicts.".to_string(),
-impl<F: Float + Debug + ScalarOperand + Send + Sync> Layer<F> for BertIntermediate<F> {
-        // Apply dense layer
-        let hidden_states = self.dense.forward(input)?;
-        // Apply activation function
-        let hidden_states = hidden_states.mapv(|x| (self.activation_fn)(x));
-        Ok(hidden_states)
-        self.dense.update(learning_rate)?;
-/// BERT output layer
-struct BertOutput<F: Float + Debug + ScalarOperand + Send + Sync> {
-impl<F: Float + Debug + ScalarOperand + Send + Sync> BertOutput<F> {
-    /// Create BERT output layer
-impl<F: Float + Debug + ScalarOperand + Send + Sync> Layer<F> for BertOutput<F> {
-        // This is a simplified version without the residual connection
-        // In a real implementation, we'd need to pass both the input and the residual
-        let mut hidden_states = self.dense.forward(input)?;
-        hidden_states = self.dropout.forward(&hidden_states)?;
-        hidden_states = self.layer_norm.forward(&hidden_states)?;
-/// BERT attention block
-struct BertAttention<
+        Ok(())
+    }
+
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
+    }
+
+    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+        self
+    }
+}
+
+/// BERT feed-forward network (intermediate + output)
+struct BertFeedForward<F: Float + Debug + ScalarOperand + Send + Sync + 'static> {
+    /// Intermediate dense layer
+    intermediate_dense: Dense<F>,
+    /// Output dense layer
+    output_dense: Dense<F>,
+    /// Layer normalization
+    layer_norm: LayerNorm<F>,
+    /// Dropout
+    dropout: Dropout<F>,
+}
+
+impl<F: Float + Debug + ScalarOperand + Send + Sync + SimdUnifiedOps + 'static> Clone
+    for BertFeedForward<F>
+{
+    fn clone(&self) -> Self {
+        Self {
+            intermediate_dense: self.intermediate_dense.clone(),
+            output_dense: self.output_dense.clone(),
+            layer_norm: self.layer_norm.clone(),
+            dropout: self.dropout.clone(),
+        }
+    }
+}
+
+impl<F: Float + Debug + ScalarOperand + Send + Sync + SimdUnifiedOps + 'static> BertFeedForward<F> {
+    /// Create BERT feed-forward layer
+    pub fn new(config: &BertConfig) -> Result<Self> {
+        let mut rng1 = scirs2_core::random::rngs::SmallRng::from_seed([49; 32]);
+        let intermediate_dense =
+            Dense::new(config.hidden_size, config.intermediate_size, None, &mut rng1)?;
+
+        let mut rng2 = scirs2_core::random::rngs::SmallRng::from_seed([50; 32]);
+        let output_dense =
+            Dense::new(config.intermediate_size, config.hidden_size, None, &mut rng2)?;
+
+        let mut rng3 = scirs2_core::random::rngs::SmallRng::from_seed([51; 32]);
+        let layer_norm = LayerNorm::new(config.hidden_size, config.layer_norm_eps, &mut rng3)?;
+
+        let mut rng4 = scirs2_core::random::rngs::SmallRng::from_seed([52; 32]);
+        let dropout = Dropout::new(config.hidden_dropout_prob, &mut rng4)?;
+
+        Ok(Self {
+            intermediate_dense,
+            output_dense,
+            layer_norm,
+            dropout,
+        })
+    }
+}
+
+impl<F: Float + Debug + ScalarOperand + Send + Sync + SimdUnifiedOps + 'static> Layer<F>
+    for BertFeedForward<F>
+{
+    fn forward(&self, input: &Array<F, IxDyn>) -> Result<Array<F, IxDyn>> {
+        // Intermediate layer with GELU activation
+        let hidden = self.intermediate_dense.forward(input)?;
+        let hidden = hidden.mapv(|v| {
+            // GELU approximation
+            let x3 = v * v * v;
+            v * F::from(0.5).unwrap()
+                * (F::one() + (v + F::from(0.044715).unwrap() * x3).tanh())
+        });
+
+        // Output layer
+        let output = self.output_dense.forward(&hidden)?;
+        let output = self.dropout.forward(&output)?;
+
+        // Add residual and layer norm
+        let output = input + &output;
+        let output = self.layer_norm.forward(&output)?;
+
+        Ok(output)
+    }
+
+    fn backward(
+        &self,
+        _input: &Array<F, IxDyn>,
+        grad_output: &Array<F, IxDyn>,
+    ) -> Result<Array<F, IxDyn>> {
+        Ok(grad_output.clone())
+    }
+
+    fn update(&mut self, learning_rate: F) -> Result<()> {
+        self.intermediate_dense.update(learning_rate)?;
+        self.output_dense.update(learning_rate)?;
+        self.layer_norm.update(learning_rate)?;
+        Ok(())
+    }
+
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
+    }
+
+    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+        self
+    }
+}
+
+/// BERT layer (attention + feed-forward)
+struct BertLayer<F: Float + Debug + ScalarOperand + Send + Sync + SimdUnifiedOps> {
     /// Self attention
-    self_attention: BertSelfAttention<F>,
-    /// Output layer
-    output: BertOutput<F>,
-    BertAttention<F>
-    /// Create BERT attention block
-    Layer<F> for BertAttention<F>
-        let attention_output = self.self_attention.forward(input)?;
-        let layer_output = self.output.forward(&attention_output)?;
-        // In a real implementation, we would add the residual connection here
-        // For now, we'll manually add the residual in the simplified output.forward()
-        Ok(layer_output)
-        self.self_attention.update(learning_rate)?;
-        self.output.update(learning_rate)?;
-/// BERT layer
-struct BertLayer<
-    /// Attention block
-    attention: BertAttention<F>,
-    /// Intermediate layer
-    intermediate: BertIntermediate<F>,
-    BertLayer<F>
+    attention: BertSelfAttention<F>,
+    /// Attention output layer norm
+    attention_layer_norm: LayerNorm<F>,
+    /// Feed-forward network
+    feed_forward: BertFeedForward<F>,
+}
+
+impl<F: Float + Debug + ScalarOperand + Send + Sync + SimdUnifiedOps + 'static> Clone
+    for BertLayer<F>
+{
+    fn clone(&self) -> Self {
+        Self {
+            attention: self.attention.clone(),
+            attention_layer_norm: self.attention_layer_norm.clone(),
+            feed_forward: self.feed_forward.clone(),
+        }
+    }
+}
+
+impl<F: Float + Debug + ScalarOperand + Send + Sync + SimdUnifiedOps + 'static> BertLayer<F> {
     /// Create BERT layer
-    Layer<F> for BertLayer<F>
-        let intermediate_output = self.intermediate.forward(&attention_output)?;
-        let layer_output = self.output.forward(&intermediate_output)?;
-        self.intermediate.update(learning_rate)?;
+    pub fn new(config: &BertConfig) -> Result<Self> {
+        let attention = BertSelfAttention::new(config)?;
+
+        let mut rng = scirs2_core::random::rngs::SmallRng::from_seed([53; 32]);
+        let attention_layer_norm =
+            LayerNorm::new(config.hidden_size, config.layer_norm_eps, &mut rng)?;
+
+        let feed_forward = BertFeedForward::new(config)?;
+
+        Ok(Self {
+            attention,
+            attention_layer_norm,
+            feed_forward,
+        })
+    }
+}
+
+impl<F: Float + Debug + ScalarOperand + Send + Sync + SimdUnifiedOps + 'static> Layer<F>
+    for BertLayer<F>
+{
+    fn forward(&self, input: &Array<F, IxDyn>) -> Result<Array<F, IxDyn>> {
+        // Self-attention with residual and layer norm
+        let attention_output = self.attention.forward(input)?;
+        let attention_output = input + &attention_output;
+        let attention_output = self.attention_layer_norm.forward(&attention_output)?;
+
+        // Feed-forward with residual and layer norm
+        let layer_output = self.feed_forward.forward(&attention_output)?;
+
+        Ok(layer_output)
+    }
+
+    fn backward(
+        &self,
+        _input: &Array<F, IxDyn>,
+        grad_output: &Array<F, IxDyn>,
+    ) -> Result<Array<F, IxDyn>> {
+        Ok(grad_output.clone())
+    }
+
+    fn update(&mut self, learning_rate: F) -> Result<()> {
+        self.attention.update(learning_rate)?;
+        self.attention_layer_norm.update(learning_rate)?;
+        self.feed_forward.update(learning_rate)?;
+        Ok(())
+    }
+
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
+    }
+
+    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+        self
+    }
+}
+
 /// BERT encoder
-struct BertEncoder<
+struct BertEncoder<F: Float + Debug + ScalarOperand + Send + Sync + SimdUnifiedOps> {
     /// BERT layers
     layers: Vec<BertLayer<F>>,
-    BertEncoder<F>
+}
+
+impl<F: Float + Debug + ScalarOperand + Send + Sync + SimdUnifiedOps + 'static> Clone
+    for BertEncoder<F>
+{
+    fn clone(&self) -> Self {
+        Self {
+            layers: self.layers.clone(),
+        }
+    }
+}
+
+impl<F: Float + Debug + ScalarOperand + Send + Sync + SimdUnifiedOps + 'static> BertEncoder<F> {
     /// Create BERT encoder
-    Layer<F> for BertEncoder<F>
+    pub fn new(config: &BertConfig) -> Result<Self> {
+        let mut layers = Vec::with_capacity(config.num_hidden_layers);
+        for _ in 0..config.num_hidden_layers {
+            layers.push(BertLayer::new(config)?);
+        }
+
+        Ok(Self { layers })
+    }
+}
+
+impl<F: Float + Debug + ScalarOperand + Send + Sync + SimdUnifiedOps + 'static> Layer<F>
+    for BertEncoder<F>
+{
+    fn forward(&self, input: &Array<F, IxDyn>) -> Result<Array<F, IxDyn>> {
         let mut hidden_states = input.clone();
         for layer in &self.layers {
             hidden_states = layer.forward(&hidden_states)?;
+        }
+        Ok(hidden_states)
+    }
+
+    fn backward(
+        &self,
+        _input: &Array<F, IxDyn>,
+        grad_output: &Array<F, IxDyn>,
+    ) -> Result<Array<F, IxDyn>> {
+        Ok(grad_output.clone())
+    }
+
+    fn update(&mut self, learning_rate: F) -> Result<()> {
         for layer in &mut self.layers {
-            layer.update(learningrate)?;
-/// BERT pooler
-struct BertPooler<F: Float + Debug + ScalarOperand + Send + Sync> {
-impl<F: Float + Debug + ScalarOperand + Send + Sync> BertPooler<F> {
+            layer.update(learning_rate)?;
+        }
+        Ok(())
+    }
+
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
+    }
+
+    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+        self
+    }
+}
+
+/// BERT pooler (for classification tasks)
+struct BertPooler<F: Float + Debug + ScalarOperand + Send + Sync + 'static> {
+    /// Dense layer
+    dense: Dense<F>,
+}
+
+impl<F: Float + Debug + ScalarOperand + Send + Sync + SimdUnifiedOps + 'static> Clone
+    for BertPooler<F>
+{
+    fn clone(&self) -> Self {
+        Self {
+            dense: self.dense.clone(),
+        }
+    }
+}
+
+impl<F: Float + Debug + ScalarOperand + Send + Sync + SimdUnifiedOps + 'static> BertPooler<F> {
     /// Create BERT pooler
-impl<F: Float + Debug + ScalarOperand + Send + Sync> Layer<F> for BertPooler<F> {
+    pub fn new(config: &BertConfig) -> Result<Self> {
+        let mut rng = scirs2_core::random::rngs::SmallRng::from_seed([54; 32]);
+        let dense = Dense::new(config.hidden_size, config.hidden_size, None, &mut rng)?;
+
+        Ok(Self { dense })
+    }
+}
+
+impl<F: Float + Debug + ScalarOperand + Send + Sync + SimdUnifiedOps + 'static> Layer<F>
+    for BertPooler<F>
+{
+    fn forward(&self, input: &Array<F, IxDyn>) -> Result<Array<F, IxDyn>> {
         // Take the first token ([CLS]) representation
+        let shape = input.shape();
         if shape.len() != 3 {
+            return Err(NeuralError::InferenceError(format!(
                 "Expected input shape [batch_size, seq_len, hidden_size], got {:?}",
+                shape
+            )));
+        }
+
+        let batch_size = shape[0];
         let hidden_size = shape[2];
+
         // Extract [CLS] token (first token)
         let mut cls_tokens = Array::zeros(IxDyn(&[batch_size, hidden_size]));
+        for b in 0..batch_size {
             for i in 0..hidden_size {
                 cls_tokens[[b, i]] = input[[b, 0, i]];
+            }
+        }
+
+        // Apply dense layer
         let pooled_output = self.dense.forward(&cls_tokens)?;
-        let pooled_output = pooled_output.mapv(|x| (self.activation_fn)(x));
+
+        // Apply tanh activation
+        let pooled_output = pooled_output.mapv(|x| x.tanh());
+
         Ok(pooled_output)
+    }
+
+    fn backward(
+        &self,
+        _input: &Array<F, IxDyn>,
+        grad_output: &Array<F, IxDyn>,
+    ) -> Result<Array<F, IxDyn>> {
+        Ok(grad_output.clone())
+    }
+
+    fn update(&mut self, learning_rate: F) -> Result<()> {
+        self.dense.update(learning_rate)?;
+        Ok(())
+    }
+
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
+    }
+
+    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+        self
+    }
+}
+
 /// BERT model implementation
-pub struct BertModel<
+pub struct BertModel<F: Float + Debug + ScalarOperand + Send + Sync + SimdUnifiedOps> {
     /// Embeddings layer
     embeddings: BertEmbeddings<F>,
     /// Encoder
@@ -271,41 +642,139 @@ pub struct BertModel<
     pooler: BertPooler<F>,
     /// Model configuration
     config: BertConfig,
-    BertModel<F>
+}
+
+impl<F: Float + Debug + ScalarOperand + Send + Sync + SimdUnifiedOps + 'static> Clone
+    for BertModel<F>
+{
+    fn clone(&self) -> Self {
+        Self {
+            embeddings: self.embeddings.clone(),
+            encoder: self.encoder.clone(),
+            pooler: self.pooler.clone(),
+            config: self.config.clone(),
+        }
+    }
+}
+
+impl<F: Float + Debug + ScalarOperand + Send + Sync + SimdUnifiedOps + 'static> BertModel<F> {
     /// Create a new BERT model
     pub fn new(config: BertConfig) -> Result<Self> {
-        let embeddings = BertEmbeddings::new(&_config)?;
-        let encoder = BertEncoder::new(&_config)?;
-        let pooler = BertPooler::new(&_config)?;
+        let embeddings = BertEmbeddings::new(&config)?;
+        let encoder = BertEncoder::new(&config)?;
+        let pooler = BertPooler::new(&config)?;
+
         Ok(Self {
             embeddings,
             encoder,
             pooler,
             config,
         })
+    }
+
     /// Create a BERT-Base-Uncased model
     pub fn bert_base_uncased() -> Result<Self> {
         let config = BertConfig::bert_base_uncased();
         Self::new(config)
+    }
+
     /// Create a BERT-Large-Uncased model
     pub fn bert_large_uncased() -> Result<Self> {
         let config = BertConfig::bert_large_uncased();
+        Self::new(config)
+    }
+
     /// Create a custom BERT model
+    pub fn custom(
+        vocab_size: usize,
+        hidden_size: usize,
+        num_hidden_layers: usize,
+        num_attention_heads: usize,
     ) -> Result<Self> {
-        let config = BertConfig::custom(
-        );
+        let config = BertConfig::custom(vocab_size, hidden_size, num_hidden_layers, num_attention_heads);
+        Self::new(config)
+    }
+
     /// Get sequence output (last layer hidden states)
     pub fn get_sequence_output(&self, input: &Array<F, IxDyn>) -> Result<Array<F, IxDyn>> {
         let embedding_output = self.embeddings.forward(input)?;
         let sequence_output = self.encoder.forward(&embedding_output)?;
         Ok(sequence_output)
+    }
+
     /// Get pooled output (for classification tasks)
     pub fn get_pooled_output(&self, input: &Array<F, IxDyn>) -> Result<Array<F, IxDyn>> {
         let sequence_output = self.get_sequence_output(input)?;
         let pooled_output = self.pooler.forward(&sequence_output)?;
-    Layer<F> for BertModel<F>
+        Ok(pooled_output)
+    }
+
+    /// Get the model configuration
+    pub fn config(&self) -> &BertConfig {
+        &self.config
+    }
+}
+
+impl<F: Float + Debug + ScalarOperand + Send + Sync + SimdUnifiedOps + 'static> Layer<F>
+    for BertModel<F>
+{
+    fn forward(&self, input: &Array<F, IxDyn>) -> Result<Array<F, IxDyn>> {
         // By default, return the full sequence output
         self.get_sequence_output(input)
+    }
+
+    fn backward(
+        &self,
+        _input: &Array<F, IxDyn>,
+        grad_output: &Array<F, IxDyn>,
+    ) -> Result<Array<F, IxDyn>> {
+        Ok(grad_output.clone())
+    }
+
+    fn update(&mut self, learning_rate: F) -> Result<()> {
         self.embeddings.update(learning_rate)?;
         self.encoder.update(learning_rate)?;
         self.pooler.update(learning_rate)?;
+        Ok(())
+    }
+
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
+    }
+
+    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+        self
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_bert_config_base() {
+        let config = BertConfig::bert_base_uncased();
+        assert_eq!(config.vocab_size, 30522);
+        assert_eq!(config.hidden_size, 768);
+        assert_eq!(config.num_hidden_layers, 12);
+        assert_eq!(config.num_attention_heads, 12);
+    }
+
+    #[test]
+    fn test_bert_config_large() {
+        let config = BertConfig::bert_large_uncased();
+        assert_eq!(config.hidden_size, 1024);
+        assert_eq!(config.num_hidden_layers, 24);
+        assert_eq!(config.num_attention_heads, 16);
+    }
+
+    #[test]
+    fn test_bert_config_custom() {
+        let config = BertConfig::custom(10000, 256, 4, 4);
+        assert_eq!(config.vocab_size, 10000);
+        assert_eq!(config.hidden_size, 256);
+        assert_eq!(config.num_hidden_layers, 4);
+        assert_eq!(config.num_attention_heads, 4);
+        assert_eq!(config.intermediate_size, 1024); // 256 * 4
+    }
+}

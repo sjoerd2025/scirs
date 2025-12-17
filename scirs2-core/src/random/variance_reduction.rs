@@ -31,7 +31,7 @@ impl<R: Rng> AntitheticSampling<R> {
 
     /// Generate antithetic pairs of samples
     ///
-    /// Returns (original_samples, antithetic_samples) where antithetic[i] = 1 - original[i]
+    /// Returns (original_samples, antithetic_samples) where `antithetic[i]` = 1 - `original[i]`
     pub fn generate_antithetic_pairs(&mut self, count: usize) -> (Vec<f64>, Vec<f64>) {
         let original: Vec<f64> = (0..count)
             .map(|_| self.rng.sample(Uniform::new(0.0, 1.0).unwrap()))

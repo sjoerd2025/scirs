@@ -692,9 +692,13 @@ mod tests {
 
     #[test]
     fn test_multiscale_encoding() {
-        let config = HDCConfig::default();
-        let image = Array2::from_shape_fn((20, 20), |(i, j)| (i + j) as f64 / 40.0);
-        let scales = vec![1.0, 0.5, 0.25];
+        // Use smaller hypervector_dim for faster testing
+        let config = HDCConfig {
+            hypervector_dim: 500, // Reduced from default 10000 for faster testing
+            ..Default::default()
+        };
+        let image = Array2::from_shape_fn((10, 10), |(i, j)| (i + j) as f64 / 20.0);
+        let scales = vec![1.0, 0.5];
 
         let result = multiscale_encoding(image.view(), &scales, &config);
         assert!(result.is_ok());

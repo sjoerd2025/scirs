@@ -1,7 +1,7 @@
 # SciRS2 Development Roadmap
 
-**Current Version**: 0.1.0-rc.2 (Released October 19, 2025)
-**Focus**: Release Candidate 2 - Performance refinements and code quality
+**Current Version**: 0.1.0-rc.3 (December 2025)
+**Focus**: Release Candidate 3 - Python bindings, documentation, and quality improvements
 
 This document outlines the development plan for the SciRS2 project, a scientific computing and machine learning ecosystem in Rust. For detailed module-specific plans, see individual module TODO.md files.
 
@@ -41,7 +41,7 @@ This document outlines the development plan for the SciRS2 project, a scientific
 
 ---
 
-## 🎯 Current Release: rc.2 (October 2025)
+## 🎯 Current Release: rc.3 (December 2025)
 
 ### ✅ Major Achievements
 
@@ -361,7 +361,8 @@ This document outlines the development plan for the SciRS2 project, a scientific
 - **✅ 0.1.0-beta.3** (2025): Numerical stability improvements
 - **✅ 0.1.0-beta.4** (2025-10-01): SciRS2 POLICY, bug fixes, ultra-performance SIMD
 - **✅ 0.1.0-rc.1** (2025-10-03): Release Candidate 1 with platform testing
-- **✅ 0.1.0-rc.2** (2025-10-19): **CURRENT** - Release Candidate 2 with SIMD ODE solvers and code quality improvements
+- **✅ 0.1.0-rc.3** (2025-12-17): Release Candidate 2 with SIMD ODE solvers and code quality improvements
+- **✅ 0.1.0-rc.3** (2025-12): **CURRENT** - Release Candidate 3 with Python bindings foundation and documentation
 - **🎯 0.1.0** (2026-Q4): First stable release with full SciPy feature parity and API guarantees
 - **🎯 0.2.0** (2026): Enhanced performance and feature integration
 - **🎯 1.0.0** (2026): Complete implementation with Rust-specific optimizations
@@ -489,5 +490,5 @@ This document outlines the development plan for the SciRS2 project, a scientific
 
 ---
 
-**Last Updated**: October 19, 2025
-**Status**: rc.2 Released - Release Candidate with SIMD optimizations and code quality improvements
+**Last Updated**: December 13, 2025
+**Status**: rc.3 Released - Release Candidate with Python bindings foundation, documentation improvements, and enhanced SIMD operations

@@ -25,7 +25,7 @@
 //!
 //! ```rust
 //! use scirs2_core::random::neural_sampling::*;
-//! use ndarray::Array2;
+//! use ::ndarray::Array2;
 //!
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! // Sample training data (small for doc test)
@@ -50,7 +50,7 @@ use crate::random::{
     distributions::MultivariateNormal,
     parallel::{ParallelRng, ThreadLocalRngPool},
 };
-use ndarray::{s, Array1, Array2, Array3, Axis};
+use ::ndarray::{s, Array1, Array2, Array3, Axis};
 use rand::Rng;
 use rand_distr::{Distribution, Normal, Uniform};
 use std::collections::VecDeque;
@@ -141,7 +141,7 @@ impl NormalizingFlow {
                 let batch = training_data.slice(s![start_idx..end_idx, ..]);
 
                 // Forward pass: compute negative log-likelihood
-                let mut total_loss = 0.0;
+                let mut _total_loss = 0.0;
                 for i in 0..batch.nrows() {
                     let x = batch.row(i).to_owned();
                     let (z, log_det_jacobian) = self.forward(&x)?;
@@ -150,7 +150,7 @@ impl NormalizingFlow {
                     let log_prob_z = self.base_distribution.log_probability(&z.to_vec())?;
                     let log_prob_x = log_prob_z + log_det_jacobian;
 
-                    total_loss -= log_prob_x; // Negative log-likelihood
+                    _total_loss -= log_prob_x; // Negative log-likelihood (TODO: use for monitoring)
                 }
 
                 // Backward pass (simplified gradient computation)
@@ -231,7 +231,7 @@ impl NormalizingFlow {
     fn update_parameters(
         &mut self,
         learning_rate: f64,
-        batch: &ndarray::ArrayView2<f64>,
+        batch: &crate::ndarray::ArrayView2<f64>,
     ) -> Result<(), String> {
         // Simplified parameter update - in practice would use automatic differentiation
         for layer in &mut self.flow_layers {
@@ -327,7 +327,7 @@ impl FlowLayer {
     fn update_parameters(
         &mut self,
         learning_rate: f64,
-        _batch: &ndarray::ArrayView2<f64>,
+        _batch: &crate::ndarray::ArrayView2<f64>,
     ) -> Result<(), String> {
         // Simplified parameter update
         self.scale_network.update_parameters(learning_rate)?;

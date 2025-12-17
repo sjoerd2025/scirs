@@ -51,7 +51,7 @@ impl Default for ParallelVectorOptions {
 ///
 /// # Returns
 ///
-/// The dot product sum(x[i] * y[i])
+/// The dot product `sum(x[i] * y[i])`
 ///
 /// # Panics
 ///

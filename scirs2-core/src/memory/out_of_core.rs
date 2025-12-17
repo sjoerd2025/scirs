@@ -5,7 +5,7 @@
 
 use crate::error::{CoreError, CoreResult};
 use crate::memory::metrics::{track_allocation, track_deallocation};
-use ndarray::{Array, IxDyn};
+use ::ndarray::{Array, IxDyn};
 use std::collections::{HashMap, VecDeque};
 use std::fs::{File, OpenOptions};
 use std::io::{Read, Seek, SeekFrom, Write};

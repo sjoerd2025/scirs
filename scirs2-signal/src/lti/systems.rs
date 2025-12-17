@@ -73,7 +73,7 @@ pub trait LtiSystem {
 /// Transfer function representation of an LTI system
 ///
 /// The transfer function is represented as a ratio of two polynomials:
-/// H(s) = (b[0] * s^n + b[1] * s^(n-1) + ... + b[n]) / (a[0] * s^m + a[1] * s^(m-1) + ... + a[m])
+/// `H(s) = (b[0] * s^n + b[1] * s^(n-1) + ... + b[n]) / (a[0] * s^m + a[1] * s^(m-1) + ... + a[m])`
 ///
 /// Where:
 /// - b: numerator coefficients (highest power first)
@@ -426,7 +426,7 @@ impl LtiSystem for TransferFunction {
 /// Zeros-poles-gain representation of an LTI system
 ///
 /// The transfer function is represented as:
-/// H(s) = gain * (s - zeros[0]) * (s - zeros[1]) * ... / ((s - poles[0]) * (s - poles[1]) * ...)
+/// `H(s) = gain * (s - zeros[0]) * (s - zeros[1]) * ... / ((s - poles[0]) * (s - poles[1]) * ...)`
 ///
 /// # Examples
 ///
@@ -623,7 +623,7 @@ impl LtiSystem for ZerosPoleGain {
 ///
 /// The system is represented as:
 /// dx/dt = A*x + B*u  (for continuous-time systems)
-/// x[k+1] = A*x[k] + B*u[k]  (for discrete-time systems)
+/// `x[k+1] = A*x[k] + B*u[k]`  (for discrete-time systems)
 /// y = C*x + D*u
 ///
 /// Where:
@@ -767,7 +767,7 @@ impl StateSpace {
     ///
     /// # Returns
     ///
-    /// The value A[i,j]
+    /// The value `A[i,j]`
     pub fn a(&self, i: usize, j: usize) -> SignalResult<f64> {
         if i >= self.n_states || j >= self.n_states {
             return Err(SignalError::ValueError(
@@ -787,7 +787,7 @@ impl StateSpace {
     ///
     /// # Returns
     ///
-    /// The value B[i,j]
+    /// The value `B[i,j]`
     pub fn b(&self, i: usize, j: usize) -> SignalResult<f64> {
         if i >= self.n_states || j >= self.n_inputs {
             return Err(SignalError::ValueError(
@@ -807,7 +807,7 @@ impl StateSpace {
     ///
     /// # Returns
     ///
-    /// The value C[i,j]
+    /// The value `C[i,j]`
     pub fn c(&self, i: usize, j: usize) -> SignalResult<f64> {
         if i >= self.n_outputs || j >= self.n_states {
             return Err(SignalError::ValueError(
@@ -827,7 +827,7 @@ impl StateSpace {
     ///
     /// # Returns
     ///
-    /// The value D[i,j]
+    /// The value `D[i,j]`
     pub fn d(&self, i: usize, j: usize) -> SignalResult<f64> {
         if i >= self.n_outputs || j >= self.n_inputs {
             return Err(SignalError::ValueError(

@@ -25,7 +25,7 @@
 //! # Usage Notes
 //!
 //! - Input must be a binary array where `false` represents background and `true` represents foreground
-//! - All functions require input arrays to be in IxDyn format (use array.into_dimensionality::<IxDyn>())
+//! - All functions require input arrays to be in IxDyn format (use `array.into_dimensionality::<IxDyn>()`)
 //! - Optional sampling parameter allows for non-uniform pixel spacing
 //!
 
@@ -152,14 +152,14 @@ fn felzenszwalb_1d_edt<D>(
     for slice_idx in 0..total_slices {
         // Convert linear slice index to coordinates (excluding the processing dimension)
         let mut temp_idx = slice_idx;
-        let mut coord_idx = 0;
+        let mut _coord_idx = 0;
         for i in 0..ndim {
             if i == dim {
                 continue;
             }
             coords[i] = temp_idx % shape[i];
             temp_idx /= shape[i];
-            coord_idx += 1;
+            _coord_idx += 1;
         }
 
         // Extract 1D slice along the processing dimension

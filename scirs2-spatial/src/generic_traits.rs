@@ -735,7 +735,8 @@ pub mod ndarray_integration {
         }
 
         fn as_slice(&self) -> Option<&[T]> {
-            self.as_slice()
+            // Use as_slice_memory_order() to avoid infinite recursion with trait method
+            self.as_slice_memory_order()
         }
 
         fn from_coords(coords: &[T]) -> Self {
@@ -758,7 +759,8 @@ pub mod ndarray_integration {
         }
 
         fn as_slice(&self) -> Option<&[T]> {
-            self.as_slice()
+            // Use as_slice_memory_order() to avoid infinite recursion with trait method
+            self.as_slice_memory_order()
         }
 
         fn from_coords(coords: &[T]) -> Self {

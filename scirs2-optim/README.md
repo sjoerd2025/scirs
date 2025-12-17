@@ -64,5 +64,5 @@ Full documentation and examples are available in the OptiRS repository.
 **For SciRS2 core scientific computing**, continue using:
 ```toml
 [dependencies]
-scirs2 = "0.1.0-rc.2"  # Scientific computing without optimization
+scirs2 = "0.1.0-rc.3"  # Scientific computing without optimization
 ```

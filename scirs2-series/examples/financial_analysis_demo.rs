@@ -3,7 +3,7 @@
 //! This example demonstrates the current function-based API for financial analysis.
 //! Note: Full examples will be updated in v0.1.0 after API stabilization.
 
-use scirs2_core::ndarray::Array1;
+use scirs2_core::ndarray::{compat::ArrayStatCompat, Array1};
 use scirs2_series::financial::{
     models::{Distribution, GarchConfig, GarchModel, MeanModel},
     risk::{expected_shortfall, max_drawdown, sharpe_ratio, var_historical},
@@ -195,21 +195,20 @@ fn risk_metrics_demo(prices: &Array1<f64>, returns: &Array1<f64>) {
     }
 
     // Basic statistics
-    if let Some(mean_return) = returns.mean() {
-        let volatility = returns.std_dev();
-        let annualized_return = mean_return * periods_per_year as f64;
-        let annualized_volatility = volatility * (periods_per_year as f64).sqrt();
+    let mean_return = returns.mean_or(0.0);
+    let volatility = returns.std_dev();
+    let annualized_return = mean_return * periods_per_year as f64;
+    let annualized_volatility = volatility * (periods_per_year as f64).sqrt();
 
-        println!("\n  Performance Summary:");
-        println!(
-            "    Mean return: {:.4}% (daily), {:.2}% (annual)",
-            mean_return * 100.0,
-            annualized_return * 100.0
-        );
-        println!(
-            "    Volatility: {:.4}% (daily), {:.2}% (annual)",
-            volatility * 100.0,
-            annualized_volatility * 100.0
-        );
-    }
+    println!("\n  Performance Summary:");
+    println!(
+        "    Mean return: {:.4}% (daily), {:.2}% (annual)",
+        mean_return * 100.0,
+        annualized_return * 100.0
+    );
+    println!(
+        "    Volatility: {:.4}% (daily), {:.2}% (annual)",
+        volatility * 100.0,
+        annualized_volatility * 100.0
+    );
 }

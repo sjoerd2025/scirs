@@ -17,6 +17,7 @@ use crate::error::Result;
 #[cfg(test)]
 use crate::streaming::FrameMetadata;
 use crate::streaming::{Frame, ProcessingStage};
+use scirs2_core::ndarray::ArrayStatCompat;
 use scirs2_core::ndarray::{Array1, Array2, ArrayView2};
 use scirs2_core::random::prelude::*;
 use statrs::statistics::Statistics;
@@ -1062,7 +1063,7 @@ impl AdaptiveNeuromorphicPipeline {
     /// Estimate processing accuracy (simplified)
     fn estimate_accuracy(&self, frame: &Frame) -> f32 {
         // Simple heuristic based on information content
-        let mean = frame.data.mean().unwrap_or(0.0);
+        let mean = frame.data.mean_or(0.0);
         let variance =
             frame.data.iter().map(|&x| (x - mean).powi(2)).sum::<f32>() / frame.data.len() as f32;
         let edge_density =

@@ -21,7 +21,7 @@ use std::f64::consts::PI;
 /// * `sym` - If true, generates a symmetric window, otherwise a periodic window
 ///
 /// # Returns
-/// A Vec<f64> of window values
+/// A `Vec<f64>` of window values
 ///
 /// # Examples
 /// ```
@@ -62,7 +62,7 @@ pub fn bohman(m: usize, sym: bool) -> SignalResult<Vec<f64>> {
 /// * `sym` - If true, generates a symmetric window, otherwise a periodic window
 ///
 /// # Returns
-/// A Vec<f64> of window values
+/// A `Vec<f64>` of window values
 pub fn poisson(m: usize, alpha: f64, sym: bool) -> SignalResult<Vec<f64>> {
     if alpha < 0.0 {
         return Err(SignalError::ValueError(
@@ -98,7 +98,7 @@ pub fn poisson(m: usize, alpha: f64, sym: bool) -> SignalResult<Vec<f64>> {
 /// * `sym` - If true, generates a symmetric window, otherwise a periodic window
 ///
 /// # Returns
-/// A Vec<f64> of window values
+/// A `Vec<f64>` of window values
 pub fn planck_taper(m: usize, epsilon: f64, sym: bool) -> SignalResult<Vec<f64>> {
     if epsilon <= 0.0 || epsilon >= 0.5 {
         return Err(SignalError::ValueError(
@@ -153,7 +153,7 @@ pub fn planck_taper(m: usize, epsilon: f64, sym: bool) -> SignalResult<Vec<f64>>
 /// * `sym` - If true, generates a symmetric window, otherwise a periodic window
 ///
 /// # Returns
-/// A Vec<f64> of window values
+/// A `Vec<f64>` of window values
 ///
 /// # Examples
 /// ```
@@ -205,7 +205,7 @@ pub fn general_cosine(m: usize, coeffs: &[f64], sym: bool) -> SignalResult<Vec<f
 /// * `sym` - If true, generates a symmetric window, otherwise a periodic window
 ///
 /// # Returns
-/// A Vec<f64> of window values
+/// A `Vec<f64>` of window values
 pub fn dpss_approximation(m: usize, nw: f64, sym: bool) -> SignalResult<Vec<f64>> {
     if nw <= 0.0 {
         return Err(SignalError::ValueError(
@@ -247,7 +247,7 @@ pub fn dpss_approximation(m: usize, nw: f64, sym: bool) -> SignalResult<Vec<f64>
 /// * `sym` - If true, generates a symmetric window, otherwise a periodic window
 ///
 /// # Returns
-/// A Vec<f64> of window values
+/// A `Vec<f64>` of window values
 pub fn ultraspherical(m: usize, alpha: f64, beta: f64, sym: bool) -> SignalResult<Vec<f64>> {
     if alpha < 0.0 {
         return Err(SignalError::ValueError(
@@ -302,7 +302,7 @@ pub fn ultraspherical(m: usize, alpha: f64, beta: f64, sym: bool) -> SignalResul
 /// * `sym` - If true, generates a symmetric window, otherwise a periodic window
 ///
 /// # Returns
-/// A Vec<f64> of window values
+/// A `Vec<f64>` of window values
 pub fn riesz(m: usize, alpha: f64, sym: bool) -> SignalResult<Vec<f64>> {
     if alpha < 0.0 {
         return Err(SignalError::ValueError(
@@ -337,7 +337,7 @@ pub fn riesz(m: usize, alpha: f64, sym: bool) -> SignalResult<Vec<f64>> {
 /// * `sym` - If true, generates a symmetric window, otherwise a periodic window
 ///
 /// # Returns
-/// A Vec<f64> of window values
+/// A `Vec<f64>` of window values
 pub fn de_la_vallee_poussin(m: usize, sym: bool) -> SignalResult<Vec<f64>> {
     if _len_guards(m) {
         return Ok(vec![1.0; m]);

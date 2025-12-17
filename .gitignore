@@ -10,6 +10,10 @@ Cargo.lock
 **/*.rs.old
 **/*.rs.backup
 **/*.backup.*/
+**/*.rs.bak[0-9]*
+**/*.rs.bak_*
+**/*.tmp
+**/*.temp
 
 # HDF5 files
 **/*.nc
@@ -85,6 +89,7 @@ scirs2-optimize/cargo-tests/
 scirs2-signal/src_backup_*/
 
 scirs2-core/auditlogs/
-scirs2-stats/performancebaselines/linux-x86_64-debug-sse2_sse4.1_avx_avx2_avx512f_fma-test_function.json
+scirs2-stats/performancebaselines/*.json
 scirs2-cluster/model.json
 scirs2-text/*.w2v
+scirs2-python/.hypothesis/

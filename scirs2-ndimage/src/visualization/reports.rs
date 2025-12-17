@@ -4,6 +4,7 @@
 //! supporting multiple output formats (HTML, Markdown, Text) and comprehensive
 //! analysis sections including basic statistics, quality metrics, and texture analysis.
 
+use scirs2_core::ndarray::ArrayStatCompat;
 use scirs2_core::ndarray::ArrayView2;
 use scirs2_core::numeric::{Float, FromPrimitive, ToPrimitive, Zero};
 use std::fmt::{Debug, Write};
@@ -210,7 +211,7 @@ pub fn add_basic_statistics<T>(
 where
     T: Float + FromPrimitive + ToPrimitive + Debug + Clone,
 {
-    let mean = image.mean().unwrap_or(T::zero());
+    let mean = image.mean_or(T::zero());
     let min_val = image.iter().cloned().fold(T::infinity(), T::min);
     let max_val = image.iter().cloned().fold(T::neg_infinity(), T::max);
 

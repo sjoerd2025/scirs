@@ -80,7 +80,6 @@ where
 ///
 /// let (binary, threshold) = otsu_threshold(&image, 256).unwrap();
 /// ```
-/// ```
 #[allow(dead_code)]
 pub fn otsu_threshold<T, D>(image: &Array<T, D>, bins: usize) -> NdimageResult<(Array<T, D>, T)>
 where

@@ -6,7 +6,7 @@
 use std::fmt;
 
 // Core dependencies for array/matrix validation
-use ndarray::{ArrayBase, Data, Dimension, ScalarOperand};
+use ::ndarray::{ArrayBase, Data, Dimension, ScalarOperand};
 use num_traits::{Float, FromPrimitive, ToPrimitive};
 
 use super::config::{ErrorSeverity, QualityIssueType};
@@ -582,7 +582,7 @@ impl DataQualityReport {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::Array1;
+    use ::ndarray::Array1;
 
     #[test]
     fn test_quality_analyzer() {

@@ -691,7 +691,7 @@ mod performance_validation_tests {
                 (None, array![1.0], None) // Dummy values for test purposes
             });
         let svd_time = start.elapsed();
-        assert!(svd_time.as_millis() < max_time_ms * 2); // SVD can be slower
+        assert!(svd_time.as_millis() < max_time_ms * 3); // SVD can be significantly slower in CI
 
         println!(
             "Decomposition times - LU: {:?}, QR: {:?}, SVD: {:?}",

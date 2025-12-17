@@ -19,7 +19,7 @@
 use std::any::{Any, TypeId};
 use std::collections::HashMap;
 
-use ndarray::{Array, ArrayBase, Dimension, Ix2, IxDyn, OwnedRepr};
+use ::ndarray::{Array, ArrayBase, Dimension, Ix2, IxDyn, OwnedRepr};
 
 use crate::array_protocol::{
     ArrayFunction, ArrayProtocol, GPUNdarray, NotImplemented, NdarrayWrapper
@@ -190,7 +190,7 @@ where
 
     match axis {
         Some(ax) => {
-            let result = a_array.sum_axis(ndarray::Axis(ax));
+            let result = a_array.sum_axis(crate::ndarray::Axis(ax));
             let result_gpu = GPUNdarray::new(result, a.config().clone());
             Ok(Box::new(result_gpu))
         },

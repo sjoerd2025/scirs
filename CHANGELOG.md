@@ -5,6 +5,90 @@ All notable changes to the SciRS2 project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.0-RC.3] - 2025-12-17
+
+### 🚀 Release Candidate 3 - Python Integration & Performance Enhancements
+
+This release introduces Python bindings, expands SIMD optimizations, and enhances performance across the entire ecosystem.
+
+### Added
+
+#### scirs2-python
+- **Python Bindings**: Complete PyO3 integration for Python interoperability
+  - Native bindings for all major SciRS2 modules
+  - Zero-copy data sharing between Rust and Python
+  - Type-safe API with Python's dynamic typing
+  - PyPI packaging infrastructure
+
+#### scirs2-numpy
+- **ndarray 0.17 Compatibility**: Enhanced compatibility layer
+  - Seamless integration with rust-numpy
+  - Type conversions and zero-copy views
+  - NumPy array protocol support
+
+#### Advanced SIMD Library (Phases 25-80)
+- **Phase 25**: SIMD-accelerated integer exponentiation
+  - Fast integer power operations with SIMD vectorization
+  - Optimized for common exponent values
+- **Phases 75-80**: Complete SIMD transcendental & normalization library
+  - SIMD-accelerated transcendental functions (exp, log, sin, cos, tan)
+  - Batch normalization with SIMD vectorization
+  - Layer normalization optimizations
+  - Bandwidth-saturated implementations
+  - TLB-optimized memory access patterns
+  - Cache-line aware processing
+
+### Changed
+
+#### BLAS/LAPACK Optimizations
+- Enhanced linear algebra performance with platform-specific tuning
+- Improved batch matrix operations
+- Reduced memory allocations in hot paths
+- Better numerical stability algorithms
+
+#### CUDA Backend
+- Kernel performance improvements
+- Enhanced GPU memory management
+- Better multi-GPU support
+- Improved asynchronous execution patterns
+
+#### Testing & Quality
+- Refactored tests for consistency and maintainability
+- Enhanced benchmark implementations (softmax and others)
+- Improved test coverage and reliability
+- Linter fixes and code cleanup
+
+### Fixed
+
+#### Critical Compilation Fixes
+- **scirs2-stats**: Fixed conditional compilation of error module (204 errors resolved)
+  - Error module was incorrectly gated behind `python` feature
+  - Now unconditionally available as required by all submodules
+- **scirs2-cluster**: Fixed conditional compilation of quantum_clustering module (2 errors resolved)
+  - Module was incorrectly gated behind `python` feature
+  - Now unconditionally available for use by other modules
+- **scirs2-optimize**: Fixed conditional compilation of advanced_coordinator module
+  - Module dependency issue resolved
+
+#### Build System
+- PyO3 configuration fix for Linux compatibility (removed extension-module from workspace)
+- cargo dependency updates and optimizations
+- Linter warnings resolved across the workspace
+- Build configuration improvements
+
+### Technical Details
+
+#### Performance Improvements
+- SIMD transcendental functions: 10-30x speedup
+- Integer exponentiation: 15-25x speedup
+- BLAS/LAPACK operations: Platform-specific optimizations
+- CUDA kernels: 2-5x improvement in specific workloads
+
+#### Test Coverage
+- All 9,300+ tests passing
+- Zero compilation warnings
+- Full clippy compliance maintained
+
 ## [0.1.0-RC.2] - 2025-10-18
 
 ### 🚀 Release Candidate 2 - Performance & Quality Refinements

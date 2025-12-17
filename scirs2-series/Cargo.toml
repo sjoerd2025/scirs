@@ -53,8 +53,8 @@ serde = ["dep:serde"]
 # pandrs = ["dep:pandrs_wrapper"]
 # WASM support for browser-based time series analysis
 wasm = ["dep:wasm-bindgen", "dep:wasm-bindgen-futures", "dep:js-sys", "dep:web-sys", "serde", "dep:serde_json", "dep:serde-wasm-bindgen", "dep:console_error_panic_hook"]
-# Python interoperability
-python = ["dep:pyo3", "dep:numpy"]
+# Python interoperability via scirs2-core conversion utilities
+python = ["scirs2-core/python"]
 # R integration for R ecosystem compatibility
 r = []
 

@@ -10,10 +10,10 @@ use pyo3::prelude::*;
 use pyo3::types::{PyAny, PyDict, PyType};
 
 #[cfg(feature = "python")]
-use numpy::{IntoPyArray, PyArray1, PyReadonlyArray1};
+use scirs2_core::python::numpy_compat::*;
 
 #[cfg(feature = "python")]
-use scirs2_core::ndarray::Array1;
+use scirs2_core::ndarray::compat::ArrayStatCompat;
 
 #[cfg(feature = "python")]
 use std::collections::HashMap;
@@ -67,24 +67,25 @@ impl PyTimeSeries {
     }
 
     /// Get values as numpy array
-    fn get_values<'py>(&self, py: Python<'py>) -> Bound<'py, PyArray1<f64>> {
-        self.values.clone().into_pyarray(py)
+    fn get_values<'py>(&self, py: Python<'py>) -> PyResult<Py<PyArray1<f64>>> {
+        scirs_to_numpy_array1(self.values.clone(), py)
     }
 
     /// Get timestamps as numpy array (if available)
-    fn get_timestamps<'py>(&self, py: Python<'py>) -> Option<Bound<'py, PyArray1<f64>>> {
+    fn get_timestamps<'py>(&self, py: Python<'py>) -> PyResult<Option<Py<PyArray1<f64>>>> {
         self.timestamps
             .as_ref()
-            .map(|ts| ts.clone().into_pyarray(py))
+            .map(|ts| scirs_to_numpy_array1(ts.clone(), py))
+            .transpose()
     }
 
     /// Convert to pandas-compatible dictionary
     fn to_dict(&self, py: Python) -> PyResult<PyObject> {
         let dict = PyDict::new(py);
-        dict.set_item("values", self.values.clone().into_pyarray(py))?;
+        dict.set_item("values", scirs_to_numpy_array1(self.values.clone(), py)?)?;
 
         if let Some(ref timestamps) = self.timestamps {
-            dict.set_item("timestamps", timestamps.clone().into_pyarray(py))?;
+            dict.set_item("timestamps", scirs_to_numpy_array1(timestamps.clone(), py)?)?;
         }
 
         if let Some(freq) = self.frequency {
@@ -118,7 +119,7 @@ impl PyTimeSeries {
         let mut stats = HashMap::new();
         let values = &self.values;
 
-        let mean = values.mean().unwrap_or(0.0);
+        let mean = values.mean_or(0.0);
         let std = values.std(0.0);
         let min = values.iter().fold(f64::INFINITY, |a, &b| a.min(b));
         let max = values.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
@@ -218,13 +219,13 @@ impl PyARIMA {
     }
 
     /// Generate forecasts
-    fn forecast<'py>(&self, py: Python<'py>, steps: usize) -> PyResult<Bound<'py, PyArray1<f64>>> {
+    fn forecast(&self, py: Python, steps: usize) -> PyResult<Py<PyArray1<f64>>> {
         match (&self.model, &self.data) {
             (Some(model), Some(data)) => {
                 let forecasts = model
                     .forecast(steps, data)
                     .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(format!("{e}")))?;
-                Ok(forecasts.into_pyarray(py))
+                scirs_to_numpy_array1(forecasts, py)
             }
             _ => Err(pyo3::exceptions::PyRuntimeError::new_err(
                 "Model not fitted. Call fit() first.",
@@ -300,27 +301,27 @@ fn check_stationarity(data: &PyTimeSeries) -> PyResult<bool> {
 #[cfg(feature = "python")]
 #[pyfunction]
 #[allow(dead_code)]
-fn apply_differencing<'py>(
-    py: Python<'py>,
+fn apply_differencing(
+    py: Python,
     data: &PyTimeSeries,
     periods: usize,
-) -> PyResult<Bound<'py, PyArray1<f64>>> {
+) -> PyResult<Py<PyArray1<f64>>> {
     let differenced = difference_series(&data.values, periods)
         .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(format!("{e}")))?;
-    Ok(differenced.into_pyarray(py))
+    scirs_to_numpy_array1(differenced, py)
 }
 
 #[cfg(feature = "python")]
 #[pyfunction]
 #[allow(dead_code)]
-fn apply_seasonal_differencing<'py>(
-    py: Python<'py>,
+fn apply_seasonal_differencing(
+    py: Python,
     data: &PyTimeSeries,
     periods: usize,
-) -> PyResult<Bound<'py, PyArray1<f64>>> {
+) -> PyResult<Py<PyArray1<f64>>> {
     let differenced = seasonal_difference_series(&data.values, periods)
         .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(format!("{e}")))?;
-    Ok(differenced.into_pyarray(py))
+    scirs_to_numpy_array1(differenced, py)
 }
 
 /// Auto-ARIMA functionality for Python
@@ -412,7 +413,7 @@ pub fn create_pandas_dataframe(
     let dict = PyDict::new(py);
 
     for (key, values) in data {
-        dict.set_item(key, values.into_pyarray(py))?;
+        dict.set_item(key, scirs_to_numpy_array1(values, py)?)?;
     }
 
     let df = pandas.call_method1("DataFrame", (dict,))?;
@@ -436,7 +437,7 @@ pub fn create_pandas_series(
     name: Option<&str>,
 ) -> PyResult<PyObject> {
     let pandas = py.import("pandas")?;
-    let args = (data.into_pyarray(py),);
+    let args = (scirs_to_numpy_array1(data, py)?,);
     let kwargs = PyDict::new(py);
 
     if let Some(name) = name {

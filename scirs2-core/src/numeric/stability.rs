@@ -17,7 +17,7 @@ use crate::{
     error::{CoreError, CoreResult, ErrorContext},
     validation::check_positive,
 };
-use ndarray::{Array1, ArrayView2, Axis};
+use ::ndarray::{Array1, ArrayView2, Axis};
 use num_traits::{cast, Float, Zero};
 use std::fmt::Debug;
 

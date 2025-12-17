@@ -18,7 +18,7 @@ use crate::error::{SignalError, SignalResult};
 /// * `sym` - If true, generates a symmetric window, otherwise a periodic window
 ///
 /// # Returns
-/// A Vec<f64> of window values
+/// A `Vec<f64>` of window values
 ///
 /// # Examples
 /// ```
@@ -58,7 +58,7 @@ pub fn bartlett(m: usize, sym: bool) -> SignalResult<Vec<f64>> {
 /// * `sym` - If true, generates a symmetric window, otherwise a periodic window
 ///
 /// # Returns
-/// A Vec<f64> of window values
+/// A `Vec<f64>` of window values
 ///
 /// # Examples
 /// ```
@@ -97,7 +97,7 @@ pub fn triang(m: usize, sym: bool) -> SignalResult<Vec<f64>> {
 /// * `sym` - If true, generates a symmetric window, otherwise a periodic window
 ///
 /// # Returns
-/// A Vec<f64> of window values
+/// A `Vec<f64>` of window values
 ///
 /// # Examples
 /// ```
@@ -142,7 +142,7 @@ pub fn parzen(m: usize, sym: bool) -> SignalResult<Vec<f64>> {
 /// * `sym` - If true, generates a symmetric window, otherwise a periodic window
 ///
 /// # Returns
-/// A Vec<f64> of window values
+/// A `Vec<f64>` of window values
 pub fn welch(m: usize, sym: bool) -> SignalResult<Vec<f64>> {
     if _len_guards(m) {
         return Ok(vec![1.0; m]);
@@ -171,7 +171,7 @@ pub fn welch(m: usize, sym: bool) -> SignalResult<Vec<f64>> {
 /// * `sym` - If true, generates a symmetric window, otherwise a periodic window
 ///
 /// # Returns
-/// A Vec<f64> of window values
+/// A `Vec<f64>` of window values
 pub fn generalized_triangular(
     m: usize,
     slope_factor: f64,

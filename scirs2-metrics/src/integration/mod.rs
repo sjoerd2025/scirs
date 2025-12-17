@@ -5,7 +5,7 @@
 //!
 //! # Neural Integration
 //!
-//! The [`neural`] module provides integration with the scirs2-neural module, allowing
+//! The `neural` module provides integration with the scirs2-neural module, allowing
 //! metrics to be used during model training, evaluation, and visualization.
 //!
 //! ```toml
@@ -42,7 +42,7 @@
 //!
 //! ## Training Callbacks
 //!
-//! The [`MetricsCallback`] can be used to track metrics during neural network training.
+//! The `MetricsCallback` can be used to track metrics during neural network training.
 //!
 //! ## Visualizations
 //!

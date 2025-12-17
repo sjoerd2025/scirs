@@ -19,7 +19,7 @@
 use std::any::{Any, TypeId};
 use std::collections::HashMap;
 
-use ndarray::{Array, Axis, Ix1, Ix2, Ix3, Ix4, IxDyn};
+use ::ndarray::{Array, Axis, Ix1, Ix2, Ix3, Ix4, IxDyn};
 use rand::prelude::*;
 use rand::Rng;
 
@@ -50,7 +50,7 @@ pub enum ActivationFunc {
 /// Apply an activation function to an array.
 #[allow(dead_code)]
 fn apply_activation(
-    x: &ndarray::ArrayBase<ndarray::ViewRepr<&f64>, IxDyn>,
+    x: &crate::ndarray::ArrayBase<crate::ndarray::ViewRepr<&f64>, IxDyn>,
     func: ActivationFunc,
 ) -> Array<f64, IxDyn> {
     match func {
@@ -750,9 +750,9 @@ array_function_dispatch!(
 
                 for b in 0..batch_size {
                     // Extract batch slices
-                    let q_batch = q.slice(ndarray::s![b, .., .., ..]);
-                    let k_batch = k.slice(ndarray::s![b, .., .., ..]);
-                    let v_batch = v.slice(ndarray::s![b, .., .., ..]);
+                    let q_batch = q.slice(crate::s![b, .., .., ..]);
+                    let k_batch = k.slice(crate::s![b, .., .., ..]);
+                    let v_batch = v.slice(crate::s![b, .., .., ..]);
 
                     // Compute attention scores: Q * K^T for each head
                     let mut head_outputs = Array::zeros((q_len, num_heads, d_k));
@@ -776,7 +776,7 @@ array_function_dispatch!(
                                 .downcast_ref::<NdarrayWrapper<f64, Ix3>>()
                             {
                                 let mask_batch =
-                                    mask_wrapper.as_array().slice(ndarray::s![b, .., ..]);
+                                    mask_wrapper.as_array().slice(crate::s![b, .., ..]);
                                 for i in 0..q_len {
                                     for j in 0..k_len {
                                         if mask_batch[[i, j]] == 0.0 {

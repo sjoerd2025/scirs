@@ -3,7 +3,7 @@
 //! This module provides the foundational infrastructure for the universal function
 //! (ufunc) system, including trait definitions, registration, and dispatching.
 
-use ndarray::{
+use ::ndarray::{
     Array, ArrayBase, ArrayView, ArrayViewMut, Data, DataMut, Dimension, Ix1, IxDyn, RawData,
 };
 use once_cell::sync::Lazy;
@@ -253,7 +253,7 @@ where
                 return Err("Axis index out of bounds");
             }
 
-            let axis_size = input.len_of(ndarray::Axis(ax));
+            let axis_size = input.len_of(crate::ndarray::Axis(ax));
             let othershape = input
                 .shape()
                 .iter()

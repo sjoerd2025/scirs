@@ -56,7 +56,7 @@ impl<F: IntegrateFloat> HigherOrderODE<F> {
 
 /// Result of converting a higher-order ODE to first-order system
 pub struct FirstOrderSystem<F: IntegrateFloat> {
-    /// The state variables (y[0] = x, y[1] = x', y[2] = x'', etc.)
+    /// The state variables (`y[0]` = x, `y[1]` = x', `y[2]` = x'', etc.)
     pub state_vars: Vec<Variable>,
     /// The expressions for dy/dt
     pub expressions: Vec<SymbolicExpression<F>>,
@@ -108,10 +108,10 @@ impl<F: IntegrateFloat> FirstOrderSystem<F> {
 /// # Example
 /// For a second-order ODE: x'' = -x - 0.1*x'
 /// This converts to:
-/// - y[0] = x
-/// - y[1] = x'
-/// - dy[0]/dt = y[1]
-/// - dy[1]/dt = -y[0] - 0.1*y[1]
+/// - `y[0]` = x
+/// - `y[1]` = x'
+/// - `dy[0]/dt` = `y[1]`
+/// - `dy[1]/dt` = `-y[0]` - 0.1*`y[1]`
 #[allow(dead_code)]
 pub fn higher_order_to_first_order<F: IntegrateFloat>(
     ode: &HigherOrderODE<F>,

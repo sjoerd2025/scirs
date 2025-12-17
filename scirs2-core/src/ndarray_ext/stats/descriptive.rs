@@ -3,7 +3,7 @@
 //! This module provides descriptive statistical functions such as mean, median,
 //! standard deviation, variance, min, max, etc. for ndarray arrays.
 
-use ndarray::{Array, ArrayView, Axis, Dimension, Ix1, Ix2};
+use ::ndarray::{Array, ArrayView, Axis, Dimension, Ix1, Ix2};
 use num_traits::{Float, FromPrimitive};
 
 /// Calculate the mean of array elements (2D arrays)
@@ -873,7 +873,7 @@ pub fn mean<T, D>(
 ) -> Result<Array<T, Ix1>, &'static str>
 where
     T: Clone + Float + FromPrimitive,
-    D: Dimension + ndarray::RemoveAxis,
+    D: Dimension + crate::ndarray::RemoveAxis,
 {
     if array.is_empty() {
         return Err("Cannot compute mean of an empty array");
@@ -948,7 +948,7 @@ pub fn median<T, D>(
 ) -> Result<Array<T, Ix1>, &'static str>
 where
     T: Clone + Float + FromPrimitive,
-    D: Dimension + ndarray::RemoveAxis,
+    D: Dimension + crate::ndarray::RemoveAxis,
 {
     if array.is_empty() {
         return Err("Cannot compute median of an empty array");
@@ -1004,7 +1004,7 @@ pub fn variance<T, D>(
 ) -> Result<Array<T, Ix1>, &'static str>
 where
     T: Clone + Float + FromPrimitive,
-    D: Dimension + ndarray::RemoveAxis,
+    D: Dimension + crate::ndarray::RemoveAxis,
 {
     if array.is_empty() {
         return Err("Cannot compute variance of an empty array");
@@ -1089,7 +1089,7 @@ pub fn std_dev<T, D>(
 ) -> Result<Array<T, Ix1>, &'static str>
 where
     T: Clone + Float + FromPrimitive,
-    D: Dimension + ndarray::RemoveAxis,
+    D: Dimension + crate::ndarray::RemoveAxis,
 {
     let var_result = variance(array, axis, ddof)?;
     Ok(var_result.mapv(|x| x.sqrt()))
@@ -1113,7 +1113,7 @@ where
 pub fn min<T, D>(array: &ArrayView<T, D>, axis: Option<Axis>) -> Result<Array<T, Ix1>, &'static str>
 where
     T: Clone + Float,
-    D: Dimension + ndarray::RemoveAxis,
+    D: Dimension + crate::ndarray::RemoveAxis,
 {
     if array.is_empty() {
         return Err("Cannot compute minimum of an empty array");
@@ -1179,7 +1179,7 @@ where
 pub fn max<T, D>(array: &ArrayView<T, D>, axis: Option<Axis>) -> Result<Array<T, Ix1>, &'static str>
 where
     T: Clone + Float,
-    D: Dimension + ndarray::RemoveAxis,
+    D: Dimension + crate::ndarray::RemoveAxis,
 {
     if array.is_empty() {
         return Err("Cannot compute maximum of an empty array");
@@ -1254,7 +1254,7 @@ pub fn percentile<T, D>(
 ) -> Result<Array<T, Ix1>, &'static str>
 where
     T: Clone + Float + FromPrimitive,
-    D: Dimension + ndarray::RemoveAxis,
+    D: Dimension + crate::ndarray::RemoveAxis,
 {
     if array.is_empty() {
         return Err("Cannot compute percentile of an empty array");

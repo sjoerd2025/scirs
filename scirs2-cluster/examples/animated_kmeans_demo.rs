@@ -3,6 +3,8 @@
 //! This example shows how to create animated visualizations of K-means clustering
 //! that capture the iterative convergence process with rich visual feedback.
 
+#![allow(unused_assignments)]
+
 use scirs2_cluster::preprocess::standardize;
 use scirs2_cluster::visualization::animation::{
     AnimationFrame, ConvergenceInfo, IterativeAnimationConfig, IterativeAnimationRecorder,

@@ -329,7 +329,7 @@ impl<A: Float> Default for ArrayRng<A> {
     }
 }
 
-/// Check if a shape represents a scalar value (empty or [1] shape)
+/// Check if a shape represents a scalar value (empty or `[1]` shape)
 #[inline]
 #[allow(dead_code)]
 pub fn is_scalarshape(shape: &[usize]) -> bool {

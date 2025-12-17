@@ -3,7 +3,7 @@
 //! This module provides implementation of common mathematical functions
 //! as universal functions for efficient vectorized operations.
 
-use ndarray::{Array, ArrayView, Dimension, IxDyn, ShapeBuilder};
+use ::ndarray::{Array, ArrayView, Dimension, IxDyn, ShapeBuilder};
 use crate::ufuncs::core::{UFunc, UFuncKind, apply_unary, register_ufunc};
 use std::sync::Once;
 
@@ -38,7 +38,7 @@ impl UFunc for SinUFunc {
         UFuncKind::Unary
     }
 
-    fn apply<D>(&self, inputs: &[&ndarray::ArrayBase<ndarray::Data, D>], output: &mut ndarray::ArrayBase<ndarray::Data, D>) -> Result<(), &'static str>
+    fn apply<D>(&self, inputs: &[&crate::ndarray::ArrayBase<crate::ndarray::Data, D>], output: &mut crate::ndarray::ArrayBase<crate::ndarray::Data, D>) -> Result<(), &'static str>
     where
         D: Dimension,
     {
@@ -63,7 +63,7 @@ impl UFunc for CosUFunc {
         UFuncKind::Unary
     }
 
-    fn apply<D>(&self, inputs: &[&ndarray::ArrayBase<ndarray::Data, D>], output: &mut ndarray::ArrayBase<ndarray::Data, D>) -> Result<(), &'static str>
+    fn apply<D>(&self, inputs: &[&crate::ndarray::ArrayBase<crate::ndarray::Data, D>], output: &mut crate::ndarray::ArrayBase<crate::ndarray::Data, D>) -> Result<(), &'static str>
     where
         D: Dimension,
     {
@@ -88,7 +88,7 @@ impl UFunc for TanUFunc {
         UFuncKind::Unary
     }
 
-    fn apply<D>(&self, inputs: &[&ndarray::ArrayBase<ndarray::Data, D>], output: &mut ndarray::ArrayBase<ndarray::Data, D>) -> Result<(), &'static str>
+    fn apply<D>(&self, inputs: &[&crate::ndarray::ArrayBase<crate::ndarray::Data, D>], output: &mut crate::ndarray::ArrayBase<crate::ndarray::Data, D>) -> Result<(), &'static str>
     where
         D: Dimension,
     {
@@ -113,7 +113,7 @@ impl UFunc for ExpUFunc {
         UFuncKind::Unary
     }
 
-    fn apply<D>(&self, inputs: &[&ndarray::ArrayBase<ndarray::Data, D>], output: &mut ndarray::ArrayBase<ndarray::Data, D>) -> Result<(), &'static str>
+    fn apply<D>(&self, inputs: &[&crate::ndarray::ArrayBase<crate::ndarray::Data, D>], output: &mut crate::ndarray::ArrayBase<crate::ndarray::Data, D>) -> Result<(), &'static str>
     where
         D: Dimension,
     {
@@ -138,7 +138,7 @@ impl UFunc for LogUFunc {
         UFuncKind::Unary
     }
 
-    fn apply<D>(&self, inputs: &[&ndarray::ArrayBase<ndarray::Data, D>], output: &mut ndarray::ArrayBase<ndarray::Data, D>) -> Result<(), &'static str>
+    fn apply<D>(&self, inputs: &[&crate::ndarray::ArrayBase<crate::ndarray::Data, D>], output: &mut crate::ndarray::ArrayBase<crate::ndarray::Data, D>) -> Result<(), &'static str>
     where
         D: Dimension,
     {
@@ -163,7 +163,7 @@ impl UFunc for SqrtUFunc {
         UFuncKind::Unary
     }
 
-    fn apply<D>(&self, inputs: &[&ndarray::ArrayBase<ndarray::Data, D>], output: &mut ndarray::ArrayBase<ndarray::Data, D>) -> Result<(), &'static str>
+    fn apply<D>(&self, inputs: &[&crate::ndarray::ArrayBase<crate::ndarray::Data, D>], output: &mut crate::ndarray::ArrayBase<crate::ndarray::Data, D>) -> Result<(), &'static str>
     where
         D: Dimension,
     {
@@ -188,7 +188,7 @@ impl UFunc for AbsUFunc {
         UFuncKind::Unary
     }
 
-    fn apply<D>(&self, inputs: &[&ndarray::ArrayBase<ndarray::Data, D>], output: &mut ndarray::ArrayBase<ndarray::Data, D>) -> Result<(), &'static str>
+    fn apply<D>(&self, inputs: &[&crate::ndarray::ArrayBase<crate::ndarray::Data, D>], output: &mut crate::ndarray::ArrayBase<crate::ndarray::Data, D>) -> Result<(), &'static str>
     where
         D: Dimension,
     {
@@ -216,7 +216,7 @@ impl UFunc for AbsUFunc {
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use ::ndarray::array;
 /// use scirs2_core::ufuncs::sin;
 ///
 /// let a = array![0.0, PI/2.0, PI];
@@ -226,7 +226,7 @@ impl UFunc for AbsUFunc {
 /// assert!((result[2] - 0.0).abs() < 1e-10);
 /// ```
 #[allow(dead_code)]
-pub fn sin<D>(array: &ndarray::ArrayBase<ndarray::Data, D>) -> Array<f64, D>
+pub fn sin<D>(array: &crate::ndarray::ArrayBase<crate::ndarray::Data, D>) -> Array<f64, D>
 where
     D: Dimension,
 {
@@ -256,7 +256,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use ::ndarray::array;
 /// use scirs2_core::ufuncs::cos;
 ///
 /// let a = array![0.0, PI/2.0, PI];
@@ -266,7 +266,7 @@ where
 /// assert!((result[2] + 1.0).abs() < 1e-10);
 /// ```
 #[allow(dead_code)]
-pub fn cos<D>(array: &ndarray::ArrayBase<ndarray::Data, D>) -> Array<f64, D>
+pub fn cos<D>(array: &crate::ndarray::ArrayBase<crate::ndarray::Data, D>) -> Array<f64, D>
 where
     D: Dimension,
 {
@@ -296,7 +296,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use ::ndarray::array;
 /// use scirs2_core::ufuncs::tan;
 ///
 /// let a = array![0.0, PI/4.0];
@@ -305,7 +305,7 @@ where
 /// assert!((result[1] - 1.0).abs() < 1e-10);
 /// ```
 #[allow(dead_code)]
-pub fn tan<D>(array: &ndarray::ArrayBase<ndarray::Data, D>) -> Array<f64, D>
+pub fn tan<D>(array: &crate::ndarray::ArrayBase<crate::ndarray::Data, D>) -> Array<f64, D>
 where
     D: Dimension,
 {
@@ -335,7 +335,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use ::ndarray::array;
 /// use scirs2_core::ufuncs::exp;
 ///
 /// let a = array![0.0, 1.0];
@@ -344,7 +344,7 @@ where
 /// assert!((result[1] - std::f64::consts::E).abs() < 1e-10);
 /// ```
 #[allow(dead_code)]
-pub fn exp<D>(array: &ndarray::ArrayBase<ndarray::Data, D>) -> Array<f64, D>
+pub fn exp<D>(array: &crate::ndarray::ArrayBase<crate::ndarray::Data, D>) -> Array<f64, D>
 where
     D: Dimension,
 {
@@ -374,7 +374,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use ::ndarray::array;
 /// use scirs2_core::ufuncs::log;
 ///
 /// let a = array![1.0, std::f64::consts::E];
@@ -383,7 +383,7 @@ where
 /// assert!((result[1] - 1.0).abs() < 1e-10);
 /// ```
 #[allow(dead_code)]
-pub fn log<D>(array: &ndarray::ArrayBase<ndarray::Data, D>) -> Array<f64, D>
+pub fn log<D>(array: &crate::ndarray::ArrayBase<crate::ndarray::Data, D>) -> Array<f64, D>
 where
     D: Dimension,
 {
@@ -413,7 +413,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use ::ndarray::array;
 /// use scirs2_core::ufuncs::sqrt;
 ///
 /// let a = array![1.0, 4.0, 9.0];
@@ -421,7 +421,7 @@ where
 /// assert_eq!(result, array![1.0, 2.0, 3.0]);
 /// ```
 #[allow(dead_code)]
-pub fn sqrt<D>(array: &ndarray::ArrayBase<ndarray::Data, D>) -> Array<f64, D>
+pub fn sqrt<D>(array: &crate::ndarray::ArrayBase<crate::ndarray::Data, D>) -> Array<f64, D>
 where
     D: Dimension,
 {
@@ -451,7 +451,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use ::ndarray::array;
 /// use scirs2_core::ufuncs::abs;
 ///
 /// let a = array![-1.0, 0.0, 1.0];
@@ -459,7 +459,7 @@ where
 /// assert_eq!(result, array![1.0, 0.0, 1.0]);
 /// ```
 #[allow(dead_code)]
-pub fn abs<D>(array: &ndarray::ArrayBase<ndarray::Data, D>) -> Array<f64, D>
+pub fn abs<D>(array: &crate::ndarray::ArrayBase<crate::ndarray::Data, D>) -> Array<f64, D>
 where
     D: Dimension,
 {
@@ -479,7 +479,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::array;
+    use ::ndarray::array;
 
     #[test]
     fn test_sin() {

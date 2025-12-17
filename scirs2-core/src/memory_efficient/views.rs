@@ -1,6 +1,6 @@
 use super::validation;
 use crate::error::{CoreError, ErrorContext, ErrorLocation};
-use ndarray::{
+use ::ndarray::{
     Array, ArrayBase, ArrayView as NdArrayView, ArrayViewMut as NdArrayViewMut, Data, Dimension,
     Ix1, Ix2,
 };

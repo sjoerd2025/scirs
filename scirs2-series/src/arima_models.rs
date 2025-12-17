@@ -2,6 +2,7 @@
 //!
 //! Implements advanced ARIMA fitting, diagnostic checking, and model selection
 
+use scirs2_core::ndarray::ArrayStatCompat;
 use scirs2_core::ndarray::{s, Array1, ArrayBase, Data, Ix1, ScalarOperand};
 use scirs2_core::numeric::{Float, FromPrimitive};
 use std::fmt::{Debug, Display};
@@ -226,7 +227,7 @@ where
         }
 
         // Initialize intercept
-        self.intercept = data.mean().unwrap_or(F::zero());
+        self.intercept = data.mean_or(F::zero());
 
         // Initialize variance
         self.sigma2 = data

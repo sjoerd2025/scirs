@@ -165,8 +165,8 @@ pub use types::{
 // Re-export basic SIMD operations for backward compatibility
 pub use basic_ops::{
     scalar_autocorrelation, scalar_cross_correlation, simd_apply_window, simd_autocorrelation,
-    simd_complex_fft_butterfly, simd_cross_correlation, simd_fir_filter, simd_rms,
-    simd_signal_energy, simd_zero_crossing_rate,
+    simd_complex_fft_butterfly, simd_cross_correlation, simd_diff, simd_diff_f32, simd_fir_filter,
+    simd_rms, simd_signal_energy, simd_zero_crossing_rate,
 };
 
 // Re-export spectral analysis SIMD operations for backward compatibility

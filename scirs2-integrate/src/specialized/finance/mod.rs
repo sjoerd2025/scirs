@@ -162,7 +162,7 @@
 //! - [`pricing`]: Pricing methods (Black-Scholes, PDE, MC, trees, Fourier)
 //! - [`models`]: Stochastic models (volatility, interest rates)
 //! - [`risk`]: Risk measures (Greeks, VaR, stress testing)
-//! - [`utils`]: Utilities (math functions, calibration, simulation)
+//! - `utils`: Utilities (math functions, calibration, simulation)
 //! - [`solvers`]: PDE solvers for stochastic processes
 //!
 //! # Performance Features

@@ -2,7 +2,7 @@
 
 This module provides special functions similar to SciPy's special module.
 
-## Production Status (v0.1.0-rc.2) - Release Candidate 2
+## Production Status (v0.1.0-rc.3) - Release Candidate 2
 
 Following the [SciRS2 POLICY](../SCIRS2_POLICY.md), this module provides ecosystem consistency with comprehensive platform testing and reliability through scirs2-core abstractions.
 
@@ -85,9 +85,9 @@ Following the [SciRS2 POLICY](../SCIRS2_POLICY.md), this module provides ecosyst
 - [x] **Cross-validation against multiple reference implementations** (✅ Implemented validation framework with SciPy, GSL, and MPFR references)
 - [x] **Performance regression testing in CI/CD pipeline** (✅ Comprehensive CI/CD script with baseline comparison, regression detection, and detailed reporting)
 
-## Current Status & Known Issues (v0.1.0-rc.2)
+## Current Status & Known Issues (v0.1.0-rc.3)
 
-### Recently Fixed (Advanced Implementation - v0.1.0-rc.2)
+### Recently Fixed (Advanced Implementation - v0.1.0-rc.3)
 - ✅ **Build System**: All Clippy warnings resolved, zero-warning builds achieved
 - ✅ **Core Library**: Compiles successfully with proper error handling
 - ✅ **Function Mapping**: Fixed function name mismatches (legendre_p → legendre, log_gamma → loggamma, etc.)
@@ -118,7 +118,7 @@ Following the [SciRS2 POLICY](../SCIRS2_POLICY.md), this module provides ecosyst
 
 ## Next Steps (Priority Order)
 
-### High Priority (v0.1.0-rc.2) - COMPLETED ✅
+### High Priority (v0.1.0-rc.3) - COMPLETED ✅
 1. ✅ **Test Stabilization**: Optimized property-based tests for faster compilation with configurable test intensity
 2. ✅ **Example Fixes**: Resolved all remaining example compilation errors
 3. ✅ **Documentation Polish**: Enhanced comprehensive documentation for all public APIs

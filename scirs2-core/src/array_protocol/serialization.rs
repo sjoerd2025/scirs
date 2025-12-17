@@ -20,7 +20,7 @@ use std::fs::{self, File};
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 
-use ndarray::IxDyn;
+use ::ndarray::IxDyn;
 
 #[cfg(feature = "serialization")]
 use serde::{Deserialize, Serialize};

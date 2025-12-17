@@ -40,7 +40,7 @@ pub struct NewtonCotesResult<F: IntegrateFloat> {
 /// formula of the given order and type. The formula can be used to approximate
 /// an integral over the interval [a, b]:
 ///
-/// ∫[a,b] f(x) dx ≈ (b-a) × ∑[i=0..n] w_i × f(x_i)
+/// `∫[a,b] f(x) dx ≈ (b-a) × ∑[i=0..n] w_i × f(x_i)`
 ///
 /// # Arguments
 ///

@@ -55,7 +55,7 @@ When implementing SciPy-compatible functionality, directly read these source fil
 - **Prohibited**: Direct `rand::`, `rand_distr::`, `ndarray::`, `num_complex::` imports in non-core code
 - **Required**: Use `scirs2_core::random::*`, `scirs2_core::ndarray::*`, `scirs2_core::numeric::*`, etc.
 
-**✅ POLICY Compliance Complete (Established v0.1.0-RC.1, Current: v0.1.0-rc.2)**:
+**✅ POLICY Compliance Complete (Established v0.1.0-RC.1, Current: v0.1.0-rc.3)**:
 - All 23 crates are POLICY-compliant (100%)
 - `scirs2_core::random` - ALL rand_distr distributions (Beta, Cauchy, StudentT, etc.)
 - `scirs2_core::ndarray` - Complete ndarray including macros (`array!`, `s!`, `azip!`)
@@ -314,9 +314,10 @@ The project uses GitHub Actions with:
 - Comprehensive test coverage
 
 ## Version Information
-- Current version: 0.1.0-rc.2 (Release Candidate 2)
-- Release date: October 19, 2025
+- Current version: 0.1.0-rc.3 (Release Candidate 3)
+- Release date: December 17, 2025
 - Repository: https://github.com/cool-japan/scirs
 - Main branch: master
 - ML Optimization: Independent [OptiRS](https://github.com/cool-japan/optirs) project
-- SciRS2 POLICY: ✅ **COMPLETE** - All 23 crates compliant (v0.1.0-rc.2)
+- SciRS2 POLICY: ✅ **COMPLETE** - All 23 crates compliant (v0.1.0-rc.3)
+- Python Bindings: scirs2-python with PyO3 integration

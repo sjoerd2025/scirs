@@ -1,5 +1,5 @@
 use crate::error::{CoreError, ErrorContext, ErrorLocation};
-use ndarray::{Array, Dimension, IxDyn};
+use ::ndarray::{Array, Dimension, IxDyn};
 use std::any::Any;
 use std::fmt;
 use std::ops::{Add, Div, Mul, Sub};

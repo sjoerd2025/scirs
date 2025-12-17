@@ -1515,23 +1515,23 @@ pub mod parallel {
 pub trait WorkStealingArray<A, S, D>
 where
     A: Clone + Send + Sync + 'static,
-    S: ndarray::RawData<Elem = A>,
-    D: ndarray::Dimension,
+    S: crate::ndarray::RawData<Elem = A>,
+    D: crate::ndarray::Dimension,
 {
     /// Map a function over the array elements in parallel
-    fn work_stealing_map<F, B>(&self, f: F) -> CoreResult<ndarray::Array<B, D>>
+    fn work_stealing_map<F, B>(&self, f: F) -> CoreResult<crate::ndarray::Array<B, D>>
     where
         B: Clone + Send + 'static,
         F: Fn(&A) -> Result<B, CoreError> + Send + Sync + Clone + 'static;
 }
 
-impl<A, S, D> WorkStealingArray<A, S, D> for ndarray::ArrayBase<S, D>
+impl<A, S, D> WorkStealingArray<A, S, D> for crate::ndarray::ArrayBase<S, D>
 where
     A: Clone + Send + Sync + 'static,
-    S: ndarray::RawData<Elem = A> + ndarray::Data,
-    D: ndarray::Dimension + Clone + Send + 'static,
+    S: crate::ndarray::RawData<Elem = A> + crate::ndarray::Data,
+    D: crate::ndarray::Dimension + Clone + Send + 'static,
 {
-    fn work_stealing_map<F, B>(&self, f: F) -> CoreResult<ndarray::Array<B, D>>
+    fn work_stealing_map<F, B>(&self, f: F) -> CoreResult<crate::ndarray::Array<B, D>>
     where
         B: Clone + Send + 'static,
         F: Fn(&A) -> Result<B, CoreError> + Send + Sync + Clone + 'static,
@@ -1540,7 +1540,7 @@ where
         let shape = self.raw_dim();
         let flat_view = self
             .view()
-            .into_shape_with_order(ndarray::IxDyn(&[self.len()]))
+            .into_shape_with_order(crate::ndarray::IxDyn(&[self.len()]))
             .unwrap();
         let flat = flat_view.to_slice().unwrap();
 
@@ -1548,7 +1548,7 @@ where
         let results = parallel::par_map(flat, f)?;
 
         // Convert back to array
-        let result_array = ndarray::Array::from_shape_vec(shape, results).map_err(|e| {
+        let result_array = crate::ndarray::Array::from_shape_vec(shape, results).map_err(|e| {
             CoreError::DimensionError(
                 ErrorContext::new(format!("{e}"))
                     .with_location(ErrorLocation::new(file!(), line!())),

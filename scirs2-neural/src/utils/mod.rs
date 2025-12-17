@@ -18,24 +18,25 @@ pub mod initializers;
 pub mod metrics;
 /// Model architecture visualization utilities
 pub mod model_viz;
-// pub mod positional_encoding; // Disabled - file is broken
-/// Visualization utilities for neural networks
-// pub mod visualization; // Disabled - file is broken
+/// Positional encoding for transformer models
+pub mod positional_encoding;
 pub use colors::{
     color_legend, colored_metric_cell, colorize, colorize_and_style, colorize_bg, gradient_color,
     stylize, Color, ColorOptions, Style,
+};
+pub use datasets::{
+    normalize_features, one_hot_encode as datasets_one_hot_encode, BatchIterator, DataLoader,
+    Dataset, Normalization,
 };
 pub use evaluation::{ConfusionMatrix, FeatureImportance, LearningCurve, ROCCurve};
 pub use initializers::*;
 pub use metrics::*;
 pub use model_viz::{sequential_model_dataflow, sequential_model_summary, ModelVizOptions};
-// pub use positional_encoding::{
-//     LearnedPositionalEncoding, PositionalEncoding, PositionalEncodingFactory,
-//     PositionalEncodingType, RelativePositionalEncoding, SinusoidalPositionalEncoding,
-// }; // Disabled - module is broken
-// pub use visualization::{
-//     analyze_training_history, ascii_plot, export_history_to_csv, LearningRateSchedule, PlotOptions,
-// }; // Disabled - module is broken
+pub use positional_encoding::{
+    LearnedPositionalEncoding, PositionalEncoding, PositionalEncodingFactory,
+    PositionalEncodingType, RelativePositionalEncoding, RotaryPositionalEncoding,
+    SinusoidalPositionalEncoding,
+};
 /// Generate a random vector or matrix with values from a normal distribution
 ///
 /// # Arguments
@@ -93,7 +94,7 @@ pub fn random_normal<F: Float + Debug, R: Rng>(
 ///   use scirs2_neural::utils::one_hot_encode;
 ///   use scirs2_core::ndarray::arr1;
 ///   let indices = arr1(&[0, 2, 1]);
-///   let one_hot = one_hot_encode::<f64>(&indices, 3).unwrap();
+///   let one_hot = one_hot_encode::&lt;f64&gt;(&indices, 3).unwrap();
 ///   assert_eq!(one_hot.shape(), &[3, 3]);
 ///   assert_eq!(one_hot[[0, 0]], 1.0f64); // First sample, class 0
 ///   assert_eq!(one_hot[[1, 2]], 1.0f64); // Second sample, class 2
@@ -128,13 +129,13 @@ pub fn one_hot_encode<F: Float + Debug>(
 ///   let x = arr2(&[[1.0f64, 2.0], [3.0, 4.0], [5.0, 6.0], [7.0, 8.0]]).into_dyn();
 ///   let y = arr2(&[[0.0f64], [1.0], [0.0], [1.0]]).into_dyn();
 ///   let (x_train, x_test, y_train, y_test) =
-///   train_test_split::<f64>(&x, &y, 0.25, true, &mut rng).unwrap();
+///   train_test_split::&lt;f64&gt;(&x, &y, 0.25, true, &mut rng).unwrap();
 ///   // Note: Since the implementation is incomplete (TODO in the code),
 ///   // we're just checking that the shapes are what we expect
-///   assert_eq!(x_train.shape()[0], 3);
-///   assert_eq!(x_train.shape()[1], 2);
-///   assert_eq!(x_test.shape()[0], 1);
-///   assert_eq!(x_test.shape()[1], 2);
+///   assert_eq!(x_train.shape()\[0\], 3);
+///   assert_eq!(x_train.shape()\[1\], 2);
+///   assert_eq!(x_test.shape()\[0\], 1);
+///   assert_eq!(x_test.shape()\[1\], 2);
 ///   Result type for train/test split
 pub type TrainTestSplitResult<F> = (
     scirs2_core::ndarray::Array<F, scirs2_core::ndarray::IxDyn>, // x_train

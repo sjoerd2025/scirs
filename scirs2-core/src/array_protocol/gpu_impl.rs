@@ -21,7 +21,7 @@ use std::fmt::Debug;
 
 use crate::array_protocol::{ArrayFunction, ArrayProtocol, GPUArray, NotImplemented};
 use crate::error::{CoreError, CoreResult, ErrorContext};
-use ndarray::{Array, Dimension};
+use ::ndarray::{Array, Dimension};
 
 /// GPU backends that can be used
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -84,7 +84,7 @@ pub struct GPUNdarray<T, D: Dimension>
 where
     T: Clone + Send + Sync + 'static + num_traits::Zero,
     T: std::ops::Div<f64, Output = T>,
-    D: Clone + Send + Sync + 'static + ndarray::RemoveAxis,
+    D: Clone + Send + Sync + 'static + crate::ndarray::RemoveAxis,
 {
     /// The host-side copy of the data (in a real implementation, this would be on the GPU)
     host_data: Array<T, D>,
@@ -102,7 +102,7 @@ where
 impl<T, D> Debug for GPUNdarray<T, D>
 where
     T: Debug + Clone + Send + Sync + 'static + num_traits::Zero + std::ops::Div<f64, Output = T>,
-    D: Dimension + Debug + Clone + Send + Sync + 'static + ndarray::RemoveAxis,
+    D: Dimension + Debug + Clone + Send + Sync + 'static + crate::ndarray::RemoveAxis,
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("GPUNdarray")
@@ -117,7 +117,7 @@ where
 impl<T, D> GPUNdarray<T, D>
 where
     T: Clone + Send + Sync + 'static + num_traits::Zero + std::ops::Div<f64, Output = T>,
-    D: Dimension + Clone + Send + Sync + 'static + ndarray::RemoveAxis,
+    D: Dimension + Clone + Send + Sync + 'static + crate::ndarray::RemoveAxis,
 {
     /// Create a new GPU array from a host array.
     #[must_use]
@@ -201,7 +201,7 @@ impl<T, D> ArrayProtocol for GPUNdarray<T, D>
 where
     T: Clone + Send + Sync + 'static + num_traits::Zero,
     T: std::ops::Div<f64, Output = T> + std::ops::Mul<Output = T> + std::ops::Add<Output = T>,
-    D: Dimension + Clone + Send + Sync + 'static + ndarray::RemoveAxis,
+    D: Dimension + Clone + Send + Sync + 'static + crate::ndarray::RemoveAxis,
 {
     fn array_function(
         &self,
@@ -296,7 +296,7 @@ where
                 // We can only handle matrix multiplication for 2D arrays
                 // Note: For Dimension trait, checking ndim would need more complex logic
                 // For simplicity, we'll just check if this is specifically an Ix2 array
-                if TypeId::of::<D>() != TypeId::of::<ndarray::Ix2>() {
+                if TypeId::of::<D>() != TypeId::of::<crate::ndarray::Ix2>() {
                     return Err(NotImplemented);
                 }
 
@@ -305,13 +305,15 @@ where
                     // For simplicity, we'll use the existing kernel function for the specific case
                     // of f64 arrays with 2 dimensions
                     if TypeId::of::<T>() == TypeId::of::<f64>()
-                        && TypeId::of::<D>() == TypeId::of::<ndarray::Ix2>()
+                        && TypeId::of::<D>() == TypeId::of::<crate::ndarray::Ix2>()
                     {
                         let self_f64 = unsafe {
-                            &*std::ptr::from_ref(self).cast::<GPUNdarray<f64, ndarray::Ix2>>()
+                            &*std::ptr::from_ref(self)
+                                .cast::<GPUNdarray<f64, crate::ndarray::Ix2>>()
                         };
                         let other_f64 = unsafe {
-                            &*std::ptr::from_ref(other).cast::<GPUNdarray<f64, ndarray::Ix2>>()
+                            &*std::ptr::from_ref(other)
+                                .cast::<GPUNdarray<f64, crate::ndarray::Ix2>>()
                         };
 
                         match kernels::matmul(self_f64, other_f64) {
@@ -335,7 +337,7 @@ where
             "scirs2::array_protocol::operations::transpose" => {
                 // Transpose operation
                 // Check for 2D array using TypeId
-                if TypeId::of::<D>() != TypeId::of::<ndarray::Ix2>() {
+                if TypeId::of::<D>() != TypeId::of::<crate::ndarray::Ix2>() {
                     return Err(NotImplemented);
                 }
 
@@ -384,7 +386,7 @@ impl<T, D> GPUArray for GPUNdarray<T, D>
 where
     T: Clone + Send + Sync + 'static + num_traits::Zero,
     T: std::ops::Div<f64, Output = T> + std::ops::Mul<Output = T> + std::ops::Add<Output = T>,
-    D: Dimension + Clone + Send + Sync + 'static + ndarray::RemoveAxis,
+    D: Dimension + Clone + Send + Sync + 'static + crate::ndarray::RemoveAxis,
 {
     /// # Errors
     /// Returns `CoreError` if GPU transfer fails.
@@ -420,7 +422,7 @@ impl<T, D> Clone for GPUNdarray<T, D>
 where
     T: Clone + Send + Sync + 'static + num_traits::Zero,
     T: std::ops::Div<f64, Output = T>,
-    D: Dimension + Clone + Send + Sync + 'static + ndarray::RemoveAxis,
+    D: Dimension + Clone + Send + Sync + 'static + crate::ndarray::RemoveAxis,
 {
     fn clone(&self) -> Self {
         Self {
@@ -492,7 +494,7 @@ impl GPUArrayBuilder {
     pub fn build<T, D>(self, hostdata: Array<T, D>) -> GPUNdarray<T, D>
     where
         T: Clone + Send + Sync + 'static + num_traits::Zero + std::ops::Div<f64, Output = T>,
-        D: Dimension + Clone + Send + Sync + 'static + ndarray::RemoveAxis,
+        D: Dimension + Clone + Send + Sync + 'static + crate::ndarray::RemoveAxis,
     {
         GPUNdarray::new(hostdata, self.config)
     }
@@ -501,7 +503,7 @@ impl GPUArrayBuilder {
 /// A collection of GPU kernels for common operations
 pub mod kernels {
     use super::*;
-    use ndarray::{Array, Dimension};
+    use ::ndarray::{Array, Dimension};
 
     /// Add two arrays element-wise.
     ///
@@ -516,7 +518,7 @@ pub mod kernels {
             + 'static
             + num_traits::Zero
             + std::ops::Div<f64, Output = T>,
-        D: Dimension + Clone + Send + Sync + 'static + ndarray::RemoveAxis,
+        D: Dimension + Clone + Send + Sync + 'static + crate::ndarray::RemoveAxis,
     {
         // In a real implementation, this would use a GPU kernel
         // For now, we just add the arrays on the CPU
@@ -553,7 +555,7 @@ pub mod kernels {
             + 'static
             + num_traits::Zero
             + std::ops::Div<f64, Output = T>,
-        D: Dimension + Clone + Send + Sync + 'static + ndarray::RemoveAxis,
+        D: Dimension + Clone + Send + Sync + 'static + crate::ndarray::RemoveAxis,
     {
         // In a real implementation, this would use a GPU kernel
         // For now, we just multiply the arrays on the CPU
@@ -579,9 +581,9 @@ pub mod kernels {
     /// # Errors
     /// Returns `CoreError::ShapeError` if arrays are not compatible for matrix multiplication.
     pub fn matmul<T>(
-        a: &GPUNdarray<T, ndarray::Ix2>,
-        b: &GPUNdarray<T, ndarray::Ix2>,
-    ) -> CoreResult<GPUNdarray<T, ndarray::Ix2>>
+        a: &GPUNdarray<T, crate::ndarray::Ix2>,
+        b: &GPUNdarray<T, crate::ndarray::Ix2>,
+    ) -> CoreResult<GPUNdarray<T, crate::ndarray::Ix2>>
     where
         T: Clone
             + std::ops::Mul<Output = T>
@@ -615,7 +617,7 @@ pub mod kernels {
         let result_data = Array::default((m, p));
 
         // Create a new GPU array from the result - with explicit type
-        Ok(GPUNdarray::<T, ndarray::Ix2>::new(
+        Ok(GPUNdarray::<T, crate::ndarray::Ix2>::new(
             result_data,
             a.config.clone(),
         ))
@@ -625,7 +627,7 @@ pub mod kernels {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::{arr2, Array2};
+    use ::ndarray::{arr2, Array2};
 
     #[test]
     fn test_gpu_ndarray_creation() {

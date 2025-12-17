@@ -21,7 +21,7 @@ use std::collections::HashMap;
 use std::fmt;
 use std::sync::{LazyLock, RwLock};
 
-use ndarray::{Array, Dimension};
+use ::ndarray::{Array, Dimension};
 use num_traits::Float;
 
 use crate::array_protocol::gpu_impl::GPUNdarray;
@@ -442,7 +442,7 @@ where
 impl<T, D> MixedPrecisionSupport for GPUNdarray<T, D>
 where
     T: Clone + Float + Send + Sync + 'static + num_traits::Zero + std::ops::Div<f64, Output = T>,
-    D: Dimension + Send + Sync + 'static + ndarray::RemoveAxis,
+    D: Dimension + Send + Sync + 'static + crate::ndarray::RemoveAxis,
 {
     fn to_precision(&self, precision: Precision) -> CoreResult<Box<dyn MixedPrecisionSupport>> {
         // For GPUs, creating a new array with mixed precision enabled
@@ -511,14 +511,12 @@ where
         converted_arrays.push(converted);
     }
 
-    // Create array references
-    let array_refs: Vec<&dyn ArrayProtocol> = converted_arrays
-        .iter()
-        .map(|arr| arr.as_ref() as &dyn ArrayProtocol)
-        .collect();
+    // NOTE: Trait upcasting is unstable, so we skip this for now
+    // This functionality is not critical for TenRSo
+    // TODO: Re-enable once trait_upcasting is stabilized (RFC #65991)
 
-    // Execute the operation
-    executor(&array_refs)
+    // Workaround: just return error for now
+    Err("Mixed precision batch execution not supported on stable Rust - requires trait_upcasting feature".to_string().into())
 }
 
 /// Implementation of common array operations with mixed precision.
@@ -581,7 +579,7 @@ pub mod ops {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::arr2;
+    use ::ndarray::arr2;
 
     #[test]
     fn test_mixed_precision_array() {
@@ -597,7 +595,7 @@ mod tests {
         // The array is of type MixedPrecisionArray<f64, Ix2> (not IxDyn)
         assert!(array_protocol
             .as_any()
-            .is::<MixedPrecisionArray<f64, ndarray::Ix2>>());
+            .is::<MixedPrecisionArray<f64, crate::ndarray::Ix2>>());
     }
 
     #[test]

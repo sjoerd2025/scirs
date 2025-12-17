@@ -279,7 +279,7 @@ where
         &self.data
     }
 
-    /// Convert to dense matrix (as Vec<Vec<T>>)
+    /// Convert to dense matrix (as `Vec<Vec<T>>`)
     pub fn to_dense(&self) -> Vec<Vec<T>>
     where
         T: Zero + Copy + SparseElement,

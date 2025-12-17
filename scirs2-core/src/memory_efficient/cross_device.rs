@@ -12,7 +12,7 @@
 use crate::error::{CoreError, CoreResult, ErrorContext, ErrorLocation};
 #[cfg(feature = "gpu")]
 use crate::gpu::{GpuBackend, GpuBuffer, GpuContext, GpuDataType};
-use ndarray::{Array, ArrayBase, Dimension, IxDyn, RawData};
+use ::ndarray::{Array, ArrayBase, Dimension, IxDyn, RawData};
 use std::any::TypeId;
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
@@ -325,7 +325,7 @@ impl DeviceMemoryManager {
     ) -> CoreResult<DeviceArray<T, D>>
     where
         T: GpuDataType,
-        S: RawData<Elem = T> + ndarray::Data,
+        S: RawData<Elem = T> + crate::ndarray::Data,
         D: Dimension,
     {
         let options = options.unwrap_or_default();
@@ -766,7 +766,7 @@ pub struct DeviceArray<T: GpuDataType, D: Dimension> {
 
 impl<T: GpuDataType, D: Dimension> DeviceArray<T, D> {
     /// Create a new CPU array
-    fn new_cpu<S: RawData<Elem = T> + ndarray::Data>(array: ArrayBase<S, D>) -> Self {
+    fn new_cpu<S: RawData<Elem = T> + crate::ndarray::Data>(array: ArrayBase<S, D>) -> Self {
         Self {
             buffer: DeviceBuffer::new_cpu(array.to_owned()),
             shape: array.raw_dim(),
@@ -902,7 +902,7 @@ impl DeviceMemoryPool {
         match self.device {
             DeviceType::Cpu => {
                 // Allocate CPU memory
-                let array = Array::<T, ndarray::IxDyn>::zeros(IxDyn(&[size]));
+                let array = Array::<T, crate::ndarray::IxDyn>::zeros(IxDyn(&[size]));
                 Ok(DeviceBuffer::new_cpu(array))
             }
             DeviceType::Gpu(_) => {
@@ -1088,7 +1088,7 @@ impl CrossDeviceManager {
     ) -> CoreResult<DeviceArray<T, D>>
     where
         T: GpuDataType,
-        S: RawData<Elem = T> + ndarray::Data,
+        S: RawData<Elem = T> + crate::ndarray::Data,
         D: Dimension,
     {
         // Check if the device is available
@@ -1266,7 +1266,7 @@ where
 impl<T, S, D> ToDevice<T, D> for ArrayBase<S, D>
 where
     T: GpuDataType,
-    S: RawData<Elem = T> + ndarray::Data,
+    S: RawData<Elem = T> + crate::ndarray::Data,
     D: Dimension,
 {
     fn to_device(
@@ -1305,7 +1305,7 @@ where
 pub fn create_cpuarray<T, S, D>(array: &ArrayBase<S, D>) -> DeviceArray<T, D>
 where
     T: GpuDataType,
-    S: RawData<Elem = T> + ndarray::Data,
+    S: RawData<Elem = T> + crate::ndarray::Data,
     D: Dimension,
 {
     DeviceArray::new_cpu(array.to_owned())
@@ -1319,7 +1319,7 @@ pub fn create_gpuarray<T, S, D>(
 ) -> CoreResult<DeviceArray<T, D>>
 where
     T: GpuDataType,
-    S: RawData<Elem = T> + ndarray::Data,
+    S: RawData<Elem = T> + crate::ndarray::Data,
     D: Dimension,
 {
     // Find the first available GPU
@@ -1343,7 +1343,7 @@ pub fn to_best_device<T, S, D>(
 ) -> CoreResult<DeviceArray<T, D>>
 where
     T: GpuDataType,
-    S: RawData<Elem = T> + ndarray::Data,
+    S: RawData<Elem = T> + crate::ndarray::Data,
     D: Dimension,
 {
     // Try to find a GPU first

@@ -18,7 +18,7 @@ use std::f64::consts::PI;
 /// * `sym` - If true, generates a symmetric window, otherwise a periodic window
 ///
 /// # Returns
-/// A Vec<f64> of window values (all ones)
+/// A `Vec<f64>` of window values (all ones)
 ///
 /// # Examples
 /// ```
@@ -47,7 +47,7 @@ pub fn boxcar(m: usize, sym: bool) -> SignalResult<Vec<f64>> {
 /// * `sym` - If true, generates a symmetric window, otherwise a periodic window
 ///
 /// # Returns
-/// A Vec<f64> of window values (all ones)
+/// A `Vec<f64>` of window values (all ones)
 pub fn dirichlet(m: usize, sym: bool) -> SignalResult<Vec<f64>> {
     boxcar(m, sym)
 }
@@ -62,7 +62,7 @@ pub fn dirichlet(m: usize, sym: bool) -> SignalResult<Vec<f64>> {
 /// * `sym` - If true, generates a symmetric window, otherwise a periodic window
 ///
 /// # Returns
-/// A Vec<f64> of window values (all equal to amplitude)
+/// A `Vec<f64>` of window values (all equal to amplitude)
 ///
 /// # Examples
 /// ```
@@ -162,7 +162,7 @@ pub fn is_rectangular_window(window: &[f64], tolerance: f64) -> bool {
 /// * `sym` - If true, generates a symmetric window, otherwise a periodic window
 ///
 /// # Returns
-/// A Vec<f64> of window values representing rectangular pulse train
+/// A `Vec<f64>` of window values representing rectangular pulse train
 pub fn rectangular_pulse_train(
     m: usize,
     duty_cycle: f64,

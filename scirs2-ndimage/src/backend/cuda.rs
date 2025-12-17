@@ -1046,6 +1046,7 @@ impl CudaMemoryManager {
     }
 
     /// Return a buffer to the pool for reuse
+    #[allow(clippy::not_unsafe_ptr_arg_deref)]
     pub fn deallocate_buffer(&mut self, ptr: *mut c_void, size: usize) -> NdimageResult<()> {
         let pool = self.buffer_pools.entry(size).or_insert_with(Vec::new);
 
@@ -1190,6 +1191,7 @@ pub struct CudaManagedBuffer<T> {
 }
 
 impl<T> CudaManagedBuffer<T> {
+    #[allow(clippy::not_unsafe_ptr_arg_deref)]
     pub fn copy_from_host_async(&self, data: &[T], stream: *mut c_void) -> NdimageResult<()> {
         if data.len() != self.size {
             return Err(NdimageError::InvalidInput("Data size mismatch".to_string()));
@@ -1215,6 +1217,7 @@ impl<T> CudaManagedBuffer<T> {
         Ok(())
     }
 
+    #[allow(clippy::not_unsafe_ptr_arg_deref)]
     pub fn copy_to_host_async(&self, data: &mut [T], stream: *mut c_void) -> NdimageResult<()> {
         if data.len() != self.size {
             return Err(NdimageError::InvalidInput("Data size mismatch".to_string()));

@@ -179,7 +179,7 @@ where
 /// * `compute_p` - Whether to compute P (if false, only U is returned)
 ///
 /// # Returns
-/// * Tuple (U, Option<P>) where U is unitary and P is positive semidefinite
+/// * Tuple `(U, Option<P>)` where U is unitary and P is positive semidefinite
 ///
 /// # Example
 /// ```

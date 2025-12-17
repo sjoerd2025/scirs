@@ -978,7 +978,7 @@ pub mod fast_paths {
         if optimizer.should_use_simd(len) {
             // Use SIMD operations for f64 addition
             use crate::simd_ops::SimdUnifiedOps;
-            use ndarray::ArrayView1;
+            use ::ndarray::ArrayView1;
 
             // Process in SIMD-width chunks
             let simd_chunks = len / 4; // Process 4 f64s at a time

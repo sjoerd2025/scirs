@@ -90,7 +90,7 @@ where
 /// * `Result<S::Ok, S::Error>` - Serialization result
 ///   Serialize a 1D array to a serde-compatible format
 ///
-/// This function converts an Array1<f64> to a Vec<f64> for serialization.
+/// This function converts an `Array1<f64>` to a `Vec<f64>` for serialization.
 /// Useful for saving datasets or individual arrays to JSON, YAML, etc.
 ///
 /// # Arguments
@@ -112,7 +112,7 @@ where
 
 /// Deserialize a 1D array from a serde-compatible format
 ///
-/// Reconstructs an Array1 from a Vec<f64>.
+/// Reconstructs an `Array1` from a `Vec<f64>`.
 ///
 /// # Arguments
 ///
@@ -130,7 +130,7 @@ where
     Ok(Array1::from(vec))
 }
 
-/// Helper functions for serializing Option<Array1<f64>> types
+/// Helper functions for serializing `Option<Array1<f64>>` types
 pub mod optional_array1 {
     use super::*;
 

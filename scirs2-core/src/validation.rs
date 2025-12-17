@@ -3,7 +3,7 @@
 //! This module provides utilities for validating data and parameters, including
 //! production-level security hardening and comprehensive input validation.
 
-use ndarray::{ArrayBase, Dimension, ScalarOperand};
+use ::ndarray::{ArrayBase, Dimension, ScalarOperand};
 use num_traits::{Float, One, Zero};
 
 use crate::error::{CoreError, CoreResult, ErrorContext, ErrorLocation};
@@ -155,7 +155,7 @@ where
 /// Returns `CoreError::ValueError` if any value in the array is not finite.
 pub fn checkarray_finite<S, A, D>(array: &ArrayBase<S, D>, name: A) -> CoreResult<()>
 where
-    S: ndarray::Data,
+    S: crate::ndarray::Data,
     D: Dimension,
     S::Elem: Float + std::fmt::Display,
     A: Into<String>,
@@ -196,7 +196,7 @@ pub fn checkshape<S, D, A>(
     name: A,
 ) -> CoreResult<()>
 where
-    S: ndarray::Data,
+    S: crate::ndarray::Data,
     D: Dimension,
     A: Into<String>,
 {
@@ -230,7 +230,7 @@ where
 /// Returns `CoreError::ShapeError` if the array is not 1D.
 pub fn check_1d<S, D, A>(array: &ArrayBase<S, D>, name: A) -> CoreResult<()>
 where
-    S: ndarray::Data,
+    S: crate::ndarray::Data,
     D: Dimension,
     A: Into<String>,
 {
@@ -264,7 +264,7 @@ where
 /// Returns `CoreError::ShapeError` if the array is not 2D.
 pub fn check_2d<S, D, A>(array: &ArrayBase<S, D>, name: A) -> CoreResult<()>
 where
-    S: ndarray::Data,
+    S: crate::ndarray::Data,
     D: Dimension,
     A: Into<String>,
 {
@@ -305,8 +305,8 @@ pub fn check_sameshape<S1, S2, D1, D2, A, B>(
     b_name: B,
 ) -> CoreResult<()>
 where
-    S1: ndarray::Data,
-    S2: ndarray::Data,
+    S1: crate::ndarray::Data,
+    S2: crate::ndarray::Data,
     D1: Dimension,
     D2: Dimension,
     A: Into<String>,
@@ -346,7 +346,7 @@ where
 /// Returns `CoreError::ShapeError` if the matrix is not square.
 pub fn check_square<S, D, A>(matrix: &ArrayBase<S, D>, name: A) -> CoreResult<()>
 where
-    S: ndarray::Data,
+    S: crate::ndarray::Data,
     D: Dimension,
     A: Into<String> + std::string::ToString,
 {
@@ -415,7 +415,7 @@ where
 /// Returns `CoreError::ValueError` if any value is not a valid probability.
 pub fn check_probabilities<S, D, A>(probs: &ArrayBase<S, D>, name: A) -> CoreResult<()>
 where
-    S: ndarray::Data,
+    S: crate::ndarray::Data,
     D: Dimension,
     S::Elem: Float + std::fmt::Display,
     A: Into<String>,
@@ -452,7 +452,7 @@ pub fn check_probabilities_sum_to_one<S, D, A>(
     tol: Option<S::Elem>,
 ) -> CoreResult<()>
 where
-    S: ndarray::Data,
+    S: crate::ndarray::Data,
     D: Dimension,
     S::Elem: Float + std::fmt::Display + ScalarOperand,
     A: Into<String> + std::string::ToString,
@@ -496,7 +496,7 @@ where
 /// * `Err(CoreError::ValueError)` if the array is empty
 pub fn check_not_empty<S, D, A>(array: &ArrayBase<S, D>, name: A) -> CoreResult<()>
 where
-    S: ndarray::Data,
+    S: crate::ndarray::Data,
     D: Dimension,
     A: Into<String>,
 {
@@ -530,7 +530,7 @@ pub fn check_min_samples<S, D, A>(
     name: A,
 ) -> CoreResult<()>
 where
-    S: ndarray::Data,
+    S: crate::ndarray::Data,
     D: Dimension,
     A: Into<String>,
 {
@@ -571,7 +571,7 @@ pub mod clustering {
         operation: &str,
     ) -> CoreResult<()>
     where
-        S: ndarray::Data,
+        S: crate::ndarray::Data,
         D: Dimension,
     {
         let n_samples = data.shape()[0];
@@ -617,7 +617,7 @@ pub mod clustering {
         min_samples: Option<usize>,
     ) -> CoreResult<()>
     where
-        S: ndarray::Data,
+        S: crate::ndarray::Data,
         D: Dimension,
         S::Elem: Float + std::fmt::Display,
     {
@@ -1232,7 +1232,7 @@ pub mod custom {
 
     impl<S, T, D> Validator<ArrayBase<S, D>> for ArrayValidator<T, D>
     where
-        S: ndarray::Data<Elem = T>,
+        S: crate::ndarray::Data<Elem = T>,
         T: Clone,
         D: Dimension,
     {
@@ -1394,7 +1394,7 @@ pub mod custom {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use ndarray::arr1;
+        use ::ndarray::arr1;
 
         #[test]
         fn test_range_validator() {

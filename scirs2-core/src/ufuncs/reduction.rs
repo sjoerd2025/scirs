@@ -4,8 +4,11 @@
 //! (sum, mean, etc.) as universal functions for efficient
 //! array reductions along specified axes.
 
+use crate::ndarray::compat::ArrayStatCompat;
 use crate::ufuncs::core::{apply_reduction, register_ufunc, UFunc, UFuncKind};
-use ndarray::{Array, Array1, ArrayView, ArrayViewMut, Axis, Dimension, Ix1, IxDyn, ShapeBuilder};
+use ::ndarray::{
+    Array, Array1, ArrayView, ArrayViewMut, Axis, Dimension, Ix1, IxDyn, ShapeBuilder,
+};
 use std::sync::Once;
 
 static INIT: Once = Once::new();
@@ -350,7 +353,7 @@ impl UFunc for MaxUFunc {
 // Helper function to prepare the output array for reduction
 #[allow(dead_code)]
 fn prepare_reduction_output<D>(
-    input: &ndarray::ArrayView<f64, D>,
+    input: &crate::ndarray::ArrayView<f64, D>,
     axis: Option<usize>,
 ) -> (Array<f64, Ix1>, Vec<usize>)
 where
@@ -399,7 +402,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use ::ndarray::array;
 /// use scirs2_core::ufuncs::sum;
 ///
 /// let a = array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]];
@@ -417,11 +420,11 @@ where
 /// assert_eq!(result, array![6.0, 15.0]);
 /// ```
 #[allow(dead_code)]
-pub fn sum<D>(array: &ndarray::ArrayView<f64, D>, axis: Option<usize>) -> Array<f64, Ix1>
+pub fn sum<D>(array: &crate::ndarray::ArrayView<f64, D>, axis: Option<usize>) -> Array<f64, Ix1>
 where
-    D: Dimension + ndarray::RemoveAxis,
+    D: Dimension + crate::ndarray::RemoveAxis,
 {
-    use ndarray::Axis;
+    use ::ndarray::Axis;
 
     match axis {
         Some(ax) => {
@@ -452,7 +455,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use ::ndarray::array;
 /// use scirs2_core::ufuncs::product;
 ///
 /// let a = array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]];
@@ -470,11 +473,11 @@ where
 /// assert_eq!(result, array![6.0, 120.0]);
 /// ```
 #[allow(dead_code)]
-pub fn product<D>(array: &ndarray::ArrayView<f64, D>, axis: Option<usize>) -> Array<f64, Ix1>
+pub fn product<D>(array: &crate::ndarray::ArrayView<f64, D>, axis: Option<usize>) -> Array<f64, Ix1>
 where
-    D: Dimension + ndarray::RemoveAxis,
+    D: Dimension + crate::ndarray::RemoveAxis,
 {
-    use ndarray::Axis;
+    use ::ndarray::Axis;
 
     match axis {
         Some(ax) => {
@@ -505,7 +508,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use ::ndarray::array;
 /// use scirs2_core::ufuncs::mean;
 ///
 /// let a = array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]];
@@ -523,9 +526,9 @@ where
 /// assert_eq!(result, array![2.0, 5.0]);
 /// ```
 #[allow(dead_code)]
-pub fn mean<D>(array: &ndarray::ArrayView<f64, D>, axis: Option<usize>) -> Array<f64, Ix1>
+pub fn mean<D>(array: &crate::ndarray::ArrayView<f64, D>, axis: Option<usize>) -> Array<f64, Ix1>
 where
-    D: Dimension + ndarray::RemoveAxis,
+    D: Dimension + crate::ndarray::RemoveAxis,
 {
     // Initialize the ufuncs registry if needed
     init_reduction_ufuncs();
@@ -535,7 +538,7 @@ where
     match axis {
         Some(ax) => {
             // Divide by the length of the specified axis
-            let axis_len = array.len_of(ndarray::Axis(ax)) as f64;
+            let axis_len = array.len_of(crate::ndarray::Axis(ax)) as f64;
             sum_result.map(|&x| x / axis_len)
         }
         None => {
@@ -560,7 +563,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use ::ndarray::array;
 /// use scirs2_core::ufuncs::reduction::std;
 ///
 /// let a = array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]];
@@ -576,9 +579,9 @@ where
 /// assert!((result[2] - 1.5).abs() < 1e-10);
 /// ```
 #[allow(dead_code)]
-pub fn std<D>(array: &ndarray::ArrayView<f64, D>, axis: Option<usize>) -> Array<f64, Ix1>
+pub fn std<D>(array: &crate::ndarray::ArrayView<f64, D>, axis: Option<usize>) -> Array<f64, Ix1>
 where
-    D: Dimension + ndarray::RemoveAxis,
+    D: Dimension + crate::ndarray::RemoveAxis,
 {
     let var_result = var(array, axis);
     var_result.map(|&x| x.sqrt())
@@ -598,7 +601,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use ::ndarray::array;
 /// use scirs2_core::ufuncs::reduction::var;
 ///
 /// let a = array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]];
@@ -612,11 +615,11 @@ where
 /// assert_eq!(result, array![2.25, 2.25, 2.25]);
 /// ```
 #[allow(dead_code)]
-pub fn var<D>(array: &ndarray::ArrayView<f64, D>, axis: Option<usize>) -> Array<f64, Ix1>
+pub fn var<D>(array: &crate::ndarray::ArrayView<f64, D>, axis: Option<usize>) -> Array<f64, Ix1>
 where
-    D: Dimension + ndarray::RemoveAxis,
+    D: Dimension + crate::ndarray::RemoveAxis,
 {
-    use ndarray::Axis;
+    use ::ndarray::Axis;
     // Initialize the ufuncs registry if needed
     init_reduction_ufuncs();
 
@@ -625,7 +628,7 @@ where
             // Variance along a specific axis
             let n = array.len_of(Axis(ax)) as f64;
             let result = array.map_axis(Axis(ax), |lane| {
-                let m = lane.mean().unwrap_or(0.0);
+                let m = lane.mean_or(0.0);
                 lane.iter().map(|&x| (x - m).powi(2)).sum::<f64>() / n
             });
             // Convert to 1D array
@@ -633,7 +636,7 @@ where
         }
         None => {
             // Variance of all elements
-            let mean_val = array.mean().unwrap_or(0.0);
+            let mean_val = array.mean_or(0.0);
             let n = array.len() as f64;
             let var_val = array.iter().map(|&x| (x - mean_val).powi(2)).sum::<f64>() / n;
             Array::from_elem(1, var_val)
@@ -655,7 +658,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use ::ndarray::array;
 /// use scirs2_core::ufuncs::min;
 ///
 /// let a = array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]];
@@ -673,11 +676,11 @@ where
 /// assert_eq!(result, array![1.0, 4.0]);
 /// ```
 #[allow(dead_code)]
-pub fn min<D>(array: &ndarray::ArrayView<f64, D>, axis: Option<usize>) -> Array<f64, Ix1>
+pub fn min<D>(array: &crate::ndarray::ArrayView<f64, D>, axis: Option<usize>) -> Array<f64, Ix1>
 where
-    D: Dimension + ndarray::RemoveAxis,
+    D: Dimension + crate::ndarray::RemoveAxis,
 {
-    use ndarray::Axis;
+    use ::ndarray::Axis;
     // Initialize the ufuncs registry if needed
     init_reduction_ufuncs();
 
@@ -719,7 +722,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use ::ndarray::array;
 /// use scirs2_core::ufuncs::max;
 ///
 /// let a = array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]];
@@ -737,11 +740,11 @@ where
 /// assert_eq!(result, array![3.0, 6.0]);
 /// ```
 #[allow(dead_code)]
-pub fn max<D>(array: &ndarray::ArrayView<f64, D>, axis: Option<usize>) -> Array<f64, Ix1>
+pub fn max<D>(array: &crate::ndarray::ArrayView<f64, D>, axis: Option<usize>) -> Array<f64, Ix1>
 where
-    D: Dimension + ndarray::RemoveAxis,
+    D: Dimension + crate::ndarray::RemoveAxis,
 {
-    use ndarray::Axis;
+    use ::ndarray::Axis;
     // Initialize the ufuncs registry if needed
     init_reduction_ufuncs();
 
@@ -772,7 +775,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::array;
+    use ::ndarray::array;
 
     #[test]
     fn test_sum() {

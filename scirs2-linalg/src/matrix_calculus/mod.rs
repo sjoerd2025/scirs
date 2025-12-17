@@ -67,7 +67,7 @@ pub mod optimization;
 /// Compute the Jacobian matrix of a vector-valued function.
 ///
 /// For a function f: R^n -> R^m, the Jacobian is an m×n matrix where
-/// J[i,j] = df_i/dx_j.
+/// `J[i,j] = df_i/dx_j`.
 ///
 /// # Arguments
 ///
@@ -114,7 +114,7 @@ where
 /// Compute the gradient of a scalar-valued function.
 ///
 /// For a function f: R^n -> R, the gradient is an n-dimensional vector where
-/// grad[i] = df/dx_i.
+/// `grad[i] = df/dx_i`.
 ///
 /// # Arguments
 ///
@@ -158,7 +158,7 @@ where
 /// Compute the Hessian matrix of a scalar-valued function.
 ///
 /// For a function f: R^n -> R, the Hessian is an n×n matrix where
-/// H[i,j] = d²f/(dx_i dx_j).
+/// `H[i,j] = d²f/(dx_i dx_j)`.
 ///
 /// # Arguments
 ///

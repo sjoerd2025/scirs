@@ -38,7 +38,7 @@ pub enum WeightFunction {
 /// Polynomial basis types for the local approximation
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum PolynomialBasis {
-    /// Constant basis: [1]
+    /// Constant basis: `[1]`
     Constant,
 
     /// Linear basis: [1, x, y, ...]

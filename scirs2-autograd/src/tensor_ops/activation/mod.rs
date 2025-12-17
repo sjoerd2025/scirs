@@ -103,7 +103,7 @@ where
 /// LeakyReLU(x) = max(alpha * x, x)
 /// In common, `alpha` is around 0.1 ~ 0.2.
 ///
-/// https://ai.stanford.edu/~amaas/papers/relu_hybrid_icml2013_final.pdf
+/// <https://ai.stanford.edu/~amaas/papers/relu_hybrid_icml2013_final.pdf>
 ///
 /// # Examples
 ///

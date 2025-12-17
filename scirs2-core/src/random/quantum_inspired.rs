@@ -33,13 +33,14 @@
 //!
 //! ```rust
 //! use scirs2_core::random::quantum_inspired::*;
+//! use scirs2_core::ndarray::Array1;
 //!
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! // Define fitness function (sphere function)
-//! let fitness_function = |x: &ndarray::Array1<f64>| -x.iter().map(|xi| xi * xi).sum::<f64>();
+//! let fitness_function = |x: &Array1<f64>| -x.iter().map(|xi| xi * xi).sum::<f64>();
 //!
 //! // Define oracle function for rare event detection
-//! let oracle_function = |x: &ndarray::Array1<f64>| x[0] > 0.5;
+//! let oracle_function = |x: &Array1<f64>| x[0] > 0.5;
 //!
 //! // Quantum-inspired evolutionary algorithm
 //! let mut qiea = QuantumInspiredEvolutionary::new(100, 50);
@@ -64,7 +65,7 @@ use crate::random::{
     distributions::MultivariateNormal,
     parallel::{ParallelRng, ThreadLocalRngPool},
 };
-use ndarray::{s, Array1, Array2, Array3, Axis};
+use ::ndarray::{s, Array1, Array2, Array3, Axis};
 use rand::Rng;
 use rand_distr::{Distribution, Normal, Uniform};
 use std::collections::HashMap;

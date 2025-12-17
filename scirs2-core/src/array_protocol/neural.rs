@@ -15,7 +15,7 @@
 //! This module provides neural network layers and models that work with
 //! any array type implementing the ArrayProtocol trait.
 
-use ndarray::{Array, Ix1};
+use ::ndarray::{Array, Ix1};
 use rand::Rng;
 
 use crate::array_protocol::ml_ops::ActivationFunc;
@@ -845,7 +845,7 @@ impl MultiHeadAttention {
     pub fn with_params(name: &str, num_heads: usize, dmodel: usize) -> Self {
         // Check if dmodel is divisible by num_heads
         assert!(
-            dmodel.is_multiple_of(num_heads),
+            dmodel % num_heads == 0,
             "dmodel must be divisible by num_heads"
         );
 

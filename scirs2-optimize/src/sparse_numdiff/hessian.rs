@@ -30,8 +30,8 @@ fn exists_in_sparsity(matrix: &CsrArray<f64>, row: usize, col: usize) -> bool {
 ///
 /// # Arguments
 ///
-/// * `func` - Function to differentiate, takes ArrayView1<f64> and returns f64
-/// * `grad` - Optional gradient function, takes ArrayView1<f64> and returns Array1<f64>
+/// * `func` - Function to differentiate, takes `ArrayView1<f64>` and returns `f64`
+/// * `grad` - Optional gradient function, takes `ArrayView1<f64>` and returns `Array1<f64>`
 /// * `x` - Point at which to compute the Hessian
 /// * `f0` - Function value at `x` (if None, computed internally)
 /// * `g0` - Gradient value at `x` (if None, computed internally)

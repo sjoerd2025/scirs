@@ -1,4 +1,4 @@
-# scirs2-vision - Production Status (0.1.0-rc.2)
+# scirs2-vision - Production Status (0.1.0-rc.3)
 
 Computer vision module for SciRS2 - **PRODUCTION READY** with comprehensive platform testing.
 
@@ -68,7 +68,7 @@ Computer vision module for SciRS2 - **PRODUCTION READY** with comprehensive plat
 - [x] **Template Matching**: Cross-correlation methods
 - [x] **Optical Flow**: Dense optical flow computation
 
-### ✅ Performance Optimizations (NEW - 0.1.0-rc.2)
+### ✅ Performance Optimizations (NEW - 0.1.0-rc.3)
 - [x] **SIMD Acceleration**: Implemented SIMD-optimized operations using scirs2-core
   - [x] SIMD convolution for 2-4x speedup
   - [x] SIMD Sobel gradients with orientation
@@ -97,7 +97,7 @@ Computer vision module for SciRS2 - **PRODUCTION READY** with comprehensive plat
 - [x] **Algorithm References**: Include references to papers/algorithms where applicable
 - [x] **Thread Safety**: Document thread-safety considerations for parallel operations
 
-## Cutting-Edge Enhancements (NEW - 0.1.0-rc.2)
+## Cutting-Edge Enhancements (NEW - 0.1.0-rc.3)
 
 ### ✅ Neural-Quantum Hybrid Processing
 - [x] **Quantum-Inspired Streaming**: Superposition, entanglement, and interference algorithms
@@ -168,7 +168,7 @@ The following features are planned for future releases but are **NOT** part of t
 
 ## Production Release Notes
 
-**Version 0.1.0-rc.2** represents a comprehensive computer vision library with:
+**Version 0.1.0-rc.3** represents a comprehensive computer vision library with:
 
 - **217+ unit tests** covering all implemented functionality
 - **Working examples** demonstrating real-world usage

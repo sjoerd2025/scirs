@@ -6,6 +6,7 @@
 //! Usage:
 //!   cargo run --example real_world_datasets --release
 
+use scirs2_core::ndarray::compat::ArrayStatCompat;
 use scirs2_datasets::{
     list_real_world_datasets, load_adult, load_california_housing, load_heart_disease,
     load_red_wine_quality, load_titanic,
@@ -203,7 +204,7 @@ fn demonstrate_regression_datasets() -> Result<(), Box<dyn std::error::Error>> {
 
     // Analyze target distribution
     if let Some(target) = &housing.target {
-        let mean = target.mean().unwrap_or(0.0);
+        let mean = target.mean_or(0.0);
         let std = target.std(0.0);
         let min = target.iter().fold(f64::INFINITY, |a, &b| a.min(b));
         let max = target.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
@@ -229,7 +230,7 @@ fn demonstrate_regression_datasets() -> Result<(), Box<dyn std::error::Error>> {
     println!("  Features: {}", wine.n_features());
 
     if let Some(target) = &wine.target {
-        let mean_quality = target.mean().unwrap_or(0.0);
+        let mean_quality = target.mean_or(0.0);
         println!("  Average wine quality: {mean_quality:.1}/10");
 
         // Quality distribution

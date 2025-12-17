@@ -9,7 +9,7 @@
 //! - `ComplexToReal` trait for inverse complex-to-real FFT operations
 //! - `RealFftPlanner` for creating and caching FFT plans
 //! - Support for both f32 and f64 precision
-//! - Thread-safe plan caching with Arc<dyn Trait>
+//! - Thread-safe plan caching with `Arc<dyn Trait>`
 //!
 //! # Examples
 //!

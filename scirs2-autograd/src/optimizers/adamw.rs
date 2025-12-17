@@ -9,7 +9,7 @@ use crate::{Context, Float, VariableEnvironment};
 /// AdamW optimizer with decoupled weight decay
 ///
 /// This implementation is based on the paper "Decoupled Weight Decay Regularization"
-/// (https://arxiv.org/abs/1711.05101). AdamW fixes the issue with Adam where L2 regularization
+/// (<https://arxiv.org/abs/1711.05101>). AdamW fixes the issue with Adam where L2 regularization
 /// and weight decay are not equivalent. AdamW decouples weight decay from gradient-based updates.
 ///
 /// # Example

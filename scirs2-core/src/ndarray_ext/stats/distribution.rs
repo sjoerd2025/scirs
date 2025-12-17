@@ -3,7 +3,7 @@
 //! This module provides functions for working with data distributions,
 //! including histograms, binning, and quantile calculations.
 
-use ndarray::{Array, ArrayView, Ix1, Ix2};
+use ::ndarray::{Array, ArrayView, Ix1, Ix2};
 use num_traits::{Float, FromPrimitive};
 
 /// Result type for histogram function
@@ -29,7 +29,7 @@ pub type Histogram2dResult<T> =
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use ::ndarray::array;
 /// use scirs2_core::ndarray_ext::stats::histogram;
 ///
 /// let data = array![0.1, 0.5, 1.1, 1.5, 2.2, 2.9, 3.1, 3.8, 4.1, 4.9];
@@ -166,7 +166,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use ::ndarray::array;
 /// use scirs2_core::ndarray_ext::stats::histogram2d;
 ///
 /// let x = array![0.1, 0.5, 1.3, 2.5, 3.1, 3.8, 4.2, 4.9];
@@ -345,7 +345,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use ::ndarray::array;
 /// use scirs2_core::ndarray_ext::stats::quantile;
 ///
 /// let data = array![1.0, 3.0, 5.0, 7.0, 9.0];
@@ -453,7 +453,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use ::ndarray::array;
 /// use scirs2_core::ndarray_ext::stats::bincount;
 ///
 /// let data = array![1, 2, 3, 1, 2, 1, 0, 1, 3, 2];
@@ -528,7 +528,7 @@ pub fn bincount(
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use ::ndarray::array;
 /// use scirs2_core::ndarray_ext::stats::digitize;
 ///
 /// let data = array![1.2, 3.5, 5.1, 0.8, 2.9];

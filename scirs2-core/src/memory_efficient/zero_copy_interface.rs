@@ -771,7 +771,7 @@ where
 
         // Create memory-mapped array from the imported data
         // Note: This assumes a 1D array - in practice, you'd need to store shape information
-        Self::new::<ndarray::OwnedRepr<A>, ndarray::IxDyn>(
+        Self::new::<crate::ndarray::OwnedRepr<A>, crate::ndarray::IxDyn>(
             None,
             &temp_path,
             AccessMode::ReadWrite,

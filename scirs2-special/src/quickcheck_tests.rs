@@ -509,15 +509,15 @@ mod statistical_function_properties {
             return true;
         }
 
-        // Clamp to reasonable range
-        let _xs: Vec<f64> = xs.iter().map(|&x| x.clamp(-100.0, 100.0)).collect();
+        // Clamp to reasonable range to avoid overflow in direct calculation
+        let clamped_xs: Vec<f64> = xs.iter().map(|&x| x.clamp(-100.0, 100.0)).collect();
 
-        let xs_array = scirs2_core::ndarray::Array1::from(_xs.clone());
+        let xs_array = scirs2_core::ndarray::Array1::from(clamped_xs.clone());
         let lse_result = crate::statistical::logsumexp(xs_array.view());
         let lse = lse_result.unwrap_or(f64::NAN);
 
-        // Direct calculation (may overflow)
-        let direct: f64 = xs.iter().map(|&x| x.exp()).sum::<f64>().ln();
+        // Direct calculation using clamped values (same as logsumexp input)
+        let direct: f64 = clamped_xs.iter().map(|&x| x.exp()).sum::<f64>().ln();
 
         if !lse.is_finite() || !direct.is_finite() {
             // If direct overflows but logsumexp doesn't, that's good

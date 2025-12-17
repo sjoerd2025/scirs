@@ -190,10 +190,10 @@ where
 /// * `labels_true` - Ground truth class labels
 /// * `labels_pred` - Predicted cluster labels to evaluate
 /// * `average_method` - Method to compute the adjustment. One of:
-///   * "arithmetic": (MI - E[MI]) / (max(H(labels_true), H(labels_pred)) - E[MI])
-///   * "geometric": (MI - E[MI]) / (sqrt(H(labels_true) * H(labels_pred)) - E[MI])
-///   * "max": (MI - E[MI]) / (max(H(labels_true), H(labels_pred)) - E[MI])
-///   * "min": (MI - E[MI]) / (min(H(labels_true), H(labels_pred)) - E[MI])
+///   * "arithmetic": `(MI - E[MI]) / (max(H(labels_true), H(labels_pred)) - E[MI])`
+///   * "geometric": `(MI - E[MI]) / (sqrt(H(labels_true) * H(labels_pred)) - E[MI])`
+///   * "max": `(MI - E[MI]) / (max(H(labels_true), H(labels_pred)) - E[MI])`
+///   * "min": `(MI - E[MI]) / (min(H(labels_true), H(labels_pred)) - E[MI])`
 ///
 /// # Returns
 ///

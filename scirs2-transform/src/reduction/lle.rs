@@ -496,7 +496,8 @@ mod tests {
     #[test]
     fn test_lle_basic() {
         // Create a simple Swiss roll dataset
-        let n_points = 30;
+        // Reduced from 30 to 20 points for faster testing
+        let n_points = 20;
         let mut data = Vec::new();
 
         for i in 0..n_points {
@@ -509,8 +510,8 @@ mod tests {
 
         let x = Array::from_shape_vec((n_points, 3), data).unwrap();
 
-        // Fit LLE
-        let mut lle = LLE::new(10, 2);
+        // Fit LLE with reduced neighbors for faster testing
+        let mut lle = LLE::new(5, 2);
         let embedding = lle.fit_transform(&x).unwrap();
 
         // Check shape

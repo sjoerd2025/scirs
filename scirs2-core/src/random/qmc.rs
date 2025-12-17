@@ -35,7 +35,7 @@
 //! # example().unwrap();
 //! ```
 
-use ndarray::{Array1, Array2};
+use ::ndarray::{Array1, Array2};
 use rand::Rng;
 use std::f64;
 use thiserror::Error;
@@ -100,7 +100,7 @@ pub trait LowDiscrepancySequence {
 
 /// Sobol sequence generator
 ///
-/// Generates points in [0,1]^d using the Sobol low-discrepancy sequence.
+/// Generates points in `[0,1]^d` using the Sobol low-discrepancy sequence.
 /// Excellent for high-dimensional integration and Monte Carlo methods.
 pub struct SobolGenerator {
     dimension: usize,

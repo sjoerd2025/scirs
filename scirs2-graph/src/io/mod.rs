@@ -42,7 +42,7 @@ use matrix_market::{
 /// Supported file formats for graph I/O
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum GraphFormat {
-    /// Edge list format (one edge per line: source target [weight])
+    /// Edge list format (one edge per line: source target \[weight\])
     EdgeList,
     /// Adjacency list format (source: target1 target2 ...)
     AdjacencyList,

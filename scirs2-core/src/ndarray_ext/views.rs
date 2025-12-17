@@ -3,7 +3,7 @@
 //! This module provides enhanced array view operations that support
 //! more advanced memory layout options and zero-copy transformations.
 
-use ndarray::{Array, ArrayView, Dimension};
+use ::ndarray::{Array, ArrayView, Dimension};
 
 /// Memory layout ordering types
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -28,7 +28,7 @@ pub enum Order {
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use ::ndarray::array;
 /// use scirs2_core::ndarray_ext::strided_view;
 ///
 /// let a = array![[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12]];
@@ -106,7 +106,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use ::ndarray::array;
 /// use scirs2_core::ndarray_ext::{as_layout, Order};
 ///
 /// let a = array![[1, 2], [3, 4]];
@@ -162,7 +162,7 @@ pub fn broadcast_to<D1, D2, T>(
 ) -> Result<Array<T, D2::Dim>, &'static str>
 where
     D1: Dimension,
-    D2: ndarray::ShapeBuilder,
+    D2: crate::ndarray::ShapeBuilder,
     T: Clone + Default,
 {
     // Convert the shape to a dimension
@@ -247,7 +247,7 @@ mod tests {
     #[test]
     fn test_broadcast_to() {
         let a = array![1, 2, 3];
-        let shape: Ix2 = ndarray::Ix2::from((3, 3));
+        let shape: Ix2 = crate::ndarray::Ix2::from((3, 3));
         let b = broadcast_to(a.view(), shape).unwrap();
         assert_eq!(b.shape(), &[3, 3]);
         assert_eq!(b[[0, 0]], 1);

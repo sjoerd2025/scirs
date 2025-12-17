@@ -630,7 +630,7 @@ impl TrainingCallback for ParameterSyncCallback {
         self.batch_counter += 1;
 
         // Synchronize parameters if needed
-        if self.batch_counter.is_multiple_of(self.syncinterval) {
+        if self.batch_counter % self.syncinterval == 0 {
             // This is a simplified implementation for demonstration purposes.
             // In a real implementation, this would call channel.all_reduce() for each parameter.
 
@@ -701,7 +701,7 @@ mod tests {
     use super::*;
     use crate::array_protocol::training::InMemoryDataset;
     use crate::array_protocol::NdarrayWrapper;
-    use ndarray::Array2;
+    use ::ndarray::Array2;
 
     #[test]
     fn test_distributed_dataset() {
@@ -722,11 +722,11 @@ mod tests {
         let (input, target) = dist_dataset.get(0).unwrap();
         assert!(input
             .as_any()
-            .downcast_ref::<NdarrayWrapper<f64, ndarray::IxDyn>>()
+            .downcast_ref::<NdarrayWrapper<f64, crate::ndarray::IxDyn>>()
             .is_some());
         assert!(target
             .as_any()
-            .downcast_ref::<NdarrayWrapper<f64, ndarray::IxDyn>>()
+            .downcast_ref::<NdarrayWrapper<f64, crate::ndarray::IxDyn>>()
             .is_some());
     }
 

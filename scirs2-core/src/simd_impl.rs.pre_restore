@@ -1,0 +1,383 @@
+//! Legacy SIMD implementations - Advanced optimization variants
+//!
+//! This module contains highly optimized SIMD variants and experimental implementations.
+//! Most standard SIMD operations have been moved to dedicated modules under `simd/`.
+
+use crate::ndarray::{Array, Array1, ArrayView1, ArrayView2, Dimension, Zip};
+use crate::simd_ops::SimdUnifiedOps;
+use num_traits::Float;
+use std::ops::{Add, Div, Mul, Sub};
+
+// Import from simd module
+use crate::simd::detect::get_cpu_features;
+use crate::simd::traits::SimdOps;
+
+/// Apply element-wise operation on arrays using unified SIMD operations
+///
+/// Generic helper for binary operations with SIMD support.
+#[allow(dead_code)]
+pub fn simd_binary_op<F, S1, S2, D>(
+    a: &crate::ndarray::ArrayBase<S1, D>,
+    b: &crate::ndarray::ArrayBase<S2, D>,
+    op: fn(F, F) -> F,
+) -> Array<F, D>
+where
+    F: SimdOps + Float + SimdUnifiedOps,
+    S1: crate::ndarray::Data<Elem = F>,
+    S2: crate::ndarray::Data<Elem = F>,
+    D: Dimension,
+{
+    let mut result = Array::zeros(a.raw_dim());
+    Zip::from(&mut result)
+        .and(a)
+        .and(b)
+        .for_each(|r, &a, &b| *r = op(a, b));
+    result
+}
+
+// ==================== Advanced Multiplication Variants ====================
+
+/// PHASE 3: High-performance SIMD multiplication with prefetching
+#[allow(dead_code)]
+pub fn simd_mul_f32_ultra(a: &ArrayView1<f32>, b: &ArrayView1<f32>) -> Array1<f32> {
+    assert_eq!(a.len(), b.len(), "Arrays must have the same length");
+
+    #[cfg(target_arch = "x86_64")]
+    {
+        let len = a.len();
+        let mut result = vec![0.0f32; len];
+
+        let a_ptr = a.as_slice().unwrap().as_ptr();
+        let b_ptr = b.as_slice().unwrap().as_ptr();
+        let result_ptr = result.as_mut_ptr();
+
+        let features = get_cpu_features();
+
+        use std::arch::x86_64::*;
+
+        if features.has_avx2 {
+            unsafe {
+                let mut i = 0;
+                const PREFETCH_DISTANCE: usize = 256;
+
+                // Check for alignment opportunities
+                let a_aligned = (a_ptr as usize) % 32 == 0;
+                let b_aligned = (b_ptr as usize) % 32 == 0;
+                let result_aligned = (result_ptr as usize) % 32 == 0;
+
+                if a_aligned && b_aligned && result_aligned && len >= 64 {
+                    // Aligned path: maximum performance
+                    while i + 64 <= len {
+                        // Prefetch for cache efficiency
+                        if i + PREFETCH_DISTANCE < len {
+                            _mm_prefetch(
+                                a_ptr.add(i + PREFETCH_DISTANCE) as *const i8,
+                                _MM_HINT_T0,
+                            );
+                            _mm_prefetch(
+                                b_ptr.add(i + PREFETCH_DISTANCE) as *const i8,
+                                _MM_HINT_T0,
+                            );
+                        }
+
+                        // Process 64 elements (8 AVX2 vectors) with 4-way loop unrolling
+                        let a_vec1 = _mm256_load_ps(a_ptr.add(i));
+                        let b_vec1 = _mm256_load_ps(b_ptr.add(i));
+                        let result_vec1 = _mm256_mul_ps(a_vec1, b_vec1);
+
+                        let a_vec2 = _mm256_load_ps(a_ptr.add(i + 8));
+                        let b_vec2 = _mm256_load_ps(b_ptr.add(i + 8));
+                        let result_vec2 = _mm256_mul_ps(a_vec2, b_vec2);
+
+                        let a_vec3 = _mm256_load_ps(a_ptr.add(i + 16));
+                        let b_vec3 = _mm256_load_ps(b_ptr.add(i + 16));
+                        let result_vec3 = _mm256_mul_ps(a_vec3, b_vec3);
+
+                        let a_vec4 = _mm256_load_ps(a_ptr.add(i + 24));
+                        let b_vec4 = _mm256_load_ps(b_ptr.add(i + 24));
+                        let result_vec4 = _mm256_mul_ps(a_vec4, b_vec4);
+
+                        let a_vec5 = _mm256_load_ps(a_ptr.add(i + 32));
+                        let b_vec5 = _mm256_load_ps(b_ptr.add(i + 32));
+                        let result_vec5 = _mm256_mul_ps(a_vec5, b_vec5);
+
+                        let a_vec6 = _mm256_load_ps(a_ptr.add(i + 40));
+                        let b_vec6 = _mm256_load_ps(b_ptr.add(i + 40));
+                        let result_vec6 = _mm256_mul_ps(a_vec6, b_vec6);
+
+                        let a_vec7 = _mm256_load_ps(a_ptr.add(i + 48));
+                        let b_vec7 = _mm256_load_ps(b_ptr.add(i + 48));
+                        let result_vec7 = _mm256_mul_ps(a_vec7, b_vec7);
+
+                        let a_vec8 = _mm256_load_ps(a_ptr.add(i + 56));
+                        let b_vec8 = _mm256_load_ps(b_ptr.add(i + 56));
+                        let result_vec8 = _mm256_mul_ps(a_vec8, b_vec8);
+
+                        _mm256_store_ps(result_ptr.add(i), result_vec1);
+                        _mm256_store_ps(result_ptr.add(i + 8), result_vec2);
+                        _mm256_store_ps(result_ptr.add(i + 16), result_vec3);
+                        _mm256_store_ps(result_ptr.add(i + 24), result_vec4);
+                        _mm256_store_ps(result_ptr.add(i + 32), result_vec5);
+                        _mm256_store_ps(result_ptr.add(i + 40), result_vec6);
+                        _mm256_store_ps(result_ptr.add(i + 48), result_vec7);
+                        _mm256_store_ps(result_ptr.add(i + 56), result_vec8);
+
+                        i += 64;
+                    }
+                }
+
+                // Unaligned path or cleanup
+                while i + 8 <= len {
+                    let a_vec = _mm256_loadu_ps(a_ptr.add(i));
+                    let b_vec = _mm256_loadu_ps(b_ptr.add(i));
+                    let result_vec = _mm256_mul_ps(a_vec, b_vec);
+                    _mm256_storeu_ps(result_ptr.add(i), result_vec);
+                    i += 8;
+                }
+
+                // Handle remaining elements
+                while i < len {
+                    *result_ptr.add(i) = *a_ptr.add(i) * *b_ptr.add(i);
+                    i += 1;
+                }
+            }
+        } else {
+            // Fallback for older CPUs
+            for i in 0..len {
+                result[i] = a[i] * b[i];
+            }
+        }
+
+        return Array1::from_vec(result);
+    }
+
+    #[cfg(not(target_arch = "x86_64"))]
+    {
+        // Fallback for non-x86_64
+        (a * b).to_owned()
+    }
+}
+
+// Note: Other simd_mul_f32_* variants omitted for brevity
+// They follow similar patterns with different optimization strategies
+
+/// Fused multiply-add for f32 arrays using unified interface
+#[allow(dead_code)]
+pub fn simd_fused_multiply_add_f32(
+    a: &ArrayView1<f32>,
+    b: &ArrayView1<f32>,
+    c: &ArrayView1<f32>,
+) -> Array1<f32> {
+    assert_eq!(a.len(), b.len(), "Arrays a and b must have the same length");
+    assert_eq!(a.len(), c.len(), "Arrays a and c must have the same length");
+
+    let len = a.len();
+    let mut result = Vec::with_capacity(len);
+
+    let features = get_cpu_features();
+
+    #[cfg(target_arch = "x86_64")]
+    {
+        use std::arch::x86_64::*;
+
+        if features.has_fma {
+            unsafe {
+                let mut i = 0;
+                // Process 8 f32s at a time with AVX2 + FMA
+                while i + 8 <= len {
+                    let a_slice = &a.as_slice().unwrap()[i..i + 8];
+                    let b_slice = &b.as_slice().unwrap()[i..i + 8];
+                    let c_slice = &c.as_slice().unwrap()[i..i + 8];
+
+                    let a_vec = _mm256_loadu_ps(a_slice.as_ptr());
+                    let b_vec = _mm256_loadu_ps(b_slice.as_ptr());
+                    let c_vec = _mm256_loadu_ps(c_slice.as_ptr());
+                    // FMA: a * b + c
+                    let result_vec = _mm256_fmadd_ps(a_vec, b_vec, c_vec);
+
+                    let mut temp = [0.0f32; 8];
+                    _mm256_storeu_ps(temp.as_mut_ptr(), result_vec);
+                    result.extend_from_slice(&temp);
+                    i += 8;
+                }
+
+                // Handle remaining elements with scalar FMA
+                for j in i..len {
+                    result.push(a[j].mul_add(b[j], c[j]));
+                }
+            }
+        } else if is_x86_feature_detected!("avx2") {
+            unsafe {
+                let mut i = 0;
+                // Process 8 f32s at a time with AVX2 (separate mul + add)
+                while i + 8 <= len {
+                    let a_slice = &a.as_slice().unwrap()[i..i + 8];
+                    let b_slice = &b.as_slice().unwrap()[i..i + 8];
+                    let c_slice = &c.as_slice().unwrap()[i..i + 8];
+
+                    let a_vec = _mm256_loadu_ps(a_slice.as_ptr());
+                    let b_vec = _mm256_loadu_ps(b_slice.as_ptr());
+                    let c_vec = _mm256_loadu_ps(c_slice.as_ptr());
+                    let mul_result = _mm256_mul_ps(a_vec, b_vec);
+                    let result_vec = _mm256_add_ps(mul_result, c_vec);
+
+                    let mut temp = [0.0f32; 8];
+                    _mm256_storeu_ps(temp.as_mut_ptr(), result_vec);
+                    result.extend_from_slice(&temp);
+                    i += 8;
+                }
+
+                // Handle remaining elements
+                for j in i..len {
+                    result.push(a[j] * b[j] + c[j]);
+                }
+            }
+        } else {
+            // Fallback to scalar implementation
+            for i in 0..len {
+                result.push(a[i] * b[i] + c[i]);
+            }
+        }
+    }
+
+    #[cfg(target_arch = "aarch64")]
+    {
+        use std::arch::aarch64::*;
+
+        if std::arch::is_aarch64_feature_detected!("neon") {
+            unsafe {
+                let mut i = 0;
+                // Process 4 f32s at a time with NEON FMA
+                while i + 4 <= len {
+                    let a_slice = &a.as_slice().unwrap()[i..i + 4];
+                    let b_slice = &b.as_slice().unwrap()[i..i + 4];
+                    let c_slice = &c.as_slice().unwrap()[i..i + 4];
+
+                    let a_vec = vld1q_f32(a_slice.as_ptr());
+                    let b_vec = vld1q_f32(b_slice.as_ptr());
+                    let c_vec = vld1q_f32(c_slice.as_ptr());
+                    // NEON FMA: a * b + c
+                    let result_vec = vfmaq_f32(c_vec, a_vec, b_vec);
+
+                    let mut temp = [0.0f32; 4];
+                    vst1q_f32(temp.as_mut_ptr(), result_vec);
+                    result.extend_from_slice(&temp);
+                    i += 4;
+                }
+
+                // Handle remaining elements
+                for j in i..len {
+                    result.push(a[j].mul_add(b[j], c[j]));
+                }
+            }
+        } else {
+            // Fallback to scalar implementation
+            for i in 0..len {
+                result.push(a[i] * b[i] + c[i]);
+            }
+        }
+    }
+
+    #[cfg(not(any(target_arch = "x86_64", target_arch = "aarch64")))]
+    {
+        // Fallback to scalar implementation for other architectures
+        for i in 0..len {
+            result.push(a[i] * b[i] + c[i]);
+        }
+    }
+
+    Array1::from_vec(result)
+}
+
+/// Fused multiply-add for f64 arrays using unified interface
+#[allow(dead_code)]
+pub fn simd_fused_multiply_add_f64(
+    a: &ArrayView1<f64>,
+    b: &ArrayView1<f64>,
+    c: &ArrayView1<f64>,
+) -> Array1<f64> {
+    f64::simd_fma(a, b, c)
+}
+
+/// Cache-aware matrix-vector multiplication (GEMV) using unified interface
+#[allow(dead_code)]
+pub fn simd_gemv_cache_optimized_f32(
+    alpha: f32,
+    a: &ArrayView2<f32>,
+    x: &ArrayView1<f32>,
+    beta: f32,
+    y: &mut Array1<f32>,
+) {
+    f32::simd_gemv(a, x, beta, y);
+
+    // Apply alpha scaling (could be optimized further)
+    if alpha != 1.0 {
+        for elem in y.iter_mut() {
+            *elem *= alpha;
+        }
+    }
+}
+
+// Note: Additional advanced variants (simd_mul_f32_blazing, simd_mul_f32_cache_optimized, etc.)
+// have been omitted to reduce file size. They can be added back if needed for benchmarking.
+
+// ==================== Additional Unified Interface Wrappers ====================
+
+/// Cache-optimized SIMD addition for f32 using unified interface
+#[allow(dead_code)]
+pub fn simd_add_cache_optimized_f32(a: &ArrayView1<f32>, b: &ArrayView1<f32>) -> Array1<f32> {
+    f32::simd_add_cache_optimized(a, b)
+}
+
+/// Advanced-optimized fused multiply-add for f32 using unified interface
+#[allow(dead_code)]
+pub fn simd_fma_advanced_optimized_f32(
+    a: &ArrayView1<f32>,
+    b: &ArrayView1<f32>,
+    c: &ArrayView1<f32>,
+) -> Array1<f32> {
+    f32::simd_fma_advanced_optimized(a, b, c)
+}
+
+/// Adaptive SIMD operation selector using unified interface
+#[allow(dead_code)]
+pub fn simd_adaptive_add_f32(a: &ArrayView1<f32>, b: &ArrayView1<f32>) -> Array1<f32> {
+    f32::simd_add_adaptive(a, b)
+}
+
+/// Cache-optimized SIMD addition for f64 using unified interface
+#[allow(dead_code)]
+pub fn simd_add_cache_optimized_f64(a: &ArrayView1<f64>, b: &ArrayView1<f64>) -> Array1<f64> {
+    f64::simd_add_cache_optimized(a, b)
+}
+
+/// Advanced-optimized fused multiply-add for f64 using unified interface
+#[allow(dead_code)]
+pub fn simd_fma_advanced_optimized_f64(
+    a: &ArrayView1<f64>,
+    b: &ArrayView1<f64>,
+    c: &ArrayView1<f64>,
+) -> Array1<f64> {
+    f64::simd_fma_advanced_optimized(a, b, c)
+}
+
+/// Adaptive SIMD operation selector for f64 using unified interface
+#[allow(dead_code)]
+pub fn simd_adaptive_add_f64(a: &ArrayView1<f64>, b: &ArrayView1<f64>) -> Array1<f64> {
+    f64::simd_add_adaptive(a, b)
+}
+
+// ==================== Additional Optimization Variants ====================
+
+/// Hyperoptimized multiplication variant
+#[allow(dead_code)]
+pub fn simd_mul_f32_hyperoptimized(a: &ArrayView1<f32>, b: &ArrayView1<f32>) -> Array1<f32> {
+    // Delegate to ultra variant for now
+    simd_mul_f32_ultra(a, b)
+}
+
+/// Adaptive addition selector
+#[allow(dead_code)]
+pub fn simd_add_f32_adaptive(a: &ArrayView1<f32>, b: &ArrayView1<f32>) -> Array1<f32> {
+    f32::simd_add_adaptive(a, b)
+}

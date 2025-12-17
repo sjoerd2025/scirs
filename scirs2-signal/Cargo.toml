@@ -14,7 +14,7 @@ workspace = true
 
 [dependencies]
 # Core dependencies
-scirs2-core = { workspace = true, features = ["array", "random", "parallel"] }
+scirs2-core = { workspace = true, features = ["array", "random", "parallel", "simd"] }
 num-integer = { workspace = true }
 thiserror = { workspace = true }
 # BLAS dependencies handled through scirs2-core

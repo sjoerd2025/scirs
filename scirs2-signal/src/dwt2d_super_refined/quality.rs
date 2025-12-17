@@ -5,6 +5,7 @@
 
 use super::types::*;
 use crate::error::{SignalError, SignalResult};
+use scirs2_core::ndarray::ArrayStatCompat;
 use scirs2_core::ndarray::{Array2, Array3};
 use statrs::statistics::Statistics;
 
@@ -217,8 +218,8 @@ pub fn compute_structural_similarity(
     }
 
     // Compute means
-    let mean1 = image1.mean().unwrap_or(0.0);
-    let mean2 = image2.mean().unwrap_or(0.0);
+    let mean1 = image1.mean_or(0.0);
+    let mean2 = image2.mean_or(0.0);
 
     // Compute variances and covariance
     let var1 = image1.var(0.0);
@@ -521,8 +522,8 @@ pub fn compute_edge_correlation(edges1: &Array2<f64>, edges2: &Array2<f64>) -> S
         return Ok(0.0);
     }
 
-    let mean1 = edges1.mean().unwrap_or(0.0);
-    let mean2 = edges2.mean().unwrap_or(0.0);
+    let mean1 = edges1.mean_or(0.0);
+    let mean2 = edges2.mean_or(0.0);
 
     let mut numerator = 0.0;
     let mut var1 = 0.0;

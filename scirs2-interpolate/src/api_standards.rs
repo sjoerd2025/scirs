@@ -12,7 +12,7 @@ use scirs2_core::ndarray::{ArrayView1, ArrayView2};
 /// All factory functions should follow this pattern:
 /// 1. Name: `make_<interpolator_name>`
 /// 2. Parameters: points, values, config (optional)
-/// 3. Return: InterpolateResult<Interpolator>
+/// 3. Return: `InterpolateResult<Interpolator>`
 ///
 /// # Example Implementation
 /// ```ignore

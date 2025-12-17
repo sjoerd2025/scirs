@@ -3,7 +3,7 @@
 //! This example demonstrates the advanced visualization capabilities of scirs2-ndimage,
 //! including interactive HTML visualizations, export utilities, and comparison views.
 
-use scirs2_core::ndarray::{Array2, ArrayView2};
+use scirs2_core::ndarray::{compat::ArrayStatCompat, Array2, ArrayView2};
 use scirs2_ndimage::{
     error::NdimageResult,
     filters::gaussian_filter,
@@ -204,7 +204,7 @@ struct ImageStats {
 
 #[allow(dead_code)]
 fn computeimage_stats(image: &ArrayView2<f64>) -> ImageStats {
-    let mean = image.mean().unwrap_or(0.0);
+    let mean = image.mean_or(0.0);
     let min = image.iter().cloned().fold(f64::INFINITY, f64::min);
     let max = image.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
 

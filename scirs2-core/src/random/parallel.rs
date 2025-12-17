@@ -5,7 +5,7 @@
 //! requiring concurrent random number generation.
 
 use crate::random::core::Random;
-use ndarray::{Array, Dimension, IxDyn};
+use ::ndarray::{Array, Dimension, IxDyn};
 use rand::rngs::StdRng;
 use rand::{Rng, SeedableRng};
 use rand_distr::Distribution;
@@ -151,7 +151,7 @@ impl ParallelRng {
     where
         D: Distribution<T> + Copy,
         T: Send + Clone,
-        Sh: Into<IxDyn> + ndarray::Dimension,
+        Sh: Into<IxDyn> + crate::ndarray::Dimension,
     {
         pool.with_rng(|rng| rng.sample_array(shape.into(), distribution))
     }

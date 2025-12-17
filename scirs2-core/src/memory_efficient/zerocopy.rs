@@ -8,7 +8,8 @@
 use super::chunked::ChunkingStrategy;
 use super::memmap::{AccessMode, MemoryMappedArray};
 use crate::error::{CoreError, CoreResult, ErrorContext, ErrorLocation};
-use ndarray;
+// Use crate::ndarray for SciRS2 POLICY compliance (supports both ndarray 0.16 and 0.17)
+use crate::ndarray;
 use num_traits::Zero;
 use std::ops::{Add, Div, Mul, Sub};
 
@@ -229,23 +230,19 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync + Zero> ZeroCopyOps<A
 
         // Create the output memory-mapped array with zeros to initialize the header
         // First create with Write mode to initialize
-        let zeros = ndarray::ArrayD::zeros(ndarray::IxDyn(&self.shape));
+        let zeros = crate::ndarray::ArrayD::zeros(crate::ndarray::IxDyn(&self.shape));
         {
-            let _ = MemoryMappedArray::<A>::new::<ndarray::OwnedRepr<A>, ndarray::IxDyn>(
-                Some(&zeros),
-                &temp_path,
-                AccessMode::Write,
-                0,
-            )?;
+            let _ = MemoryMappedArray::<A>::new::<
+                crate::ndarray::OwnedRepr<A>,
+                crate::ndarray::IxDyn,
+            >(Some(&zeros), &temp_path, AccessMode::Write, 0)?;
         }
 
         // Now reopen in ReadWrite mode to allow modifications
-        let mut output = MemoryMappedArray::<A>::new::<ndarray::OwnedRepr<A>, ndarray::IxDyn>(
-            None,
-            &temp_path,
-            AccessMode::ReadWrite,
-            0,
-        )?;
+        let mut output = MemoryMappedArray::<A>::new::<
+            crate::ndarray::OwnedRepr<A>,
+            crate::ndarray::IxDyn,
+        >(None, &temp_path, AccessMode::ReadWrite, 0)?;
 
         // Process the input array in chunks
         #[cfg(feature = "parallel")]
@@ -259,8 +256,8 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync + Zero> ZeroCopyOps<A
             let num_chunks = self.size.div_ceil(chunk_size);
 
             // Process each chunk sequentially to avoid mutable borrow issues
-            let array = self.as_array::<ndarray::IxDyn>()?;
-            let mut out_array = output.as_array_mut::<ndarray::IxDyn>()?;
+            let array = self.as_array::<crate::ndarray::IxDyn>()?;
+            let mut out_array = output.as_array_mut::<crate::ndarray::IxDyn>()?;
 
             for chunk_idx in 0..num_chunks {
                 // Calculate chunk bounds
@@ -307,7 +304,7 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync + Zero> ZeroCopyOps<A
                 let end = (start + chunk_size).min(self.size);
 
                 // Get the data for this chunk
-                let array = self.as_array::<ndarray::IxDyn>()?;
+                let array = self.as_array::<crate::ndarray::IxDyn>()?;
                 let slice = array.as_slice().ok_or_else(|| {
                     CoreError::ValidationError(
                         ErrorContext::new("Array is not contiguous in memory".to_string())
@@ -321,7 +318,7 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync + Zero> ZeroCopyOps<A
 
                 // Copy the mapped chunk to the output at the same position
                 // Get a mutable view of the output array
-                let mut out_array = output.as_array_mut::<ndarray::IxDyn>()?;
+                let mut out_array = output.as_array_mut::<crate::ndarray::IxDyn>()?;
                 let out_slice_full = out_array.as_slice_mut().ok_or_else(|| {
                     CoreError::ValidationError(
                         ErrorContext::new("Output array is not contiguous in memory".to_string())
@@ -357,7 +354,7 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync + Zero> ZeroCopyOps<A
             let end = (start + chunk_size).min(self.size);
 
             // Load the array
-            let array = self.as_array::<ndarray::IxDyn>()?;
+            let array = self.as_array::<crate::ndarray::IxDyn>()?;
             let slice = array.as_slice().ok_or_else(|| {
                 CoreError::ValidationError(
                     ErrorContext::new("Array is not contiguous in memory".to_string())
@@ -404,23 +401,19 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync + Zero> ZeroCopyOps<A
 
         // Create the output memory-mapped array with zeros to initialize the header
         // First create with Write mode to initialize
-        let zeros = ndarray::ArrayD::zeros(ndarray::IxDyn(&self.shape));
+        let zeros = crate::ndarray::ArrayD::zeros(crate::ndarray::IxDyn(&self.shape));
         {
-            let _ = MemoryMappedArray::<A>::new::<ndarray::OwnedRepr<A>, ndarray::IxDyn>(
-                Some(&zeros),
-                &temp_path,
-                AccessMode::Write,
-                0,
-            )?;
+            let _ = MemoryMappedArray::<A>::new::<
+                crate::ndarray::OwnedRepr<A>,
+                crate::ndarray::IxDyn,
+            >(Some(&zeros), &temp_path, AccessMode::Write, 0)?;
         }
 
         // Now reopen in ReadWrite mode to allow modifications
-        let mut output = MemoryMappedArray::<A>::new::<ndarray::OwnedRepr<A>, ndarray::IxDyn>(
-            None,
-            &temp_path,
-            AccessMode::ReadWrite,
-            0,
-        )?;
+        let mut output = MemoryMappedArray::<A>::new::<
+            crate::ndarray::OwnedRepr<A>,
+            crate::ndarray::IxDyn,
+        >(None, &temp_path, AccessMode::ReadWrite, 0)?;
 
         // Process the arrays in chunks
         let chunk_size = 1024 * 1024; // 1M elements
@@ -437,8 +430,8 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync + Zero> ZeroCopyOps<A
             let len = end - start;
 
             // Load chunks from both arrays
-            let self_array = self.as_array::<ndarray::IxDyn>()?;
-            let other_array = other.as_array::<ndarray::IxDyn>()?;
+            let self_array = self.as_array::<crate::ndarray::IxDyn>()?;
+            let other_array = other.as_array::<crate::ndarray::IxDyn>()?;
 
             let self_slice = self_array.as_slice().ok_or_else(|| {
                 CoreError::ValidationError(
@@ -462,7 +455,7 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync + Zero> ZeroCopyOps<A
             }
 
             // Write the result to the output array
-            let mut out_array = output.as_array_mut::<ndarray::IxDyn>()?;
+            let mut out_array = output.as_array_mut::<crate::ndarray::IxDyn>()?;
             let out_slice_full = out_array.as_slice_mut().ok_or_else(|| {
                 CoreError::ValidationError(
                     ErrorContext::new("Output array is not contiguous in memory".to_string())
@@ -492,7 +485,7 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync + Zero> ZeroCopyOps<A
             let end = (start + chunk_size).min(self.size);
 
             // Load the array
-            let array = self.as_array::<ndarray::IxDyn>()?;
+            let array = self.as_array::<crate::ndarray::IxDyn>()?;
             let array_slice = array.as_slice().ok_or_else(|| {
                 CoreError::ValidationError(
                     ErrorContext::new("Array is not contiguous in memory".to_string())
@@ -528,7 +521,7 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync + Zero> ZeroCopyOps<A
 
         // Read the first element to initialize
         let first_element = {
-            let array = self.as_array::<ndarray::IxDyn>()?;
+            let array = self.as_array::<crate::ndarray::IxDyn>()?;
             let slice = array.as_slice().ok_or_else(|| {
                 CoreError::ValidationError(
                     ErrorContext::new("Array is not contiguous in memory".to_string())
@@ -555,7 +548,7 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync + Zero> ZeroCopyOps<A
 
         // Read the first element to initialize
         let first_element = {
-            let array = self.as_array::<ndarray::IxDyn>()?;
+            let array = self.as_array::<crate::ndarray::IxDyn>()?;
             let slice = array.as_slice().ok_or_else(|| {
                 CoreError::ValidationError(
                     ErrorContext::new("Array is not contiguous in memory".to_string())
@@ -718,37 +711,33 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync + Zero> BroadcastOps<
 
         // Create the output memory-mapped array with zeros to initialize the header
         // Use the calculated output shape instead of self.shape
-        let zeros = ndarray::ArrayD::zeros(ndarray::IxDyn(&outputshape));
+        let zeros = crate::ndarray::ArrayD::zeros(crate::ndarray::IxDyn(&outputshape));
         {
-            let _ = MemoryMappedArray::<A>::new::<ndarray::OwnedRepr<A>, ndarray::IxDyn>(
-                Some(&zeros),
-                &temp_path,
-                AccessMode::Write,
-                0,
-            )?;
+            let _ = MemoryMappedArray::<A>::new::<
+                crate::ndarray::OwnedRepr<A>,
+                crate::ndarray::IxDyn,
+            >(Some(&zeros), &temp_path, AccessMode::Write, 0)?;
         }
 
         // Now reopen in ReadWrite mode to allow modifications
-        let mut output = MemoryMappedArray::<A>::new::<ndarray::OwnedRepr<A>, ndarray::IxDyn>(
-            None,
-            &temp_path,
-            AccessMode::ReadWrite,
-            0,
-        )?;
+        let mut output = MemoryMappedArray::<A>::new::<
+            crate::ndarray::OwnedRepr<A>,
+            crate::ndarray::IxDyn,
+        >(None, &temp_path, AccessMode::ReadWrite, 0)?;
 
         // Load both arrays into memory (for broadcasting, we need random access)
-        let self_array = self.as_array::<ndarray::IxDyn>()?;
-        let other_array = other.as_array::<ndarray::IxDyn>()?;
+        let self_array = self.as_array::<crate::ndarray::IxDyn>()?;
+        let other_array = other.as_array::<crate::ndarray::IxDyn>()?;
 
         // Create ndarray views for easier broadcasting
         let self_view = self_array.view();
         let other_view = other_array.view();
 
         // Perform the broadcasted operation
-        let mut output_array = output.as_array_mut::<ndarray::IxDyn>()?;
+        let mut output_array = output.as_array_mut::<crate::ndarray::IxDyn>()?;
 
         // Use ndarray's broadcasting capability
-        ndarray::Zip::from(&mut output_array)
+        crate::ndarray::Zip::from(&mut output_array)
             .and_broadcast(&self_view)
             .and_broadcast(&other_view)
             .for_each(|out, &a, &b| {
@@ -853,7 +842,7 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync + Zero> ArithmeticOps
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::Array2;
+    use ::ndarray::Array2;
     use std::fs::File;
     use std::io::Write;
     use tempfile::tempdir;
@@ -865,7 +854,7 @@ mod tests {
         let file_path = dir.path().join("test_map.bin");
 
         // Create a test array and save it with proper header using save_array
-        let data = ndarray::Array1::from_vec((0..1000).map(|i| i as f64).collect());
+        let data = crate::ndarray::Array1::from_vec((0..1000).map(|i| i as f64).collect());
         MemoryMappedArray::<f64>::save_array(&data, &file_path, None).unwrap();
 
         // Open the file for zero-copy operations
@@ -876,7 +865,7 @@ mod tests {
         let result = mmap.map_zero_copy(|x| x * 2.0).unwrap();
 
         // Verify the result
-        let result_array = result.readonlyarray::<ndarray::Ix1>().unwrap();
+        let result_array = result.readonlyarray::<crate::ndarray::Ix1>().unwrap();
         for i in 0..1000 {
             assert_eq!(result_array[i], (i as f64) * 2.0);
         }
@@ -914,8 +903,8 @@ mod tests {
         let file_path2 = dir.path().join("test_combine2.bin");
 
         // Create two test arrays and save them with proper headers using save_array
-        let data1 = ndarray::Array1::from_vec((0..1000).map(|i| i as f64).collect());
-        let data2 = ndarray::Array1::from_vec((0..1000).map(|i| (i * 2) as f64).collect());
+        let data1 = crate::ndarray::Array1::from_vec((0..1000).map(|i| i as f64).collect());
+        let data2 = crate::ndarray::Array1::from_vec((0..1000).map(|i| (i * 2) as f64).collect());
 
         MemoryMappedArray::<f64>::save_array(&data1, &file_path1, None).unwrap();
         MemoryMappedArray::<f64>::save_array(&data2, &file_path2, None).unwrap();
@@ -930,7 +919,7 @@ mod tests {
         let result = mmap1.combine_zero_copy(&mmap2, |a, b| a + b).unwrap();
 
         // Verify the result (each element should be 3*i)
-        let result_array = result.readonlyarray::<ndarray::Ix1>().unwrap();
+        let result_array = result.readonlyarray::<crate::ndarray::Ix1>().unwrap();
         for i in 0..1000 {
             assert_eq!(result_array[i], (i as f64) * 3.0);
         }
@@ -971,8 +960,8 @@ mod tests {
         let file_path2 = dir.path().join("test_arithmetic2.bin");
 
         // Create two test arrays and save them with proper headers using save_array
-        let data1 = ndarray::Array1::from_vec((0..100).map(|i| i as f64).collect());
-        let data2 = ndarray::Array1::from_vec((0..100).map(|i| (i + 5) as f64).collect());
+        let data1 = crate::ndarray::Array1::from_vec((0..100).map(|i| i as f64).collect());
+        let data2 = crate::ndarray::Array1::from_vec((0..100).map(|i| (i + 5) as f64).collect());
 
         MemoryMappedArray::<f64>::save_array(&data1, &file_path1, None).unwrap();
         MemoryMappedArray::<f64>::save_array(&data2, &file_path2, None).unwrap();
@@ -985,21 +974,21 @@ mod tests {
 
         // Test addition
         let add_result = mmap1.add(&mmap2).unwrap();
-        let add_array = add_result.readonlyarray::<ndarray::Ix1>().unwrap();
+        let add_array = add_result.readonlyarray::<crate::ndarray::Ix1>().unwrap();
         for i in 0..100 {
             assert_eq!(add_array[i], (i as f64) + ((i + 5) as f64));
         }
 
         // Test subtraction
         let sub_result = mmap1.sub(&mmap2).unwrap();
-        let sub_array = sub_result.readonlyarray::<ndarray::Ix1>().unwrap();
+        let sub_array = sub_result.readonlyarray::<crate::ndarray::Ix1>().unwrap();
         for i in 0..100 {
             assert_eq!(sub_array[i], (i as f64) - ((i + 5) as f64));
         }
 
         // Test multiplication
         let mul_result = mmap1.mul(&mmap2).unwrap();
-        let mul_array = mul_result.readonlyarray::<ndarray::Ix1>().unwrap();
+        let mul_array = mul_result.readonlyarray::<crate::ndarray::Ix1>().unwrap();
         for i in 0..100 {
             assert_eq!(mul_array[i], (i as f64) * ((i + 5) as f64));
         }
@@ -1008,7 +997,7 @@ mod tests {
         let div_result = mmap2
             .div(&mmap1.map_zero_copy(|x| x + 1.0).unwrap())
             .unwrap();
-        let div_array = div_result.readonlyarray::<ndarray::Ix1>().unwrap();
+        let div_array = div_result.readonlyarray::<crate::ndarray::Ix1>().unwrap();
         for i in 0..100 {
             assert_eq!(div_array[i], ((i + 5) as f64) / ((i + 1) as f64));
         }
@@ -1023,7 +1012,7 @@ mod tests {
 
         // Create a 2D array (3x4) and a 1D array (4)
         let data1 = Array2::<f64>::from_shape_fn((3, 4), |(i, j)| (i * 4 + j) as f64);
-        let data2 = ndarray::Array1::from_vec((0..4).map(|i| (i + 1) as f64).collect());
+        let data2 = crate::ndarray::Array1::from_vec((0..4).map(|i| (i + 1) as f64).collect());
 
         // Save the arrays with proper headers using save_array
         MemoryMappedArray::<f64>::save_array(&data1, &file_path1, None).unwrap();
@@ -1039,7 +1028,7 @@ mod tests {
         let result = mmap1.broadcast_op(&mmap2, |a, b| a * b).unwrap();
 
         // Verify the result
-        let result_array = result.readonlyarray::<ndarray::Ix2>().unwrap();
+        let result_array = result.readonlyarray::<crate::ndarray::Ix2>().unwrap();
         assert_eq!(result_array.shape(), &[3, 4]);
 
         for i in 0..3 {

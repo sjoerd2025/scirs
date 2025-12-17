@@ -9,7 +9,7 @@ use super::chunked::ChunkingStrategy;
 use super::memmap::MemoryMappedArray;
 use super::memmap_chunks::MemoryMappedChunks;
 use crate::error::{CoreError, CoreResult, ErrorContext, ErrorLocation};
-// use ndarray::Dimension; // Currently unused
+// use ::ndarray::Dimension; // Currently unused
 use std::time::Duration;
 
 /// Beta 2: Workload types for optimized chunking strategies
@@ -723,7 +723,7 @@ pub mod beta2_enhancements {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::Array2;
+    use ::ndarray::Array2;
     use std::fs::File;
     use std::io::Write;
     use tempfile::tempdir;

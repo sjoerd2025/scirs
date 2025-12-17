@@ -155,7 +155,7 @@ pub use ecosystem_integration::{
 };
 
 // Re-export external dependencies for convenience
-pub use ndarray::Dimension;
+pub use ::ndarray::Dimension;
 pub use rand::prelude as rand_prelude;
 pub use rand::rngs;
 pub use rand::seq::SliceRandom;
@@ -276,9 +276,9 @@ pub trait RandomExt<T, D> {
 }
 
 #[cfg(not(feature = "random"))]
-impl<T, D> RandomExt<T, D> for ndarray::ArrayBase<ndarray::OwnedRepr<T>, D>
+impl<T, D> RandomExt<T, D> for crate::ndarray::ArrayBase<crate::ndarray::OwnedRepr<T>, D>
 where
-    D: ndarray::Dimension,
+    D: crate::ndarray::Dimension,
 {
     fn random_using<R: rand::Rng>(
         shape: D,
@@ -323,7 +323,7 @@ pub mod legacy {
 /// High-level convenience functions for common operations
 pub mod convenience {
     use super::*;
-    use ndarray::{Array, Dimension, IxDyn};
+    use ::ndarray::{Array, Dimension, IxDyn};
     use rand_distr::{Distribution, Normal, Uniform};
 
     /// Generate a uniform random number in [0, 1)
@@ -376,7 +376,7 @@ pub mod convenience {
 /// Sampling utilities for common statistical operations
 pub mod sampling {
     use super::*;
-    use ndarray::{Array, Dimension, IxDyn};
+    use ::ndarray::{Array, Dimension, IxDyn};
     use rand_distr::{Distribution, Exp, LogNormal, Normal, Uniform};
 
     /// Sample uniformly from [0, 1)
@@ -712,20 +712,20 @@ impl<R: rand::Rng> Random<R> {
             .collect()
     }
 
-    /// Generate an ndarray::Array from samples of a distribution
+    /// Generate an crate::ndarray::Array from samples of a distribution
     pub fn sample_array<D, T, Sh>(
         &mut self,
         distribution: D,
         shape: Sh,
-    ) -> ndarray::Array<T, ndarray::IxDyn>
+    ) -> crate::ndarray::Array<T, crate::ndarray::IxDyn>
     where
         D: rand_distr::Distribution<T> + Copy,
-        Sh: Into<ndarray::IxDyn>,
+        Sh: Into<crate::ndarray::IxDyn>,
     {
         let shape = shape.into();
         let size = shape.size();
         let values = self.sample_vec(distribution, size);
-        ndarray::Array::from_shape_vec(shape, values).unwrap()
+        crate::ndarray::Array::from_shape_vec(shape, values).unwrap()
     }
 }
 
@@ -820,15 +820,15 @@ impl DeterministicSequence {
         (0..size).map(|_| self.next_f64()).collect()
     }
 
-    /// Get an ndarray::Array of deterministic values
-    pub fn get_array<Sh>(&mut self, shape: Sh) -> ndarray::Array<f64, ndarray::IxDyn>
+    /// Get an crate::ndarray::Array of deterministic values
+    pub fn get_array<Sh>(&mut self, shape: Sh) -> crate::ndarray::Array<f64, crate::ndarray::IxDyn>
     where
-        Sh: Into<ndarray::IxDyn>,
+        Sh: Into<crate::ndarray::IxDyn>,
     {
         let shape = shape.into();
         let size = shape.size();
         let values = self.get_vec(size);
-        ndarray::Array::from_shape_vec(shape, values).unwrap()
+        crate::ndarray::Array::from_shape_vec(shape, values).unwrap()
     }
 }
 
@@ -846,9 +846,9 @@ pub type NormalDist = rand_distributions::Normal<f64>;
 pub type ExponentialDist = rand_distributions::Exp<f64>;
 
 /// Array type aliases for convenience
-pub type Array1D<T> = ndarray::Array1<T>;
-pub type Array2D<T> = ndarray::Array2<T>;
-pub type Array3D<T> = ndarray::Array3<T>;
+pub type Array1D<T> = crate::ndarray::Array1<T>;
+pub type Array2D<T> = crate::ndarray::Array2<T>;
+pub type Array3D<T> = crate::ndarray::Array3<T>;
 
 // ===============================
 // Workflow Module Aliases

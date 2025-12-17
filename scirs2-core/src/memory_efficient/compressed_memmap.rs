@@ -9,7 +9,7 @@
 //! partial loading of the data.
 
 use crate::error::{CoreError, CoreResult, ErrorContext};
-use ndarray::{Array, ArrayBase, Dimension, IxDyn, RawData};
+use ::ndarray::{Array, ArrayBase, Dimension, IxDyn, RawData};
 
 #[cfg(feature = "memory_compression")]
 use lz4::{Decoder, EncoderBuilder};
@@ -1167,7 +1167,7 @@ impl<A: Clone + Copy + 'static + Send + Sync> BlockCache<A> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::Array2;
+    use ::ndarray::Array2;
     use tempfile::tempdir;
 
     #[test]
@@ -1205,7 +1205,7 @@ mod tests {
         let slice = cmm.slice(&[(200, 300)]).unwrap();
         assert_eq!(slice.shape(), &[100]);
         for i in 0..100 {
-            assert_eq!(slice[ndarray::IxDyn(&[i])], (i + 200) as f64);
+            assert_eq!(slice[crate::ndarray::IxDyn(&[i])], (i + 200) as f64);
         }
 
         // Test block processing
@@ -1219,7 +1219,7 @@ mod tests {
         let array = cmm.readonly_array().unwrap();
         assert_eq!(array.shape(), &[1000]);
         for i in 0..1000 {
-            assert_eq!(array[ndarray::IxDyn(&[i])], i as f64);
+            assert_eq!(array[crate::ndarray::IxDyn(&[i])], i as f64);
         }
     }
 
@@ -1262,7 +1262,7 @@ mod tests {
         for i in 0..3 {
             for j in 0..4 {
                 assert_eq!(
-                    slice[ndarray::IxDyn(&[i, j])],
+                    slice[crate::ndarray::IxDyn(&[i, j])],
                     ((i + 2) * 10 + (j + 3)) as f64
                 );
             }
@@ -1273,7 +1273,7 @@ mod tests {
         assert_eq!(array.shape(), &[10, 10]);
         for i in 0..10 {
             for j in 0..10 {
-                assert_eq!(array[ndarray::IxDyn(&[i, j])], (i * 10 + j) as f64);
+                assert_eq!(array[crate::ndarray::IxDyn(&[i, j])], (i * 10 + j) as f64);
             }
         }
     }
@@ -1307,7 +1307,7 @@ mod tests {
             // Test loading the entire array
             let array = cmm.readonly_array().unwrap();
             for i in 0..1000 {
-                assert_eq!(array[ndarray::IxDyn(&[i])], i as f64);
+                assert_eq!(array[crate::ndarray::IxDyn(&[i])], i as f64);
             }
         }
     }

@@ -3,7 +3,7 @@
 //! This module provides functions for calculating correlation coefficients
 //! and covariance matrices.
 
-use ndarray::{Array, ArrayView, Ix1, Ix2};
+use ::ndarray::{Array, ArrayView, Ix1, Ix2};
 use num_traits::{Float, FromPrimitive};
 
 /// Calculate correlation coefficient between two 1D arrays
@@ -20,7 +20,7 @@ use num_traits::{Float, FromPrimitive};
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use ::ndarray::array;
 /// use scirs2_core::ndarray_ext::stats::corrcoef;
 ///
 /// let x = array![1.0, 2.0, 3.0, 4.0, 5.0];
@@ -91,7 +91,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use ::ndarray::array;
 /// use scirs2_core::ndarray_ext::stats::cov;
 ///
 /// let data = array![

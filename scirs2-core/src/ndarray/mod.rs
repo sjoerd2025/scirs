@@ -27,128 +27,11 @@
 // COMPLETE NDARRAY RE-EXPORT
 // ========================================
 
-/// Re-export everything from ndarray crate
-pub use ndarray::*;
+// Complete ndarray 0.17 re-export (no version switching needed anymore)
+// Use ::ndarray to refer to the external crate (not this module)
+pub use ::ndarray::*;
 
-// Ensure specific items are definitely available (for clarity)
-pub use ndarray::{
-    ArcArray,
-    ArcArray1,
-    ArcArray2,
-    // Core array types
-    Array,
-    Array0,
-    Array1,
-    Array2,
-    Array3,
-    Array4,
-    Array5,
-    Array6,
-    ArrayBase,
-    // Builder patterns
-    ArrayBase as NdArray,
-
-    ArrayD,
-    // View types
-    ArrayView,
-    ArrayView0,
-    ArrayView1,
-    ArrayView2,
-    ArrayView3,
-    ArrayView4,
-    ArrayView5,
-    ArrayView6,
-    ArrayViewD,
-    ArrayViewMut,
-    ArrayViewMut0,
-    ArrayViewMut1,
-    ArrayViewMut2,
-    ArrayViewMut3,
-    ArrayViewMut4,
-    ArrayViewMut5,
-    ArrayViewMut6,
-    ArrayViewMutD,
-
-    AsArray,
-
-    // Axis and indexing
-    Axis,
-    AxisDescription,
-    CowArray,
-    // Essential traits
-    Data,
-    DataMut,
-    DataOwned,
-    DataShared,
-    // Dimension types
-    Dim,
-    Dimension,
-    // Utility types
-    ErrorKind,
-    FoldWhile,
-
-    Ix0,
-    Ix1,
-    Ix2,
-    Ix3,
-    Ix4,
-    Ix5,
-    Ix6,
-    IxDyn,
-    IxDynImpl,
-    // Mathematical operations
-    LinalgScalar,
-    NdFloat,
-
-    NdProducer,
-    NewAxis,
-
-    Order,
-    OwnedArcRepr,
-    // Storage
-    OwnedRepr,
-    RawArrayView,
-    RawArrayViewMut,
-
-    RawData,
-    RawDataClone,
-    RawDataMut,
-    RawViewRepr,
-
-    RemoveAxis,
-
-    ScalarOperand,
-    // Shape and strides
-    Shape,
-    ShapeBuilder,
-    ShapeError,
-
-    Slice,
-    SliceArg,
-    SliceInfo,
-    SliceInfoElem,
-    StrideShape,
-    ViewRepr,
-    // Iteration
-    Zip,
-};
-
-// ========================================
-// ESSENTIAL MACROS
-// ========================================
-
-/// Re-export essential macros that were missing in some modules
-pub use ndarray::{
-    arr0, // Creates 0-dimensional arrays
-    arr1, // Creates 1-dimensional arrays
-    arr2, // Creates 2-dimensional arrays
-    arr3, // Creates 3-dimensional arrays
-    // Array creation macros
-    array, // Creates arrays with literal syntax
-    azip,  // Zip iterator macro
-    s,     // Slicing macro - CRITICAL for ToRSh
-    stack, // Stack arrays macro
-};
+// Note: All macros (array!, s!, azip!, etc.) are already included via `pub use ::ndarray::*;`
 
 // ========================================
 // NDARRAY-RELATED CRATE RE-EXPORTS
@@ -156,6 +39,8 @@ pub use ndarray::{
 
 #[cfg(feature = "random")]
 pub use ndarray_rand::{rand_distr as distributions, RandomExt, SamplingStrategy};
+
+// Note: ndarray_rand is compatible with both ndarray 0.16 and 0.17
 
 #[cfg(feature = "linalg")]
 pub use ndarray_linalg;
@@ -274,8 +159,10 @@ pub mod utils {
 // ========================================
 
 /// Compatibility module for smooth migration from fragmented imports
+/// and ndarray version changes (SciRS2 POLICY compliance)
 pub mod compat {
     pub use super::*;
+    use crate::numeric::{Float, FromPrimitive};
 
     /// Alias for commonly used types to match existing usage patterns
     pub type DynArray<T> = ArrayD<T>;
@@ -283,6 +170,75 @@ pub mod compat {
     pub type Vector<T> = Array1<T>;
     pub type Tensor3<T> = Array3<T>;
     pub type Tensor4<T> = Array4<T>;
+
+    /// Compatibility extensions for ndarray statistical operations
+    ///
+    /// This trait provides stable statistical operation APIs that remain consistent
+    /// across ndarray version updates, implementing the SciRS2 POLICY principle
+    /// of isolating external dependency changes to scirs2-core only.
+    ///
+    /// ## Rationale
+    ///
+    /// ndarray's statistical methods have changed across versions:
+    /// - v0.16: `.mean()` returns `Option<T>`
+    /// - v0.17: `.mean()` returns `T` directly (may be NaN for invalid operations)
+    ///
+    /// This trait provides a consistent API regardless of the underlying ndarray version.
+    ///
+    /// ## Example
+    ///
+    /// ```rust
+    /// use scirs2_core::ndarray::{Array1, compat::ArrayStatCompat};
+    ///
+    /// let data = Array1::from(vec![1.0, 2.0, 3.0]);
+    /// let mean = data.mean_or(0.0);  // Stable API across ndarray versions
+    /// ```
+    pub trait ArrayStatCompat<T> {
+        /// Compute the mean of the array, returning a default value if computation fails
+        ///
+        /// This method abstracts over ndarray version differences:
+        /// - For ndarray 0.16: Unwraps the Option, using default if None
+        /// - For ndarray 0.17+: Returns the value, using default if NaN
+        fn mean_or(&self, default: T) -> T;
+
+        /// Compute the variance with optional default
+        fn var_or(&self, ddof: T, default: T) -> T;
+
+        /// Compute the standard deviation with optional default
+        fn std_or(&self, ddof: T, default: T) -> T;
+    }
+
+    impl<T, S, D> ArrayStatCompat<T> for ArrayBase<S, D>
+    where
+        T: Float + FromPrimitive,
+        S: Data<Elem = T>,
+        D: Dimension,
+    {
+        fn mean_or(&self, default: T) -> T {
+            // ndarray returns Option<T> in both 0.16 and 0.17
+            self.mean().unwrap_or(default)
+        }
+
+        fn var_or(&self, ddof: T, default: T) -> T {
+            // ndarray returns T directly (may be NaN for invalid inputs)
+            let v = self.var(ddof);
+            if v.is_nan() {
+                default
+            } else {
+                v
+            }
+        }
+
+        fn std_or(&self, ddof: T, default: T) -> T {
+            // ndarray returns T directly (may be NaN for invalid inputs)
+            let s = self.std(ddof);
+            if s.is_nan() {
+                default
+            } else {
+                s
+            }
+        }
+    }
 
     /// Re-export from ndarray_ext for backward compatibility
     pub use crate::ndarray_ext::{
@@ -463,6 +419,9 @@ pub mod migration_guide {
     //! | `use ndarray::{s!, Axis}` | `use scirs2_core::ndarray::{s, Axis}` |
 }
 
+// Re-export compatibility traits for easy access
+pub use compat::ArrayStatCompat;
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -521,7 +480,7 @@ mod tests {
         assert_eq!(concat.shape(), &[4, 2]);
 
         // Stack along new axis
-        let stacked = ndarray::stack(Axis(0), &[a.view(), b.view()]).unwrap();
+        let stacked = crate::ndarray::stack(Axis(0), &[a.view(), b.view()]).unwrap();
         assert_eq!(stacked.shape(), &[2, 2, 2]);
     }
 
@@ -536,5 +495,26 @@ mod tests {
         });
 
         assert_eq!(c, array![5, 7, 9]);
+    }
+
+    #[test]
+    fn test_array_stat_compat() {
+        use compat::ArrayStatCompat;
+
+        // Test mean_or
+        let data = array![1.0, 2.0, 3.0, 4.0, 5.0];
+        assert_eq!(data.mean_or(0.0), 3.0);
+
+        let empty = Array1::<f64>::from(vec![]);
+        assert_eq!(empty.mean_or(0.0), 0.0);
+
+        // Test var_or
+        let data = array![1.0, 2.0, 3.0, 4.0, 5.0];
+        let var = data.var_or(1.0, 0.0);
+        assert!(var > 0.0);
+
+        // Test std_or
+        let std = data.std_or(1.0, 0.0);
+        assert!(std > 0.0);
     }
 }

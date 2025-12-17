@@ -5,7 +5,7 @@
 //! automatic broadcasting.
 
 use crate::error::{CoreError, CoreResult};
-use ndarray::{Array, ArrayView, Ix1, Ix2};
+use ::ndarray::{Array, ArrayView, Ix1, Ix2};
 use std::ops;
 
 // External module declarations
@@ -1019,7 +1019,7 @@ pub use reduction::{max, mean, min, product, std, sum, var};
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::array;
+    use ::ndarray::array;
     use std::f64::consts::PI;
 
     #[test]

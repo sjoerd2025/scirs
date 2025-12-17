@@ -17,8 +17,8 @@ use std::fmt::Debug;
 ///
 /// # Returns
 ///
-/// The index i such that knots[i] <= x < knots[i+1]
-/// or the largest i such that knots[i] <= x if x == knots[knots.len()-1]
+/// The index i such that `knots[i]` <= x < `knots[i+1]`
+/// or the largest i such that `knots[i]` <= x if x == `knots[knots.len()-1]`
 #[allow(dead_code)]
 pub fn find_span<F: crate::traits::InterpolationFloat>(
     x: F,

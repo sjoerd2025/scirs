@@ -73,7 +73,7 @@ pub struct PolynomialSolution<F: IntegrateFloat> {
 }
 
 impl<F: IntegrateFloat> PolynomialSolution<F> {
-    /// Create a new polynomial solution: sum(coeff[i] * t^i)
+    /// Create a new polynomial solution: `sum(coeff[i] * t^i)`
     pub fn new(coefficients: Vec<F>) -> Self {
         Self { coefficients }
     }

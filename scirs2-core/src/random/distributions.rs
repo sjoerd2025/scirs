@@ -5,7 +5,7 @@
 //! performance and numerical stability.
 
 use crate::random::core::Random;
-use ndarray::{Array, Array1, Array2};
+use ::ndarray::{Array, Array1, Array2};
 use rand::Rng;
 use rand_distr::{Distribution, Gamma, Normal, Uniform};
 use std::f64::consts::PI;

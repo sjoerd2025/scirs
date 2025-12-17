@@ -36,7 +36,7 @@
 //! ```
 
 use crate::error::{CoreError, CoreResult, ErrorContext, ErrorLocation};
-use ndarray::{Array, ArrayBase, Data, Dimension, RawData, ShapeBuilder};
+use ::ndarray::{Array, ArrayBase, Data, Dimension, RawData, ShapeBuilder};
 use std::mem;
 
 /// Memory layout order following `NumPy` conventions
@@ -775,7 +775,7 @@ impl ArrayCreation {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::Array2;
+    use ::ndarray::Array2;
 
     #[test]
     fn test_layout_order_parsing() {
@@ -893,13 +893,16 @@ mod tests {
     fn test_array_creation_with_order() {
         let data: Vec<f64> = (0..12).map(|x| x as f64).collect();
 
-        let c_array: ndarray::Array2<f64> =
-            ArrayCreation::array_with_order(data.clone(), ndarray::Ix2(3, 4), LayoutOrder::C)
-                .unwrap();
+        let c_array: crate::ndarray::Array2<f64> = ArrayCreation::array_with_order(
+            data.clone(),
+            crate::ndarray::Ix2(3, 4),
+            LayoutOrder::C,
+        )
+        .unwrap();
         assert!(ArrayLayout::is_c_order(&c_array));
 
-        let f_array: ndarray::Array2<f64> =
-            ArrayCreation::array_with_order(data, ndarray::Ix2(3, 4), LayoutOrder::Fortran)
+        let f_array: crate::ndarray::Array2<f64> =
+            ArrayCreation::array_with_order(data, crate::ndarray::Ix2(3, 4), LayoutOrder::Fortran)
                 .unwrap();
         assert!(ArrayLayout::is_f_order(&f_array));
     }

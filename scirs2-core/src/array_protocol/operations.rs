@@ -20,7 +20,7 @@
 use std::any::{Any, TypeId};
 use std::collections::HashMap;
 
-use ndarray::{Array1, Array2, Ix1, Ix2, IxDyn};
+use ::ndarray::{Array1, Array2, Ix1, Ix2, IxDyn};
 
 use crate::array_protocol::{
     get_implementing_args, ArrayFunction, ArrayProtocol, NdarrayWrapper, NotImplemented,
@@ -106,7 +106,7 @@ array_function_dispatch!(
                 let b_array_owned = b_array.as_array().clone();
                 let (m, k) = a_array_owned.dim();
                 let (_, n) = b_array_owned.dim();
-                let mut result = ndarray::Array2::<f64>::zeros((m, n));
+                let mut result = crate::ndarray::Array2::<f64>::zeros((m, n));
                 for i in 0..m {
                     for j in 0..n {
                         let mut sum = 0.0;
@@ -135,7 +135,7 @@ array_function_dispatch!(
                 }
                 let (m, k) = (a_dim[0], a_dim[1]);
                 let n = b_dim[1];
-                let mut result = ndarray::Array2::<f64>::zeros((m, n));
+                let mut result = crate::ndarray::Array2::<f64>::zeros((m, n));
                 for i in 0..m {
                     for j in 0..n {
                         let mut sum = 0.0;
@@ -157,7 +157,7 @@ array_function_dispatch!(
                 let b_array_owned = b_array.as_array().clone();
                 let (m, k) = a_array_owned.dim();
                 let (_, n) = b_array_owned.dim();
-                let mut result = ndarray::Array2::<f32>::zeros((m, n));
+                let mut result = crate::ndarray::Array2::<f32>::zeros((m, n));
                 for i in 0..m {
                     for j in 0..n {
                         let mut sum = 0.0;
@@ -186,7 +186,7 @@ array_function_dispatch!(
                 }
                 let (m, k) = (a_dim[0], a_dim[1]);
                 let n = b_dim[1];
-                let mut result = ndarray::Array2::<f32>::zeros((m, n));
+                let mut result = crate::ndarray::Array2::<f32>::zeros((m, n));
                 for i in 0..m {
                     for j in 0..n {
                         let mut sum = 0.0;
@@ -634,7 +634,7 @@ array_function_dispatch!(
             if let Some(a_array) = a.as_any().downcast_ref::<NdarrayWrapper<f64, Ix2>>() {
                 match axis {
                     Some(ax) => {
-                        let result = a_array.as_array().sum_axis(ndarray::Axis(ax));
+                        let result = a_array.as_array().sum_axis(crate::ndarray::Axis(ax));
                         return Ok(Box::new(NdarrayWrapper::new(result)));
                     }
                     None => {
@@ -647,7 +647,7 @@ array_function_dispatch!(
             else if let Some(a_array) = a.as_any().downcast_ref::<NdarrayWrapper<f64, IxDyn>>() {
                 match axis {
                     Some(ax) => {
-                        let result = a_array.as_array().sum_axis(ndarray::Axis(ax));
+                        let result = a_array.as_array().sum_axis(crate::ndarray::Axis(ax));
                         return Ok(Box::new(NdarrayWrapper::new(result)));
                     }
                     None => {
@@ -707,7 +707,7 @@ array_function_dispatch!(
 
                 // Create a transposed array
                 let (m, n) = (a_dim[0], a_dim[1]);
-                let mut result = ndarray::Array2::<f64>::zeros((n, m));
+                let mut result = crate::ndarray::Array2::<f64>::zeros((n, m));
 
                 // Fill the transposed array
                 for i in 0..m {
@@ -814,7 +814,7 @@ array_function_dispatch!(
                 }
             }
 
-            let result = match ndarray::stack(ndarray::Axis(axis), &ndarray_arrays) {
+            let result = match crate::ndarray::stack(crate::ndarray::Axis(axis), &ndarray_arrays) {
                 Ok(arr) => arr,
                 Err(e) => return Err(OperationError::Other(format!("Concatenation failed: {e}"))),
             };
@@ -1191,11 +1191,11 @@ pub fn divide_by_scalar_f64(
 mod tests {
     use super::*;
     use crate::array_protocol::{self, NdarrayWrapper};
-    use ndarray::{array, Array2};
+    use ::ndarray::{array, Array2};
 
     #[test]
     fn test_operations_with_ndarray() {
-        use ndarray::array;
+        use ::ndarray::array;
 
         // Initialize the array protocol system
         array_protocol::init();

@@ -23,7 +23,7 @@
 //!
 //! ```rust
 //! use scirs2_core::validation::data::{Validator, ValidationSchema, ValidationConfig, DataType, Constraint};
-//! use ndarray::Array2;
+//! use ::ndarray::Array2;
 //!
 //! // Create a validation schema
 //! let schema = ValidationSchema::new()
@@ -146,13 +146,13 @@ pub use array_validation::ArrayValidator;
 pub use validator::{ValidationRule, Validator};
 
 // Type aliases for convenience
-pub type Array1<T> = ndarray::Array1<T>;
-pub type Array2<T> = ndarray::Array2<T>;
+pub type Array1<T> = crate::ndarray::Array1<T>;
+pub type Array2<T> = crate::ndarray::Array2<T>;
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::Array2;
+    use ::ndarray::Array2;
 
     #[test]
     fn test_module_integration() {

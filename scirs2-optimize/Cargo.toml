@@ -33,6 +33,7 @@ futures = { workspace = true, optional = true }
 default = ["parallel"]
 parallel = ["scirs2-core/parallel"]
 async = ["tokio", "futures"]
+python = ["scirs2-core/python"] # Python bindings support
 
 [dev-dependencies]
 approx = { workspace = true }

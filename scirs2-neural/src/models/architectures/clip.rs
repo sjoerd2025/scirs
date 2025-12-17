@@ -10,7 +10,7 @@ use crate::error::Result;
 use crate::layers::{Dense, Layer, LayerNorm, Sequential};
 use crate::models::architectures::{ViTConfig, VisionTransformer};
 use crate::transformer::TransformerEncoderLayer;
-// use crate::utils::positional_encoding::{PositionalEncoding, SinusoidalPositionalEncoding}; // Disabled - module is broken
+use crate::utils::positional_encoding::{PositionalEncoding, SinusoidalPositionalEncoding};
 use scirs2_core::ndarray::{Array, Axis, IxDyn, ScalarOperand};
 use scirs2_core::numeric::Float;
 use scirs2_core::random::{rngs::SmallRng,  SeedableRng};

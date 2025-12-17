@@ -392,7 +392,7 @@ impl<F: Float + FromPrimitive + Debug + std::fmt::Display> BezierSurface<F> {
     ///
     /// * `u_values` - Array of u parameter values, each in [0, 1]
     /// * `v_values` - Array of v parameter values, each in [0, 1]
-    /// * `grid` - If true, evaluate on a grid of u×v points; otherwise, evaluate at pairs (u[i], v[i])
+    /// * `grid` - If true, evaluate on a grid of u×v points; otherwise, evaluate at pairs `(u[i], v[i])`
     ///
     /// # Returns
     ///

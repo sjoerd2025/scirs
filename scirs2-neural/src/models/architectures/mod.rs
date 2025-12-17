@@ -9,6 +9,8 @@ pub mod convnext;
 pub mod efficientnet;
 pub mod fusion;
 pub mod gpt;
+pub mod mamba;
+pub mod mlp_mixer;
 pub mod mobilenet;
 pub mod resnet;
 pub mod seq2seq;
@@ -22,8 +24,11 @@ pub use fusion::{
     FiLMModule, FusionMethod,
 };
 pub use gpt::{GPTConfig, GPTModel};
+pub use mlp_mixer::{MLPMixer, MLPMixerConfig, MixerBlock, MixerMLP};
 pub use mobilenet::{MobileNet, MobileNetConfig, MobileNetVersion};
 pub use resnet::{ResNet, ResNetBlock, ResNetConfig, ResNetLayer};
 pub use seq2seq::{
     Attention, AttentionType, RNNCellType, Seq2Seq, Seq2SeqConfig, Seq2SeqDecoder, Seq2SeqEncoder,
+};
+pub use mamba::{Mamba, MambaBlock, MambaConfig, S4Layer, SelectiveSSM};
 pub use vit::{ViTConfig, VisionTransformer};

@@ -28,7 +28,7 @@
 //! ## Saving an Array with Zero-Copy Serialization
 //!
 //! ```no_run
-//! use ndarray::Array2;
+//! use scirs2_core::ndarray::Array2;
 //! use scirs2_core::memory_efficient::{MemoryMappedArray, ZeroCopySerialization};
 //! use serde_json::json;
 //! use std::path::Path;
@@ -66,7 +66,7 @@
 //! let array = MemoryMappedArray::<f64>::open_zero_copy(&filepath, AccessMode::ReadOnly)?;
 //!
 //! // Access as a standard ndarray
-//! let ndarray = array.readonlyarray::<ndarray::Ix2>()?;
+//! let ndarray = array.readonlyarray::<scirs2_core::ndarray::Ix2>()?;
 //! println!("Value at [10, 20]: {}", ndarray[[10, 20]]);
 //! # Ok(())
 //! # }
@@ -115,7 +115,7 @@
 //!
 //! // Modify the array
 //! {
-//!     let mut ndarray = array.as_array_mut::<ndarray::Ix2>()?;
+//!     let mut ndarray = array.as_array_mut::<scirs2_core::ndarray::Ix2>()?;
 //!     
 //!     // Set all diagonal elements to 1000
 //!     for i in 0..100 {
@@ -139,7 +139,7 @@
 //! 2. Header (variable size): Bincode-serialized ZeroCopyHeader struct containing:
 //!    - Type name (string)
 //!    - Element size in bytes (usize)
-//!    - Array shape (Vec<usize>)
+//!    - Array shape (`Vec<usize>`)
 //!    - Total number of elements (usize)
 //!    - Optional metadata (serde_json::Value or None)
 //! 3. Array Data: Raw binary data of the array's elements
@@ -222,7 +222,7 @@
 //! functionality, including saving and loading arrays of your type:
 //!
 //! ```no_run
-//! use ndarray::Array2;
+//! use scirs2_core::ndarray::Array2;
 //! use scirs2_core::memory_efficient::{AccessMode, MemoryMappedArray, ZeroCopySerialization};
 //! use serde_json::json;
 //! use std::path::Path;
@@ -255,7 +255,7 @@
 //! let array = MemoryMappedArray::<Complex64>::open_zero_copy(&filepath, AccessMode::ReadOnly)?;
 //!
 //! // Access as an ndarray
-//! let loaded_data = array.readonlyarray::<ndarray::Ix2>()?;
+//! let loaded_data = array.readonlyarray::<scirs2_core::ndarray::Ix2>()?;
 //! println!("First element: real={}, imag={}", loaded_data[[0, 0]].real, loaded_data[[0, 0]].imag);
 //! # Ok(())
 //! # }
@@ -276,6 +276,8 @@
 //! - Converting endianness explicitly (using `to_ne_bytes()` and `from_ne_bytes()`)
 //! - Adding a version field to your serialized format for future compatibility
 
+use crate::ndarray::compat::ArrayStatCompat;
+
 use std::fs::{File, OpenOptions};
 use std::io::{Read, Seek, SeekFrom, Write};
 use std::marker::PhantomData;
@@ -283,8 +285,8 @@ use std::mem;
 use std::path::{Path, PathBuf};
 use std::slice;
 
+use ::ndarray::{Array, Dimension};
 use memmap2::MmapOptions;
-use ndarray::{Array, Dimension};
 #[cfg(feature = "serialization")]
 use serde::{Deserialize, Serialize};
 
@@ -820,7 +822,7 @@ impl<A: ZeroCopySerializable> MemoryMappedArray<A> {
     /// # Example
     ///
     /// ```no_run
-    /// # use ndarray::Array2;
+    /// # use ::ndarray::Array2;
     /// # use scirs2_core::memory_efficient::MemoryMappedArray;
     /// # use serde_json::json;
     /// # fn example() -> Result<(), Box<dyn std::error::Error>> {
@@ -836,12 +838,12 @@ impl<A: ZeroCopySerializable> MemoryMappedArray<A> {
     /// # }
     /// ```
     pub fn save_array<S, D>(
-        data: &ndarray::ArrayBase<S, D>,
+        data: &crate::ndarray::ArrayBase<S, D>,
         file_path: impl AsRef<Path>,
         metadata: Option<serde_json::Value>,
     ) -> CoreResult<Self>
     where
-        S: ndarray::Data<Elem = A>,
+        S: crate::ndarray::Data<Elem = A>,
         D: Dimension,
     {
         // First create a temporary in-memory memory-mapped array
@@ -878,7 +880,7 @@ impl<A: ZeroCopySerializable> MemoryMappedArray<A> {
     /// let array = MemoryMappedArray::<f64>::open_zero_copy("data/temperature.bin", AccessMode::ReadOnly)?;
     ///
     /// // Access the array
-    /// let ndarray = array.readonlyarray::<ndarray::Ix2>()?;
+    /// let ndarray = array.readonlyarray::<scirs2_core::ndarray::Ix2>()?;
     /// println!("First value: {}", ndarray[[0, 0]]);
     /// # Ok(())
     /// # }
@@ -973,7 +975,8 @@ impl<A: ZeroCopySerializable> MemoryMappedArray<A> {
     /// # Example
     ///
     /// ```no_run
-    /// # use ndarray::Ix2;
+    /// # use scirs2_core::ndarray::Ix2;
+    /// # use scirs2_core::ndarray::ArrayStatCompat;
     /// # use scirs2_core::memory_efficient::{AccessMode, MemoryMappedArray};
     /// # fn example() -> Result<(), Box<dyn std::error::Error>> {
     /// let array = MemoryMappedArray::<f64>::open_zero_copy("matrix.bin", AccessMode::ReadOnly)?;
@@ -983,7 +986,7 @@ impl<A: ZeroCopySerializable> MemoryMappedArray<A> {
     ///
     /// // Now you can use all the ndarray methods
     /// let sum = ndarray.sum();
-    /// let mean = ndarray.mean().unwrap_or(0.0);
+    /// let mean = ndarray.mean_or(0.0);
     /// println!("Matrix sum: {}, mean: {}", sum, mean);
     /// # Ok(())
     /// # }
@@ -1220,7 +1223,7 @@ mod tests {
         assert_eq!(loaded.size, data.len());
 
         // Convert to ndarray and check values
-        let loaded_array = loaded.readonlyarray::<ndarray::Ix2>().unwrap();
+        let loaded_array = loaded.readonlyarray::<crate::ndarray::Ix2>().unwrap();
 
         for i in 0..5 {
             for j in 0..5 {
@@ -1291,7 +1294,7 @@ mod tests {
         assert_eq!(loaded.size, data.len());
 
         // Convert to ndarray and check values
-        let loaded_array = loaded.readonlyarray::<ndarray::Ix1>().unwrap();
+        let loaded_array = loaded.readonlyarray::<crate::ndarray::Ix1>().unwrap();
         assert_eq!(loaded_array.shape(), data.shape());
 
         for (i, &val) in loaded_array.iter().enumerate() {
@@ -1329,7 +1332,7 @@ mod tests {
         assert_eq!(loaded.size, data.len());
 
         // Convert to ndarray and check values
-        let loaded_array = loaded.readonlyarray::<ndarray::Ix2>().unwrap();
+        let loaded_array = loaded.readonlyarray::<crate::ndarray::Ix2>().unwrap();
         assert_eq!(loaded_array.shape(), data.shape());
 
         for i in 0..10 {
@@ -1372,7 +1375,7 @@ mod tests {
         assert_eq!(loaded.size, data.len());
 
         // Convert to ndarray and check values
-        let loaded_array = loaded.readonlyarray::<ndarray::Ix3>().unwrap();
+        let loaded_array = loaded.readonlyarray::<crate::ndarray::Ix3>().unwrap();
         assert_eq!(loaded_array.shape(), data.shape());
 
         for i in 0..5 {
@@ -1481,7 +1484,7 @@ mod tests {
             // Load and verify
             let loaded =
                 MemoryMappedArray::<u32>::open_zero_copy(&filepath, AccessMode::ReadOnly).unwrap();
-            let loaded_array = loaded.readonlyarray::<ndarray::Ix1>().unwrap();
+            let loaded_array = loaded.readonlyarray::<crate::ndarray::Ix1>().unwrap();
 
             for i in 0..data.len() {
                 assert_eq!(loaded_array[0], data[0]);
@@ -1511,7 +1514,7 @@ mod tests {
             // Load and verify
             let loaded =
                 MemoryMappedArray::<i64>::open_zero_copy(&filepath, AccessMode::ReadOnly).unwrap();
-            let loaded_array = loaded.readonlyarray::<ndarray::Ix2>().unwrap();
+            let loaded_array = loaded.readonlyarray::<crate::ndarray::Ix2>().unwrap();
 
             for i in 0..data.shape()[0] {
                 for j in 0..data.shape()[1] {
@@ -1544,7 +1547,7 @@ mod tests {
             // Load and verify
             let loaded =
                 MemoryMappedArray::<f32>::open_zero_copy(&filepath, AccessMode::ReadOnly).unwrap();
-            let loaded_array = loaded.readonlyarray::<ndarray::Ix3>().unwrap();
+            let loaded_array = loaded.readonlyarray::<crate::ndarray::Ix3>().unwrap();
 
             for i in 0..data.shape()[0] {
                 for j in 0..data.shape()[1] {
@@ -1591,7 +1594,7 @@ mod tests {
         // Load array and check it's still correct
         let loaded =
             MemoryMappedArray::<f64>::open_zero_copy(&filepath, AccessMode::ReadOnly).unwrap();
-        let loaded_array = loaded.readonlyarray::<ndarray::Ix1>().unwrap();
+        let loaded_array = loaded.readonlyarray::<crate::ndarray::Ix1>().unwrap();
 
         for (i, &val) in loaded_array.iter().enumerate() {
             assert_eq!(val, data[i]);
@@ -1617,7 +1620,7 @@ mod tests {
 
         // Modify array through mmap
         {
-            let mut array = mmap.as_array_mut::<ndarray::Ix2>().unwrap();
+            let mut array = mmap.as_array_mut::<crate::ndarray::Ix2>().unwrap();
             array[[2, 2]] = 999.0;
         }
 
@@ -1627,7 +1630,7 @@ mod tests {
         // Load again to verify changes were saved
         let loaded =
             MemoryMappedArray::<f32>::open_zero_copy(&filepath, AccessMode::ReadOnly).unwrap();
-        let loaded_array = loaded.readonlyarray::<ndarray::Ix2>().unwrap();
+        let loaded_array = loaded.readonlyarray::<crate::ndarray::Ix2>().unwrap();
 
         // Verify only the specified element was changed
         for i in 0..5 {
@@ -1659,7 +1662,7 @@ mod tests {
 
         // Modify array through copy-on-write view
         {
-            let mut array_view = cow_mmap.as_array_mut::<ndarray::Ix2>().unwrap();
+            let mut array_view = cow_mmap.as_array_mut::<crate::ndarray::Ix2>().unwrap();
             // Set diagonal to 100
             for i in 0..10 {
                 array_view[[i, i]] = 100.0;
@@ -1669,7 +1672,7 @@ mod tests {
         // Load the original file to verify it wasn't modified
         let original =
             MemoryMappedArray::<f64>::open_zero_copy(&filepath, AccessMode::ReadOnly).unwrap();
-        let original_array = original.readonlyarray::<ndarray::Ix2>().unwrap();
+        let original_array = original.readonlyarray::<crate::ndarray::Ix2>().unwrap();
 
         // Check original values weren't changed on disk
         for i in 0..10 {
@@ -1679,7 +1682,7 @@ mod tests {
         }
 
         // Check our copy-on-write view has the modifications
-        let cow_array = cow_mmap.as_array::<ndarray::Ix2>().unwrap();
+        let cow_array = cow_mmap.as_array::<crate::ndarray::Ix2>().unwrap();
         for i in 0..10 {
             for j in 0..10 {
                 if i == j {

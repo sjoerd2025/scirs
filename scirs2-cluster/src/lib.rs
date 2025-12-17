@@ -38,7 +38,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! scirs2-cluster = "0.1.0-rc.2"
+//! scirs2-cluster = "0.1.0-rc.3"
 //! ```
 //!
 //! ```rust
@@ -54,7 +54,7 @@
 //! let (centroids, labels) = kmeans(data.view(), 2, None, None, None, None).unwrap();
 //! ```
 //!
-//! ## 🔒 Version: 0.1.0-rc.2 (October 03, 2025)
+//! ## 🔒 Version: 0.1.0-rc.3 (October 03, 2025)
 //!
 //! ## Features
 //!
@@ -289,8 +289,14 @@ pub mod preprocess;
 /// * **Hierarchical**: Python binding for agglomerative clustering with various linkage methods
 /// * **Evaluation Metrics**: Silhouette score, Calinski-Harabasz score, and Davies-Bouldin score
 /// * **Numpy Integration**: Seamless integration with NumPy arrays
-#[cfg(feature = "pyo3")]
-pub mod python_bindings;
+///
+// Python API wrappers that use scirs2-core conversion utilities
+// These provide ndarray16-compatible interfaces to internal ndarray17 functions
+// Note: python_api module not yet implemented
+// #[cfg(feature = "python")]
+// pub mod python_api;
+
+// Quantum clustering module (used by other modules, must be unconditional)
 pub mod quantum_clustering;
 pub mod serialization;
 pub mod sparse;

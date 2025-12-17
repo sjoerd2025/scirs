@@ -126,7 +126,8 @@
 // ================================
 
 /// Re-export core array types
-pub use crate::ndarray::{
+/// These are re-exported from crate root (see lib.rs lines 521-540)
+pub use crate::{
     Array,  // Generic N-dimensional array
     Array1, // 1-dimensional array
     Array2, // 2-dimensional array
@@ -142,7 +143,8 @@ pub use crate::ndarray::{
 };
 
 /// Re-export array creation and manipulation macros
-pub use crate::ndarray::{
+/// These are re-exported from crate root (see lib.rs lines 521-540)
+pub use crate::{
     array, // Create arrays: array![[1, 2], [3, 4]]
     s,     // Slice arrays: arr.slice(s![.., 0])
 };

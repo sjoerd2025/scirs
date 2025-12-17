@@ -15,7 +15,7 @@
 //!
 //! ```rust,no_run
 //! use scirs2_core::batch_conversions::{BatchConverter, BatchConversionConfig};
-//! use ndarray::Array1;
+//! use ::ndarray::Array1;
 //!
 //! // Convert a large array of f64 to f32 with SIMD optimization
 //! let data: Vec<f64> = (0..1000).map(|i| i as f64 * 0.1).collect();
@@ -643,14 +643,14 @@ impl BatchConverter {
 #[cfg(feature = "array")]
 pub mod ndarray_integration {
     use super::*;
-    use ndarray::{Array, ArrayBase, Data, Dimension};
+    use ::ndarray::{Array, ArrayBase, Data, Dimension};
 
     impl BatchConverter {
         /// Convert an ndarray to another numeric type
         pub fn convert_array<S, T, D>(
             &self,
             array: &ArrayBase<S, D>,
-        ) -> CoreResult<ndarray::Array<T, D>>
+        ) -> CoreResult<crate::ndarray::Array<T, D>>
         where
             S: Data,
             S::Elem: Copy + NumCast + PartialOrd + fmt::Display + Send + Sync + 'static,
@@ -679,7 +679,7 @@ pub mod ndarray_integration {
         pub fn convert_array_clamped<S, T, D>(
             &self,
             array: &ArrayBase<S, D>,
-        ) -> CoreResult<ndarray::Array<T, D>>
+        ) -> CoreResult<crate::ndarray::Array<T, D>>
         where
             S: Data,
             S::Elem: Copy + NumericConversion + Send + Sync,

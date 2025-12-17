@@ -162,12 +162,12 @@ impl OutOfCoreManager {
 
     /// Cleanup all temporary files
     pub fn cleanup(&mut self) -> SparseResult<()> {
-        let mut total_removed = 0;
+        let mut _total_removed = 0;
 
         for file_name in self.active_files.values() {
             let filepath = Path::new(&self.temp_dir).join(file_name);
             if let Ok(metadata) = std::fs::metadata(&filepath) {
-                total_removed += metadata.len() as usize;
+                _total_removed += metadata.len() as usize;
             }
             let _ = std::fs::remove_file(&filepath); // Ignore errors during cleanup
         }
